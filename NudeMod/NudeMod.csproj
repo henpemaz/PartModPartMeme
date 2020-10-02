@@ -57,5 +57,12 @@
     <Compile Include="NudeMod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="UNQ - Plate1.png" />
+    <EmbeddedResource Include="UNQ - Plate2.png" />
+    <EmbeddedResource Include="UNQ - Plate3.png" />
+    <EmbeddedResource Include="UNQ - Plate4.png" />
+    <EmbeddedResource Include="UNQ - Plate5.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
