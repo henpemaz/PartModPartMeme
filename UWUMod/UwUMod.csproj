@@ -1,0 +1,103 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{E444DADE-2650-4C55-80A7-6BB01B8A9441}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>UwUMod</RootNamespace>
+    <AssemblyName>UwUMod</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp - publicitystuntd">
+      <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
+    </Reference>
+    <Reference Include="HOOKS-Assembly-CSharp">
+      <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\HOOKS-Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoMod">
+      <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\MonoMod.exe</HintPath>
+    </Reference>
+    <Reference Include="Partiality">
+      <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\Partiality.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="UnityEngine">
+      <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\UnityEngine.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="UwUMod.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="wesuwwces\CompetitiveShadow.png" />
+    <EmbeddedResource Include="wesuwwces\CompetitiveTitle.png" />
+    <EmbeddedResource Include="wesuwwces\Intro_Roll_A.png" />
+    <EmbeddedResource Include="wesuwwces\Intro_Roll_B.png" />
+    <EmbeddedResource Include="wesuwwces\Intro_Roll_C.png" />
+    <EmbeddedResource Include="wesuwwces\MainTitle.png" />
+    <EmbeddedResource Include="wesuwwces\MainTitle2.png" />
+    <EmbeddedResource Include="wesuwwces\MainTitleBevel.png" />
+    <EmbeddedResource Include="wesuwwces\MainTitleShadow.png" />
+    <EmbeddedResource Include="wesuwwces\MultiplayerPortrait01.png" />
+    <EmbeddedResource Include="wesuwwces\MultiplayerPortrait11.png" />
+    <EmbeddedResource Include="wesuwwces\MultiplayerPortrait21.png" />
+    <EmbeddedResource Include="wesuwwces\MultiplayerPortrait31.png" />
+    <EmbeddedResource Include="wesuwwces\SandboxShadow.png" />
+    <EmbeddedResource Include="wesuwwces\SandboxTitle.png" />
+    <EmbeddedResource Include="wesuwwces\Title_CC.png" />
+    <EmbeddedResource Include="wesuwwces\Title_CC_Shadow.png" />
+    <EmbeddedResource Include="wesuwwces\Title_DS.png" />
+    <EmbeddedResource Include="wesuwwces\Title_DS_Shadow.png" />
+    <EmbeddedResource Include="wesuwwces\Title_GW.png" />
+    <EmbeddedResource Include="wesuwwces\Title_GW_Shadow.png" />
+    <EmbeddedResource Include="wesuwwces\Title_HI.png" />
+    <EmbeddedResource Include="wesuwwces\Title_HI_Shadow.png" />
+    <EmbeddedResource Include="wesuwwces\Title_LF.png" />
+    <EmbeddedResource Include="wesuwwces\Title_LF_Shadow.png" />
+    <EmbeddedResource Include="wesuwwces\Title_SB.png" />
+    <EmbeddedResource Include="wesuwwces\Title_SB_Shadow.png" />
+    <EmbeddedResource Include="wesuwwces\Title_SH.png" />
+    <EmbeddedResource Include="wesuwwces\Title_SH_Shadow.png" />
+    <EmbeddedResource Include="wesuwwces\Title_SI.png" />
+    <EmbeddedResource Include="wesuwwces\Title_SI_Shadow.png" />
+    <EmbeddedResource Include="wesuwwces\Title_SL.png" />
+    <EmbeddedResource Include="wesuwwces\Title_SL_Shadow.png" />
+    <EmbeddedResource Include="wesuwwces\Title_SS.png" />
+    <EmbeddedResource Include="wesuwwces\Title_SS_Shadow.png" />
+    <EmbeddedResource Include="wesuwwces\Title_SU.png" />
+    <EmbeddedResource Include="wesuwwces\Title_SU_Shadow.png" />
+    <EmbeddedResource Include="wesuwwces\Title_UW.png" />
+    <EmbeddedResource Include="wesuwwces\Title_UW_Shadow.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

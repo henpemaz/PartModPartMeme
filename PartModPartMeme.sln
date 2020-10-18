@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GuardianSemaphore", "Guardi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoolCatTailFix", "CoolCatTailFix\CoolCatTailFix.csproj", "{EBB1EB50-7CB8-4E95-BC2D-FB3F5571A47E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UwUMod", "UWUMod\UwUMod.csproj", "{E444DADE-2650-4C55-80A7-6BB01B8A9441}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +59,10 @@ Global
 		{EBB1EB50-7CB8-4E95-BC2D-FB3F5571A47E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EBB1EB50-7CB8-4E95-BC2D-FB3F5571A47E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EBB1EB50-7CB8-4E95-BC2D-FB3F5571A47E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E444DADE-2650-4C55-80A7-6BB01B8A9441}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E444DADE-2650-4C55-80A7-6BB01B8A9441}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E444DADE-2650-4C55-80A7-6BB01B8A9441}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E444DADE-2650-4C55-80A7-6BB01B8A9441}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
