@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UwUMod", "UWUMod\UwUMod.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SlugcatIsInvisible", "SlugcatIsInvisible\SlugcatIsInvisible.csproj", "{E27EBC83-ADC5-45D9-A4AF-1361859B6387}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LizardSkin", "LizardSkin\LizardSkin.csproj", "{61CC62BE-031E-475E-B30C-0E0AC08AE4F2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,10 @@ Global
 		{E27EBC83-ADC5-45D9-A4AF-1361859B6387}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E27EBC83-ADC5-45D9-A4AF-1361859B6387}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E27EBC83-ADC5-45D9-A4AF-1361859B6387}.Release|Any CPU.Build.0 = Release|Any CPU
+		{61CC62BE-031E-475E-B30C-0E0AC08AE4F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{61CC62BE-031E-475E-B30C-0E0AC08AE4F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61CC62BE-031E-475E-B30C-0E0AC08AE4F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61CC62BE-031E-475E-B30C-0E0AC08AE4F2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
