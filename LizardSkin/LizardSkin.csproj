@@ -34,6 +34,9 @@
     <Reference Include="Assembly-CSharp - publicitystuntd">
       <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
     </Reference>
+    <Reference Include="FancySlugcats">
+      <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\FancySlugcats.dll</HintPath>
+    </Reference>
     <Reference Include="HOOKS-Assembly-CSharp">
       <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\HOOKS-Assembly-CSharp.dll</HintPath>
     </Reference>
@@ -54,6 +57,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FancyPlayerGraphicsCosmeticsAdaptor.cs" />
     <Compile Include="ICosmeticsAdaptor.cs" />
     <Compile Include="GenericCosmeticsAdaptor.cs" />
     <Compile Include="PlayerGraphicsCosmeticsAdaptor.cs" />

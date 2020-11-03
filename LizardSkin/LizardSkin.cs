@@ -50,7 +50,10 @@ namespace LizardSkin
             base.OnEnable();
             // Hooking code goose hre
 
-            PlayerGraphicsCosmeticsAdaptor.ApplyHooksToGraphics();
+            PlayerGraphicsCosmeticsAdaptor.ApplyHooksToPlayerGraphics();
+
+            // if FancySlugcats present
+            // FancyPlayerGraphicsCosmeticsAdaptor.ApplyHooksToFancyPlayerGraphics();
         }
     }
 }
