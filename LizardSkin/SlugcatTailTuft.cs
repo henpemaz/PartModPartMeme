@@ -4,7 +4,7 @@ namespace LizardSkin
 {
     internal class SlugcatTailTuft : GenericLongBodyScales
     {
-        public SlugcatTailTuft(ICosmeticsAdaptor iGraphics, int startSprite) : base(iGraphics, startSprite)
+        public SlugcatTailTuft(ICosmeticsAdaptor iGraphics) : base(iGraphics)
 		{
 			this.rigor = 0f;
 			//if (Random.value < 0.14285715f)// || (Random.value < 0.9f && pGraphics.lizard.Template.type == CreatureTemplate.Type.BlueLizard) || pGraphics.lizard.Template.type == CreatureTemplate.Type.RedLizard)

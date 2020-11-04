@@ -3,7 +3,7 @@
 	public class GenericLizardScale : BodyPart
 	{
 		// Token: 0x06001FCE RID: 8142 RVA: 0x001EAA18 File Offset: 0x001E8C18
-		public GenericLizardScale(GenericCosmeticsTemplate gCosmetics) : base(gCosmetics.iGraphics.graphics)
+		public GenericLizardScale(GenericCosmeticTemplate gCosmetics) : base(gCosmetics.iGraphics.graphics)
 		{
 			this.iCosmetics = gCosmetics;
 		}
@@ -25,7 +25,7 @@
 		}
 
 		// Token: 0x0400229C RID: 8860
-		public GenericCosmeticsTemplate iCosmetics;
+		public GenericCosmeticTemplate iCosmetics;
 
 		// Token: 0x0400229D RID: 8861
 		public float length;

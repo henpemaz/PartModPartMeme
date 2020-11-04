@@ -1,13 +1,15 @@
 ﻿using RWCustom;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using MonoMod.RuntimeDetour;
 using UnityEngine;
 
 namespace LizardSkin
 {
     public class PlayerGraphicsCosmeticsAdaptor : GenericCosmeticsAdaptor
     {
-        private PlayerGraphics pGraphics { get => this.graphics as PlayerGraphics; }
+        protected PlayerGraphics pGraphics { get => this.graphics as PlayerGraphics; }
 
         public static void ApplyHooksToPlayerGraphics()
         {
@@ -17,49 +19,120 @@ namespace LizardSkin
             On.PlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites_hk;
             On.PlayerGraphics.ApplyPalette += PlayerGraphics_ApplyPalette_hk;
             On.PlayerGraphics.Reset += PlayerGraphics_Reset_hk;
+            On.PlayerGraphics.AddToContainer += PlayerGraphics_AddToContainer_hk;
         }
 
-        // Quick and dirty
-        public static PlayerGraphicsCosmeticsAdaptor staticAdaptor;
-        private static void PlayerGraphics_ctor_hk(On.PlayerGraphics.orig_ctor orig, PlayerGraphics instance, PhysicalObject ow)
+        public static void ApplyHooksToJollyPlayerGraphicsHK()
+        {
+            Type jollypg = Type.GetType("JollyCoop.PlayerGraphicsHK, JollyCoop");
+
+            new Hook(jollypg.GetMethod("PlayerGraphics_ApplyPalette", BindingFlags.NonPublic | BindingFlags.Static), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("PlayerGraphics_ApplyPalette_jolly_fix", BindingFlags.NonPublic | BindingFlags.Static));
+            new Hook(jollypg.GetMethod("SwichtLayersVanilla", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("Jolly_SwichtLayersVanilla_fix", BindingFlags.NonPublic | BindingFlags.Static));
+        }
+
+
+        public static PlayerGraphicsCosmeticsAdaptor[] playerAdaptors = new PlayerGraphicsCosmeticsAdaptor[4];
+        public static List<PlayerGraphicsCosmeticsAdaptor> ghostAdaptors = new List<PlayerGraphicsCosmeticsAdaptor>();
+        protected static PlayerGraphicsCosmeticsAdaptor getAdaptor(PlayerGraphics instance)
+        {
+            PlayerState playerState = (instance.owner as Player).playerState;
+            if (!playerState.isGhost)
+            {
+                //Debug.LogError("Retreiving LS Adaptor for player " + playerState.playerNumber);
+                return playerAdaptors[playerState.playerNumber];
+            }
+            PlayerGraphicsCosmeticsAdaptor toReturn = null;
+            for(int i = ghostAdaptors.Count; i >= 0; i--)
+            {
+                if (ghostAdaptors[i].graphics.owner.slatedForDeletetion)
+                {
+                    ghostAdaptors.RemoveAt(i);
+                }
+                else if (toReturn is null && ghostAdaptors[i].pGraphics == instance)
+                {
+                    toReturn = ghostAdaptors[i];
+                }
+            }
+            return toReturn;
+        }
+
+        protected static void addAdaptor(PlayerGraphicsCosmeticsAdaptor adaptor)
+        {
+            PlayerState playerState = (adaptor.graphics.owner as Player).playerState;
+            if (!playerState.isGhost)
+            {
+                //Debug.LogError("Adding LS Adaptor for player " + playerState.playerNumber);
+                playerAdaptors[playerState.playerNumber] = adaptor;
+            }
+            else
+            {
+                ghostAdaptors.Add(adaptor);
+            }
+        }
+
+
+        protected static void PlayerGraphics_ctor_hk(On.PlayerGraphics.orig_ctor orig, PlayerGraphics instance, PhysicalObject ow)
         {
             orig(instance, ow);
-            staticAdaptor = new PlayerGraphicsCosmeticsAdaptor(instance);
+            addAdaptor(new PlayerGraphicsCosmeticsAdaptor(instance));
         }
-        private static void PlayerGraphics_Reset_hk(On.PlayerGraphics.orig_Reset orig, PlayerGraphics self)
-        {
-            orig(self);
-            staticAdaptor.Reset();
-        }
-
-        private static void PlayerGraphics_ApplyPalette_hk(On.PlayerGraphics.orig_ApplyPalette orig, PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
-        {
-            orig(self, sLeaser, rCam, palette);
-            staticAdaptor.ApplyPalette(sLeaser, rCam, palette);
-        }
-
-        private static void PlayerGraphics_DrawSprites_hk(On.PlayerGraphics.orig_DrawSprites orig, PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
-        {
-            orig(self, sLeaser, rCam, timeStacker, camPos);
-            staticAdaptor.DrawSprites(sLeaser, rCam, timeStacker, camPos);
-
-        }
-
-        private static void PlayerGraphics_InitiateSprites_hk(On.PlayerGraphics.orig_InitiateSprites orig, PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
-        {
-            orig(self, sLeaser, rCam);
-            staticAdaptor.InitiateSprites(sLeaser, rCam);
-
-        }
-
-        private static void PlayerGraphics_Update_hk(On.PlayerGraphics.orig_Update orig, PlayerGraphics instance)
+        protected static void PlayerGraphics_Reset_hk(On.PlayerGraphics.orig_Reset orig, PlayerGraphics instance)
         {
             orig(instance);
-            staticAdaptor.Update();
+            getAdaptor(instance).Reset();
         }
 
+        protected static void PlayerGraphics_ApplyPalette_hk(On.PlayerGraphics.orig_ApplyPalette orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
+        {
+            orig(instance, sLeaser, rCam, palette);
+            getAdaptor(instance).ApplyPalette(sLeaser, rCam, palette);
+        }
+
+        public delegate void jolly_ApplyPalette_hook(On.PlayerGraphics.orig_ApplyPalette orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette);
+        protected static void PlayerGraphics_ApplyPalette_jolly_fix(jolly_ApplyPalette_hook orig_hook, On.PlayerGraphics.orig_ApplyPalette orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
+        {
+            // Who hooks the hookers ???
+            orig_hook(orig, instance, sLeaser, rCam, palette);
+            getAdaptor(instance).ApplyPalette(sLeaser, rCam, palette);
+        }
+
+        public delegate void SwichtLayersVanilla(PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, bool newOverlap);
+        protected static void Jolly_SwichtLayersVanilla_fix(SwichtLayersVanilla orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, bool newOverlap)
+        {
+            orig(instance, sLeaser, rCam, newOverlap);
+            FContainer fcontainer = rCam.ReturnFContainer(newOverlap ? "Background" : "Midground");
+            getAdaptor(instance).AddToContainer(sLeaser, rCam, fcontainer);
+        }
+
+        protected static void PlayerGraphics_DrawSprites_hk(On.PlayerGraphics.orig_DrawSprites orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+        {
+            orig(instance, sLeaser, rCam, timeStacker, camPos);
+            getAdaptor(instance).DrawSprites(sLeaser, rCam, timeStacker, camPos);
+        }
+
+        protected static void PlayerGraphics_InitiateSprites_hk(On.PlayerGraphics.orig_InitiateSprites orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
+        {
+            orig(instance, sLeaser, rCam);
+            getAdaptor(instance).InitiateSprites(sLeaser, rCam);
+        }
+
+        protected static void PlayerGraphics_AddToContainer_hk(On.PlayerGraphics.orig_AddToContainer orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
+        {
+            orig(instance, sLeaser, rCam, newContatiner);
+            getAdaptor(instance).AddToContainer(sLeaser, rCam, newContatiner);
+        }
+
+        protected static void PlayerGraphics_Update_hk(On.PlayerGraphics.orig_Update orig, PlayerGraphics instance)
+        {
+            orig(instance);
+            getAdaptor(instance).Update();
+        }
+
+        Type jolly_ref;
         public PlayerGraphicsCosmeticsAdaptor(PlayerGraphics pGraphics) : base(pGraphics)
         {
+            jolly_ref = Type.GetType("JollyCoop.PlayerGraphicsHK, JollyCoop");
+
             this.bodyLength = this.pGraphics.player.bodyChunkConnections[0].distance;
             this.tailLength = 0f;
             for (int l = 0; l < this.pGraphics.tail.Length; l++)
@@ -77,12 +150,12 @@ namespace LizardSkin
 
             this.cosmeticsParams = new CosmeticsParams(0.5f, 0.5f);
 
-            this.cosmetics = new List<GenericCosmeticsTemplate>();
+            this.cosmetics = new List<GenericCosmeticTemplate>();
             this.extraSprites = 0;
 
-            // This is trouble!!!
-            int spriteIndex = firstSprite;
-            spriteIndex = this.AddCosmetic(spriteIndex, new SlugcatTailTuft(this, spriteIndex));
+            this.AddCosmetic(new SlugcatTailTuft(this));
+            this.AddCosmetic(new SlugcatTailTuft(this));
+            this.AddCosmetic(new SlugcatTailTuft(this));
 
             //for(int i = 0; i < (this.cosmetics[0] as SlugcatTailTuft).scalesPositions.Length; i++)
             //         {
@@ -123,7 +196,7 @@ namespace LizardSkin
             return sLeaser.sprites[3];
         }
 
-        protected override FSprite getBehindNode(RoomCamera.SpriteLeaser sLeaser)
+        protected override FNode getBehindNode(RoomCamera.SpriteLeaser sLeaser)
         {
             return sLeaser.sprites[0];
         }
@@ -193,9 +266,33 @@ namespace LizardSkin
             return new LizardGraphics.LizardSpineData(spineFactor, Vector2.Lerp(vector, vector2, t), outerPos, normalized, vector3, rot, rad);
         }
 
+        public Color color_from_jolly(Color color)
+        {
+            if (pGraphics.player.room != null && !pGraphics.player.room.game.IsStorySession)
+            {
+                return color;
+            }
+            if (!JollyCoop.JollyMod.config.enableColors[pGraphics.player.playerState.playerNumber] && !(typeof(JollyCoop.JollyMod.CoopConfig).GetField("randomColors", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).GetValue(JollyCoop.JollyMod.config) as bool[])[pGraphics.player.playerState.playerNumber])
+            {
+                return color;
+            }
+            color = JollyCoop.JollyMod.config.playerBodyColors[pGraphics.player.playerState.playerNumber];
+            if (pGraphics.malnourished > 0f)
+            {
+                float num = (!pGraphics.player.Malnourished) ? Mathf.Max(0f, pGraphics.malnourished - 0.005f) : pGraphics.malnourished;
+                color = Color.Lerp(color, Color.gray, 0.4f * num);
+            }
+            return color;
+        }
+
         public override Color BodyColor(float y)
         {
-            return PlayerGraphics.SlugcatColor((pGraphics.player.State as PlayerState).slugcatCharacter);
+            Color color = PlayerGraphics.SlugcatColor((pGraphics.player.State as PlayerState).slugcatCharacter);
+            if (jolly_ref != null)
+            {
+                color = color_from_jolly(color);
+            }
+            return color;
             //if (y < this.bodyLength / this.BodyAndTailLength || this.cosmeticsParams.tailColor == 0f)
             //            {
             //                return PlayerGraphics.SlugcatColor((pGraphics.player.State as PlayerState).slugcatCharacter);
@@ -208,7 +305,8 @@ namespace LizardSkin
 
         public override Color HeadColor(float v)
         {
-            return PlayerGraphics.SlugcatColor((pGraphics.player.State as PlayerState).slugcatCharacter);
+            //return PlayerGraphics.SlugcatColor((pGraphics.player.State as PlayerState).slugcatCharacter);
+            return BodyColor(0f);
         }
 
         public override int getFirstSpriteImpl()

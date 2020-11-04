@@ -17,7 +17,7 @@ namespace LizardSkin
         public RoomPalette palette { get; protected set; }
         public float showDominance { get; protected set; }
         public CosmeticsParams cosmeticsParams { get; protected set; }
-        public List<GenericCosmeticsTemplate> cosmetics { get; protected set; }
+        public List<GenericCosmeticTemplate> cosmetics { get; protected set; }
 
         protected float depthRotation { get; set; }
         protected float lastDepthRotation { get; set; }
@@ -32,17 +32,16 @@ namespace LizardSkin
 
             this.cosmeticsParams = new CosmeticsParams(0.5f, 0.5f);
 
-            this.cosmetics = new List<GenericCosmeticsTemplate>();
+            this.cosmetics = new List<GenericCosmeticTemplate>();
             this.extraSprites = 0;
-            this.firstSprite = this.getFirstSpriteImpl();
+            this.firstSprite = 0;
         }
 
-        public virtual int AddCosmetic(int spriteIndex, GenericCosmeticsTemplate cosmetic)
+        public virtual void AddCosmetic(GenericCosmeticTemplate cosmetic)
         {
             this.cosmetics.Add(cosmetic);
-            spriteIndex += cosmetic.numberOfSprites;
+            cosmetic.startSprite = this.extraSprites;
             this.extraSprites += cosmetic.numberOfSprites;
-            return spriteIndex;
         }
 
         public virtual void Update()
@@ -61,41 +60,48 @@ namespace LizardSkin
 
         public virtual void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
         {
-            // sLeaser.sprites = new FSprite[this.startOfExtraSprites + this.extraSprites];
-            System.Array.Resize(ref sLeaser.sprites, sLeaser.sprites.Length + this.extraSprites);
+            this.firstSprite = sLeaser.sprites.Length;
+            System.Array.Resize(ref sLeaser.sprites, this.firstSprite + this.extraSprites);
             for (int l = 0; l < this.cosmetics.Count; l++)
             {
                 this.cosmetics[l].InitiateSprites(sLeaser, rCam);
             }
+            this.AddToContainer(sLeaser, rCam, null);
+        }
 
+        public virtual void AddToContainer(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
+        {
+            if (newContatiner == null)
+            {
+                newContatiner = rCam.ReturnFContainer("Midground");
+            }
             FContainer behind = new FContainer();
             FContainer behindHead = new FContainer();
             FContainer onTop = new FContainer();
-            FContainer midground = rCam.ReturnFContainer("Midground");
-            midground.AddChild(behind);
+            newContatiner.AddChild(behind);
             behind.MoveBehindOtherNode(getBehindNode(sLeaser));
-            midground.AddChild(behindHead);
-            behind.MoveBehindOtherNode(getBehindHeadNode(sLeaser));
-            midground.AddChild(onTop);
-            behind.MoveBehindOtherNode(getOnTopNode(sLeaser));
+            newContatiner.AddChild(behindHead);
+            behindHead.MoveBehindOtherNode(getBehindHeadNode(sLeaser));
+            newContatiner.AddChild(onTop);
+            onTop.MoveInFrontOfOtherNode(getOnTopNode(sLeaser));
 
             for (int j = 0; j < this.cosmetics.Count; j++)
             {
-                if (this.cosmetics[j].spritesOverlap == GenericCosmeticsTemplate.SpritesOverlap.Behind)
+                if (this.cosmetics[j].spritesOverlap == GenericCosmeticTemplate.SpritesOverlap.Behind)
                 {
                     this.cosmetics[j].AddToContainer(sLeaser, rCam, behind);
                 }
             }
             for (int m = 0; m < this.cosmetics.Count; m++)
             {
-                if (this.cosmetics[m].spritesOverlap == GenericCosmeticsTemplate.SpritesOverlap.BehindHead)
+                if (this.cosmetics[m].spritesOverlap == GenericCosmeticTemplate.SpritesOverlap.BehindHead)
                 {
                     this.cosmetics[m].AddToContainer(sLeaser, rCam, behindHead);
                 }
             }
             for (int m = 0; m < this.cosmetics.Count; m++)
             {
-                if (this.cosmetics[m].spritesOverlap == GenericCosmeticsTemplate.SpritesOverlap.InFront)
+                if (this.cosmetics[m].spritesOverlap == GenericCosmeticTemplate.SpritesOverlap.InFront)
                 {
                     this.cosmetics[m].AddToContainer(sLeaser, rCam, onTop);
                 }
@@ -107,7 +113,7 @@ namespace LizardSkin
 
         protected abstract FNode getBehindHeadNode(RoomCamera.SpriteLeaser sLeaser);
 
-        protected abstract FSprite getBehindNode(RoomCamera.SpriteLeaser sLeaser);
+        protected abstract FNode getBehindNode(RoomCamera.SpriteLeaser sLeaser);
 
         public virtual void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
         {

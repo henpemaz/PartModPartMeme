@@ -40,8 +40,14 @@
     <Reference Include="HOOKS-Assembly-CSharp">
       <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\HOOKS-Assembly-CSharp.dll</HintPath>
     </Reference>
+    <Reference Include="JollyCoop">
+      <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\JollyCoop.dll</HintPath>
+    </Reference>
     <Reference Include="MonoMod">
       <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\MonoMod.exe</HintPath>
+    </Reference>
+    <Reference Include="MonoMod.RuntimeDetour">
+      <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\MonoMod.RuntimeDetour.dll</HintPath>
     </Reference>
     <Reference Include="Partiality">
       <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\Partiality.dll</HintPath>
@@ -61,7 +67,7 @@
     <Compile Include="ICosmeticsAdaptor.cs" />
     <Compile Include="GenericCosmeticsAdaptor.cs" />
     <Compile Include="PlayerGraphicsCosmeticsAdaptor.cs" />
-    <Compile Include="GenericCosmeticsTemplate.cs" />
+    <Compile Include="GenericCosmeticTemplate.cs" />
     <Compile Include="GenericLizardScale.cs" />
     <Compile Include="GenericLongBodyScales.cs" />
     <Compile Include="LizardSkin.cs" />

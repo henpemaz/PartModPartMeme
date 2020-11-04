@@ -2,13 +2,12 @@
 
 namespace LizardSkin
 {
-    public abstract partial class GenericCosmeticsTemplate
+    public abstract partial class GenericCosmeticTemplate
 	{
 		// Token: 0x06001F2A RID: 7978 RVA: 0x001D869C File Offset: 0x001D689C
-		public GenericCosmeticsTemplate(ICosmeticsAdaptor pGraphics, int startSprite)
+		public GenericCosmeticTemplate(ICosmeticsAdaptor pGraphics)
 		{
 			this.iGraphics = pGraphics;
-			this.startSprite = startSprite;
 		}
 
 		// Token: 0x06001F2B RID: 7979 RVA: 0x001D86B4 File Offset: 0x001D68B4
@@ -56,13 +55,15 @@ namespace LizardSkin
 		public int numberOfSprites;
 
 		// Token: 0x040021D9 RID: 8665
-		public int startSprite;
+		public int startSprite { get => this.iGraphics.firstSprite + this._startSprite; set => this._startSprite = value; }
+
+		public int _startSprite;
 
 		// Token: 0x040021DA RID: 8666
 		public RoomPalette palette;
 
 		// Token: 0x040021DB RID: 8667
-		public GenericCosmeticsTemplate.SpritesOverlap spritesOverlap;
+		public GenericCosmeticTemplate.SpritesOverlap spritesOverlap;
 
 		// Token: 0x020004BB RID: 1211
 		public enum SpritesOverlap

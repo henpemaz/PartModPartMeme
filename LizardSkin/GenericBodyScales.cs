@@ -4,13 +4,13 @@ using UnityEngine;
 namespace LizardSkin
 {
 	// Token: 0x020004BE RID: 1214
-	public class GenericBodyScales : GenericCosmeticsTemplate
+	public class GenericBodyScales : GenericCosmeticTemplate
 	{
 		// Token: 0x06001F3B RID: 7995 RVA: 0x001D9310 File Offset: 0x001D7510
-		public GenericBodyScales(ICosmeticsAdaptor iGraphics, int startSprite) : base(iGraphics, startSprite)
+		public GenericBodyScales(ICosmeticsAdaptor iGraphics) : base(iGraphics)
 		{
 			//this.spritesOverlap = ((!(this is SlugcatLongHeadScales)) ? SlugcatCosmeticsTemplate.SpritesOverlap.BehindHead : SlugcatCosmeticsTemplate.SpritesOverlap.InFront);
-			this.spritesOverlap = GenericCosmeticsTemplate.SpritesOverlap.BehindHead;
+			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.BehindHead;
 		}
 
 		// Token: 0x06001F3C RID: 7996 RVA: 0x001D9340 File Offset: 0x001D7540

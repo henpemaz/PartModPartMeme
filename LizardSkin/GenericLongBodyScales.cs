@@ -10,7 +10,7 @@ namespace LizardSkin
 	public class GenericLongBodyScales : GenericBodyScales
 	{
 		// Token: 0x06001F48 RID: 8008 RVA: 0x001D9994 File Offset: 0x001D7B94
-		public GenericLongBodyScales(ICosmeticsAdaptor iGraphics, int startSprite) : base(iGraphics, startSprite)
+		public GenericLongBodyScales(ICosmeticsAdaptor iGraphics) : base(iGraphics)
 		{
 
 		}

@@ -9,6 +9,7 @@ using System.Security;
 using System.Runtime.CompilerServices;
 using System.Security.Permissions;
 using System.Runtime.InteropServices;
+using UnityEngine;
 
 [assembly: IgnoresAccessChecksTo("Assembly-CSharp")]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
@@ -53,7 +54,28 @@ namespace LizardSkin
             PlayerGraphicsCosmeticsAdaptor.ApplyHooksToPlayerGraphics();
 
             // if FancySlugcats present
-            // FancyPlayerGraphicsCosmeticsAdaptor.ApplyHooksToFancyPlayerGraphics();
+            Type fpg = Type.GetType("FancySlugcats.FancyPlayerGraphics, FancySlugcats");
+            if(fpg != null)
+            {
+                Debug.LogError("LizardSkin: FOUND FancyPlayerGraphics");
+                FancyPlayerGraphicsCosmeticsAdaptor.ApplyHooksToFancyPlayerGraphics();
+            }
+            else
+            {
+                Debug.LogError("LizardSkin: NOT FOUND FancyPlayerGraphics");
+            }
+            // 
+
+            Type jollypg = Type.GetType("JollyCoop.PlayerGraphicsHK, JollyCoop");
+            if (jollypg != null)
+            {
+                Debug.LogError("LizardSkin: FOUND Jolly");
+                PlayerGraphicsCosmeticsAdaptor.ApplyHooksToJollyPlayerGraphicsHK();
+            }
+            else
+            {
+                Debug.LogError("LizardSkin: NOT FOUND Jolly");
+            }
         }
     }
 }
