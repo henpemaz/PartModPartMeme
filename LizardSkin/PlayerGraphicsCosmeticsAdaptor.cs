@@ -25,32 +25,38 @@ namespace LizardSkin
         public static void ApplyHooksToJollyPlayerGraphicsHK()
         {
             Type jollypg = Type.GetType("JollyCoop.PlayerGraphicsHK, JollyCoop");
-
             new Hook(jollypg.GetMethod("PlayerGraphics_ApplyPalette", BindingFlags.NonPublic | BindingFlags.Static), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("PlayerGraphics_ApplyPalette_jolly_fix", BindingFlags.NonPublic | BindingFlags.Static));
             new Hook(jollypg.GetMethod("SwichtLayersVanilla", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("Jolly_SwichtLayersVanilla_fix", BindingFlags.NonPublic | BindingFlags.Static));
         }
 
+        public static void ApplyHooksToColorfootPlayerGraphicsPatch()
+        {
+            Type colorfootpg = Type.GetType("Colorfoot.PlayerGraphicsPatch, Colorfoot");
+            new Hook(colorfootpg.GetMethod("ApplyPalette", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("Colorfoot_ApplyPalette_fix", BindingFlags.NonPublic | BindingFlags.Static));
+        }
 
-        public static PlayerGraphicsCosmeticsAdaptor[] playerAdaptors = new PlayerGraphicsCosmeticsAdaptor[4];
-        public static List<PlayerGraphicsCosmeticsAdaptor> ghostAdaptors = new List<PlayerGraphicsCosmeticsAdaptor>();
+        //public static PlayerGraphicsCosmeticsAdaptor[] playerAdaptors = new PlayerGraphicsCosmeticsAdaptor[4];
+        //public static List<PlayerGraphicsCosmeticsAdaptor> ghostAdaptors = new List<PlayerGraphicsCosmeticsAdaptor>();
+        public static WeakReference[] playerAdaptors = new WeakReference[4];
+        public static List<WeakReference> ghostAdaptors = new List<WeakReference>();
         protected static PlayerGraphicsCosmeticsAdaptor getAdaptor(PlayerGraphics instance)
         {
             PlayerState playerState = (instance.owner as Player).playerState;
             if (!playerState.isGhost)
             {
-                //Debug.LogError("Retreiving LS Adaptor for player " + playerState.playerNumber);
-                return playerAdaptors[playerState.playerNumber];
+                // Debug.LogError("LizardSkin: Retreiving LS Adaptor for player " + playerState.playerNumber);
+                return playerAdaptors[playerState.playerNumber].Target as PlayerGraphicsCosmeticsAdaptor;
             }
             PlayerGraphicsCosmeticsAdaptor toReturn = null;
-            for(int i = ghostAdaptors.Count; i >= 0; i--)
+            for(int i = ghostAdaptors.Count-1; i >= 0; i--)
             {
-                if (ghostAdaptors[i].graphics.owner.slatedForDeletetion)
+                if (!ghostAdaptors[i].IsAlive || (ghostAdaptors[i].Target as PlayerGraphicsCosmeticsAdaptor).graphics.owner.slatedForDeletetion)
                 {
                     ghostAdaptors.RemoveAt(i);
                 }
-                else if (toReturn is null && ghostAdaptors[i].pGraphics == instance)
+                else if (toReturn is null && (ghostAdaptors[i].Target as PlayerGraphicsCosmeticsAdaptor).pGraphics == instance)
                 {
-                    toReturn = ghostAdaptors[i];
+                    toReturn = ghostAdaptors[i].Target as PlayerGraphicsCosmeticsAdaptor;
                 }
             }
             return toReturn;
@@ -61,12 +67,12 @@ namespace LizardSkin
             PlayerState playerState = (adaptor.graphics.owner as Player).playerState;
             if (!playerState.isGhost)
             {
-                //Debug.LogError("Adding LS Adaptor for player " + playerState.playerNumber);
-                playerAdaptors[playerState.playerNumber] = adaptor;
+                // Debug.LogError("LizardSkin: Adding LS Adaptor for player " + playerState.playerNumber);
+                playerAdaptors[playerState.playerNumber] = new WeakReference(adaptor);
             }
             else
             {
-                ghostAdaptors.Add(adaptor);
+                ghostAdaptors.Add(new WeakReference(adaptor));
             }
         }
 
@@ -74,7 +80,18 @@ namespace LizardSkin
         protected static void PlayerGraphics_ctor_hk(On.PlayerGraphics.orig_ctor orig, PlayerGraphics instance, PhysicalObject ow)
         {
             orig(instance, ow);
-            addAdaptor(new PlayerGraphicsCosmeticsAdaptor(instance));
+            Type fpg = Type.GetType("FancySlugcats.FancyPlayerGraphics, FancySlugcats");
+            if (fpg != null && fpg.IsInstanceOfType(instance))
+            {
+                // skip default constructor if Fancy
+                Debug.LogError("LizardSkin: Skipping default adaptor, Fancy detected");
+                return;
+            }
+
+            PlayerGraphicsCosmeticsAdaptor adaptor = new PlayerGraphicsCosmeticsAdaptor(instance);
+            System.Array.Resize(ref instance.bodyParts, instance.bodyParts.Length + 1);
+            instance.bodyParts[instance.bodyParts.Length - 1] = adaptor;
+            addAdaptor(adaptor);
         }
         protected static void PlayerGraphics_Reset_hk(On.PlayerGraphics.orig_Reset orig, PlayerGraphics instance)
         {
@@ -104,6 +121,16 @@ namespace LizardSkin
             getAdaptor(instance).AddToContainer(sLeaser, rCam, fcontainer);
         }
 
+        public delegate void Colorfoot_ApplyPalette(On.PlayerGraphics.orig_ApplyPalette orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette);
+        protected static void Colorfoot_ApplyPalette_fix(Colorfoot_ApplyPalette orig_hook, On.PlayerGraphics.orig_ApplyPalette orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
+        {
+            orig_hook(orig, instance, sLeaser, rCam, palette);
+            if (Colorfoot.LegMod.config.setting == 2)
+            {
+                getAdaptor(instance).ApplyPalette(sLeaser, rCam, palette);
+            }
+        }
+
         protected static void PlayerGraphics_DrawSprites_hk(On.PlayerGraphics.orig_DrawSprites orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
         {
             orig(instance, sLeaser, rCam, timeStacker, camPos);
@@ -129,9 +156,15 @@ namespace LizardSkin
         }
 
         Type jolly_ref;
+        Type custail_ref;
+        Type colorfoot_ref;
         public PlayerGraphicsCosmeticsAdaptor(PlayerGraphics pGraphics) : base(pGraphics)
         {
             jolly_ref = Type.GetType("JollyCoop.PlayerGraphicsHK, JollyCoop");
+
+            custail_ref = Type.GetType("CustomTail.CustomTail, CustomTail");
+
+            colorfoot_ref = Type.GetType("Colorfoot.LegMod, Colorfoot");
 
             this.bodyLength = this.pGraphics.player.bodyChunkConnections[0].distance;
             this.tailLength = 0f;
@@ -153,9 +186,10 @@ namespace LizardSkin
             this.cosmetics = new List<GenericCosmeticTemplate>();
             this.extraSprites = 0;
 
-            this.AddCosmetic(new SlugcatTailTuft(this));
-            this.AddCosmetic(new SlugcatTailTuft(this));
-            this.AddCosmetic(new SlugcatTailTuft(this));
+            //this.AddCosmetic(new GenericTailTuft(this));
+            this.AddCosmetic(new GenericSpineSpikes(this));
+            this.AddCosmetic(new GenericTailTuft(this));
+            this.AddCosmetic(new GenericTailTuft(this));
 
             //for(int i = 0; i < (this.cosmetics[0] as SlugcatTailTuft).scalesPositions.Length; i++)
             //         {
@@ -266,6 +300,15 @@ namespace LizardSkin
             return new LizardGraphics.LizardSpineData(spineFactor, Vector2.Lerp(vector, vector2, t), outerPos, normalized, vector3, rot, rad);
         }
 
+        public Color color_from_colorfoot(Color color)
+        {
+            if (Colorfoot.LegMod.config.setting != 0)
+            {
+                return Colorfoot.PlayerGraphicsPatch.bodyColors[pGraphics.player.playerState.slugcatCharacter];
+            }
+            return color;
+        }
+
         public Color color_from_jolly(Color color)
         {
             if (pGraphics.player.room != null && !pGraphics.player.room.game.IsStorySession)
@@ -277,33 +320,65 @@ namespace LizardSkin
                 return color;
             }
             color = JollyCoop.JollyMod.config.playerBodyColors[pGraphics.player.playerState.playerNumber];
-            if (pGraphics.malnourished > 0f)
-            {
-                float num = (!pGraphics.player.Malnourished) ? Mathf.Max(0f, pGraphics.malnourished - 0.005f) : pGraphics.malnourished;
-                color = Color.Lerp(color, Color.gray, 0.4f * num);
-            }
+            
             return color;
         }
 
         public override Color BodyColor(float y)
         {
+
+            if (y < this.bodyLength / this.BodyAndTailLength || this.custail_ref == null)
+            {
+                return BaseBodyColor();
+            }
+
+            float tailFactor = Mathf.InverseLerp(this.bodyLength / this.BodyAndTailLength, 1f, y);
+            return CustomTailColor(tailFactor);
+        }
+
+        public virtual Color BaseBodyColor()
+        {
             Color color = PlayerGraphics.SlugcatColor((pGraphics.player.State as PlayerState).slugcatCharacter);
+
             if (jolly_ref != null)
             {
                 color = color_from_jolly(color);
             }
+
+            // Vanilla and Jolly
+            if (pGraphics.malnourished > 0f)
+            {
+                float num = (!pGraphics.player.Malnourished) ? Mathf.Max(0f, pGraphics.malnourished - 0.005f) : pGraphics.malnourished;
+                color = Color.Lerp(color, Color.gray, 0.4f * num);
+            }
+
+            if (colorfoot_ref != null)
+            {
+                color = color_from_colorfoot(color);
+            }
+
             return color;
-            //if (y < this.bodyLength / this.BodyAndTailLength || this.cosmeticsParams.tailColor == 0f)
-            //            {
-            //                return PlayerGraphics.SlugcatColor((pGraphics.player.State as PlayerState).slugcatCharacter);
-            //            }
-            //            float value = Mathf.InverseLerp(this.bodyLength / this.BodyAndTailLength, 1f, y);
-            //            float num = Mathf.Clamp(Mathf.InverseLerp(this.cosmeticsParams.tailColorationStart, 0.95f, value), 0f, 1f);
-            //            num = Mathf.Pow(num, this.cosmeticsParams.tailColorationExponent) * this.cosmeticsParams.tailColor;
-            //            return Color.Lerp(this.palette.blackColor, this.effectColor, num);
         }
 
-        public override Color HeadColor(float v)
+        public virtual Color CustomTailColor(float tailFactor)
+        {
+            CustomTail.TailConfig tailConfig = CustomTail.CustomTail.GetTailConfig(this.pGraphics.player.playerState.slugcatCharacter);
+
+            Color color = BaseBodyColor();
+            Color color2 = tailConfig.baseTint;
+            Color color3 = tailConfig.tipTint;
+            if (color2 == Color.black)
+            {
+                color2 = color;
+            }
+            if (color3 == Color.black)
+            {
+                color3 = color;
+            }
+            return Color.Lerp(color2, color3, tailFactor);
+        }
+
+        public override Color HeadColor(float timeStacker)
         {
             //return PlayerGraphics.SlugcatColor((pGraphics.player.State as PlayerState).slugcatCharacter);
             return BodyColor(0f);

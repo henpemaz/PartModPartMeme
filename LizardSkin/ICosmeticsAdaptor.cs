@@ -16,6 +16,7 @@ namespace LizardSkin
         float showDominance { get;}
 
         int firstSprite { get;}
+        float depthRotation { get; }
 
         void AddCosmetic(GenericCosmeticTemplate cosmetic);
         void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette);

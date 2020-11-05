@@ -76,6 +76,28 @@ namespace LizardSkin
             {
                 Debug.LogError("LizardSkin: NOT FOUND Jolly");
             }
+
+            Type custail_ref = Type.GetType("CustomTail.CustomTail, CustomTail");
+            if (custail_ref != null)
+            {
+                Debug.LogError("LizardSkin: FOUND CustomTail");
+                // No hookies
+            }
+            else
+            {
+                Debug.LogError("LizardSkin: NOT FOUND CustomTail");
+            }
+
+            Type colorfoot_ref = Type.GetType("Colorfoot.LegMod, Colorfoot");
+            if (colorfoot_ref != null)
+            {
+                Debug.LogError("LizardSkin: FOUND Colorfoot");
+                PlayerGraphicsCosmeticsAdaptor.ApplyHooksToColorfootPlayerGraphicsPatch();
+            }
+            else
+            {
+                Debug.LogError("LizardSkin: NOT FOUND Colorfoot");
+            }
         }
     }
 }

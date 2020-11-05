@@ -34,6 +34,12 @@
     <Reference Include="Assembly-CSharp - publicitystuntd">
       <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
     </Reference>
+    <Reference Include="Colorfoot">
+      <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\Colorfoot.dll</HintPath>
+    </Reference>
+    <Reference Include="CustomTail">
+      <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\CustomTail.dll</HintPath>
+    </Reference>
     <Reference Include="FancySlugcats">
       <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\FancySlugcats.dll</HintPath>
     </Reference>
@@ -64,6 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FancyPlayerGraphicsCosmeticsAdaptor.cs" />
+    <Compile Include="GenericSpineSpikes.cs" />
     <Compile Include="ICosmeticsAdaptor.cs" />
     <Compile Include="GenericCosmeticsAdaptor.cs" />
     <Compile Include="PlayerGraphicsCosmeticsAdaptor.cs" />
@@ -73,7 +80,7 @@
     <Compile Include="LizardSkin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="GenericBodyScales.cs" />
-    <Compile Include="SlugcatTailTuft.cs" />
+    <Compile Include="GenericTailTuft.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -5,9 +5,9 @@ namespace LizardSkin
     public abstract partial class GenericCosmeticTemplate
 	{
 		// Token: 0x06001F2A RID: 7978 RVA: 0x001D869C File Offset: 0x001D689C
-		public GenericCosmeticTemplate(ICosmeticsAdaptor pGraphics)
+		public GenericCosmeticTemplate(ICosmeticsAdaptor iGraphics)
 		{
-			this.iGraphics = pGraphics;
+			this.iGraphics = iGraphics;
 		}
 
 		// Token: 0x06001F2B RID: 7979 RVA: 0x001D86B4 File Offset: 0x001D68B4

@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace LizardSkin
 {
-    public abstract class GenericCosmeticsAdaptor : ICosmeticsAdaptor
+    public abstract class GenericCosmeticsAdaptor : BodyPart, ICosmeticsAdaptor
     {
         //protected GraphicsModule _graphics;
         public GraphicsModule graphics { get ; protected set; }
@@ -19,14 +19,15 @@ namespace LizardSkin
         public CosmeticsParams cosmeticsParams { get; protected set; }
         public List<GenericCosmeticTemplate> cosmetics { get; protected set; }
 
-        protected float depthRotation { get; set; }
+        public float depthRotation { get; set; }
         protected float lastDepthRotation { get; set; }
         public int firstSprite { get; protected set; }
         public int extraSprites { get; protected set; }
 
+        // Possibly unused, I'm getting first sprite on sprite initialization and pulling some property wizardry on the cosmeticstemplates
         public abstract int getFirstSpriteImpl();
 
-        public GenericCosmeticsAdaptor(GraphicsModule graphicsModule)
+        public GenericCosmeticsAdaptor(GraphicsModule graphicsModule) : base(graphicsModule)
         {
             this.graphics = graphicsModule;
 
@@ -44,7 +45,7 @@ namespace LizardSkin
             this.extraSprites += cosmetic.numberOfSprites;
         }
 
-        public virtual void Update()
+        public override void Update()
         {
             this.showDominance = Mathf.Clamp(this.showDominance - 1f / Mathf.Lerp(60f, 120f, UnityEngine.Random.value), 0f, 1f);
 
@@ -134,6 +135,7 @@ namespace LizardSkin
 
         public virtual void Reset()
         {
+            base.Reset(graphics.owner.firstChunk.pos);
 
             for (int l = 0; l < this.cosmetics.Count; l++)
             {
@@ -147,7 +149,7 @@ namespace LizardSkin
 
         public abstract Color BodyColor(float y);
 
-        public abstract Color HeadColor(float v);
+        public abstract Color HeadColor(float timeStacker);
     }
     public struct CosmeticsParams
     {

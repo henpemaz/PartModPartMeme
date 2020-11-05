@@ -49,7 +49,11 @@ namespace LizardSkin
         {
             // Debug.LogError("FancyPlayerGraphics HOOK WAS CALLED");
             orig(instance, ow);
-            addAdaptor(new FancyPlayerGraphicsCosmeticsAdaptor(instance));
+            FancyPlayerGraphicsCosmeticsAdaptor adaptor = new FancyPlayerGraphicsCosmeticsAdaptor(instance);
+            System.Array.Resize(ref instance.bodyParts, instance.bodyParts.Length + 1);
+            instance.bodyParts[instance.bodyParts.Length - 1] = adaptor;
+            addAdaptor(adaptor);
+            //addAdaptor(new FancyPlayerGraphicsCosmeticsAdaptor(instance));
         }
 
         protected override FNode getOnTopNode(RoomCamera.SpriteLeaser sLeaser)
@@ -67,12 +71,12 @@ namespace LizardSkin
             return sLeaser.sprites[(int)fpg_ref.GetField("firstTailSprite", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this.pGraphics)];
         }
 
-        public override Color BodyColor(float y)
+        public override Color BaseBodyColor()
         {
-            /// Uuuuuugh 
-            Color color = PlayerGraphics.SlugcatColor(pGraphics.player.playerState.slugcatCharacter);
-            bool flag = pGraphics.malnourished > 0f;
-            if (flag)
+            // Nope, that's not how it works, Fancy will not use jolly's colors
+            // Color color = base.BaseBodyColor(y);
+            Color color = PlayerGraphics.SlugcatColor((pGraphics.player.State as PlayerState).slugcatCharacter);
+            if (pGraphics.malnourished > 0f)
             {
                 float num = (!pGraphics.player.Malnourished) ? Mathf.Max(0f, pGraphics.malnourished - 0.005f) : pGraphics.malnourished;
                 color = Color.Lerp(color, Color.gray, 0.4f * num);
