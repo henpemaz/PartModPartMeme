@@ -17,7 +17,16 @@ namespace LizardSkin
 
         int firstSprite { get;}
         float depthRotation { get; }
+        float headDepthRotation { get; }
+        float lastDepthRotation { get; }
+        float lastHeadDepthRotation { get; }
 
+        BodyPart head { get; }
+        BodyChunk mainBodyChunk { get; }
+
+        PhysicalObject owner { get; }
+
+        CosmeticsParams cosmeticsParams { get; }
         void AddCosmetic(GenericCosmeticTemplate cosmetic);
         void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette);
         void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam);

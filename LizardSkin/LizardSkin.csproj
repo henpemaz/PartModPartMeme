@@ -70,7 +70,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FancyPlayerGraphicsCosmeticsAdaptor.cs" />
+    <Compile Include="GenericAntennae.cs" />
+    <Compile Include="GenericAxolotlGills.cs" />
+    <Compile Include="GenericBumpHawk.cs" />
+    <Compile Include="GenericJumpRings.cs" />
+    <Compile Include="GenericLongHeadScales.cs" />
+    <Compile Include="GenericLongShoulderScales.cs" />
+    <Compile Include="GenericShortBodyScales.cs" />
     <Compile Include="GenericSpineSpikes.cs" />
+    <Compile Include="GenericTailFin.cs" />
+    <Compile Include="GenericTailGeckoScales.cs" />
+    <Compile Include="GenericWhiskers.cs" />
+    <Compile Include="GenericWingScales.cs" />
     <Compile Include="ICosmeticsAdaptor.cs" />
     <Compile Include="GenericCosmeticsAdaptor.cs" />
     <Compile Include="PlayerGraphicsCosmeticsAdaptor.cs" />

@@ -7,6 +7,13 @@ namespace LizardSkin
 {
     public abstract class GenericCosmeticsAdaptor : BodyPart, ICosmeticsAdaptor
     {
+        protected static void LogMethodName()
+        {
+            System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace();
+            System.Diagnostics.StackFrame stackFrame = stackTrace.GetFrame(1);
+            System.Reflection.MethodBase methodBase = stackFrame.GetMethod();
+            // Debug.Log("LizardSkin: " + methodBase.Name);
+        }
         //protected GraphicsModule _graphics;
         public GraphicsModule graphics { get ; protected set; }
 
@@ -20,18 +27,29 @@ namespace LizardSkin
         public List<GenericCosmeticTemplate> cosmetics { get; protected set; }
 
         public float depthRotation { get; set; }
-        protected float lastDepthRotation { get; set; }
+        public float headDepthRotation { get; set; }
+        public float lastHeadDepthRotation { get; set; }
+        public float lastDepthRotation { get; set; }
         public int firstSprite { get; protected set; }
         public int extraSprites { get; protected set; }
+
+        public BodyPart head { get => this.getHeadImpl(); }
+
+        public BodyChunk mainBodyChunk { get => this.graphics.owner.firstChunk; }
+
+        PhysicalObject ICosmeticsAdaptor.owner { get => this.graphics.owner; }
 
         // Possibly unused, I'm getting first sprite on sprite initialization and pulling some property wizardry on the cosmeticstemplates
         public abstract int getFirstSpriteImpl();
 
+        public abstract BodyPart getHeadImpl();
+
         public GenericCosmeticsAdaptor(GraphicsModule graphicsModule) : base(graphicsModule)
         {
+            LogMethodName();
             this.graphics = graphicsModule;
 
-            this.cosmeticsParams = new CosmeticsParams(0.5f, 0.5f);
+            this.cosmeticsParams = new CosmeticsParams(0.5f, 0.5f, 0.5f);
 
             this.cosmetics = new List<GenericCosmeticTemplate>();
             this.extraSprites = 0;
@@ -40,6 +58,7 @@ namespace LizardSkin
 
         public virtual void AddCosmetic(GenericCosmeticTemplate cosmetic)
         {
+            LogMethodName();
             this.cosmetics.Add(cosmetic);
             cosmetic.startSprite = this.extraSprites;
             this.extraSprites += cosmetic.numberOfSprites;
@@ -61,8 +80,12 @@ namespace LizardSkin
 
         public virtual void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
         {
+            LogMethodName();
             this.firstSprite = sLeaser.sprites.Length;
+
+            // Debug.Log("Before: " + sLeaser.sprites.Length);
             System.Array.Resize(ref sLeaser.sprites, this.firstSprite + this.extraSprites);
+            // Debug.Log("After: " + sLeaser.sprites.Length);
             for (int l = 0; l < this.cosmetics.Count; l++)
             {
                 this.cosmetics[l].InitiateSprites(sLeaser, rCam);
@@ -72,6 +95,7 @@ namespace LizardSkin
 
         public virtual void AddToContainer(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
         {
+            LogMethodName();
             if (newContatiner == null)
             {
                 newContatiner = rCam.ReturnFContainer("Midground");
@@ -107,7 +131,6 @@ namespace LizardSkin
                     this.cosmetics[m].AddToContainer(sLeaser, rCam, onTop);
                 }
             }
-
         }
 
         protected abstract FNode getOnTopNode(RoomCamera.SpriteLeaser sLeaser);
@@ -126,6 +149,7 @@ namespace LizardSkin
 
         public virtual void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
         {
+            LogMethodName();
             this.palette = palette;
             for (int i = 0; i < this.cosmetics.Count; i++)
             {
@@ -135,6 +159,7 @@ namespace LizardSkin
 
         public virtual void Reset()
         {
+            LogMethodName();
             base.Reset(graphics.owner.firstChunk.pos);
 
             for (int l = 0; l < this.cosmetics.Count; l++)
@@ -155,11 +180,13 @@ namespace LizardSkin
     {
         internal float fatness;
         internal float tailFatness;
+        internal float headSize;
 
-        public CosmeticsParams(float fatness, float tailFatness)
+        public CosmeticsParams(float fatness, float tailFatness, float headSize)
         {
             this.fatness = fatness;
             this.tailFatness = tailFatness;
+            this.headSize = headSize;
         }
     }
 }

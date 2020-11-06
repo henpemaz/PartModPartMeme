@@ -13,6 +13,7 @@ namespace LizardSkin
 
         public static void ApplyHooksToPlayerGraphics()
         {
+            LogMethodName();
             On.PlayerGraphics.ctor += PlayerGraphics_ctor_hk;
             On.PlayerGraphics.Update += PlayerGraphics_Update_hk;
             On.PlayerGraphics.InitiateSprites += PlayerGraphics_InitiateSprites_hk;
@@ -24,6 +25,7 @@ namespace LizardSkin
 
         public static void ApplyHooksToJollyPlayerGraphicsHK()
         {
+            LogMethodName();
             Type jollypg = Type.GetType("JollyCoop.PlayerGraphicsHK, JollyCoop");
             new Hook(jollypg.GetMethod("PlayerGraphics_ApplyPalette", BindingFlags.NonPublic | BindingFlags.Static), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("PlayerGraphics_ApplyPalette_jolly_fix", BindingFlags.NonPublic | BindingFlags.Static));
             new Hook(jollypg.GetMethod("SwichtLayersVanilla", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("Jolly_SwichtLayersVanilla_fix", BindingFlags.NonPublic | BindingFlags.Static));
@@ -31,6 +33,7 @@ namespace LizardSkin
 
         public static void ApplyHooksToColorfootPlayerGraphicsPatch()
         {
+            LogMethodName();
             Type colorfootpg = Type.GetType("Colorfoot.PlayerGraphicsPatch, Colorfoot");
             new Hook(colorfootpg.GetMethod("ApplyPalette", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("Colorfoot_ApplyPalette_fix", BindingFlags.NonPublic | BindingFlags.Static));
         }
@@ -64,6 +67,7 @@ namespace LizardSkin
 
         protected static void addAdaptor(PlayerGraphicsCosmeticsAdaptor adaptor)
         {
+            LogMethodName();
             PlayerState playerState = (adaptor.graphics.owner as Player).playerState;
             if (!playerState.isGhost)
             {
@@ -79,12 +83,13 @@ namespace LizardSkin
 
         protected static void PlayerGraphics_ctor_hk(On.PlayerGraphics.orig_ctor orig, PlayerGraphics instance, PhysicalObject ow)
         {
+            LogMethodName();
             orig(instance, ow);
             Type fpg = Type.GetType("FancySlugcats.FancyPlayerGraphics, FancySlugcats");
             if (fpg != null && fpg.IsInstanceOfType(instance))
             {
                 // skip default constructor if Fancy
-                Debug.LogError("LizardSkin: Skipping default adaptor, Fancy detected");
+                // Debug.Log("LizardSkin: Skipping default adaptor, Fancy detected");
                 return;
             }
 
@@ -95,12 +100,14 @@ namespace LizardSkin
         }
         protected static void PlayerGraphics_Reset_hk(On.PlayerGraphics.orig_Reset orig, PlayerGraphics instance)
         {
+            LogMethodName();
             orig(instance);
             getAdaptor(instance).Reset();
         }
 
         protected static void PlayerGraphics_ApplyPalette_hk(On.PlayerGraphics.orig_ApplyPalette orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
         {
+            LogMethodName();
             orig(instance, sLeaser, rCam, palette);
             getAdaptor(instance).ApplyPalette(sLeaser, rCam, palette);
         }
@@ -139,14 +146,26 @@ namespace LizardSkin
 
         protected static void PlayerGraphics_InitiateSprites_hk(On.PlayerGraphics.orig_InitiateSprites orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
         {
+            LogMethodName();
+            orig_InitiateSprites_lock = true;
             orig(instance, sLeaser, rCam);
+            orig_InitiateSprites_lock = false;
+
             getAdaptor(instance).InitiateSprites(sLeaser, rCam);
         }
 
         protected static void PlayerGraphics_AddToContainer_hk(On.PlayerGraphics.orig_AddToContainer orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
         {
+            LogMethodName();
             orig(instance, sLeaser, rCam, newContatiner);
-            getAdaptor(instance).AddToContainer(sLeaser, rCam, newContatiner);
+            if (orig_InitiateSprites_lock)
+            {
+                // Debug.Log("LizardSkin: Avoiding orig_InitiateSprites_lock");
+            }
+            else
+            {
+                getAdaptor(instance).AddToContainer(sLeaser, rCam, newContatiner);
+            }
         }
 
         protected static void PlayerGraphics_Update_hk(On.PlayerGraphics.orig_Update orig, PlayerGraphics instance)
@@ -158,12 +177,13 @@ namespace LizardSkin
         Type jolly_ref;
         Type custail_ref;
         Type colorfoot_ref;
+        protected static bool orig_InitiateSprites_lock; // initialize calls palette
+
         public PlayerGraphicsCosmeticsAdaptor(PlayerGraphics pGraphics) : base(pGraphics)
         {
+            LogMethodName();
             jolly_ref = Type.GetType("JollyCoop.PlayerGraphicsHK, JollyCoop");
-
             custail_ref = Type.GetType("CustomTail.CustomTail, CustomTail");
-
             colorfoot_ref = Type.GetType("Colorfoot.LegMod, Colorfoot");
 
             this.bodyLength = this.pGraphics.player.bodyChunkConnections[0].distance;
@@ -178,18 +198,29 @@ namespace LizardSkin
             this.depthRotation = 0;
             this.lastDepthRotation = this.depthRotation;
 
-
             this.effectColor = Custom.HSL2RGB(Custom.WrappedRandomVariation(0.49f, 0.04f, 0.6f), 1f, Custom.ClampedRandomVariation(0.5f, 0.15f, 0.1f));
 
-            this.cosmeticsParams = new CosmeticsParams(0.5f, 0.5f);
-
-            this.cosmetics = new List<GenericCosmeticTemplate>();
-            this.extraSprites = 0;
-
             //this.AddCosmetic(new GenericTailTuft(this));
-            this.AddCosmetic(new GenericSpineSpikes(this));
-            this.AddCosmetic(new GenericTailTuft(this));
-            this.AddCosmetic(new GenericTailTuft(this));
+            //this.AddCosmetic(new GenericSpineSpikes(this));
+
+            //this.AddCosmetic(new GenericAxolotlGills(this));
+            //this.AddCosmetic(new GenericTailFin(this));
+
+            //this.AddCosmetic(new GenericWingScales(this));
+            //this.AddCosmetic(new GenericTailGeckoScales(this));
+            //this.AddCosmetic(new GenericJumpRings(this));
+
+            //this.AddCosmetic(new GenericBumpHawk(this));
+
+            //this.AddCosmetic(new GenericLongShoulderScales(this));
+            //this.AddCosmetic(new GenericShortBodyScales(this));
+
+            //this.AddCosmetic(new GenericLongHeadScales(this));
+
+            //this.AddCosmetic(new GenericWhiskers(this));
+            //this.AddCosmetic(new GenericAntennae(this));
+
+            this.AddCosmetic(new GenericTailTuft(this)); this.AddCosmetic(new GenericTailTuft(this)); this.AddCosmetic(new GenericTailTuft(this));
 
             //for(int i = 0; i < (this.cosmetics[0] as SlugcatTailTuft).scalesPositions.Length; i++)
             //         {
@@ -208,16 +239,7 @@ namespace LizardSkin
                 this.tailLength += this.pGraphics.tail[l].connectionRad;
             }
 
-            this.showDominance = Mathf.Clamp(this.showDominance - 1f / Mathf.Lerp(60f, 120f, UnityEngine.Random.value), 0f, 1f);
-
-            this.lastDepthRotation = this.depthRotation;
-            float newRotation = 0;
-            this.depthRotation = Mathf.Lerp(this.depthRotation, newRotation, 0.1f);
-
-            for (int l = 0; l < this.cosmetics.Count; l++)
-            {
-                this.cosmetics[l].Update();
-            }
+            base.Update();
         }
 
         protected override FNode getOnTopNode(RoomCamera.SpriteLeaser sLeaser)
@@ -381,12 +403,17 @@ namespace LizardSkin
         public override Color HeadColor(float timeStacker)
         {
             //return PlayerGraphics.SlugcatColor((pGraphics.player.State as PlayerState).slugcatCharacter);
-            return BodyColor(0f);
+            return BaseBodyColor();
         }
 
         public override int getFirstSpriteImpl()
         {
             return 12;
+        }
+
+        public override BodyPart getHeadImpl()
+        {
+            return this.pGraphics.head;
         }
     }
 }
