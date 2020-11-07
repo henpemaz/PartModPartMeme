@@ -91,10 +91,5 @@ namespace LizardSkin
 
             return color;
         }
-
-        public override int getFirstSpriteImpl()
-        {
-            return (int)fpg_ref.GetField("totalSprites", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this.pGraphics);
-        }
     }
 }

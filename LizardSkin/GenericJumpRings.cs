@@ -4,8 +4,9 @@ using RWCustom;
 namespace LizardSkin
 {
     internal class GenericJumpRings : GenericCosmeticTemplate
-    {
-        public GenericJumpRings(ICosmeticsAdaptor iGraphics) : base(iGraphics)
+	{
+		// Token: 0x06001F6E RID: 8046 RVA: 0x001DD3F0 File Offset: 0x001DB5F0
+		public GenericJumpRings(ICosmeticsAdaptor iGraphics) : base(iGraphics)
 		{
 			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.InFront;
 			this.numberOfSprites = 8;
@@ -42,8 +43,7 @@ namespace LizardSkin
 		{
 			float to = Mathf.Lerp(this.iGraphics.lastDepthRotation, this.iGraphics.depthRotation, timeStacker);
 			float from = Mathf.Lerp(this.iGraphics.lastHeadDepthRotation, this.iGraphics.headDepthRotation, timeStacker);
-			//Color color = this.iGraphics.HeadColor(timeStacker);
-			Color color = this.iGraphics.effectColor;
+			Color color = this.iGraphics.HeadColor(timeStacker);
 			float num = 1f;
 			//if (this.iGraphics.lizard.animation == Lizard.Animation.PrepareToJump)
 			//{
@@ -56,12 +56,10 @@ namespace LizardSkin
 				LizardGraphics.LizardSpineData lizardSpineData = this.iGraphics.SpinePosition(s, timeStacker);
 				Vector2 vector = lizardSpineData.dir;
 				Vector2 pos = lizardSpineData.pos;
-
-				/// UUUUUH WHAT IS GOING ONNNNN
-				//if (i == 0)
-				//{
-				//	vector = (vector - Custom.DirVec(Vector2.Lerp(this.iGraphics.drawPositions[0, 1], this.iGraphics.drawPositions[0, 0], timeStacker), Vector2.Lerp(this.iGraphics.head.lastPos, this.iGraphics.head.pos, timeStacker))).normalized;
-				//}
+				if (i == 0)
+				{
+					vector = (vector - Custom.DegToVec(this.iGraphics.HeadRotation(timeStacker))).normalized;
+				}
 				Vector2 a = Custom.PerpendicularVector(vector);
 				float num2 = 50f * Mathf.Lerp(from, to, (i != 0) ? 0.5f : 0.25f);
 				for (int j = 0; j < 2; j++)
@@ -69,16 +67,14 @@ namespace LizardSkin
 					Vector2 vector2 = Custom.DegToVec(num2 + (((float)j != 0f) ? 40f : -40f));
 					Vector2 vector3 = pos + a * lizardSpineData.rad * vector2.x;
 					Vector2 vector4 = vector;
-
-					/// FIX THIS IT LOOKS ALL SKEWED
-					//if (i == 0)
-					//{
-					//	vector4 = (vector4 - 2f * Custom.DirVec(vector3, Vector2.Lerp(this.iGraphics.head.lastPos, this.iGraphics.head.pos, timeStacker)) * Mathf.Abs(vector2.y)).normalized;
-					//}
-					//else
-					//{
-					//	vector4 = (vector4 + 2f * Custom.DirVec(vector3, Vector2.Lerp(this.iGraphics.tail[0].lastPos, this.iGraphics.tail[0].pos, timeStacker)) * Mathf.Abs(vector2.y)).normalized;
-					//}
+					if (i == 0)
+					{
+						vector4 = (vector4 - 2f * Custom.DirVec(vector3, Vector2.Lerp(this.iGraphics.head.lastPos, this.iGraphics.head.pos, timeStacker)) * Mathf.Abs(vector2.y)).normalized;
+					}
+					else
+					{
+						vector4 = (vector4 + 2f * Custom.DirVec(vector3, Vector2.Lerp(this.iGraphics.baseOfTail.lastPos, this.iGraphics.baseOfTail.pos, timeStacker)) * Mathf.Abs(vector2.y)).normalized;
+					}
 					sLeaser.sprites[this.RingSprite(i, j, 0)].x = vector3.x - camPos.x;
 					sLeaser.sprites[this.RingSprite(i, j, 0)].y = vector3.y - camPos.y;
 					sLeaser.sprites[this.RingSprite(i, j, 0)].rotation = Custom.VecToDeg(vector4);

@@ -6,16 +6,23 @@ namespace LizardSkin
 {
     public interface ICosmeticsAdaptor
     {
+        // Tightly paired with GenericCosmeticsAdaptor... 
+        // This is not ideal but lowers the amount of changes inside cosmetics code by a lot
+
+
+        PhysicalObject owner { get; }
+        // I hate this one in particular
         GraphicsModule graphics { get; }
+
         List<GenericCosmeticTemplate> cosmetics { get;}
         float BodyAndTailLength { get; }
         float bodyLength { get;}
         float tailLength { get;}
         Color effectColor { get;}
         RoomPalette palette { get;}
-        float showDominance { get;}
-
         int firstSprite { get;}
+
+        float showDominance { get; }
         float depthRotation { get; }
         float headDepthRotation { get; }
         float lastDepthRotation { get; }
@@ -23,10 +30,11 @@ namespace LizardSkin
 
         BodyPart head { get; }
         BodyChunk mainBodyChunk { get; }
+        BodyPart baseOfTail { get; }
 
-        PhysicalObject owner { get; }
 
         CosmeticsParams cosmeticsParams { get; }
+
         void AddCosmetic(GenericCosmeticTemplate cosmetic);
         void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette);
         void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam);

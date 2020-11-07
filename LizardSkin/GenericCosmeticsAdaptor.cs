@@ -14,7 +14,7 @@ namespace LizardSkin
             System.Reflection.MethodBase methodBase = stackFrame.GetMethod();
             // Debug.Log("LizardSkin: " + methodBase.Name);
         }
-        //protected GraphicsModule _graphics;
+
         public GraphicsModule graphics { get ; protected set; }
 
         public float BodyAndTailLength { get => this.bodyLength + this.tailLength; }
@@ -22,7 +22,6 @@ namespace LizardSkin
         public float bodyLength { get; protected set; }
         public float tailLength { get; protected set; }
         public RoomPalette palette { get; protected set; }
-        public float showDominance { get; protected set; }
         public CosmeticsParams cosmeticsParams { get; protected set; }
         public List<GenericCosmeticTemplate> cosmetics { get; protected set; }
 
@@ -30,19 +29,20 @@ namespace LizardSkin
         public float headDepthRotation { get; set; }
         public float lastHeadDepthRotation { get; set; }
         public float lastDepthRotation { get; set; }
+
+        public float showDominance { get; protected set; }
+
         public int firstSprite { get; protected set; }
         public int extraSprites { get; protected set; }
 
         public BodyPart head { get => this.getHeadImpl(); }
+        public BodyPart baseOfTail { get => this.getBaseOfTailImpl(); }
 
         public BodyChunk mainBodyChunk { get => this.graphics.owner.firstChunk; }
 
         PhysicalObject ICosmeticsAdaptor.owner { get => this.graphics.owner; }
-
-        // Possibly unused, I'm getting first sprite on sprite initialization and pulling some property wizardry on the cosmeticstemplates
-        public abstract int getFirstSpriteImpl();
-
         public abstract BodyPart getHeadImpl();
+        public abstract BodyPart getBaseOfTailImpl();
 
         public GenericCosmeticsAdaptor(GraphicsModule graphicsModule) : base(graphicsModule)
         {
@@ -52,8 +52,6 @@ namespace LizardSkin
             this.cosmeticsParams = new CosmeticsParams(0.5f, 0.5f, 0.5f);
 
             this.cosmetics = new List<GenericCosmeticTemplate>();
-            this.extraSprites = 0;
-            this.firstSprite = 0;
         }
 
         public virtual void AddCosmetic(GenericCosmeticTemplate cosmetic)
@@ -64,14 +62,11 @@ namespace LizardSkin
             this.extraSprites += cosmetic.numberOfSprites;
         }
 
+        protected abstract void updateRotation();
+
         public override void Update()
         {
-            this.showDominance = Mathf.Clamp(this.showDominance - 1f / Mathf.Lerp(60f, 120f, UnityEngine.Random.value), 0f, 1f);
-
-            this.lastDepthRotation = this.depthRotation;
-            float newRotation = 0;
-            this.depthRotation = Mathf.Lerp(this.depthRotation, newRotation, 0.1f);
-
+            updateRotation();
             for (int l = 0; l < this.cosmetics.Count; l++)
             {
                 this.cosmetics[l].Update();

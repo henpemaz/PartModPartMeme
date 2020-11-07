@@ -10,6 +10,7 @@ namespace LizardSkin
     public class PlayerGraphicsCosmeticsAdaptor : GenericCosmeticsAdaptor
     {
         protected PlayerGraphics pGraphics { get => this.graphics as PlayerGraphics; }
+        protected Player player { get => this.graphics.owner as Player; }
 
         public static void ApplyHooksToPlayerGraphics()
         {
@@ -220,7 +221,9 @@ namespace LizardSkin
             //this.AddCosmetic(new GenericWhiskers(this));
             //this.AddCosmetic(new GenericAntennae(this));
 
-            this.AddCosmetic(new GenericTailTuft(this)); this.AddCosmetic(new GenericTailTuft(this)); this.AddCosmetic(new GenericTailTuft(this));
+            this.AddCosmetic(new GenericTailTuft(this));
+            this.AddCosmetic(new GenericAxolotlGills(this));
+            this.AddCosmetic(new GenericJumpRings(this));
 
             //for(int i = 0; i < (this.cosmetics[0] as SlugcatTailTuft).scalesPositions.Length; i++)
             //         {
@@ -239,6 +242,8 @@ namespace LizardSkin
                 this.tailLength += this.pGraphics.tail[l].connectionRad;
             }
 
+
+
             base.Update();
         }
 
@@ -255,6 +260,61 @@ namespace LizardSkin
         protected override FNode getBehindNode(RoomCamera.SpriteLeaser sLeaser)
         {
             return sLeaser.sprites[0];
+        }
+
+
+        static int debug_counter = 0;
+        protected override void updateRotation()
+        {
+            this.showDominance = Mathf.Clamp(this.showDominance - 1f / Mathf.Lerp(60f, 120f, UnityEngine.Random.value), 0f, 1f);
+
+            this.lastDepthRotation = this.depthRotation;
+            this.lastHeadDepthRotation = this.headDepthRotation;
+
+            float newRotation;
+
+            Vector2 upDir = Custom.DirVec(this.pGraphics.drawPositions[1, 0], this.pGraphics.drawPositions[0, 0]);
+            float upRot = Custom.VecToDeg(upDir);
+            Vector2 lookDir = this.pGraphics.lookDirection * 3f * (1f - this.player.sleepCurlUp);
+            if (this.player.sleepCurlUp > 0f)
+            {
+                lookDir.y -= 2f * this.player.sleepCurlUp;
+                lookDir.x -= 4f * Mathf.Sign(this.pGraphics.drawPositions[0, 0].x - this.pGraphics.drawPositions[1, 0].x) * this.player.sleepCurlUp;
+            }
+            else if (this.player.room.gravity != 0 && this.player.Consious)
+            {
+                if (this.player.bodyMode == Player.BodyModeIndex.Stand && this.player.input[0].x != 0)
+                { lookDir.x += 4f * Mathf.Sign(this.player.input[0].x); lookDir.y++; }
+                else if (this.player.bodyMode == Player.BodyModeIndex.Crawl)
+                { lookDir.x += 4f * Mathf.Sign(this.pGraphics.drawPositions[0, 0].x - this.pGraphics.drawPositions[1, 0].x); lookDir.y++; }
+            }
+            else { lookDir *= 0f; }
+            float lookRot = lookDir.magnitude > float.Epsilon ? (Custom.VecToDeg(lookDir) -
+                (this.player.Consious && this.player.bodyMode == Player.BodyModeIndex.Crawl ? 0f : upRot)) : 0f;
+            if (Mathf.Abs(lookRot) < 90f)
+            { newRotation = Custom.LerpMap(lookRot, 0f, Mathf.Sign(lookRot) * 90f, 0f, Mathf.Sign(lookRot) * 60f, 0.5f); }
+            else
+            { newRotation = Custom.LerpMap(lookRot, Mathf.Sign(lookRot) * 180f, Mathf.Sign(lookRot) * 90f, Mathf.Sign(lookRot) * 60f, 0f, 0.5f); }
+            // Tail rotation
+            //float totTailRot = newRotation, lastTailRot = -upRot;
+            //for (int t = 0; t < 4; t++)
+            //{
+            //    float tailRot = -Custom.AimFromOneVectorToAnother(t == 0 ? this.pGraphics.drawPositions[1, 0]
+            //        : this.pGraphics.tail[t - 1].pos, this.pGraphics.tail[t].pos);
+            //    tailRot -= lastTailRot; lastTailRot += tailRot;
+            //    totTailRot += tailRot;
+            //    //dbg[t] = tailRot;
+            //    zRot[1 + t, 0] = totTailRot < 0f ? Mathf.Clamp(totTailRot, -90f, 0f) : Mathf.Clamp(totTailRot, 0f, 90f);
+            //}
+
+            this.depthRotation = Mathf.Lerp(this.depthRotation, Mathf.Clamp(newRotation / 60f, -1f, 1f), 0.1f);
+            this.headDepthRotation = depthRotation;
+
+            debug_counter++;
+            if(debug_counter % 100 == 0)
+            {
+                Debug.Log("LizardSkin: depthRotation is " + depthRotation);
+            }
         }
 
         public override float HeadRotation(float timeStacker)
@@ -406,14 +466,14 @@ namespace LizardSkin
             return BaseBodyColor();
         }
 
-        public override int getFirstSpriteImpl()
-        {
-            return 12;
-        }
-
         public override BodyPart getHeadImpl()
         {
             return this.pGraphics.head;
+        }
+
+        public override BodyPart getBaseOfTailImpl()
+        {
+            return this.pGraphics.tail[0];
         }
     }
 }
