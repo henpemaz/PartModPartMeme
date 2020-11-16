@@ -9,9 +9,8 @@ namespace LizardSkin
 {
     public class PlayerGraphicsCosmeticsAdaptor : GenericCosmeticsAdaptor
     {
-        protected PlayerGraphics pGraphics { get => this.graphics as PlayerGraphics; }
-        protected Player player { get => this.graphics.owner as Player; }
-
+        // Hooks in here
+        #region Hooks
         public static void ApplyHooksToPlayerGraphics()
         {
             LogMethodName();
@@ -39,53 +38,23 @@ namespace LizardSkin
             new Hook(colorfootpg.GetMethod("ApplyPalette", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("Colorfoot_ApplyPalette_fix", BindingFlags.NonPublic | BindingFlags.Static));
         }
 
-        //public static PlayerGraphicsCosmeticsAdaptor[] playerAdaptors = new PlayerGraphicsCosmeticsAdaptor[4];
-        //public static List<PlayerGraphicsCosmeticsAdaptor> ghostAdaptors = new List<PlayerGraphicsCosmeticsAdaptor>();
-        public static WeakReference[] playerAdaptors = new WeakReference[4];
-        public static List<WeakReference> ghostAdaptors = new List<WeakReference>();
-        protected static PlayerGraphicsCosmeticsAdaptor getAdaptor(PlayerGraphics instance)
+        public static void InitDebugLabels(PlayerGraphics pg, PhysicalObject ow)
         {
-            PlayerState playerState = (instance.owner as Player).playerState;
-            if (!playerState.isGhost)
-            {
-                // Debug.LogError("LizardSkin: Retreiving LS Adaptor for player " + playerState.playerNumber);
-                return playerAdaptors[playerState.playerNumber].Target as PlayerGraphicsCosmeticsAdaptor;
-            }
-            PlayerGraphicsCosmeticsAdaptor toReturn = null;
-            for(int i = ghostAdaptors.Count-1; i >= 0; i--)
-            {
-                if (!ghostAdaptors[i].IsAlive || (ghostAdaptors[i].Target as PlayerGraphicsCosmeticsAdaptor).graphics.owner.slatedForDeletetion)
-                {
-                    ghostAdaptors.RemoveAt(i);
-                }
-                else if (toReturn is null && (ghostAdaptors[i].Target as PlayerGraphicsCosmeticsAdaptor).pGraphics == instance)
-                {
-                    toReturn = ghostAdaptors[i].Target as PlayerGraphicsCosmeticsAdaptor;
-                }
-            }
-            return toReturn;
+            pg.DEBUGLABELS = new DebugLabel[6];
+            pg.DEBUGLABELS[0] = new DebugLabel(ow, new Vector2(0f, 50f));
+            pg.DEBUGLABELS[1] = new DebugLabel(ow, new Vector2(0f, 40f));
+            pg.DEBUGLABELS[2] = new DebugLabel(ow, new Vector2(0f, 30f));
+            pg.DEBUGLABELS[3] = new DebugLabel(ow, new Vector2(0f, 20f));
+            pg.DEBUGLABELS[4] = new DebugLabel(ow, new Vector2(0f, 10f));
+            pg.DEBUGLABELS[5] = new DebugLabel(ow, new Vector2(0f, 0f));
         }
-
-        protected static void addAdaptor(PlayerGraphicsCosmeticsAdaptor adaptor)
-        {
-            LogMethodName();
-            PlayerState playerState = (adaptor.graphics.owner as Player).playerState;
-            if (!playerState.isGhost)
-            {
-                // Debug.LogError("LizardSkin: Adding LS Adaptor for player " + playerState.playerNumber);
-                playerAdaptors[playerState.playerNumber] = new WeakReference(adaptor);
-            }
-            else
-            {
-                ghostAdaptors.Add(new WeakReference(adaptor));
-            }
-        }
-
 
         protected static void PlayerGraphics_ctor_hk(On.PlayerGraphics.orig_ctor orig, PlayerGraphics instance, PhysicalObject ow)
         {
             LogMethodName();
             orig(instance, ow);
+            InitDebugLabels(instance, ow);
+
             Type fpg = Type.GetType("FancySlugcats.FancyPlayerGraphics, FancySlugcats");
             if (fpg != null && fpg.IsInstanceOfType(instance))
             {
@@ -145,6 +114,7 @@ namespace LizardSkin
             getAdaptor(instance).DrawSprites(sLeaser, rCam, timeStacker, camPos);
         }
 
+        protected static bool orig_InitiateSprites_lock; // initialize calls palette lock
         protected static void PlayerGraphics_InitiateSprites_hk(On.PlayerGraphics.orig_InitiateSprites orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
         {
             LogMethodName();
@@ -175,10 +145,70 @@ namespace LizardSkin
             getAdaptor(instance).Update();
         }
 
+        #endregion Hooks
+
+        // Static Adaptor lists and methods
+        #region AdaptorManagement
+        //public static PlayerGraphicsCosmeticsAdaptor[] playerAdaptors = new PlayerGraphicsCosmeticsAdaptor[4];
+        //public static List<PlayerGraphicsCosmeticsAdaptor> ghostAdaptors = new List<PlayerGraphicsCosmeticsAdaptor>();
+        public static WeakReference[] playerAdaptors = new WeakReference[4];
+        public static List<WeakReference> ghostAdaptors = new List<WeakReference>();
+        protected static PlayerGraphicsCosmeticsAdaptor getAdaptor(PlayerGraphics instance)
+        {
+            PlayerState playerState = (instance.owner as Player).playerState;
+            if (!playerState.isGhost)
+            {
+                // Debug.LogError("LizardSkin: Retreiving LS Adaptor for player " + playerState.playerNumber);
+                return playerAdaptors[playerState.playerNumber].Target as PlayerGraphicsCosmeticsAdaptor;
+            }
+            PlayerGraphicsCosmeticsAdaptor toReturn = null;
+            for (int i = ghostAdaptors.Count - 1; i >= 0; i--)
+            {
+                if (!ghostAdaptors[i].IsAlive || (ghostAdaptors[i].Target as PlayerGraphicsCosmeticsAdaptor).graphics.owner.slatedForDeletetion)
+                {
+                    ghostAdaptors.RemoveAt(i);
+                }
+                else if (toReturn is null && (ghostAdaptors[i].Target as PlayerGraphicsCosmeticsAdaptor).pGraphics == instance)
+                {
+                    toReturn = ghostAdaptors[i].Target as PlayerGraphicsCosmeticsAdaptor;
+                }
+            }
+            return toReturn;
+        }
+
+        protected static void addAdaptor(PlayerGraphicsCosmeticsAdaptor adaptor)
+        {
+            LogMethodName();
+            PlayerState playerState = (adaptor.graphics.owner as Player).playerState;
+            if (!playerState.isGhost)
+            {
+                // Debug.LogError("LizardSkin: Adding LS Adaptor for player " + playerState.playerNumber);
+                playerAdaptors[playerState.playerNumber] = new WeakReference(adaptor);
+            }
+            else
+            {
+                ghostAdaptors.Add(new WeakReference(adaptor));
+            }
+        }
+        #endregion AdaptorManagement
+
+
+        protected PlayerGraphics pGraphics { get => this.graphics as PlayerGraphics; }
+        protected Player player { get => this.graphics.owner as Player; }
+        
+        // Implementing properties
+        public override BodyPart head => this.pGraphics.head;
+        public override BodyPart baseOfTail => this.pGraphics.tail[0];
+        public override BodyChunk mainBodyChunk => this.player.mainBodyChunk;
+
+        protected override FNode getOnTopNode(RoomCamera.SpriteLeaser sLeaser) => sLeaser.sprites[6];
+        protected override FNode getBehindHeadNode(RoomCamera.SpriteLeaser sLeaser) => sLeaser.sprites[3];
+        protected override FNode getBehindNode(RoomCamera.SpriteLeaser sLeaser) => sLeaser.sprites[0];
+
+        // Compatibilification references
         Type jolly_ref;
         Type custail_ref;
         Type colorfoot_ref;
-        protected static bool orig_InitiateSprites_lock; // initialize calls palette
 
         public PlayerGraphicsCosmeticsAdaptor(PlayerGraphics pGraphics) : base(pGraphics)
         {
@@ -221,9 +251,11 @@ namespace LizardSkin
             //this.AddCosmetic(new GenericWhiskers(this));
             //this.AddCosmetic(new GenericAntennae(this));
 
+
             this.AddCosmetic(new GenericTailTuft(this));
-            this.AddCosmetic(new GenericAxolotlGills(this));
-            this.AddCosmetic(new GenericJumpRings(this));
+            this.AddCosmetic(new GenericLongHeadScales(this));
+            this.AddCosmetic(new GenericAntennae(this));
+
 
             //for(int i = 0; i < (this.cosmetics[0] as SlugcatTailTuft).scalesPositions.Length; i++)
             //         {
@@ -242,30 +274,20 @@ namespace LizardSkin
                 this.tailLength += this.pGraphics.tail[l].connectionRad;
             }
 
-
-
+            updateRotation();
             base.Update();
         }
 
-        protected override FNode getOnTopNode(RoomCamera.SpriteLeaser sLeaser)
+        protected void updateRotation()
         {
-            return sLeaser.sprites[6];
-        }
-
-        protected override FNode getBehindHeadNode(RoomCamera.SpriteLeaser sLeaser)
-        {
-            return sLeaser.sprites[3];
-        }
-
-        protected override FNode getBehindNode(RoomCamera.SpriteLeaser sLeaser)
-        {
-            return sLeaser.sprites[0];
-        }
-
-
-        static int debug_counter = 0;
-        protected override void updateRotation()
-        {
+            //if (this.pGraphics.player.input[0].jmp)
+            //{
+            //    this.showDominance += 0.05f;
+            //}
+            if (this.pGraphics.player.input[0].thrw)
+            {
+                this.showDominance += 0.2f;
+            }
             this.showDominance = Mathf.Clamp(this.showDominance - 1f / Mathf.Lerp(60f, 120f, UnityEngine.Random.value), 0f, 1f);
 
             this.lastDepthRotation = this.depthRotation;
@@ -275,26 +297,49 @@ namespace LizardSkin
 
             Vector2 upDir = Custom.DirVec(this.pGraphics.drawPositions[1, 0], this.pGraphics.drawPositions[0, 0]);
             float upRot = Custom.VecToDeg(upDir);
-            Vector2 lookDir = this.pGraphics.lookDirection * 3f * (1f - this.player.sleepCurlUp);
-            if (this.player.sleepCurlUp > 0f)
-            {
-                lookDir.y -= 2f * this.player.sleepCurlUp;
-                lookDir.x -= 4f * Mathf.Sign(this.pGraphics.drawPositions[0, 0].x - this.pGraphics.drawPositions[1, 0].x) * this.player.sleepCurlUp;
-            }
-            else if (this.player.room.gravity != 0 && this.player.Consious)
-            {
-                if (this.player.bodyMode == Player.BodyModeIndex.Stand && this.player.input[0].x != 0)
-                { lookDir.x += 4f * Mathf.Sign(this.player.input[0].x); lookDir.y++; }
-                else if (this.player.bodyMode == Player.BodyModeIndex.Crawl)
-                { lookDir.x += 4f * Mathf.Sign(this.pGraphics.drawPositions[0, 0].x - this.pGraphics.drawPositions[1, 0].x); lookDir.y++; }
-            }
-            else { lookDir *= 0f; }
-            float lookRot = lookDir.magnitude > float.Epsilon ? (Custom.VecToDeg(lookDir) -
-                (this.player.Consious && this.player.bodyMode == Player.BodyModeIndex.Crawl ? 0f : upRot)) : 0f;
-            if (Mathf.Abs(lookRot) < 90f)
-            { newRotation = Custom.LerpMap(lookRot, 0f, Mathf.Sign(lookRot) * 90f, 0f, Mathf.Sign(lookRot) * 60f, 0.5f); }
-            else
-            { newRotation = Custom.LerpMap(lookRot, Mathf.Sign(lookRot) * 180f, Mathf.Sign(lookRot) * 90f, Mathf.Sign(lookRot) * 60f, 0f, 0.5f); }
+            //Vector2 lookDir = this.pGraphics.lookDirection * 3f * (1f - this.player.sleepCurlUp);
+            //lookDir *= 1 - Mathf.Abs(Vector2.Dot(upDir.normalized, lookDir.normalized));
+            //if (this.player.sleepCurlUp > 0f)
+            //{
+            //    lookDir.y -= 2f * this.player.sleepCurlUp;
+            //    lookDir.x -= 4f * Mathf.Sign(this.pGraphics.drawPositions[0, 0].x - this.pGraphics.drawPositions[1, 0].x) * this.player.sleepCurlUp;
+            //}
+            //else if (this.player.room.gravity != 0 && this.player.Consious)
+            //{
+            //    if (this.player.bodyMode == Player.BodyModeIndex.Stand && this.player.input[0].x != 0)
+            //    { lookDir.x += 4f * Mathf.Sign(this.player.input[0].x); lookDir.y++;
+            //        if (this.player.animation == Player.AnimationIndex.StandOnBeam || this.player.animation == Player.AnimationIndex.BeamTip)
+            //        {
+            //            lookDir.y++;
+            //        }
+            //    }
+            //    else if (this.player.bodyMode == Player.BodyModeIndex.Crawl)
+            //    { lookDir.x += 4f * Mathf.Sign(this.pGraphics.drawPositions[0, 0].x - this.pGraphics.drawPositions[1, 0].x); lookDir.y++; }
+            //}
+            //else { lookDir *= 0f; }
+            //float lookRot = lookDir.magnitude > float.Epsilon ? (Custom.VecToDeg(lookDir) -
+            //    (this.player.Consious && this.player.bodyMode == Player.BodyModeIndex.Crawl ? 0f : upRot)) : 0f;
+            float headRot = HeadRotation(1f);
+
+
+            // TODO need to make the looking-direction less impactful on the result, not just up/down
+            Vector2 neck_vector = this.head.pos - this.pGraphics.drawPositions[0, 0];
+            float vert_factor = (this.player.bodyMode == Player.BodyModeIndex.Crawl) ? 0.8f : 0.2f;
+            neck_vector *= vert_factor + (1-vert_factor) * Vector2.Dot(neck_vector, Custom.PerpendicularVector(Vector2.zero, upDir));
+            float expected_neck_legth = 4f;
+
+            headRot = (headRot - upRot + 540f) % 360f - 180f;
+            newRotation = Mathf.Lerp(0f, Mathf.Sign(headRot), neck_vector.magnitude / expected_neck_legth);
+            //if (Mathf.Abs(lookRot) < 90f)
+            //{
+            //    newRotation = Custom.LerpMap(lookRot, 0f, Mathf.Sign(lookRot) * 90f, 0f, Mathf.Sign(lookRot), 0.5f);
+            //}
+            //else
+            //{
+            //    newRotation = Custom.LerpMap(lookRot, Mathf.Sign(lookRot) * 90f, Mathf.Sign(lookRot) * 180f, Mathf.Sign(lookRot), 0f, 0.5f); 
+            //}
+
+            newRotation *= -1; // Hurrr durr
             // Tail rotation
             //float totTailRot = newRotation, lastTailRot = -upRot;
             //for (int t = 0; t < 4; t++)
@@ -307,20 +352,33 @@ namespace LizardSkin
             //    zRot[1 + t, 0] = totTailRot < 0f ? Mathf.Clamp(totTailRot, -90f, 0f) : Mathf.Clamp(totTailRot, 0f, 90f);
             //}
 
-            this.depthRotation = Mathf.Lerp(this.depthRotation, Mathf.Clamp(newRotation / 60f, -1f, 1f), 0.1f);
+            this.depthRotation = Mathf.Lerp(this.depthRotation, Mathf.Clamp(newRotation, -1f, 1f), 0.1f);
             this.headDepthRotation = depthRotation;
 
-            debug_counter++;
-            if(debug_counter % 100 == 0)
+            if (this.pGraphics.DEBUGLABELS != null)
             {
-                Debug.Log("LizardSkin: depthRotation is " + depthRotation);
+                this.pGraphics.DEBUGLABELS[3].label.text = "depthRotation: " + depthRotation;
+                this.pGraphics.DEBUGLABELS[4].label.text = "HeadRotation: " + HeadRotation(1f);
+                this.pGraphics.DEBUGLABELS[5].label.text = "upRot: " + upRot;
             }
         }
 
         public override float HeadRotation(float timeStacker)
         {
-            float num = Custom.AimFromOneVectorToAnother(Vector2.Lerp(this.pGraphics.drawPositions[0, 1], this.pGraphics.drawPositions[0, 0], timeStacker), Vector2.Lerp(this.pGraphics.head.lastPos, this.pGraphics.head.pos, timeStacker));
-            return num;
+            // From Player.Draw_Sprites
+            float num = 0.8f + 0.2f * Mathf.Sin(Mathf.Lerp(this.pGraphics.lastBreath, this.pGraphics.breath, timeStacker) * 3.1415927f * 2f);
+            Vector2 vector = Vector2.Lerp(this.pGraphics.drawPositions[0, 1], this.pGraphics.drawPositions[0, 0], timeStacker);
+            Vector2 vector2 = Vector2.Lerp(this.pGraphics.drawPositions[1, 1], this.pGraphics.drawPositions[1, 0], timeStacker);
+            Vector2 vector3 = Vector2.Lerp(this.head.lastPos, this.head.pos, timeStacker);
+            if (this.player.aerobicLevel > 0.5f)
+            {
+                vector += Custom.DirVec(vector2, vector) * Mathf.Lerp(-1f, 1f, num) * Mathf.InverseLerp(0.5f, 1f, this.player.aerobicLevel) * 0.5f;
+                vector3 -= Custom.DirVec(vector2, vector) * Mathf.Lerp(-1f, 1f, num) * Mathf.Pow(Mathf.InverseLerp(0.5f, 1f, this.player.aerobicLevel), 1.5f) * 0.75f;
+            }
+            float num3 = Custom.AimFromOneVectorToAnother(Vector2.Lerp(vector2, vector, 0.5f), vector3);
+            num3 = Mathf.Lerp(num3, 45f * Mathf.Sign(vector.x - vector2.x), this.player.sleepCurlUp);
+
+            return num3;
         }
 
         public override LizardGraphics.LizardSpineData SpinePosition(float spineFactor, float timeStacker)
@@ -464,16 +522,6 @@ namespace LizardSkin
         {
             //return PlayerGraphics.SlugcatColor((pGraphics.player.State as PlayerState).slugcatCharacter);
             return BaseBodyColor();
-        }
-
-        public override BodyPart getHeadImpl()
-        {
-            return this.pGraphics.head;
-        }
-
-        public override BodyPart getBaseOfTailImpl()
-        {
-            return this.pGraphics.tail[0];
         }
     }
 }

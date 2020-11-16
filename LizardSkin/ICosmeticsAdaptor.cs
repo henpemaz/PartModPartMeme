@@ -6,12 +6,9 @@ namespace LizardSkin
 {
     public interface ICosmeticsAdaptor
     {
-        // Tightly paired with GenericCosmeticsAdaptor... 
-        // This is not ideal but lowers the amount of changes inside cosmetics code by a lot
-
+        // Tightly paired with GenericCosmeticsAdaptor... Helps me keep track of what needs new implementations
 
         PhysicalObject owner { get; }
-        // I hate this one in particular
         GraphicsModule graphics { get; }
 
         List<GenericCosmeticTemplate> cosmetics { get;}
@@ -22,15 +19,22 @@ namespace LizardSkin
         RoomPalette palette { get;}
         int firstSprite { get;}
 
+        /// <summary>
+        /// float [0,1] Makes cosmetics shiver
+        /// </summary>
         float showDominance { get; }
+        /// <summary>
+        /// float [-1,1] Body rotation
+        /// </summary>
         float depthRotation { get; }
         float headDepthRotation { get; }
         float lastDepthRotation { get; }
         float lastHeadDepthRotation { get; }
 
         BodyPart head { get; }
-        BodyChunk mainBodyChunk { get; }
         BodyPart baseOfTail { get; }
+        // Hmmmm this one is not ideal but whatever
+        BodyChunk mainBodyChunk { get; }
 
 
         CosmeticsParams cosmeticsParams { get; }

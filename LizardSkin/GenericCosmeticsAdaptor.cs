@@ -35,14 +35,11 @@ namespace LizardSkin
         public int firstSprite { get; protected set; }
         public int extraSprites { get; protected set; }
 
-        public BodyPart head { get => this.getHeadImpl(); }
-        public BodyPart baseOfTail { get => this.getBaseOfTailImpl(); }
-
-        public BodyChunk mainBodyChunk { get => this.graphics.owner.firstChunk; }
+        public abstract BodyPart head { get; }
+        public abstract BodyPart baseOfTail { get; }
+        public abstract BodyChunk mainBodyChunk { get; }
 
         PhysicalObject ICosmeticsAdaptor.owner { get => this.graphics.owner; }
-        public abstract BodyPart getHeadImpl();
-        public abstract BodyPart getBaseOfTailImpl();
 
         public GenericCosmeticsAdaptor(GraphicsModule graphicsModule) : base(graphicsModule)
         {
@@ -62,11 +59,8 @@ namespace LizardSkin
             this.extraSprites += cosmetic.numberOfSprites;
         }
 
-        protected abstract void updateRotation();
-
         public override void Update()
         {
-            updateRotation();
             for (int l = 0; l < this.cosmetics.Count; l++)
             {
                 this.cosmetics[l].Update();
