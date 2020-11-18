@@ -39,7 +39,7 @@ namespace KeybindsRandomizer
             float multiplier = 1f;
             int index = 0;
             char last = axisName.Last();
-            UnityEngine.Debug.LogError("detoured method ran");
+            // UnityEngine.Debug.LogError("detoured method ran");
             if (last == '1') index = 1;
             else if (last == '2') index = 2;
             else if (last == '3') index = 3;
@@ -48,6 +48,7 @@ namespace KeybindsRandomizer
             if (controlScramblers[index].flipY && (axisName.StartsWith("Vertical") || axisName.StartsWith("DschockDpadY") || axisName.StartsWith("XboxDpadY"))) multiplier = -1f;
             if (controlScramblers[index].rotate)
             {
+                // could be optimized re assembling names from string + index!=0 ? index : empty
                 if (axisName.StartsWith("Horizontal")) axisName = axisName.Replace("Horizontal", "Vertical");
                 else if (axisName.StartsWith("DschockDpadX")) axisName = axisName.Replace("DschockDpadX", "DschockDpadY");
                 else if (axisName.StartsWith("XboxDpadX")) axisName = axisName.Replace("XboxDpadX", "XboxDpadY");
