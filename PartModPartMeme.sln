@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LizardSkin", "LizardSkin\Li
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KeybindsRandomizer", "KeybindsRandomizer\KeybindsRandomizer.csproj", "{8D717714-DA60-4DDA-8B93-1A186D5D1437}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewGamePassageMod", "NewGamePassageMod\NewGamePassageMod.csproj", "{9EA4ADC2-8922-4831-A527-8735E1277607}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -81,6 +83,10 @@ Global
 		{8D717714-DA60-4DDA-8B93-1A186D5D1437}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8D717714-DA60-4DDA-8B93-1A186D5D1437}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8D717714-DA60-4DDA-8B93-1A186D5D1437}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9EA4ADC2-8922-4831-A527-8735E1277607}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9EA4ADC2-8922-4831-A527-8735E1277607}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9EA4ADC2-8922-4831-A527-8735E1277607}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9EA4ADC2-8922-4831-A527-8735E1277607}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

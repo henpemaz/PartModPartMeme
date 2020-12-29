@@ -209,6 +209,8 @@ namespace LizardSkin
         Type jolly_ref;
         Type custail_ref;
         Type colorfoot_ref;
+        private float headRotation;
+        private float lastHeadRotation;
 
         public PlayerGraphicsCosmeticsAdaptor(PlayerGraphics pGraphics) : base(pGraphics)
         {
@@ -280,6 +282,26 @@ namespace LizardSkin
 
         protected void updateRotation()
         {
+            /*
+            Completely re-work the rotation system
+            Add z-depth info to cosmetic so they render in-front or behind slugcat based on rotation
+
+            OR don't worry about overlap
+            but change the logic to sprites that behave like they're on top vs sprites that behave like they're behind (rot *= -1)
+             
+            note: currently no vanilla cosmetics use SpritesOverlap.Behind, everything is BehindHead or InFront
+             
+            TODO
+            better body depth rotation 
+            using face direction is influenced wayyy to much by look direction
+
+
+            tail rotation
+            increase tail rotation towards +- 1 depending on its perpendicularity to updir, correctly handle 180 turns on long tails
+             */
+
+
+
             //if (this.pGraphics.player.input[0].jmp)
             //{
             //    this.showDominance += 0.05f;
@@ -292,44 +314,53 @@ namespace LizardSkin
 
             this.lastDepthRotation = this.depthRotation;
             this.lastHeadDepthRotation = this.headDepthRotation;
+            this.lastHeadRotation = this.headRotation;
 
-            float newRotation;
+            
 
             Vector2 upDir = Custom.DirVec(this.pGraphics.drawPositions[1, 0], this.pGraphics.drawPositions[0, 0]);
             float upRot = Custom.VecToDeg(upDir);
+            //Vector2 neck_vector = this.head.pos - this.pGraphics.drawPositions[0, 0];
             //Vector2 lookDir = this.pGraphics.lookDirection * 3f * (1f - this.player.sleepCurlUp);
-            //lookDir *= 1 - Mathf.Abs(Vector2.Dot(upDir.normalized, lookDir.normalized));
-            //if (this.player.sleepCurlUp > 0f)
-            //{
-            //    lookDir.y -= 2f * this.player.sleepCurlUp;
-            //    lookDir.x -= 4f * Mathf.Sign(this.pGraphics.drawPositions[0, 0].x - this.pGraphics.drawPositions[1, 0].x) * this.player.sleepCurlUp;
-            //}
-            //else if (this.player.room.gravity != 0 && this.player.Consious)
-            //{
-            //    if (this.player.bodyMode == Player.BodyModeIndex.Stand && this.player.input[0].x != 0)
-            //    { lookDir.x += 4f * Mathf.Sign(this.player.input[0].x); lookDir.y++;
-            //        if (this.player.animation == Player.AnimationIndex.StandOnBeam || this.player.animation == Player.AnimationIndex.BeamTip)
-            //        {
-            //            lookDir.y++;
-            //        }
-            //    }
-            //    else if (this.player.bodyMode == Player.BodyModeIndex.Crawl)
-            //    { lookDir.x += 4f * Mathf.Sign(this.pGraphics.drawPositions[0, 0].x - this.pGraphics.drawPositions[1, 0].x); lookDir.y++; }
-            //}
-            //else { lookDir *= 0f; }
+            Vector2 lookDir = this.head.pos - this.pGraphics.drawPositions[0, 0] * (1f - this.player.sleepCurlUp);
+            lookDir *= 1 - Mathf.Abs(Vector2.Dot(upDir.normalized, lookDir.normalized));
+            if (this.player.sleepCurlUp > 0f)
+            {
+                lookDir.y -= 2f * this.player.sleepCurlUp;
+                lookDir.x -= 4f * Mathf.Sign(this.pGraphics.drawPositions[0, 0].x - this.pGraphics.drawPositions[1, 0].x) * this.player.sleepCurlUp;
+            }
+            else if (this.player.room.gravity != 0 && this.player.Consious)
+            {
+                if (this.player.bodyMode == Player.BodyModeIndex.Stand && this.player.input[0].x != 0)
+                {
+                    lookDir.x += 4f * Mathf.Sign(this.player.input[0].x); lookDir.y++;
+                    if (this.player.animation == Player.AnimationIndex.StandOnBeam || this.player.animation == Player.AnimationIndex.BeamTip)
+                    {
+                        lookDir.y++;
+                    }
+                }
+                else if (this.player.bodyMode == Player.BodyModeIndex.Crawl)
+                { lookDir.x += 4f * Mathf.Sign(this.pGraphics.drawPositions[0, 0].x - this.pGraphics.drawPositions[1, 0].x); lookDir.y++; }
+            }
+            else { lookDir *= 0f; }
             //float lookRot = lookDir.magnitude > float.Epsilon ? (Custom.VecToDeg(lookDir) -
             //    (this.player.Consious && this.player.bodyMode == Player.BodyModeIndex.Crawl ? 0f : upRot)) : 0f;
-            float headRot = HeadRotation(1f);
+
+
 
 
             // TODO need to make the looking-direction less impactful on the result, not just up/down
-            Vector2 neck_vector = this.head.pos - this.pGraphics.drawPositions[0, 0];
+            //Vector2 lookDir = this.head.pos - this.pGraphics.drawPositions[0, 0];
+            //if (pGraphics.lookDirection.magnitude > float.Epsilon) lookDir -= pGraphics.lookDirection;
             float vert_factor = (this.player.bodyMode == Player.BodyModeIndex.Crawl) ? 0.8f : 0.2f;
-            neck_vector *= vert_factor + (1-vert_factor) * Vector2.Dot(neck_vector, Custom.PerpendicularVector(Vector2.zero, upDir));
+            lookDir *= vert_factor + (1-vert_factor) * Vector2.Dot(lookDir, Custom.PerpendicularVector(Vector2.zero, upDir));
             float expected_neck_legth = 4f;
 
-            headRot = (headRot - upRot + 540f) % 360f - 180f;
-            newRotation = Mathf.Lerp(0f, Mathf.Sign(headRot), neck_vector.magnitude / expected_neck_legth);
+            float newHeadRotation = Custom.Angle(upDir, lookDir);
+            //newHeadRotation = (newHeadRotation + 540f) % 360f - 180f;
+            float newHeadDepth = Mathf.Lerp(0f, Mathf.Sign(newHeadRotation), lookDir.magnitude / expected_neck_legth);
+
+            newHeadDepth = - player.flipDirection;
             //if (Mathf.Abs(lookRot) < 90f)
             //{
             //    newRotation = Custom.LerpMap(lookRot, 0f, Mathf.Sign(lookRot) * 90f, 0f, Mathf.Sign(lookRot), 0.5f);
@@ -339,7 +370,6 @@ namespace LizardSkin
             //    newRotation = Custom.LerpMap(lookRot, Mathf.Sign(lookRot) * 90f, Mathf.Sign(lookRot) * 180f, Mathf.Sign(lookRot), 0f, 0.5f); 
             //}
 
-            newRotation *= -1; // Hurrr durr
             // Tail rotation
             //float totTailRot = newRotation, lastTailRot = -upRot;
             //for (int t = 0; t < 4; t++)
@@ -352,8 +382,13 @@ namespace LizardSkin
             //    zRot[1 + t, 0] = totTailRot < 0f ? Mathf.Clamp(totTailRot, -90f, 0f) : Mathf.Clamp(totTailRot, 0f, 90f);
             //}
 
-            this.depthRotation = Mathf.Lerp(this.depthRotation, Mathf.Clamp(newRotation, -1f, 1f), 0.1f);
-            this.headDepthRotation = depthRotation;
+            //this.depthRotation = Mathf.Lerp(this.depthRotation, Mathf.Clamp(newHeadDepth, -1f, 1f), 0.1f);
+            this.headDepthRotation = Mathf.Lerp(this.headDepthRotation, Mathf.Clamp(newHeadDepth, -1f, 1f), 0.1f);
+            this.headRotation = Mathf.Lerp(this.headRotation, newHeadRotation, 0.1f);
+
+            // Todo handle standing crawling neutral
+            this.depthRotation = Mathf.Lerp(this.depthRotation, Mathf.Clamp(newHeadDepth, -1f, 1f), 0.1f);
+
 
             if (this.pGraphics.DEBUGLABELS != null)
             {
@@ -365,20 +400,22 @@ namespace LizardSkin
 
         public override float HeadRotation(float timeStacker)
         {
-            // From Player.Draw_Sprites
-            float num = 0.8f + 0.2f * Mathf.Sin(Mathf.Lerp(this.pGraphics.lastBreath, this.pGraphics.breath, timeStacker) * 3.1415927f * 2f);
-            Vector2 vector = Vector2.Lerp(this.pGraphics.drawPositions[0, 1], this.pGraphics.drawPositions[0, 0], timeStacker);
-            Vector2 vector2 = Vector2.Lerp(this.pGraphics.drawPositions[1, 1], this.pGraphics.drawPositions[1, 0], timeStacker);
-            Vector2 vector3 = Vector2.Lerp(this.head.lastPos, this.head.pos, timeStacker);
-            if (this.player.aerobicLevel > 0.5f)
-            {
-                vector += Custom.DirVec(vector2, vector) * Mathf.Lerp(-1f, 1f, num) * Mathf.InverseLerp(0.5f, 1f, this.player.aerobicLevel) * 0.5f;
-                vector3 -= Custom.DirVec(vector2, vector) * Mathf.Lerp(-1f, 1f, num) * Mathf.Pow(Mathf.InverseLerp(0.5f, 1f, this.player.aerobicLevel), 1.5f) * 0.75f;
-            }
-            float num3 = Custom.AimFromOneVectorToAnother(Vector2.Lerp(vector2, vector, 0.5f), vector3);
-            num3 = Mathf.Lerp(num3, 45f * Mathf.Sign(vector.x - vector2.x), this.player.sleepCurlUp);
+            //// From Player.Draw_Sprites
+            //float num = 0.8f + 0.2f * Mathf.Sin(Mathf.Lerp(this.pGraphics.lastBreath, this.pGraphics.breath, timeStacker) * 3.1415927f * 2f);
+            //Vector2 vector = Vector2.Lerp(this.pGraphics.drawPositions[0, 1], this.pGraphics.drawPositions[0, 0], timeStacker);
+            //Vector2 vector2 = Vector2.Lerp(this.pGraphics.drawPositions[1, 1], this.pGraphics.drawPositions[1, 0], timeStacker);
+            //Vector2 vector3 = Vector2.Lerp(this.head.lastPos, this.head.pos, timeStacker);
+            //if (this.player.aerobicLevel > 0.5f)
+            //{
+            //    vector += Custom.DirVec(vector2, vector) * Mathf.Lerp(-1f, 1f, num) * Mathf.InverseLerp(0.5f, 1f, this.player.aerobicLevel) * 0.5f;
+            //    vector3 -= Custom.DirVec(vector2, vector) * Mathf.Lerp(-1f, 1f, num) * Mathf.Pow(Mathf.InverseLerp(0.5f, 1f, this.player.aerobicLevel), 1.5f) * 0.75f;
+            //}
+            //float num3 = Custom.AimFromOneVectorToAnother(Vector2.Lerp(vector2, vector, 0.5f), vector3);
+            //num3 = Mathf.Lerp(num3, 45f * Mathf.Sign(vector.x - vector2.x), this.player.sleepCurlUp);
 
-            return num3;
+            //return num3;
+
+            return Mathf.Lerp(lastHeadRotation, headRotation, timeStacker);
         }
 
         public override LizardGraphics.LizardSpineData SpinePosition(float spineFactor, float timeStacker)
@@ -432,12 +469,13 @@ namespace LizardSkin
             {
                 normalized = (this.pGraphics.tail[this.pGraphics.tail.Length - 1].pos - this.pGraphics.tail[this.pGraphics.tail.Length - 2].pos).normalized;
             }
-            Vector2 vector3 = Custom.PerpendicularVector(normalized);
+            Vector2 perp = Custom.PerpendicularVector(normalized);
             float rad = Mathf.Lerp(from, to, t);
             float rot = Mathf.Lerp(this.lastDepthRotation, this.depthRotation, timeStacker);
             rot = Mathf.Pow(Mathf.Abs(rot), Mathf.Lerp(1.2f, 0.3f, Mathf.Pow(spineFactor, 0.5f))) * Mathf.Sign(rot);
-            Vector2 outerPos = Vector2.Lerp(vector, vector2, t) + vector3 * rot * rad;
-            return new LizardGraphics.LizardSpineData(spineFactor, Vector2.Lerp(vector, vector2, t), outerPos, normalized, vector3, rot, rad);
+            Vector2 pos = Vector2.Lerp(vector, vector2, t);
+            Vector2 outerPos = pos + perp * rot * rad;
+            return new LizardGraphics.LizardSpineData(spineFactor, pos, outerPos, normalized, perp, rot, rad);
         }
 
         public Color color_from_colorfoot(Color color)

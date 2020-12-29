@@ -10,7 +10,8 @@ namespace LizardSkin
 		public GenericBodyScales(ICosmeticsAdaptor iGraphics) : base(iGraphics)
 		{
 			//this.spritesOverlap = ((!(this is SlugcatLongHeadScales)) ? SlugcatCosmeticsTemplate.SpritesOverlap.BehindHead : SlugcatCosmeticsTemplate.SpritesOverlap.InFront);
-			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.BehindHead;
+			//this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.BehindHead;
+			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.Behind;
 		}
 
 		// Token: 0x06001F3C RID: 7996 RVA: 0x001D9340 File Offset: 0x001D7540
@@ -82,6 +83,10 @@ namespace LizardSkin
 		protected LizardGraphics.LizardSpineData GetBackPos(int shoulderScale, float timeStacker, bool changeDepthRotation)
 		{
 			LizardGraphics.LizardSpineData result = this.iGraphics.SpinePosition(this.scalesPositions[shoulderScale].y, timeStacker);
+			//if(this.spritesOverlap == SpritesOverlap.Behind)
+            //{
+			//	result.depthRotation -= 1;
+			//}
 			float num = Mathf.Clamp(this.scalesPositions[shoulderScale].x + result.depthRotation, -1f, 1f);
 			result.outerPos = result.pos + result.perp * num * result.rad;
 			if (changeDepthRotation)
