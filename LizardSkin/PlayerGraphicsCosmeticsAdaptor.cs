@@ -53,7 +53,7 @@ namespace LizardSkin
         {
             LogMethodName();
             orig(instance, ow);
-            InitDebugLabels(instance, ow);
+            //InitDebugLabels(instance, ow);
 
             Type fpg = Type.GetType("FancySlugcats.FancyPlayerGraphics, FancySlugcats");
             if (fpg != null && fpg.IsInstanceOfType(instance))
@@ -231,21 +231,22 @@ namespace LizardSkin
             this.depthRotation = 0;
             this.lastDepthRotation = this.depthRotation;
 
-            this.effectColor = Custom.HSL2RGB(Custom.WrappedRandomVariation(0.49f, 0.04f, 0.6f), 1f, Custom.ClampedRandomVariation(0.5f, 0.15f, 0.1f));
+            //this.effectColor = Custom.HSL2RGB(Custom.WrappedRandomVariation(0.49f, 0.04f, 0.6f), 1f, Custom.ClampedRandomVariation(0.5f, 0.15f, 0.1f));
+            this.effectColor = Custom.HSL2RGB(0.08f, 1.00f, 0.68f);
 
             //this.AddCosmetic(new GenericTailTuft(this));
             //this.AddCosmetic(new GenericSpineSpikes(this));
 
-            //this.AddCosmetic(new GenericAxolotlGills(this));
-            //this.AddCosmetic(new GenericTailFin(this));
+            //this.AddCosmetic(new GenericAxolotlGills(this)); // bad tracking still
+            //this.AddCosmetic(new GenericTailFin(this)); // .... smoll ?
 
-            //this.AddCosmetic(new GenericWingScales(this));
+            //this.AddCosmetic(new GenericWingScales(this)); // bad tracking still
             //this.AddCosmetic(new GenericTailGeckoScales(this));
-            //this.AddCosmetic(new GenericJumpRings(this));
+            //this.AddCosmetic(new GenericJumpRings(this)); // broken
 
             //this.AddCosmetic(new GenericBumpHawk(this));
 
-            //this.AddCosmetic(new GenericLongShoulderScales(this));
+            //this.AddCosmetic(new GenericLongShoulderScales(this)); // bad tracking still
             //this.AddCosmetic(new GenericShortBodyScales(this));
 
             //this.AddCosmetic(new GenericLongHeadScales(this));
@@ -253,10 +254,9 @@ namespace LizardSkin
             //this.AddCosmetic(new GenericWhiskers(this));
             //this.AddCosmetic(new GenericAntennae(this));
 
-
             this.AddCosmetic(new GenericTailTuft(this));
             this.AddCosmetic(new GenericLongHeadScales(this));
-            this.AddCosmetic(new GenericAntennae(this));
+            //this.AddCosmetic(new GenericAntennae(this));
 
 
             //for(int i = 0; i < (this.cosmetics[0] as SlugcatTailTuft).scalesPositions.Length; i++)

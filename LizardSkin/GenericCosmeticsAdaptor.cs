@@ -9,9 +9,9 @@ namespace LizardSkin
     {
         protected static void LogMethodName()
         {
-            System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace();
-            System.Diagnostics.StackFrame stackFrame = stackTrace.GetFrame(1);
-            System.Reflection.MethodBase methodBase = stackFrame.GetMethod();
+            //System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace();
+            //System.Diagnostics.StackFrame stackFrame = stackTrace.GetFrame(1);
+            //System.Reflection.MethodBase methodBase = stackFrame.GetMethod();
             // Debug.Log("LizardSkin: " + methodBase.Name);
         }
 

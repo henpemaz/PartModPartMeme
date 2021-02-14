@@ -95,6 +95,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy /Y C:\Users\Henpemaz\source\repos\PartModPartMeme\LizardSkin\bin\Release\LizardSkin.dll "C:\Program Files (x86)\Steam\steamapps\common\Rain World\Mods"</PostBuildEvent>
+    <PostBuildEvent>copy /Y $(TargetPath) "C:\Program Files (x86)\Steam\steamapps\common\Rain World\Mods"</PostBuildEvent>
   </PropertyGroup>
 </Project>

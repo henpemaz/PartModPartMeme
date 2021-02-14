@@ -33,12 +33,13 @@ namespace RopesAndDreamsMods
         public static class EnumExt_RopesAndDreamsMod
         {
             public static PlacedObject.Type ClimbableRope;
+            public static PlacedObject.Type ClimbableRopeB;
         }
 
         public static void PlacedObject_GenerateEmptyData_Patch(On.PlacedObject.orig_GenerateEmptyData orig, PlacedObject instance)
         {
             orig(instance);
-            if(instance.type == EnumExt_RopesAndDreamsMod.ClimbableRope)
+            if(instance.type == EnumExt_RopesAndDreamsMod.ClimbableRope || instance.type == EnumExt_RopesAndDreamsMod.ClimbableRopeB)
             {
                 // For now, a resizable will do. More parameters someday maybe
                 instance.data = new PlacedObject.ResizableObjectData(instance);
@@ -48,7 +49,7 @@ namespace RopesAndDreamsMods
         private static void ObjectsPage_CreateObjRep_Patch(On.DevInterface.ObjectsPage.orig_CreateObjRep orig, DevInterface.ObjectsPage instance, PlacedObject.Type tp, PlacedObject pObj)
         {
             orig(instance, tp, pObj);
-            if (tp == EnumExt_RopesAndDreamsMod.ClimbableRope)
+            if (tp == EnumExt_RopesAndDreamsMod.ClimbableRope || tp == EnumExt_RopesAndDreamsMod.ClimbableRopeB)
             {
                 DevInterface.PlacedObjectRepresentation old = (DevInterface.PlacedObjectRepresentation)instance.tempNodes.Pop();
                 instance.subNodes.Pop();
@@ -68,6 +69,10 @@ namespace RopesAndDreamsMods
                 if (instance.roomSettings.placedObjects[l].active && instance.roomSettings.placedObjects[l].type == EnumExt_RopesAndDreamsMod.ClimbableRope)
                 {
                     instance.AddObject(new ClimbableRope(instance.roomSettings.placedObjects[l], instance));
+                }
+                if (instance.roomSettings.placedObjects[l].active && instance.roomSettings.placedObjects[l].type == EnumExt_RopesAndDreamsMod.ClimbableRopeB)
+                {
+                    instance.AddObject(new ClimbableRopeB(instance.roomSettings.placedObjects[l], instance));
                 }
             }
         }
