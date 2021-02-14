@@ -62,6 +62,7 @@
   <ItemGroup>
     <Compile Include="BezierObjectRepresentation.cs" />
     <Compile Include="ClimbableArc.cs" />
+    <Compile Include="ClimbablePoleG.cs" />
     <Compile Include="ClimbablePoleH.cs" />
     <Compile Include="ClimbablePoleV.cs" />
     <Compile Include="ClimbableRope.cs" />

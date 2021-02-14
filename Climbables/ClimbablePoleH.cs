@@ -2,45 +2,66 @@
 
 namespace Climbables
 {
-    public class ClimbablePoleH : UpdatableAndDeletable, IDrawable, INotifyWhenRoomIsReady
+    public class ClimbablePoleH : ClimbablePoleG
     {
-        private PlacedObject placedObject;
-        private Room instance;
-
-        public ClimbablePoleH(PlacedObject placedObject, Room instance)
+        public ClimbablePoleH(PlacedObject placedObject, Room instance) : base(placedObject, instance)
         {
-            this.placedObject = placedObject;
-            this.instance = instance;
+
         }
 
-        void IDrawable.AddToContainer(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
+        protected override int GetStartIndex()
         {
-            throw new System.NotImplementedException();
+            return rect.left;
         }
 
-        void INotifyWhenRoomIsReady.AIMapReady()
+        protected override int GetStopIndex()
         {
-            throw new System.NotImplementedException();
+            return rect.right;
         }
 
-        void IDrawable.ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
+        protected override Room.Tile GetTile(int i)
         {
-            throw new System.NotImplementedException();
+            return room.GetTile(i, rect.bottom);
         }
 
-        void IDrawable.DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+        protected override bool getPole(Room.Tile tile)
         {
-            throw new System.NotImplementedException();
+            return tile.horizontalBeam;
         }
 
-        void IDrawable.InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
+        protected override void setPole(bool value, Room.Tile tile)
         {
-            throw new System.NotImplementedException();
+            tile.horizontalBeam = value;
         }
 
-        void INotifyWhenRoomIsReady.ShortcutsReady()
+        protected override Room.Tile lastTile(int i)
         {
-            throw new System.NotImplementedException();
+            return room.GetTile(i, lastRect.bottom);
+        }
+
+        protected override int GetLastStopIndex()
+        {
+            return lastRect.right;
+        }
+
+        protected override int GetLastStartIndex()
+        {
+            return lastRect.left;
+        }
+
+        protected override Vector2 getWidth()
+        {
+            return new Vector2(0, 4);
+        }
+
+        protected override Vector2 getStart()
+        {
+            return new Vector2((float)rect.left * 20f, (float)rect.bottom * 20f + 10f);
+        }
+
+        protected override Vector2 getEnd()
+        {
+            return new Vector2((float)rect.right * 20f, (float)rect.bottom * 20f + 10f);
         }
     }
 }

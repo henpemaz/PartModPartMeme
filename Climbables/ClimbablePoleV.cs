@@ -4,117 +4,66 @@ using UnityEngine;
 
 namespace Climbables
 {
-    public class ClimbablePoleV : UpdatableAndDeletable, IDrawable, INotifyWhenRoomIsReady
+    public class ClimbablePoleV : ClimbablePoleG
     {
-        private PlacedObject placedObject;
-        private Room instance;
-        private Vector2 start;
-        private Vector2 end;
-        private IntRect lastRect;
-        private Vector2 width;
-        private bool[] oldTiles;
-
-        public ClimbablePoleV(PlacedObject placedObject, Room instance)
+        public ClimbablePoleV(PlacedObject placedObject, Room instance) : base(placedObject, instance)
         {
-            this.placedObject = placedObject;
-            this.instance = instance;
-
-            RWCustom.IntRect rect = (this.placedObject.data as PlacedObject.GridRectObjectData).Rect;
-            //rect.right++;
-            rect.top++;
-            width = new Vector2(4, 0);
-            start = new Vector2((float)rect.left * 20f + 10f, (float)rect.bottom * 20f);
-            end = new Vector2((float)rect.left * 20f + 10f, (float)rect.top * 20f);
 
         }
 
-        public override void Update(bool eu)
+        protected override int GetStartIndex()
         {
-            base.Update(eu);
-            RWCustom.IntRect rect = (this.placedObject.data as PlacedObject.GridRectObjectData).Rect;
-            //rect.right++;
-            rect.top++;
-            if (lastRect.bottom != rect.bottom || lastRect.left != rect.left || lastRect.top != rect.top)
-            {
-                start = new Vector2((float)rect.left * 20f + 10f, (float)rect.bottom * 20f);
-                end = new Vector2((float)rect.left * 20f + 10f, (float)rect.top * 20f);
-
-                updateTiles();
-                queueAIRemapping();
-
-                lastRect = rect;
-            }
-            
+            return rect.bottom;
         }
 
-        private void queueAIRemapping()
+        protected override int GetStopIndex()
         {
-            // Nothing for now :(
+            return rect.top;
         }
 
-        void IDrawable.InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
+        protected override Room.Tile GetTile(int i)
         {
-            sLeaser.sprites = new FSprite[1];
-            sLeaser.sprites[0] = TriangleMesh.MakeLongMeshAtlased(1, false, true);
-
-            (this as IDrawable).ApplyPalette(sLeaser, rCam, rCam.currentPalette);
-            (this as IDrawable).AddToContainer(sLeaser, rCam, null);
+            return room.GetTile(rect.left, i);
         }
 
-        void IDrawable.AddToContainer(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
+        protected override bool getPole(Room.Tile tile)
         {
-            sLeaser.sprites[0].RemoveFromContainer();
-            if (newContatiner == null)
-            {
-                newContatiner = rCam.ReturnFContainer("Items");
-            }
-            newContatiner.AddChild(sLeaser.sprites[0]);
+            return tile.verticalBeam;
         }
 
-        void IDrawable.ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
+        protected override void setPole(bool value, Room.Tile tile)
         {
-            sLeaser.sprites[0].color = palette.blackColor;
+            tile.verticalBeam = value;
         }
 
-        void IDrawable.DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+        protected override Room.Tile lastTile(int i)
         {
-            (sLeaser.sprites[0] as TriangleMesh).MoveVertice(0, start - width / 2 - camPos);
-            (sLeaser.sprites[0] as TriangleMesh).MoveVertice(1, start + width / 2 - camPos);
-            (sLeaser.sprites[0] as TriangleMesh).MoveVertice(2, end - width / 2 - camPos);
-            (sLeaser.sprites[0] as TriangleMesh).MoveVertice(3, end + width / 2 - camPos);
+            return room.GetTile(lastRect.left, i);
         }
 
-        void INotifyWhenRoomIsReady.AIMapReady()
+        protected override int GetLastStopIndex()
         {
-            // pass
+            return lastRect.top;
         }
 
-        void INotifyWhenRoomIsReady.ShortcutsReady()
+        protected override int GetLastStartIndex()
         {
-            updateTiles();
+            return lastRect.bottom;
         }
 
-        private void updateTiles()
+        protected override Vector2 getWidth()
         {
-            if (oldTiles != null)
-            {
-                for (int i = lastRect.bottom; i < lastRect.top; i++)
-                {
-                    Room.Tile tile = room.GetTile(lastRect.left, i);
-                    tile.verticalBeam = oldTiles[i - lastRect.bottom];
-                }
+            return new Vector2(4, 0);
+        }
 
-                oldTiles = null;
-            }
-            RWCustom.IntRect rect = (this.placedObject.data as PlacedObject.GridRectObjectData).Rect;
-            rect.top++;
-            this.oldTiles = new bool[rect.top - rect.bottom];
-            for (int i = rect.bottom; i < rect.top; i++)
-            {
-                Room.Tile tile = room.GetTile(rect.left, i);
-                oldTiles[i - rect.bottom] = tile.verticalBeam;
-                tile.verticalBeam = true;
-            }
+        protected override Vector2 getStart()
+        {
+            return new Vector2((float)rect.left * 20f + 10f, (float)rect.bottom * 20f);
+        }
+
+        protected override Vector2 getEnd()
+        {
+            return new Vector2((float)rect.left * 20f + 10f, (float)rect.top * 20f);
         }
     }
 }
