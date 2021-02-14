@@ -56,12 +56,12 @@ namespace Climbables
 
         protected override Vector2 getStart()
         {
-            return new Vector2((float)rect.left * 20f, (float)rect.bottom * 20f + 10f);
+            return new Vector2((float)rect.left * 20f, (float)rect.bottom * 20f + 8f);
         }
 
         protected override Vector2 getEnd()
         {
-            return new Vector2((float)rect.right * 20f, (float)rect.bottom * 20f + 10f);
+            return new Vector2((float)rect.right * 20f, (float)rect.bottom * 20f + 8f);
         }
     }
 }

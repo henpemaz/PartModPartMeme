@@ -47,7 +47,7 @@ namespace Climbables
             }
             if (instance.type == EnumExt_ClimbablesMod.ClimbableArc || instance.type == EnumExt_ClimbablesMod.ClimbableRope)
             {
-                instance.data = new PlacedObject.GridRectObjectData(instance);
+                instance.data = new PlacedObject.QuadObjectData(instance);
             }
         }
 
