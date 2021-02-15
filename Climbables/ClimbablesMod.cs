@@ -45,9 +45,13 @@ namespace Climbables
             {
                 instance.data = new PlacedObject.GridRectObjectData(instance);
             }
-            if (instance.type == EnumExt_ClimbablesMod.ClimbableArc || instance.type == EnumExt_ClimbablesMod.ClimbableRope)
+            if (instance.type == EnumExt_ClimbablesMod.ClimbableArc)
             {
                 instance.data = new PlacedObject.QuadObjectData(instance);
+            }
+            if (instance.type == EnumExt_ClimbablesMod.ClimbableRope)
+            {
+                instance.data = new PlacedObject.ResizableObjectData(instance);
             }
         }
 
@@ -63,7 +67,7 @@ namespace Climbables
                 instance.tempNodes.Add(placedObjectRepresentation);
                 instance.subNodes.Add(placedObjectRepresentation);
             }
-            if (tp == EnumExt_ClimbablesMod.ClimbableArc || tp == EnumExt_ClimbablesMod.ClimbableRope)
+            if (tp == EnumExt_ClimbablesMod.ClimbableArc)
             {
                 DevInterface.PlacedObjectRepresentation old = (DevInterface.PlacedObjectRepresentation)instance.tempNodes.Pop();
                 instance.subNodes.Pop();
@@ -72,6 +76,16 @@ namespace Climbables
                 instance.tempNodes.Add(placedObjectRepresentation);
                 instance.subNodes.Add(placedObjectRepresentation);
             }
+            if (tp == EnumExt_ClimbablesMod.ClimbableRope)
+            {
+                DevInterface.PlacedObjectRepresentation old = (DevInterface.PlacedObjectRepresentation)instance.tempNodes.Pop();
+                instance.subNodes.Pop();
+                old.ClearSprites();
+                DevInterface.PlacedObjectRepresentation placedObjectRepresentation = new DevInterface.ResizeableObjectRepresentation(instance.owner, tp.ToString() + "_Rep", instance, old.pObj, tp.ToString(), false);
+                instance.tempNodes.Add(placedObjectRepresentation);
+                instance.subNodes.Add(placedObjectRepresentation);
+            }
+
         }
 
         public static void Room_Loaded_Patch(On.Room.orig_Loaded orig, Room instance)
