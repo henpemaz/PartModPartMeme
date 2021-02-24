@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewGamePassageMod", "NewGam
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Climbables", "Climbables\Climbables.csproj", "{7AE76355-80C1-4268-ABA7-E73836345C32}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevelopmentBuild", "DevelopmentBuild\DevelopmentBuild.csproj", "{423B0193-15D1-442E-83CF-DFC6F00175FE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -87,6 +89,10 @@ Global
 		{7AE76355-80C1-4268-ABA7-E73836345C32}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7AE76355-80C1-4268-ABA7-E73836345C32}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7AE76355-80C1-4268-ABA7-E73836345C32}.Release|Any CPU.Build.0 = Release|Any CPU
+		{423B0193-15D1-442E-83CF-DFC6F00175FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{423B0193-15D1-442E-83CF-DFC6F00175FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{423B0193-15D1-442E-83CF-DFC6F00175FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{423B0193-15D1-442E-83CF-DFC6F00175FE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
