@@ -1,0 +1,9 @@
+{
+	"images": [
+		{"name":"8clouds.png",	"x":-373, "y":-267, "depth":8.0},
+		{"name":"5behind.png",	"x":-373, "y":-267, "depth":5.0},
+		{"name":"4gamer.png",		"x":-373, "y":-267, "depth":4.0},
+		{"name":"2middle.png",	"x":-373, "y":-267, "depth":2.0},
+		{"name":"1front.png",		"x":-373, "y":-267, "depth":1.0},
+	]
+}

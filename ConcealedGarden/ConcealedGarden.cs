@@ -53,7 +53,7 @@ namespace ConcealedGarden
                 DevInterface.PlacedObjectRepresentation old = (DevInterface.PlacedObjectRepresentation)instance.tempNodes.Pop();
                 instance.subNodes.Pop();
                 old.ClearSprites();
-                DevInterface.PlacedObjectRepresentation placedObjectRepresentation = new CosmeticLeaves.CosmeticLeavesObjectRepresentation(instance.owner, tp.ToString() + "_Rep", instance, old.pObj, tp.ToString());
+                DevInterface.PlacedObjectRepresentation placedObjectRepresentation = new CosmeticLeaves.CosmeticLeavesObjectData.CosmeticLeavesObjectRepresentation(instance.owner, tp.ToString() + "_Rep", instance, old.pObj, tp.ToString());
                 instance.tempNodes.Add(placedObjectRepresentation);
                 instance.subNodes.Add(placedObjectRepresentation);
             }

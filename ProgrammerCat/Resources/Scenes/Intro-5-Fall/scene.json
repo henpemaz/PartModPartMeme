@@ -1,0 +1,8 @@
+{
+	"images": [
+		{"name":"4bkg.png", "x":-373, "y":-267, "depth":8.0},
+		{"name":"3gamer.png",	 "x":-373, "y":-267, "depth":3.0, "shader":"LightEdges"},
+		{"name":"2middle.png",  "x":-373, "y":-267, "depth":1.5, "shader":"LightEdges"},
+		{"name":"1front.png",  "x":-373, "y":-367, "depth":1.0, "shader":"LightEdges"},
+	]
+}

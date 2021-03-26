@@ -1,0 +1,84 @@
+{"frames": {
+
+"programmerBlush0.png":
+{
+	"frame": {"x":0,"y":0,"w":20,"h":20},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":20,"h":20},
+	"sourceSize": {"w":20,"h":20}
+},
+"programmerBlush1.png":
+{
+	"frame": {"x":20,"y":0,"w":20,"h":20},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":20,"h":20},
+	"sourceSize": {"w":20,"h":20}
+},
+"programmerBlush2.png":
+{
+	"frame": {"x":40,"y":0,"w":20,"h":20},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":20,"h":20},
+	"sourceSize": {"w":20,"h":20}
+},
+"programmerBlush3.png":
+{
+	"frame": {"x":60,"y":0,"w":20,"h":20},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":20,"h":20},
+	"sourceSize": {"w":20,"h":20}
+},
+"programmerBlush4.png":
+{
+	"frame": {"x":80,"y":0,"w":20,"h":20},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":20,"h":20},
+	"sourceSize": {"w":20,"h":20}
+},
+"programmerBlush5.png":
+{
+	"frame": {"x":0,"y":20,"w":20,"h":20},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":20,"h":20},
+	"sourceSize": {"w":20,"h":20}
+},
+"programmerBlush6.png":
+{
+	"frame": {"x":20,"y":20,"w":20,"h":20},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":20,"h":20},
+	"sourceSize": {"w":20,"h":20}
+},
+"programmerBlush7.png":
+{
+	"frame": {"x":40,"y":20,"w":20,"h":20},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":20,"h":20},
+	"sourceSize": {"w":20,"h":20}
+},
+"programmerBlush8.png":
+{
+	"frame": {"x":60,"y":20,"w":20,"h":20},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":20,"h":20},
+	"sourceSize": {"w":20,"h":20}
+}},
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "programmerBlush.png",
+	"format": "RGBA8888",
+	"size": {"w":100,"h":400},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:3dab4827439779e92017ec94a4d70305:fc9cb8802b5ea288d1f3d56a3ee5e7d0:d5b470ee17308bc246580d358ea3640d$"
+}
+}

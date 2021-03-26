@@ -1,0 +1,32 @@
+{
+	"images": [
+		{"name":"5clouds.png", "x":-373, "y":-267, "depth":8.0},
+		{"name":"4back.png",	 "x":-373, "y":-267, "depth":4.0, "shader":"LightEdges"},
+		{"name":"3middle.png",  "x":-373, "y":-267, "depth":2.0, "shader":"LightEdges"},
+		{
+			"name": "2gamerC.png",
+			"x": -373,
+			"y": -267,
+			"depth": 2.0,
+			"shader": "LightEdges",
+			"alphakeys": [ 0, 0, 0.63, 0, 0.69, 1 ]
+		},
+		{
+			"name": "2gamerB.png",
+			"x": -373,
+			"y": -267,
+			"depth": 1.75,
+			"shader": "LightEdges",
+			"alphakeys": [ 0, 0, 0.30, 0, 0.36, 1, 0.63, 1, 0.69, 0 ]
+		},
+		{
+			"name": "2gamerA.png",
+			"x": -373,
+			"y": -267,
+			"depth": 1.5,
+			"shader": "LightEdges",
+			"alphakeys": [0,1, 0.30,1, 0.36,0]
+		},
+		{"name":"1front.png",  "x":-373, "y":-267, "depth":0.3, "shader":"LightEdges"},
+	]
+}

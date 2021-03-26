@@ -1,0 +1,8 @@
+{
+	"images": [
+		{"name":"4bkg.png", "x":255, "y":86, "depth":4.0},
+		{"name":"3lower.png", "x":255, "y":86, "depth":2.9},
+		{"name":"2gamer.png", "x":255, "y":86, "depth":2.7}
+		{"name":"1occl.png", "x":255, "y":86, "depth":1.5}
+	]
+}

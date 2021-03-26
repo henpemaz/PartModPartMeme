@@ -1,0 +1,8 @@
+{
+	"images": [
+		{"name":"Sleep - 5.png", "x":672, "y":236, "depth":3.5},
+		{"name":"3bg.png", "x":690, "y":80, "depth":2.0},
+		{"name":"2gamer.png", "x":690, "y":80, "depth":1.7},
+		{"name":"1fg.png", "x":690, "y":80, "depth":1.5}
+	]
+}

@@ -1,0 +1,162 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{409CB8E0-9476-45C5-867C-1865D231FBCD}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ProgrammerCat</RootNamespace>
+    <AssemblyName>ProgrammerCat</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp - publicitystuntd">
+      <HintPath>..\..\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
+    </Reference>
+    <Reference Include="HOOKS-Assembly-CSharp">
+      <HintPath>..\..\references\HOOKS-Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="MonoMod.Common">
+      <HintPath>..\..\References\MonoMod.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoMod.RuntimeDetour">
+      <HintPath>..\..\References\MonoMod.RuntimeDetour.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoMod.Utils">
+      <HintPath>..\..\References\MonoMod.Utils.dll</HintPath>
+    </Reference>
+    <Reference Include="Partiality">
+      <HintPath>..\..\references\Partiality.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="SlugBase">
+      <HintPath>..\..\References\SlugBase.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="UnityEngine">
+      <HintPath>..\..\references\UnityEngine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ProgrammerCat.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\programmerLegs.png" />
+    <EmbeddedResource Include="Resources\programmerLegs.txt" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-2-Slugcats\1front.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-2-Slugcats\4gamer.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-2-Slugcats\8clouds.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-2-Slugcats\scene.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\programmerBlush.png" />
+    <EmbeddedResource Include="Resources\programmerBlush.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Scenes\Intro-1-Panorama\Intro-1-Panorama - Copy.kra" />
+    <None Include="Resources\Scenes\Intro-1-Panorama\Intro-1-Panorama.kra" />
+    <None Include="Resources\Scenes\Intro-1-Panorama\Intro-1-Panorama.kra~" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-1-Panorama\scene.json" />
+    <EmbeddedResource Include="Resources\Scenes\SelectMenu\scene.json" />
+    <EmbeddedResource Include="Resources\Slideshows\Intro.json" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-3-Closeup\scene.json" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-4-Walk\scene.json" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-5-Fall\scene.json" />
+    <EmbeddedResource Include="Resources\Scenes\Outro-3-Face\scene.json" />
+    <EmbeddedResource Include="Resources\Scenes\Outro-4-Tree\scene.json" />
+    <EmbeddedResource Include="Resources\Scenes\SleepScreen\scene.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Scenes\Intro-1-Panorama\1-fuzz.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-1-Panorama\2-leavesB.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-1-Panorama\3-tree.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-1-Panorama\4-leavesA.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-1-Panorama\5-MastB.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-1-Panorama\6-MastA.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-1-Panorama\7-CloudsB.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-1-Panorama\8-Spike.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-1-Panorama\9-CloudsA.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-1-Panorama\Intro-1-Panorama.flat.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Scenes\Intro-2-Slugcats\2middle.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-2-Slugcats\5behind.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-3-Closeup\1gamer.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-3-Closeup\2near.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-3-Closeup\3far.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-3-Closeup\4clouds.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Scenes\Intro-4-Walk\1front.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-4-Walk\2gamerA.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-4-Walk\2gamerB.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-4-Walk\2gamerC.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-4-Walk\3middle.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-4-Walk\4back.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-4-Walk\5clouds.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Scenes\Intro-5-Fall\1front.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-5-Fall\2middle.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-5-Fall\3gamer.png" />
+    <EmbeddedResource Include="Resources\Scenes\Intro-5-Fall\4bkg.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Scenes\Outro-3-Face\1nFuzz.png" />
+    <EmbeddedResource Include="Resources\Scenes\Outro-3-Face\2nBubbles.png" />
+    <EmbeddedResource Include="Resources\Scenes\Outro-3-Face\3nGamer.png" />
+    <EmbeddedResource Include="Resources\Scenes\Outro-3-Face\4nBkg.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Scenes\Outro-4-Tree\1deskb.png" />
+    <EmbeddedResource Include="Resources\Scenes\Outro-4-Tree\2deska.png" />
+    <EmbeddedResource Include="Resources\Scenes\Outro-4-Tree\3gamershadow.png" />
+    <EmbeddedResource Include="Resources\Scenes\Outro-4-Tree\4gamer.png" />
+    <EmbeddedResource Include="Resources\Scenes\Outro-4-Tree\5others.png" />
+    <EmbeddedResource Include="Resources\Scenes\Outro-4-Tree\6bkg.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Scenes\SelectMenu\1occl.png" />
+    <EmbeddedResource Include="Resources\Scenes\SelectMenu\2gamer.png" />
+    <EmbeddedResource Include="Resources\Scenes\SelectMenu\3lower.png" />
+    <EmbeddedResource Include="Resources\Scenes\SelectMenu\4bkg.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Scenes\SleepScreen\1fg.png" />
+    <EmbeddedResource Include="Resources\Scenes\SleepScreen\2gamer.png" />
+    <EmbeddedResource Include="Resources\Scenes\SleepScreen\3bg.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy /Y $(TargetPath) "C:\Program Files (x86)\Steam\steamapps\common\Rain World\Mods"</PostBuildEvent>
+  </PropertyGroup>
+</Project>

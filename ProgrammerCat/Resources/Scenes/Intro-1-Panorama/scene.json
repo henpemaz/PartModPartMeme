@@ -1,0 +1,13 @@
+{
+	"images": [
+		{"name":"9-CloudsA.png", "x":-147, "y":-243, "depth":8.0},
+		{"name":"8-Spike.png",		"x":-147, "y":-243, "depth":5.0,},
+		{"name":"7-CloudsB.png",	"x":-147, "y":-243, "depth":4.0, "shader":"LightEdges"},
+		{"name":"6-MastA.png",		"x":-147, "y":-243, "depth":3.0,},
+		{"name":"5-MastB.png",		"x":-147, "y":-243, "depth":2.0,},
+		{"name":"4-leavesA.png",	"x":-147, "y":-243, "depth":1.6,},
+		{"name":"3-tree.png",			"x":-147, "y":-243, "depth":1.4,},
+		{"name":"2-leavesB.png",	"x":-147, "y":-243, "depth":1.2,},
+		{"name":"1-fuzz.png",			"x":-147, "y":-243, "depth":0.8, "shader":"LightEdges"},
+	]
+}

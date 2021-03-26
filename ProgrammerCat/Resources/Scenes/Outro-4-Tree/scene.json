@@ -1,0 +1,10 @@
+{
+	"images": [
+		{"name":"6bkg.png", "x":-273, "y":-191, "depth":1.0},
+		{"name":"5others.png", "x":-273, "y":-191, "depth":0.8},
+		{"name":"4gamer.png", "x":-273, "y":-191, "depth":0.8, "alphakeys": [ 0, 0.8, 0.8, 0.8, 0.9, 1 ]},
+		{"name":"3gamershadow.png", "x":-273, "y":-191, "depth":0.8, "shader":"Overlay", "alphakeys": [ 0, 1, 0.2, 0.9, 0.4, 0.2, 0.8, 0.2, 0.9, 0 ]},
+		{"name":"2deska.png", "x":-273, "y":-191, "depth":0.1, "alphakeys": [ 0, 1, 1, 1 ]},
+		{"name":"1deskb.png", "x":-273, "y":-191, "depth":0.1}
+	]
+}

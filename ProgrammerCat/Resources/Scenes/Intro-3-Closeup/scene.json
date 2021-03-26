@@ -1,0 +1,8 @@
+{
+	"images": [
+		{"name":"4clouds.png",  "x":-373, "y":-267, "depth":8.0},
+		{"name":"3far.png", "x":-373, "y":-267, "depth":5.0},
+		{"name":"2near.png",   "x":-373, "y":-267, "depth":3.0, "shader":"LightEdges"},
+		{"name":"1gamer.png",  "x":-373, "y":-267, "depth":1.2, "shader":"LightEdges"},
+	]
+}
