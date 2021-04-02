@@ -37,6 +37,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PacifismEnforcer", "Pacifis
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProgrammerCat", "ProgrammerCat\ProgrammerCat.csproj", "{409CB8E0-9476-45C5-867C-1865D231FBCD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoreSlugcats", "MoooreSlugcats\MoreSlugcats.csproj", "{024A8D31-9CA5-442F-A477-5BAF59B75EC0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -111,6 +113,10 @@ Global
 		{409CB8E0-9476-45C5-867C-1865D231FBCD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{409CB8E0-9476-45C5-867C-1865D231FBCD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{409CB8E0-9476-45C5-867C-1865D231FBCD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{024A8D31-9CA5-442F-A477-5BAF59B75EC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{024A8D31-9CA5-442F-A477-5BAF59B75EC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{024A8D31-9CA5-442F-A477-5BAF59B75EC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{024A8D31-9CA5-442F-A477-5BAF59B75EC0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
