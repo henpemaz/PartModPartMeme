@@ -80,9 +80,9 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F3F RID: 7999 RVA: 0x001D96A0 File Offset: 0x001D78A0
-		protected LizardGraphics.LizardSpineData GetBackPos(int shoulderScale, float timeStacker, bool changeDepthRotation)
+		protected SpineData GetBackPos(int shoulderScale, float timeStacker, bool changeDepthRotation)
 		{
-			LizardGraphics.LizardSpineData result = this.iGraphics.SpinePosition(this.scalesPositions[shoulderScale].y, timeStacker);
+			SpineData result = this.iGraphics.SpinePosition(this.scalesPositions[shoulderScale].y, timeStacker);
 			//if(this.spritesOverlap == SpritesOverlap.Behind)
             //{
 			//	result.depthRotation -= 1;
@@ -96,26 +96,26 @@ namespace LizardSkin
 			return result;
 		}
 
-		// Token: 0x06001F40 RID: 8000 RVA: 0x001D9730 File Offset: 0x001D7930
-		public override void Update()
-		{
-		}
+		//// Token: 0x06001F40 RID: 8000 RVA: 0x001D9730 File Offset: 0x001D7930
+		//public override void Update()
+		//{
+		//}
 
-		// Token: 0x06001F41 RID: 8001 RVA: 0x001D9734 File Offset: 0x001D7934
-		public override void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
-		{
-		}
+		//// Token: 0x06001F41 RID: 8001 RVA: 0x001D9734 File Offset: 0x001D7934
+		//public override void InitiateSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam)
+		//{
+		//}
 
-		// Token: 0x06001F42 RID: 8002 RVA: 0x001D9738 File Offset: 0x001D7938
-		public override void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
-		{
-		}
+		//// Token: 0x06001F42 RID: 8002 RVA: 0x001D9738 File Offset: 0x001D7938
+		//public override void DrawSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam, float timeStacker, Vector2 camPos)
+		//{
+		//}
 
-		// Token: 0x06001F43 RID: 8003 RVA: 0x001D973C File Offset: 0x001D793C
-		public override void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
-		{
-			base.ApplyPalette(sLeaser, rCam, palette);
-		}
+		//// Token: 0x06001F43 RID: 8003 RVA: 0x001D973C File Offset: 0x001D793C
+		//public override void ApplyPalette(LeaserAdaptor sLeaser, CameraAdaptor rCam, PaletteAdaptor palette)
+		//{
+		//	base.ApplyPalette(sLeaser, rCam, palette);
+		//}
 
 		// Token: 0x040021EE RID: 8686
 		public int graphic;

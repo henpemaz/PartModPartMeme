@@ -5,24 +5,16 @@ using UnityEngine;
 
 namespace LizardSkin
 {
-    public abstract class GenericCosmeticsAdaptor : BodyPart, ICosmeticsAdaptor
+    public abstract class GraphicsModuleCosmeticsAdaptor : BodyPart, ICosmeticsAdaptor
     {
-        protected static void LogMethodName()
-        {
-            //System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace();
-            //System.Diagnostics.StackFrame stackFrame = stackTrace.GetFrame(1);
-            //System.Reflection.MethodBase methodBase = stackFrame.GetMethod();
-            // Debug.Log("LizardSkin: " + methodBase.Name);
-        }
-
+        public RainWorld rainWorld => graphics.owner.room.game.rainWorld;
         public GraphicsModule graphics { get ; protected set; }
 
         public float BodyAndTailLength { get => this.bodyLength + this.tailLength; }
         public Color effectColor { get; protected set; }
         public float bodyLength { get; protected set; }
         public float tailLength { get; protected set; }
-        public RoomPalette palette { get; protected set; }
-        public CosmeticsParams cosmeticsParams { get; protected set; }
+        public PaletteAdaptor palette { get; protected set; }
         public List<GenericCosmeticTemplate> cosmetics { get; protected set; }
 
         public float depthRotation { get; set; }
@@ -35,25 +27,37 @@ namespace LizardSkin
         public int firstSprite { get; protected set; }
         public int extraSprites { get; protected set; }
 
-        public abstract BodyPart head { get; }
-        public abstract BodyPart baseOfTail { get; }
-        public abstract BodyChunk mainBodyChunk { get; }
+        public abstract Vector2 headPos { get; }
+        public abstract Vector2 baseOfTailPos { get; }
+        public abstract Vector2 mainBodyChunkPos { get; }
+        public abstract Vector2 headLastPos { get; }
+        public abstract Vector2 baseOfTailLastPos { get; }
+        public abstract Vector2 mainBodyChunkLastPos { get; }
+        public abstract Vector2 mainBodyChunkVel { get; }
+        public abstract BodyChunk mainBodyChunckSecret { get; }
 
-        PhysicalObject ICosmeticsAdaptor.owner { get => this.graphics.owner; }
+        public abstract float HeadRotation(float timeStacker);
 
-        public GenericCosmeticsAdaptor(GraphicsModule graphicsModule) : base(graphicsModule)
+        public abstract SpineData SpinePosition(float spineFactor, float timeStacker);
+
+        public abstract Color BodyColor(float y);
+
+        public abstract Color HeadColor(float timeStacker);
+
+        public bool PointSubmerged(Vector2 pos)
         {
-            LogMethodName();
+            return graphics.owner.room.PointSubmerged(pos);
+        }
+
+
+        public GraphicsModuleCosmeticsAdaptor(GraphicsModule graphicsModule) : base(graphicsModule)
+        {
             this.graphics = graphicsModule;
-
-            this.cosmeticsParams = new CosmeticsParams(0.5f, 0.5f, 0.5f);
-
             this.cosmetics = new List<GenericCosmeticTemplate>();
         }
 
         public virtual void AddCosmetic(GenericCosmeticTemplate cosmetic)
         {
-            LogMethodName();
             this.cosmetics.Add(cosmetic);
             cosmetic.startSprite = this.extraSprites;
             this.extraSprites += cosmetic.numberOfSprites;
@@ -67,24 +71,55 @@ namespace LizardSkin
             }
         }
 
+        internal LeaserAdaptor _leaserAdaptor;
+        internal LeaserAdaptor GetLeaserAdaptor(RoomCamera.SpriteLeaser sLeaser)
+        {
+            if (_leaserAdaptor == null || sLeaser != _leaserAdaptor.sLeaser)
+                _leaserAdaptor = new LeaserAdaptor(sLeaser);
+
+            return _leaserAdaptor;
+        }
+
+        internal CameraAdaptor _cameraAdaptor;
+        internal CameraAdaptor GetCameraAdaptor(RoomCamera rCam)
+        {
+            if (_cameraAdaptor == null || rCam != _cameraAdaptor.rCam)
+                _cameraAdaptor = new CameraAdaptor(rCam);
+
+            return _cameraAdaptor;
+        }
+
+        internal PaletteAdaptor _paletteAdaptor;
+        internal PaletteAdaptor GetPaletteAdaptor(RoomPalette palette)
+        {
+            // focking structs man
+            //if (_paletteAdaptor == null || palette.Equals(_paletteAdaptor.palette.Value))
+            //    _paletteAdaptor = new PaletteAdaptor(palette);
+
+            //return _paletteAdaptor;
+            return new PaletteAdaptor(palette);
+        }
+
+
+
         public virtual void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
         {
-            LogMethodName();
             this.firstSprite = sLeaser.sprites.Length;
 
-            // Debug.Log("Before: " + sLeaser.sprites.Length);
             System.Array.Resize(ref sLeaser.sprites, this.firstSprite + this.extraSprites);
-            // Debug.Log("After: " + sLeaser.sprites.Length);
+
+            LeaserAdaptor leaserAdaptor = GetLeaserAdaptor(sLeaser);
+            CameraAdaptor cameraAdaptor = GetCameraAdaptor(rCam);
+
             for (int l = 0; l < this.cosmetics.Count; l++)
             {
-                this.cosmetics[l].InitiateSprites(sLeaser, rCam);
+                this.cosmetics[l].InitiateSprites(leaserAdaptor, cameraAdaptor);
             }
             this.AddToContainer(sLeaser, rCam, null);
         }
 
         public virtual void AddToContainer(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
         {
-            LogMethodName();
             if (newContatiner == null)
             {
                 newContatiner = rCam.ReturnFContainer("Midground");
@@ -99,25 +134,22 @@ namespace LizardSkin
             newContatiner.AddChild(onTop);
             onTop.MoveInFrontOfOtherNode(getOnTopNode(sLeaser));
 
+            LeaserAdaptor leaserAdaptor = GetLeaserAdaptor(sLeaser);
+            CameraAdaptor cameraAdaptor = GetCameraAdaptor(rCam);
+
             for (int j = 0; j < this.cosmetics.Count; j++)
             {
                 if (this.cosmetics[j].spritesOverlap == GenericCosmeticTemplate.SpritesOverlap.Behind)
                 {
-                    this.cosmetics[j].AddToContainer(sLeaser, rCam, behind);
+                    this.cosmetics[j].AddToContainer(leaserAdaptor, cameraAdaptor, behind);
                 }
-            }
-            for (int m = 0; m < this.cosmetics.Count; m++)
-            {
-                if (this.cosmetics[m].spritesOverlap == GenericCosmeticTemplate.SpritesOverlap.BehindHead)
+                if (this.cosmetics[j].spritesOverlap == GenericCosmeticTemplate.SpritesOverlap.BehindHead)
                 {
-                    this.cosmetics[m].AddToContainer(sLeaser, rCam, behindHead);
+                    this.cosmetics[j].AddToContainer(leaserAdaptor, cameraAdaptor, behindHead);
                 }
-            }
-            for (int m = 0; m < this.cosmetics.Count; m++)
-            {
-                if (this.cosmetics[m].spritesOverlap == GenericCosmeticTemplate.SpritesOverlap.InFront)
+                if (this.cosmetics[j].spritesOverlap == GenericCosmeticTemplate.SpritesOverlap.InFront)
                 {
-                    this.cosmetics[m].AddToContainer(sLeaser, rCam, onTop);
+                    this.cosmetics[j].AddToContainer(leaserAdaptor, cameraAdaptor, onTop);
                 }
             }
         }
@@ -130,25 +162,28 @@ namespace LizardSkin
 
         public virtual void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
         {
+            LeaserAdaptor leaserAdaptor = GetLeaserAdaptor(sLeaser);
+            CameraAdaptor cameraAdaptor = GetCameraAdaptor(rCam);
             for (int j = 0; j < this.cosmetics.Count; j++)
             {
-                this.cosmetics[j].DrawSprites(sLeaser, rCam, timeStacker, camPos);
+                this.cosmetics[j].DrawSprites(leaserAdaptor, cameraAdaptor, timeStacker, camPos);
             }
         }
 
         public virtual void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
         {
-            LogMethodName();
-            this.palette = palette;
+            LeaserAdaptor leaserAdaptor = GetLeaserAdaptor(sLeaser);
+            CameraAdaptor cameraAdaptor = GetCameraAdaptor(rCam);
+            PaletteAdaptor paletteAdaptor = GetPaletteAdaptor(palette);
+            this.palette = paletteAdaptor;
             for (int i = 0; i < this.cosmetics.Count; i++)
             {
-                this.cosmetics[i].ApplyPalette(sLeaser, rCam, palette);
+                this.cosmetics[i].ApplyPalette(leaserAdaptor, cameraAdaptor, paletteAdaptor);
             }
         }
 
         public virtual void Reset()
         {
-            LogMethodName();
             base.Reset(graphics.owner.firstChunk.pos);
 
             for (int l = 0; l < this.cosmetics.Count; l++)
@@ -157,25 +192,5 @@ namespace LizardSkin
             }
         }
 
-        public abstract float HeadRotation(float timeStacker);
-
-        public abstract LizardGraphics.LizardSpineData SpinePosition(float spineFactor, float timeStacker);
-
-        public abstract Color BodyColor(float y);
-
-        public abstract Color HeadColor(float timeStacker);
-    }
-    public struct CosmeticsParams
-    {
-        internal float fatness;
-        internal float tailFatness;
-        internal float headSize;
-
-        public CosmeticsParams(float fatness, float tailFatness, float headSize)
-        {
-            this.fatness = fatness;
-            this.tailFatness = tailFatness;
-            this.headSize = headSize;
-        }
     }
 }

@@ -50,7 +50,7 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F59 RID: 8025 RVA: 0x001DB4C0 File Offset: 0x001D96C0
-		public override void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
+		public override void InitiateSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam)
 		{
 			for (int i = 0; i < 2; i++)
 			{
@@ -70,7 +70,7 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F5A RID: 8026 RVA: 0x001DB5D0 File Offset: 0x001D97D0
-		public override void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+		public override void DrawSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam, float timeStacker, Vector2 camPos)
 		{
 			for (int i = 0; i < 2; i++)
 			{
@@ -78,7 +78,7 @@ namespace LizardSkin
 				for (int j = this.startSprite + this.bumps - 1; j >= this.startSprite; j--)
 				{
 					float num2 = Mathf.InverseLerp((float)this.startSprite, (float)(this.startSprite + this.bumps - 1), (float)j);
-					LizardGraphics.LizardSpineData lizardSpineData = this.iGraphics.SpinePosition(Mathf.Lerp(1f - this.spineLength / this.iGraphics.BodyAndTailLength, 1f, num2), timeStacker);
+					SpineData lizardSpineData = this.iGraphics.SpinePosition(Mathf.Lerp(1f - this.spineLength / this.iGraphics.BodyAndTailLength, 1f, num2), timeStacker);
 					if (i == 0)
 					{
 						sLeaser.sprites[j + num].x = lizardSpineData.outerPos.x - camPos.x;
@@ -118,7 +118,7 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F5B RID: 8027 RVA: 0x001DBA78 File Offset: 0x001D9C78
-		public override void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
+		public override void ApplyPalette(LeaserAdaptor sLeaser, CameraAdaptor rCam, PaletteAdaptor palette)
 		{
 			for (int i = 0; i < 2; i++)
 			{

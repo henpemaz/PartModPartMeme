@@ -24,7 +24,7 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F71 RID: 8049 RVA: 0x001DD420 File Offset: 0x001DB620
-		public override void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
+		public override void InitiateSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam)
 		{
 			for (int i = 0; i < 2; i++)
 			{
@@ -39,7 +39,7 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F72 RID: 8050 RVA: 0x001DD480 File Offset: 0x001DB680
-		public override void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+		public override void DrawSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam, float timeStacker, Vector2 camPos)
 		{
 			float to = Mathf.Lerp(this.iGraphics.lastDepthRotation, this.iGraphics.depthRotation, timeStacker);
 			float from = Mathf.Lerp(this.iGraphics.lastHeadDepthRotation, this.iGraphics.headDepthRotation, timeStacker);
@@ -53,7 +53,7 @@ namespace LizardSkin
 			for (int i = 0; i < 2; i++)
 			{
 				float s = 0.06f + 0.12f * (float)i;
-				LizardGraphics.LizardSpineData lizardSpineData = this.iGraphics.SpinePosition(s, timeStacker);
+				SpineData lizardSpineData = this.iGraphics.SpinePosition(s, timeStacker);
 				Vector2 vector = lizardSpineData.dir;
 				Vector2 pos = lizardSpineData.pos;
 				if (i == 0)
@@ -69,11 +69,11 @@ namespace LizardSkin
 					Vector2 vector4 = vector;
 					if (i == 0)
 					{
-						vector4 = (vector4 - 2f * Custom.DirVec(vector3, Vector2.Lerp(this.iGraphics.head.lastPos, this.iGraphics.head.pos, timeStacker)) * Mathf.Abs(vector2.y)).normalized;
+						vector4 = (vector4 - 2f * Custom.DirVec(vector3, Vector2.Lerp(this.iGraphics.headLastPos, this.iGraphics.headPos, timeStacker)) * Mathf.Abs(vector2.y)).normalized;
 					}
 					else
 					{
-						vector4 = (vector4 + 2f * Custom.DirVec(vector3, Vector2.Lerp(this.iGraphics.baseOfTail.lastPos, this.iGraphics.baseOfTail.pos, timeStacker)) * Mathf.Abs(vector2.y)).normalized;
+						vector4 = (vector4 + 2f * Custom.DirVec(vector3, Vector2.Lerp(this.iGraphics.baseOfTailLastPos, this.iGraphics.baseOfTailPos, timeStacker)) * Mathf.Abs(vector2.y)).normalized;
 					}
 					sLeaser.sprites[this.RingSprite(i, j, 0)].x = vector3.x - camPos.x;
 					sLeaser.sprites[this.RingSprite(i, j, 0)].y = vector3.y - camPos.y;
@@ -95,7 +95,7 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F73 RID: 8051 RVA: 0x001DD9CC File Offset: 0x001DBBCC
-		public override void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
+		public override void ApplyPalette(LeaserAdaptor sLeaser, CameraAdaptor rCam, PaletteAdaptor palette)
 		{
 			for (int i = 0; i < 2; i++)
 			{

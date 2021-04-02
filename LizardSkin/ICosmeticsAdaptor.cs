@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-
+using System;
 
 namespace LizardSkin
 {
@@ -8,46 +8,217 @@ namespace LizardSkin
     {
         // Tightly paired with GenericCosmeticsAdaptor... Helps me keep track of what needs new implementations
 
-        PhysicalObject owner { get; }
-        GraphicsModule graphics { get; }
+        // no, bad
+        //PhysicalObject owner { get; }
+        //GraphicsModule graphics { get; }
 
         List<GenericCosmeticTemplate> cosmetics { get;}
         float BodyAndTailLength { get; }
         float bodyLength { get;}
         float tailLength { get;}
         Color effectColor { get;}
-        RoomPalette palette { get;}
+        PaletteAdaptor palette { get;}
         int firstSprite { get;}
 
-        /// <summary>
-        /// float [0,1] Makes cosmetics shiver
-        /// </summary>
+        Vector2 headPos { get; }
+        Vector2 headLastPos { get; }
+        Vector2 baseOfTailPos { get; }
+        Vector2 baseOfTailLastPos { get; }
+        Vector2 mainBodyChunkPos { get; }
+        Vector2 mainBodyChunkLastPos { get; }
+        Vector2 mainBodyChunkVel { get; }
+
+
         float showDominance { get; }
-        /// <summary>
-        /// float [-1,1] Body rotation
-        /// </summary>
         float depthRotation { get; }
         float headDepthRotation { get; }
         float lastDepthRotation { get; }
         float lastHeadDepthRotation { get; }
+        RainWorld rainWorld { get; }
 
-        BodyPart head { get; }
-        BodyPart baseOfTail { get; }
-        // Hmmmm this one is not ideal but whatever
-        BodyChunk mainBodyChunk { get; }
-
-
-        CosmeticsParams cosmeticsParams { get; }
-
+        bool PointSubmerged(Vector2 pos);
         void AddCosmetic(GenericCosmeticTemplate cosmetic);
-        void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette);
-        void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam);
-        void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos);
+        //void ApplyPalette(LeaserAdaptor sLeaser, CameraAdaptor rCam, PaletteAdaptor palette);
+        //void InitiateSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam);
+        //void DrawSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam, float timeStacker, Vector2 camPos);
         void Reset();
         void Update();
         Color BodyColor(float y);
         Color HeadColor(float v);
         float HeadRotation(float timeStacker);
-        LizardGraphics.LizardSpineData SpinePosition(float spineFactor, float timeStacker);
+        SpineData SpinePosition(float spineFactor, float timeStacker);
+    }
+
+    public class LeaserAdaptor
+    {
+        internal RoomCamera.SpriteLeaser sLeaser;
+        internal FSprite[] sprites;
+
+        public LeaserAdaptor(RoomCamera.SpriteLeaser sLeaser)
+        {
+            this.sLeaser = sLeaser;
+            this.sprites = sLeaser.sprites;
+        }
+    }
+
+    public class CameraAdaptor
+    {
+        internal RoomCamera rCam;
+
+        public CameraAdaptor(RoomCamera rCam)
+        {
+            this.rCam = rCam;
+        }
+
+        internal FContainer ReturnFContainer(string v)
+        {
+            if (rCam != null) return rCam.ReturnFContainer(v);
+            throw new NotImplementedException();
+        }
+    }
+
+    public class PaletteAdaptor
+    {
+        //internal RoomPalette? palette;
+        internal Color blackColor;
+        internal Color skyColor;
+        internal float darkness;
+
+        public PaletteAdaptor(RoomPalette palette)
+        {
+            //this.palette = palette;
+            blackColor = palette.blackColor;
+            skyColor = palette.skyColor;
+            darkness = palette.darkness;
+        }
+    }
+
+    public class GenericBodyPartAdaptor
+    {
+        private GenericBodyPart _genericBodyPart;
+        private Vector2 _pos;
+        private Vector2 _lastPos;
+        private Vector2 _vel;
+        //private BodyChunk _connection;
+        private float _rad;
+        private float _airFriction;
+
+        public GenericBodyPartAdaptor(ICosmeticsAdaptor iG, float rd, float sfFric, float aFric)
+        {
+            if(iG is GraphicsModuleCosmeticsAdaptor)
+            {
+                this._genericBodyPart = new GenericBodyPart((iG as GraphicsModuleCosmeticsAdaptor).graphics, rd, sfFric, aFric, (iG as GraphicsModuleCosmeticsAdaptor).mainBodyChunckSecret);
+            }
+            else
+            {
+                this._rad = rd;
+                this._airFriction = aFric;
+                //BodyChunk con = new BodyChunk(null, 0, pos, rd, 1f);
+                //this._connection = con;
+                this.Reset(iG.mainBodyChunkPos);
+            }
+        }
+
+        public ref Vector2 vel
+        {
+            get
+            {
+                if (this._genericBodyPart != null) return ref this._genericBodyPart.vel;
+                return ref this._vel;
+            }
+            //internal set {
+            //    if (this._genericBodyPart != null) this._genericBodyPart.vel = value;
+            //    else this._vel = value;
+            //}
+        }
+
+        public ref Vector2 pos
+        {
+            get
+            {
+                if (this._genericBodyPart != null) return ref this._genericBodyPart.pos;
+                return ref this._pos;
+            }
+        }
+
+        public ref Vector2 lastPos {
+            get
+            {
+                if (this._genericBodyPart != null) return ref this._genericBodyPart.lastPos;
+                return ref this._lastPos;
+            }
+        }
+
+        internal void ConnectToPoint(Vector2 pnt, float connectionRad, bool push, float elasticMovement, Vector2 hostVel, float adaptVel, float exaggerateVel)
+        {
+            if (this._genericBodyPart != null) this._genericBodyPart.ConnectToPoint(pnt, connectionRad, push, elasticMovement, hostVel, adaptVel, exaggerateVel);
+            else
+            {
+                if (elasticMovement > 0f)
+                {
+                    this.vel += RWCustom.Custom.DirVec(this.pos, pnt) * Vector2.Distance(this.pos, pnt) * elasticMovement;
+                }
+                this.vel += hostVel * exaggerateVel;
+                if (push || !RWCustom.Custom.DistLess(this.pos, pnt, connectionRad))
+                {
+                    float num = Vector2.Distance(this.pos, pnt);
+                    Vector2 a = RWCustom.Custom.DirVec(this.pos, pnt);
+                    this.pos -= (connectionRad - num) * a * 1f;
+                    this.vel -= (connectionRad - num) * a * 1f;
+                }
+                this.vel -= hostVel;
+                this.vel *= 1f - adaptVel;
+                this.vel += hostVel;
+            }
+        }
+
+        internal void Reset(Vector2 vector2)
+        {
+            if(this._genericBodyPart != null)
+            {
+                this._genericBodyPart.Reset(vector2);
+            }
+            else
+            {
+                this._pos = vector2 + RWCustom.Custom.DegToVec(UnityEngine.Random.value * 360f);
+                this._lastPos = this._pos;
+                this._vel = new Vector2(0f, 0f);
+            }
+        }
+
+        internal void Update()
+        {
+            if (this._genericBodyPart != null)
+            {
+                this._genericBodyPart.Update();
+            }
+            else
+            {
+                this.lastPos = this.pos;
+                this.pos += this.vel;
+                this.vel *= this._airFriction;
+            }
+        }
+    }
+
+    public struct SpineData
+    {
+        public SpineData(float f, Vector2 pos, Vector2 outerPos, Vector2 dir, Vector2 perp, float depthRotation, float rad)
+        {
+            this.f = f;
+            this.pos = pos;
+            this.outerPos = outerPos;
+            this.dir = dir;
+            this.perp = perp;
+            this.depthRotation = depthRotation;
+            this.rad = rad;
+        }
+        public float f;
+        public Vector2 pos;
+        public Vector2 outerPos;
+        public Vector2 dir;
+        public Vector2 perp;
+        public float depthRotation;
+        public float rad;
     }
 }

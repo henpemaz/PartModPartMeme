@@ -20,7 +20,7 @@ namespace LizardSkin
 		{
 			for (int i = 0; i < this.scaleObjects.Length; i++)
 			{
-				LizardGraphics.LizardSpineData backPos = base.GetBackPos(i, 1f, true);
+				SpineData backPos = base.GetBackPos(i, 1f, true);
 				Vector2 vector = Vector2.Lerp(backPos.dir, Custom.DirVec(backPos.pos, backPos.outerPos), Mathf.Abs(backPos.depthRotation));
 				if (this.scalesPositions[i].y < 0.2f)
 				{
@@ -48,7 +48,7 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F4A RID: 8010 RVA: 0x001D9CBC File Offset: 0x001D7EBC
-		public override void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
+		public override void InitiateSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam)
 		{
 			for (int i = this.startSprite + this.scalesPositions.Length - 1; i >= this.startSprite; i--)
 			{
@@ -65,11 +65,11 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F4B RID: 8011 RVA: 0x001D9DD0 File Offset: 0x001D7FD0
-		public override void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+		public override void DrawSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam, float timeStacker, Vector2 camPos)
 		{
 			for (int i = this.startSprite + this.scalesPositions.Length - 1; i >= this.startSprite; i--)
 			{
-				LizardGraphics.LizardSpineData backPos = base.GetBackPos(i - this.startSprite, timeStacker, true);
+				SpineData backPos = base.GetBackPos(i - this.startSprite, timeStacker, true);
 				sLeaser.sprites[i].x = backPos.outerPos.x - camPos.x;
 				sLeaser.sprites[i].y = backPos.outerPos.y - camPos.y;
 				sLeaser.sprites[i].rotation = Custom.AimFromOneVectorToAnother(backPos.outerPos, Vector2.Lerp(this.scaleObjects[i - this.startSprite].lastPos, this.scaleObjects[i - this.startSprite].pos, timeStacker));
@@ -89,7 +89,7 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F4C RID: 8012 RVA: 0x001D9FDC File Offset: 0x001D81DC
-		public override void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
+		public override void ApplyPalette(LeaserAdaptor sLeaser, CameraAdaptor rCam, PaletteAdaptor palette)
 		{
 			for (int i = this.startSprite + this.scalesPositions.Length - 1; i >= this.startSprite; i--)
 			{

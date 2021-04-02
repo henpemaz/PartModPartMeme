@@ -41,7 +41,7 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F56 RID: 8022 RVA: 0x001DB1F0 File Offset: 0x001D93F0
-		public override void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+		public override void DrawSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam, float timeStacker, Vector2 camPos)
 		{
 			base.DrawSprites(sLeaser, rCam, timeStacker, camPos);
 			for (int i = this.startSprite + this.scalesPositions.Length - 1; i >= this.startSprite; i--)

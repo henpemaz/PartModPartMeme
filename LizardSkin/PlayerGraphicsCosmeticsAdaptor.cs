@@ -7,13 +7,12 @@ using UnityEngine;
 
 namespace LizardSkin
 {
-    public class PlayerGraphicsCosmeticsAdaptor : GenericCosmeticsAdaptor
+    public class PlayerGraphicsCosmeticsAdaptor : GraphicsModuleCosmeticsAdaptor
     {
         // Hooks in here
         #region Hooks
         public static void ApplyHooksToPlayerGraphics()
         {
-            LogMethodName();
             On.PlayerGraphics.ctor += PlayerGraphics_ctor_hk;
             On.PlayerGraphics.Update += PlayerGraphics_Update_hk;
             On.PlayerGraphics.InitiateSprites += PlayerGraphics_InitiateSprites_hk;
@@ -25,7 +24,6 @@ namespace LizardSkin
 
         public static void ApplyHooksToJollyPlayerGraphicsHK()
         {
-            LogMethodName();
             Type jollypg = Type.GetType("JollyCoop.PlayerGraphicsHK, JollyCoop");
             new Hook(jollypg.GetMethod("PlayerGraphics_ApplyPalette", BindingFlags.NonPublic | BindingFlags.Static), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("PlayerGraphics_ApplyPalette_jolly_fix", BindingFlags.NonPublic | BindingFlags.Static));
             new Hook(jollypg.GetMethod("SwichtLayersVanilla", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("Jolly_SwichtLayersVanilla_fix", BindingFlags.NonPublic | BindingFlags.Static));
@@ -33,7 +31,6 @@ namespace LizardSkin
 
         public static void ApplyHooksToColorfootPlayerGraphicsPatch()
         {
-            LogMethodName();
             Type colorfootpg = Type.GetType("Colorfoot.PlayerGraphicsPatch, Colorfoot");
             new Hook(colorfootpg.GetMethod("ApplyPalette", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("Colorfoot_ApplyPalette_fix", BindingFlags.NonPublic | BindingFlags.Static));
         }
@@ -51,12 +48,10 @@ namespace LizardSkin
 
         protected static void PlayerGraphics_ctor_hk(On.PlayerGraphics.orig_ctor orig, PlayerGraphics instance, PhysicalObject ow)
         {
-            LogMethodName();
             orig(instance, ow);
             //InitDebugLabels(instance, ow);
 
-            Type fpg = Type.GetType("FancySlugcats.FancyPlayerGraphics, FancySlugcats");
-            if (fpg != null && fpg.IsInstanceOfType(instance))
+            if (LizardSkin.fpg != null && LizardSkin.fpg.IsInstanceOfType(instance))
             {
                 // skip default constructor if Fancy
                 // Debug.Log("LizardSkin: Skipping default adaptor, Fancy detected");
@@ -68,16 +63,15 @@ namespace LizardSkin
             instance.bodyParts[instance.bodyParts.Length - 1] = adaptor;
             addAdaptor(adaptor);
         }
+
         protected static void PlayerGraphics_Reset_hk(On.PlayerGraphics.orig_Reset orig, PlayerGraphics instance)
         {
-            LogMethodName();
             orig(instance);
             getAdaptor(instance).Reset();
         }
 
         protected static void PlayerGraphics_ApplyPalette_hk(On.PlayerGraphics.orig_ApplyPalette orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
         {
-            LogMethodName();
             orig(instance, sLeaser, rCam, palette);
             getAdaptor(instance).ApplyPalette(sLeaser, rCam, palette);
         }
@@ -117,7 +111,6 @@ namespace LizardSkin
         protected static bool orig_InitiateSprites_lock; // initialize calls palette lock
         protected static void PlayerGraphics_InitiateSprites_hk(On.PlayerGraphics.orig_InitiateSprites orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
         {
-            LogMethodName();
             orig_InitiateSprites_lock = true;
             orig(instance, sLeaser, rCam);
             orig_InitiateSprites_lock = false;
@@ -127,7 +120,6 @@ namespace LizardSkin
 
         protected static void PlayerGraphics_AddToContainer_hk(On.PlayerGraphics.orig_AddToContainer orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
         {
-            LogMethodName();
             orig(instance, sLeaser, rCam, newContatiner);
             if (orig_InitiateSprites_lock)
             {
@@ -178,7 +170,6 @@ namespace LizardSkin
 
         protected static void addAdaptor(PlayerGraphicsCosmeticsAdaptor adaptor)
         {
-            LogMethodName();
             PlayerState playerState = (adaptor.graphics.owner as Player).playerState;
             if (!playerState.isGhost)
             {
@@ -192,32 +183,30 @@ namespace LizardSkin
         }
         #endregion AdaptorManagement
 
-
         protected PlayerGraphics pGraphics { get => this.graphics as PlayerGraphics; }
         protected Player player { get => this.graphics.owner as Player; }
-        
+
         // Implementing properties
-        public override BodyPart head => this.pGraphics.head;
-        public override BodyPart baseOfTail => this.pGraphics.tail[0];
-        public override BodyChunk mainBodyChunk => this.player.mainBodyChunk;
+        public override Vector2 headPos => this.pGraphics.head.pos;
+        public override Vector2 headLastPos => this.pGraphics.head.lastPos;
+        public override Vector2 baseOfTailPos => this.pGraphics.tail[0].pos;
+        public override Vector2 baseOfTailLastPos => this.pGraphics.tail[0].lastPos;
+        public override Vector2 mainBodyChunkPos => this.player.mainBodyChunk.pos;
+        public override Vector2 mainBodyChunkLastPos => this.player.mainBodyChunk.lastPos;
+        public override Vector2 mainBodyChunkVel => this.player.mainBodyChunk.vel;
+
+        public override BodyChunk mainBodyChunckSecret => this.player.mainBodyChunk;
 
         protected override FNode getOnTopNode(RoomCamera.SpriteLeaser sLeaser) => sLeaser.sprites[6];
         protected override FNode getBehindHeadNode(RoomCamera.SpriteLeaser sLeaser) => sLeaser.sprites[3];
         protected override FNode getBehindNode(RoomCamera.SpriteLeaser sLeaser) => sLeaser.sprites[0];
 
-        // Compatibilification references
-        Type jolly_ref;
-        Type custail_ref;
-        Type colorfoot_ref;
         private float headRotation;
         private float lastHeadRotation;
 
         public PlayerGraphicsCosmeticsAdaptor(PlayerGraphics pGraphics) : base(pGraphics)
         {
-            LogMethodName();
-            jolly_ref = Type.GetType("JollyCoop.PlayerGraphicsHK, JollyCoop");
-            custail_ref = Type.GetType("CustomTail.CustomTail, CustomTail");
-            colorfoot_ref = Type.GetType("Colorfoot.LegMod, Colorfoot");
+            
 
             this.bodyLength = this.pGraphics.player.bodyChunkConnections[0].distance;
             this.tailLength = 0f;
@@ -323,7 +312,7 @@ namespace LizardSkin
             float upRot = Custom.VecToDeg(upDir);
             //Vector2 neck_vector = this.head.pos - this.pGraphics.drawPositions[0, 0];
             //Vector2 lookDir = this.pGraphics.lookDirection * 3f * (1f - this.player.sleepCurlUp);
-            Vector2 lookDir = this.head.pos - this.pGraphics.drawPositions[0, 0] * (1f - this.player.sleepCurlUp);
+            Vector2 lookDir = this.headPos - this.pGraphics.drawPositions[0, 0] * (1f - this.player.sleepCurlUp);
             lookDir *= 1 - Mathf.Abs(Vector2.Dot(upDir.normalized, lookDir.normalized));
             if (this.player.sleepCurlUp > 0f)
             {
@@ -401,25 +390,10 @@ namespace LizardSkin
 
         public override float HeadRotation(float timeStacker)
         {
-            //// From Player.Draw_Sprites
-            //float num = 0.8f + 0.2f * Mathf.Sin(Mathf.Lerp(this.pGraphics.lastBreath, this.pGraphics.breath, timeStacker) * 3.1415927f * 2f);
-            //Vector2 vector = Vector2.Lerp(this.pGraphics.drawPositions[0, 1], this.pGraphics.drawPositions[0, 0], timeStacker);
-            //Vector2 vector2 = Vector2.Lerp(this.pGraphics.drawPositions[1, 1], this.pGraphics.drawPositions[1, 0], timeStacker);
-            //Vector2 vector3 = Vector2.Lerp(this.head.lastPos, this.head.pos, timeStacker);
-            //if (this.player.aerobicLevel > 0.5f)
-            //{
-            //    vector += Custom.DirVec(vector2, vector) * Mathf.Lerp(-1f, 1f, num) * Mathf.InverseLerp(0.5f, 1f, this.player.aerobicLevel) * 0.5f;
-            //    vector3 -= Custom.DirVec(vector2, vector) * Mathf.Lerp(-1f, 1f, num) * Mathf.Pow(Mathf.InverseLerp(0.5f, 1f, this.player.aerobicLevel), 1.5f) * 0.75f;
-            //}
-            //float num3 = Custom.AimFromOneVectorToAnother(Vector2.Lerp(vector2, vector, 0.5f), vector3);
-            //num3 = Mathf.Lerp(num3, 45f * Mathf.Sign(vector.x - vector2.x), this.player.sleepCurlUp);
-
-            //return num3;
-
             return Mathf.Lerp(lastHeadRotation, headRotation, timeStacker);
         }
 
-        public override LizardGraphics.LizardSpineData SpinePosition(float spineFactor, float timeStacker)
+        public override SpineData SpinePosition(float spineFactor, float timeStacker)
         {
             // float num = this.pGraphics.player.bodyChunkConnections[0].distance + this.pGraphics.player.bodyChunkConnections[1].distance;
             Vector2 vector;
@@ -433,7 +407,7 @@ namespace LizardSkin
                 float inBodyFactor = Mathf.InverseLerp(0f, this.bodyLength / this.BodyAndTailLength, spineFactor);
 
                 vector = Vector2.Lerp(this.pGraphics.drawPositions[0, 1], this.pGraphics.drawPositions[0, 0], timeStacker);
-                from = this.pGraphics.player.bodyChunks[0].rad * this.cosmeticsParams.fatness;
+                from = this.pGraphics.player.bodyChunks[0].rad;
 
                 vector2 = Vector2.Lerp(this.pGraphics.drawPositions[1, 1], this.pGraphics.drawPositions[1, 0], timeStacker);
                 to = this.pGraphics.player.bodyChunks[1].rad;
@@ -453,12 +427,12 @@ namespace LizardSkin
                 if (num6 < 0)
                 {
                     vector = Vector2.Lerp(this.pGraphics.drawPositions[1, 1], this.pGraphics.drawPositions[1, 0], timeStacker);
-                    from = this.pGraphics.player.bodyChunks[1].rad * this.cosmeticsParams.fatness;
+                    from = this.pGraphics.player.bodyChunks[1].rad;
                 }
                 else
                 {
                     vector = Vector2.Lerp(this.pGraphics.tail[num6].lastPos, this.pGraphics.tail[num6].pos, timeStacker);
-                    from = this.pGraphics.tail[num6].StretchedRad * this.cosmeticsParams.fatness * this.cosmeticsParams.tailFatness;
+                    from = this.pGraphics.tail[num6].StretchedRad;
                 }
                 direction = Vector2.Lerp(this.pGraphics.tail[Mathf.Min(num7 + 1, this.pGraphics.tail.Length - 1)].lastPos, this.pGraphics.tail[Mathf.Min(num7 + 1, this.pGraphics.tail.Length - 1)].pos, timeStacker);
                 vector2 = Vector2.Lerp(this.pGraphics.tail[num7].lastPos, this.pGraphics.tail[num7].pos, timeStacker);
@@ -476,7 +450,7 @@ namespace LizardSkin
             rot = Mathf.Pow(Mathf.Abs(rot), Mathf.Lerp(1.2f, 0.3f, Mathf.Pow(spineFactor, 0.5f))) * Mathf.Sign(rot);
             Vector2 pos = Vector2.Lerp(vector, vector2, t);
             Vector2 outerPos = pos + perp * rot * rad;
-            return new LizardGraphics.LizardSpineData(spineFactor, pos, outerPos, normalized, perp, rot, rad);
+            return new SpineData(spineFactor, pos, outerPos, normalized, perp, rot, rad);
         }
 
         public Color color_from_colorfoot(Color color)
@@ -506,7 +480,7 @@ namespace LizardSkin
         public override Color BodyColor(float y)
         {
 
-            if (y < this.bodyLength / this.BodyAndTailLength || this.custail_ref == null)
+            if (y < this.bodyLength / this.BodyAndTailLength || LizardSkin.custail_ref == null)
             {
                 return BaseBodyColor();
             }
@@ -519,7 +493,7 @@ namespace LizardSkin
         {
             Color color = PlayerGraphics.SlugcatColor((pGraphics.player.State as PlayerState).slugcatCharacter);
 
-            if (jolly_ref != null)
+            if (LizardSkin.jolly_ref != null)
             {
                 color = color_from_jolly(color);
             }
@@ -531,7 +505,7 @@ namespace LizardSkin
                 color = Color.Lerp(color, Color.gray, 0.4f * num);
             }
 
-            if (colorfoot_ref != null)
+            if (LizardSkin.colorfoot_ref != null)
             {
                 color = color_from_colorfoot(color);
             }

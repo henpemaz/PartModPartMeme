@@ -1,18 +1,18 @@
-﻿namespace LizardSkin
+﻿using System;
+using UnityEngine;
+
+namespace LizardSkin
 {
-	public class GenericLizardScale : BodyPart
+	public class GenericLizardScale
 	{
-		// Token: 0x06001FCE RID: 8142 RVA: 0x001EAA18 File Offset: 0x001E8C18
-		public GenericLizardScale(GenericCosmeticTemplate gCosmetics) : base(gCosmetics.iGraphics.graphics)
+		public GenericLizardScale(GenericCosmeticTemplate gCosmetics)
 		{
 			this.iCosmetics = gCosmetics;
 		}
 
-		// Token: 0x06001FCF RID: 8143 RVA: 0x001EAA30 File Offset: 0x001E8C30
-		public override void Update()
+		public void Update()
 		{
-			base.Update();
-			if (this.owner.owner.room.PointSubmerged(this.pos))
+			if (this.iCosmetics.iGraphics.PointSubmerged(this.pos))
 			{
 				this.vel *= 0.5f;
 			}
@@ -24,13 +24,35 @@
 			this.pos += this.vel;
 		}
 
-		// Token: 0x0400229C RID: 8860
 		public GenericCosmeticTemplate iCosmetics;
 
-		// Token: 0x0400229D RID: 8861
 		public float length;
 
-		// Token: 0x0400229E RID: 8862
 		public float width;
+
+		public Vector2 lastPos;
+
+		public Vector2 pos;
+
+		public Vector2 vel;
+
+		internal void ConnectToPoint(Vector2 pnt, float connectionRad, bool push, float elasticMovement, Vector2 hostVel, float adaptVel, float exaggerateVel)
+		{
+			if (elasticMovement > 0f)
+			{
+				this.vel += RWCustom.Custom.DirVec(this.pos, pnt) * Vector2.Distance(this.pos, pnt) * elasticMovement;
+			}
+			this.vel += hostVel * exaggerateVel;
+			if (push || !RWCustom.Custom.DistLess(this.pos, pnt, connectionRad))
+			{
+				float num = Vector2.Distance(this.pos, pnt);
+				Vector2 a = RWCustom.Custom.DirVec(this.pos, pnt);
+				this.pos -= (connectionRad - num) * a * 1f;
+				this.vel -= (connectionRad - num) * a * 1f;
+			}
+			this.vel -= hostVel;
+			this.vel *= 1f - adaptVel;
+			this.vel += hostVel;
+		}
 	}
 }

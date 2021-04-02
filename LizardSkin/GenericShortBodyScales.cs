@@ -38,7 +38,7 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F46 RID: 8006 RVA: 0x001D9860 File Offset: 0x001D7A60
-		public override void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
+		public override void InitiateSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam)
 		{
 			for (int i = this.startSprite + this.scalesPositions.Length - 1; i >= this.startSprite; i--)
 			{
@@ -49,11 +49,11 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F47 RID: 8007 RVA: 0x001D98CC File Offset: 0x001D7ACC
-		public override void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+		public override void DrawSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam, float timeStacker, Vector2 camPos)
 		{
 			for (int i = this.startSprite + this.scalesPositions.Length - 1; i >= this.startSprite; i--)
 			{
-				LizardGraphics.LizardSpineData backPos = base.GetBackPos(i - this.startSprite, timeStacker, true);
+				SpineData backPos = base.GetBackPos(i - this.startSprite, timeStacker, true);
 				sLeaser.sprites[i].x = backPos.outerPos.x - camPos.x;
 				sLeaser.sprites[i].y = backPos.outerPos.y - camPos.y;
 				sLeaser.sprites[i].rotation = Custom.AimFromOneVectorToAnother(backPos.dir, -backPos.dir);

@@ -83,7 +83,7 @@
     <Compile Include="GenericWhiskers.cs" />
     <Compile Include="GenericWingScales.cs" />
     <Compile Include="ICosmeticsAdaptor.cs" />
-    <Compile Include="GenericCosmeticsAdaptor.cs" />
+    <Compile Include="GraphicsModuleCosmeticsAdaptor.cs" />
     <Compile Include="PlayerGraphicsCosmeticsAdaptor.cs" />
     <Compile Include="GenericCosmeticTemplate.cs" />
     <Compile Include="GenericLizardScale.cs" />
@@ -95,6 +95,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy /Y $(TargetPath) "C:\Program Files (x86)\Steam\steamapps\common\Rain World\Mods"</PostBuildEvent>
+    <PostBuildEvent>copy /Y $(TargetPath) "C:\Program Files (x86)\Steam\steamapps\common\Rain World - Dev\Mods"</PostBuildEvent>
   </PropertyGroup>
 </Project>

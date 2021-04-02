@@ -35,7 +35,7 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F33 RID: 7987 RVA: 0x001D8888 File Offset: 0x001D6A88
-		public override void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
+		public override void InitiateSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam)
 		{
 			for (int i = this.startSprite + this.numberOfSprites - 1; i >= this.startSprite; i--)
 			{
@@ -46,13 +46,13 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F34 RID: 7988 RVA: 0x001D8948 File Offset: 0x001D6B48
-		public override void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+		public override void DrawSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam, float timeStacker, Vector2 camPos)
 		{
 			for (int i = this.startSprite + this.numberOfSprites - 1; i >= this.startSprite; i--)
 			{
 				float num = Mathf.InverseLerp((float)this.startSprite, (float)(this.startSprite + this.numberOfSprites - 1), (float)i);
 				float num2 = Mathf.Lerp(0.05f, this.spineLength / this.iGraphics.BodyAndTailLength, num);
-				LizardGraphics.LizardSpineData lizardSpineData = this.iGraphics.SpinePosition(num2, timeStacker);
+				SpineData lizardSpineData = this.iGraphics.SpinePosition(num2, timeStacker);
 				sLeaser.sprites[i].x = lizardSpineData.outerPos.x - camPos.x;
 				sLeaser.sprites[i].y = lizardSpineData.outerPos.y - camPos.y;
 				//if (this.coloredHawk || this.iGraphics.lizard.Template.type == CreatureTemplate.Type.WhiteLizard)
@@ -71,7 +71,7 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F35 RID: 7989 RVA: 0x001D8A84 File Offset: 0x001D6C84
-		public override void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
+		public override void ApplyPalette(LeaserAdaptor sLeaser, CameraAdaptor rCam, PaletteAdaptor palette)
 		{
 			if (!this.coloredHawk)
 			{

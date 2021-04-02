@@ -46,6 +46,12 @@ namespace LizardSkin
 
         public static LizardSkin instance;
 
+        internal static Type fpg;
+        internal static Type jolly_ref;
+        internal static Type custail_ref;
+        internal static Type colorfoot_ref;
+
+
         public override void OnEnable()
         {
             base.OnEnable();
@@ -53,50 +59,50 @@ namespace LizardSkin
 
             PlayerGraphicsCosmeticsAdaptor.ApplyHooksToPlayerGraphics();
 
-            // if FancySlugcats present
-            Type fpg = Type.GetType("FancySlugcats.FancyPlayerGraphics, FancySlugcats");
-            if(fpg != null)
+            // store type to check for instances
+            fpg = Type.GetType("FancySlugcats.FancyPlayerGraphics, FancySlugcats");
+            jolly_ref = Type.GetType("JollyCoop.PlayerGraphicsHK, JollyCoop");
+            custail_ref = Type.GetType("CustomTail.CustomTail, CustomTail");
+            colorfoot_ref = Type.GetType("Colorfoot.LegMod, Colorfoot");
+
+            if (fpg != null)
             {
-                Debug.LogError("LizardSkin: FOUND FancyPlayerGraphics");
+                Debug.Log("LizardSkin: FOUND FancyPlayerGraphics");
                 FancyPlayerGraphicsCosmeticsAdaptor.ApplyHooksToFancyPlayerGraphics();
             }
             else
             {
-                Debug.LogError("LizardSkin: NOT FOUND FancyPlayerGraphics");
+                Debug.Log("LizardSkin: NOT FOUND FancyPlayerGraphics");
             }
-            // 
 
-            Type jollypg = Type.GetType("JollyCoop.PlayerGraphicsHK, JollyCoop");
-            if (jollypg != null)
+            if (jolly_ref != null)
             {
-                Debug.LogError("LizardSkin: FOUND Jolly");
+                Debug.Log("LizardSkin: FOUND Jolly");
                 PlayerGraphicsCosmeticsAdaptor.ApplyHooksToJollyPlayerGraphicsHK();
             }
             else
             {
-                Debug.LogError("LizardSkin: NOT FOUND Jolly");
+                Debug.Log("LizardSkin: NOT FOUND Jolly");
             }
 
-            Type custail_ref = Type.GetType("CustomTail.CustomTail, CustomTail");
             if (custail_ref != null)
             {
-                Debug.LogError("LizardSkin: FOUND CustomTail");
-                // No hookies
+                Debug.Log("LizardSkin: FOUND CustomTail");
+                // No hookies :)
             }
             else
             {
-                Debug.LogError("LizardSkin: NOT FOUND CustomTail");
+                Debug.Log("LizardSkin: NOT FOUND CustomTail");
             }
 
-            Type colorfoot_ref = Type.GetType("Colorfoot.LegMod, Colorfoot");
             if (colorfoot_ref != null)
             {
-                Debug.LogError("LizardSkin: FOUND Colorfoot");
+                Debug.Log("LizardSkin: FOUND Colorfoot");
                 PlayerGraphicsCosmeticsAdaptor.ApplyHooksToColorfootPlayerGraphicsPatch();
             }
             else
             {
-                Debug.LogError("LizardSkin: NOT FOUND Colorfoot");
+                Debug.Log("LizardSkin: NOT FOUND Colorfoot");
             }
         }
     }

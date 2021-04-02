@@ -9,14 +9,14 @@ namespace LizardSkin
 		{
 			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.InFront;
 			this.amount = UnityEngine.Random.Range(3, 5);
-			this.whiskers = new GenericBodyPart[2, this.amount];
+			this.whiskers = new GenericBodyPartAdaptor[2, this.amount];
 			this.whiskerDirections = new Vector2[this.amount];
 			this.whiskerProps = new float[this.amount, 5];
 			this.whiskerLightUp = new float[this.amount, 2, 2];
 			for (int i = 0; i < this.amount; i++)
 			{
-				this.whiskers[0, i] = new GenericBodyPart(iGraphics.graphics, 1f, 0.6f, 0.9f, iGraphics.mainBodyChunk);
-				this.whiskers[1, i] = new GenericBodyPart(iGraphics.graphics, 1f, 0.6f, 0.9f, iGraphics.mainBodyChunk);
+				this.whiskers[0, i] = new GenericBodyPartAdaptor(iGraphics, 1f, 0.6f, 0.9f);
+				this.whiskers[1, i] = new GenericBodyPartAdaptor(iGraphics, 1f, 0.6f, 0.9f);
 				this.whiskerDirections[i] = Custom.DegToVec(Mathf.Lerp(4f, 100f, UnityEngine.Random.value));
 				this.whiskerProps[i, 0] = Custom.ClampedRandomVariation(0.5f, 0.4f, 0.5f) * 40f;
 				this.whiskerProps[i, 1] = Mathf.Lerp(-0.5f, 0.8f, UnityEngine.Random.value);
@@ -58,20 +58,20 @@ namespace LizardSkin
 				for (int j = 0; j < this.amount; j++)
 				{
 					this.whiskers[i, j].vel += this.whiskerDir(i, j, 1f) * this.whiskerProps[j, 2];
-					if (this.iGraphics.owner.room.PointSubmerged(this.whiskers[i, j].pos))
+					if (this.iGraphics.PointSubmerged(this.whiskers[i, j].pos))
 					{
 						this.whiskers[i, j].vel *= 0.8f;
 					}
 					else
 					{
-						GenericBodyPart genericBodyPart = this.whiskers[i, j];
+						GenericBodyPartAdaptor genericBodyPart = this.whiskers[i, j];
 						genericBodyPart.vel.y = genericBodyPart.vel.y - 0.6f;
 					}
 					this.whiskers[i, j].Update();
-					this.whiskers[i, j].ConnectToPoint(this.AnchorPoint(i, j, 1f), this.whiskerProps[j, 0], false, 0f, this.iGraphics.mainBodyChunk.vel, 0f, 0f);
-					if (!Custom.DistLess(this.iGraphics.head.pos, this.whiskers[i, j].pos, 200f))
+					this.whiskers[i, j].ConnectToPoint(this.AnchorPoint(i, j, 1f), this.whiskerProps[j, 0], false, 0f, this.iGraphics.mainBodyChunkVel, 0f, 0f);
+					if (!Custom.DistLess(this.iGraphics.headPos, this.whiskers[i, j].pos, 200f))
 					{
-						this.whiskers[i, j].pos = this.iGraphics.head.pos;
+						this.whiskers[i, j].pos = this.iGraphics.headPos;
 					}
 					this.whiskerLightUp[j, i, 1] = this.whiskerLightUp[j, i, 0];
 					//if (this.whiskerLightUp[j, i, 0] < Mathf.InverseLerp(0f, 0.3f, this.iGraphics.blackLizardLightUpHead))
@@ -93,17 +93,17 @@ namespace LizardSkin
 		{
 			float num = Mathf.Lerp(this.iGraphics.lastHeadDepthRotation, this.iGraphics.headDepthRotation, timeStacker);
 			Vector2 vector = new Vector2(((side != 0) ? 1f : -1f) * (1f - Mathf.Abs(num)) * this.whiskerDirections[m].x + num * this.whiskerProps[m, 1], this.whiskerDirections[m].y);
-			return Custom.RotateAroundOrigo(vector.normalized, Custom.AimFromOneVectorToAnother(Vector2.Lerp(this.iGraphics.mainBodyChunk.lastPos, this.iGraphics.mainBodyChunk.pos, timeStacker), Vector2.Lerp(this.iGraphics.head.lastPos, this.iGraphics.head.pos, timeStacker)));
+			return Custom.RotateAroundOrigo(vector.normalized, Custom.AimFromOneVectorToAnother(Vector2.Lerp(this.iGraphics.mainBodyChunkLastPos, this.iGraphics.mainBodyChunkPos, timeStacker), Vector2.Lerp(this.iGraphics.headLastPos, this.iGraphics.headPos, timeStacker)));
 		}
 
 		// Token: 0x06001F60 RID: 8032 RVA: 0x001DC18C File Offset: 0x001DA38C
 		private Vector2 AnchorPoint(int side, int m, float timeStacker)
 		{
-			return Vector2.Lerp(this.iGraphics.head.lastPos, this.iGraphics.head.pos, timeStacker) + this.whiskerDir(side, m, timeStacker) * 3f * this.iGraphics.cosmeticsParams.headSize;
+			return Vector2.Lerp(this.iGraphics.headLastPos, this.iGraphics.headPos, timeStacker) + this.whiskerDir(side, m, timeStacker) * 3f;
 		}
 
 		// Token: 0x06001F61 RID: 8033 RVA: 0x001DC1EC File Offset: 0x001DA3EC
-		public override void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
+		public override void InitiateSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam)
 		{
 			for (int i = this.startSprite + this.amount * 2 - 1; i >= this.startSprite; i--)
 			{
@@ -112,7 +112,7 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F62 RID: 8034 RVA: 0x001DC230 File Offset: 0x001DA430
-		public override void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+		public override void DrawSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam, float timeStacker, Vector2 camPos)
 		{
 			base.DrawSprites(sLeaser, rCam, timeStacker, camPos);
 			Vector2 b = Custom.DegToVec(this.iGraphics.HeadRotation(timeStacker));
@@ -167,7 +167,7 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F63 RID: 8035 RVA: 0x001DC5FC File Offset: 0x001DA7FC
-		public override void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
+		public override void ApplyPalette(LeaserAdaptor sLeaser, CameraAdaptor rCam, PaletteAdaptor palette)
 		{
 			base.ApplyPalette(sLeaser, rCam, palette);
 			for (int i = 0; i < 2; i++)
@@ -183,7 +183,7 @@ namespace LizardSkin
 		}
 
 		// Token: 0x04002200 RID: 8704
-		public GenericBodyPart[,] whiskers;
+		public GenericBodyPartAdaptor[,] whiskers;
 
 		// Token: 0x04002201 RID: 8705
 		public Vector2[] whiskerDirections;

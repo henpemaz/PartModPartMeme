@@ -11,15 +11,15 @@ namespace LizardSkin
 			this.length = UnityEngine.Random.value;
 			this.segments = Mathf.FloorToInt(Mathf.Lerp(3f, 8f, Mathf.Pow(this.length, Mathf.Lerp(1f, 6f, this.length))));
 			this.alpha = this.length * 0.9f + UnityEngine.Random.value * 0.1f;
-			this.antennae = new GenericBodyPart[2, this.segments];
+			this.antennae = new GenericBodyPartAdaptor[2, this.segments];
 			for (int i = 0; i < this.segments; i++)
 			{
-				this.antennae[0, i] = new GenericBodyPart(iGraphics.graphics, 1f, 0.6f, 0.9f, iGraphics.mainBodyChunk);
-				this.antennae[1, i] = new GenericBodyPart(iGraphics.graphics, 1f, 0.6f, 0.9f, iGraphics.mainBodyChunk);
+				this.antennae[0, i] = new GenericBodyPartAdaptor(iGraphics, 1f, 0.6f, 0.9f);
+				this.antennae[1, i] = new GenericBodyPartAdaptor(iGraphics, 1f, 0.6f, 0.9f);
 			}
-			this.redderTint = new Color(iGraphics.effectColor.r, iGraphics.effectColor.g, iGraphics.effectColor.b);
-			this.redderTint.g = this.redderTint.g * 0.5f;
-			this.redderTint.b = this.redderTint.b * 0.5f;
+			this.redderTint = iGraphics.effectColor;
+			this.redderTint.g *= 0.5f;
+			this.redderTint.b *= 0.5f;
 			this.redderTint.r = Mathf.Lerp(this.redderTint.r, 1f, 0.75f);
 			this.numberOfSprites = 4;
 		}
@@ -59,13 +59,13 @@ namespace LizardSkin
 					float num3 = (float)j / (float)(this.segments - 1);
 					num3 = Mathf.Lerp(num3, Mathf.InverseLerp(0f, 5f, (float)j), 0.2f);
 					this.antennae[i, j].vel += this.AntennaDir(i, 1f) * (1f - num3 + 0.6f * num);
-					if (this.iGraphics.owner.room.PointSubmerged(this.antennae[i, j].pos))
+					if (this.iGraphics.PointSubmerged(this.antennae[i, j].pos))
 					{
 						this.antennae[i, j].vel *= 0.8f;
 					}
 					else
 					{
-						GenericBodyPart genericBodyPart = this.antennae[i, j];
+						GenericBodyPartAdaptor genericBodyPart = this.antennae[i, j];
 						genericBodyPart.vel.y = genericBodyPart.vel.y - 0.4f * num3 * (1f - num);
 					}
 					this.antennae[i, j].Update();
@@ -74,8 +74,8 @@ namespace LizardSkin
 					if (j == 0)
 					{
 						this.antennae[i, j].vel += this.AntennaDir(i, 1f) * 5f;
-						p = this.iGraphics.head.pos;
-						this.antennae[i, j].ConnectToPoint(this.AnchorPoint(i, 1f), num2, true, 0f, this.iGraphics.mainBodyChunk.vel, 0f, 0f);
+						p = this.iGraphics.headPos;
+						this.antennae[i, j].ConnectToPoint(this.AnchorPoint(i, 1f), num2, true, 0f, this.iGraphics.mainBodyChunkVel, 0f, 0f);
 					}
 					else
 					{
@@ -99,9 +99,9 @@ namespace LizardSkin
 					{
 						this.antennae[i, j - 2].vel += Custom.DirVec(this.antennae[i, j].pos, this.antennae[i, j - 2].pos) * 3f * Mathf.Pow(1f - num3, 0.3f);
 					}
-					if (!Custom.DistLess(this.iGraphics.head.pos, this.antennae[i, j].pos, 200f))
+					if (!Custom.DistLess(this.iGraphics.headPos, this.antennae[i, j].pos, 200f))
 					{
-						this.antennae[i, j].pos = this.iGraphics.head.pos;
+						this.antennae[i, j].pos = this.iGraphics.headPos;
 					}
 				}
 			}
@@ -112,17 +112,17 @@ namespace LizardSkin
 		{
 			float num = Mathf.Lerp(this.iGraphics.lastHeadDepthRotation, this.iGraphics.headDepthRotation, timeStacker);
 			Vector2 vector = new Vector2(((side != 0) ? 1f : -1f) * (1f - Mathf.Abs(num)) * 1.5f + num * 3.5f, -1f);
-			return Custom.RotateAroundOrigo(vector.normalized, Custom.AimFromOneVectorToAnother(Vector2.Lerp(this.iGraphics.mainBodyChunk.lastPos, this.iGraphics.mainBodyChunk.pos, timeStacker), Vector2.Lerp(this.iGraphics.head.lastPos, this.iGraphics.head.pos, timeStacker)));
+			return Custom.RotateAroundOrigo(vector.normalized, Custom.AimFromOneVectorToAnother(Vector2.Lerp(this.iGraphics.mainBodyChunkLastPos, this.iGraphics.mainBodyChunkPos, timeStacker), Vector2.Lerp(this.iGraphics.headLastPos, this.iGraphics.headPos, timeStacker)));
 		}
 
 		// Token: 0x06001F69 RID: 8041 RVA: 0x001DCE1C File Offset: 0x001DB01C
 		private Vector2 AnchorPoint(int side, float timeStacker)
 		{
-			return Vector2.Lerp(this.iGraphics.mainBodyChunk.lastPos, this.iGraphics.mainBodyChunk.pos, timeStacker) + this.AntennaDir(side, timeStacker) * 3f * this.iGraphics.cosmeticsParams.headSize;
+			return Vector2.Lerp(this.iGraphics.mainBodyChunkLastPos, this.iGraphics.mainBodyChunkPos, timeStacker) + this.AntennaDir(side, timeStacker) * 3f;
 		}
 
 		// Token: 0x06001F6A RID: 8042 RVA: 0x001DCE80 File Offset: 0x001DB080
-		public override void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
+		public override void InitiateSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam)
 		{
 			for (int i = 0; i < 2; i++)
 			{
@@ -133,12 +133,12 @@ namespace LizardSkin
 			}
 			for (int k = 0; k < 2; k++)
 			{
-				sLeaser.sprites[this.Sprite(k, 1)].shader = rCam.room.game.rainWorld.Shaders["LizardAntenna"];
+				sLeaser.sprites[this.Sprite(k, 1)].shader = iGraphics.rainWorld.Shaders["LizardAntenna"];
 			}
 		}
 
 		// Token: 0x06001F6B RID: 8043 RVA: 0x001DCF14 File Offset: 0x001DB114
-		public override void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+		public override void DrawSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam, float timeStacker, Vector2 camPos)
 		{
 			base.DrawSprites(sLeaser, rCam, timeStacker, camPos);
 			float flicker = 0; // Mathf.Pow(UnityEngine.Random.value, 1f - 0.5f * this.iGraphics.lizard.AI.yellowAI.commFlicker) * this.iGraphics.lizard.AI.yellowAI.commFlicker;
@@ -150,7 +150,7 @@ namespace LizardSkin
 			for (int i = 0; i < 2; i++)
 			{
 				sLeaser.sprites[this.startSprite + i].color = this.iGraphics.HeadColor(timeStacker);
-				Vector2 vector2 = Vector2.Lerp(Vector2.Lerp(this.iGraphics.head.lastPos, this.iGraphics.head.pos, timeStacker), this.AnchorPoint(i, timeStacker), 0.5f);
+				Vector2 vector2 = Vector2.Lerp(Vector2.Lerp(this.iGraphics.headLastPos, this.iGraphics.headPos, timeStacker), this.AnchorPoint(i, timeStacker), 0.5f);
 				float num = 1f;
 				float num2 = 0f;
 				for (int j = 0; j < this.segments; j++)
@@ -198,13 +198,13 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F6D RID: 8045 RVA: 0x001DD3E4 File Offset: 0x001DB5E4
-		public override void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
+		public override void ApplyPalette(LeaserAdaptor sLeaser, CameraAdaptor rCam, PaletteAdaptor palette)
 		{
 			base.ApplyPalette(sLeaser, rCam, palette);
 		}
 
 		// Token: 0x04002205 RID: 8709
-		public GenericBodyPart[,] antennae;
+		public GenericBodyPartAdaptor[,] antennae;
 
 		// Token: 0x04002206 RID: 8710
 		private Color redderTint;

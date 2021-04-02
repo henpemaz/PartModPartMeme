@@ -8,7 +8,7 @@ namespace LizardSkin
         public GenericWingScales(ICosmeticsAdaptor iGraphics) : base(iGraphics)
 		{
 			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.InFront;
-			this.scales = new GenericBodyPart[2, (UnityEngine.Random.value >= 0.2f) ? 2 : 3];
+			this.scales = new GenericBodyPartAdaptor[2, (UnityEngine.Random.value >= 0.2f) ? 2 : 3];
 			this.graphic = ((UnityEngine.Random.value >= 0.4f) ? UnityEngine.Random.Range(0, 5) : 0);
 			this.graphicLenght = Futile.atlasManager.GetElementWithName("LizardScaleA" + this.graphic).sourcePixelSize.y;
 			this.sturdy = UnityEngine.Random.value;
@@ -21,8 +21,8 @@ namespace LizardSkin
 				for (int j = 0; j < this.scales.GetLength(1); j++)
 				{
 					// Adjusted manually ??
-					int middlechunk = (int)Mathf.Floor((iGraphics.graphics.owner.bodyChunks.Length + 1) / 2f) - 1;
-					this.scales[i, j] = new GenericBodyPart(iGraphics.graphics, 2f, 0.5f, Mathf.Lerp(0.8f, 0.999f, this.sturdy), iGraphics.graphics.owner.bodyChunks[middlechunk]);
+					//int middlechunk = (int)Mathf.Floor((iGraphics.graphics.owner.bodyChunks.Length + 1) / 2f) - 1;
+					this.scales[i, j] = new GenericBodyPartAdaptor(iGraphics, 2f, 0.5f, Mathf.Lerp(0.8f, 0.999f, this.sturdy));
 				}
 			}
 			this.numberOfSprites = this.scales.GetLength(0) * this.scales.GetLength(1);
@@ -42,9 +42,10 @@ namespace LizardSkin
 			{
 				for (int j = 0; j < this.scales.GetLength(1); j++)
 				{
-					this.scales[i, j].pos = this.scales[i, j].connection.pos;
-					this.scales[i, j].lastPos = this.scales[i, j].connection.pos;
-					this.scales[i, j].vel *= 0f;
+					//this.scales[i, j].pos = this.scales[i, j].connection.pos;
+					//this.scales[i, j].lastPos = this.scales[i, j].connection.pos;
+					//this.scales[i, j].vel *= 0f;
+					this.scales[i, j].Reset(iGraphics.mainBodyChunkPos);
 				}
 			}
 		}
@@ -55,7 +56,7 @@ namespace LizardSkin
 			for (int i = 0; i < this.scales.GetLength(1); i++)
 			{
 				float num = Custom.LerpMap((float)i, 0f, (float)(this.scales.GetLength(1) - 1), this.frontDir, this.backDir);
-				LizardGraphics.LizardSpineData lizardSpineData = this.iGraphics.SpinePosition(0.025f + (0.025f + 0.15f * (float)i) * this.posSqueeze, 1f);
+				SpineData lizardSpineData = this.iGraphics.SpinePosition(0.025f + (0.025f + 0.15f * (float)i) * this.posSqueeze, 1f);
 				float f = Mathf.Lerp(this.iGraphics.headDepthRotation, lizardSpineData.depthRotation, 0.3f + 0.2f * (float)i);
 				for (int j = 0; j < this.scales.GetLength(0); j++)
 				{
@@ -65,7 +66,7 @@ namespace LizardSkin
 					vector2 = Vector3.Slerp(vector2, lizardSpineData.perp * Mathf.Sign(f), Mathf.Abs(f) * 0.5f);
 					Vector2 a = vector + vector2 * this.scaleLength * 1.5f;
 					this.scales[j, i].Update();
-					this.scales[j, i].ConnectToPoint(vector, this.scaleLength * ((i <= 1) ? 1f : 0.6f), false, 0f, this.iGraphics.graphics.owner.bodyChunks[1].vel, 0.1f + 0.2f * this.sturdy, 0f);
+					this.scales[j, i].ConnectToPoint(vector, this.scaleLength * ((i <= 1) ? 1f : 0.6f), false, 0f, this.iGraphics.mainBodyChunkVel, 0.1f + 0.2f * this.sturdy, 0f);
 					this.scales[j, i].vel += (a - this.scales[j, i].pos) * Mathf.Lerp(0.1f, 0.3f, this.sturdy);
 					this.scales[j, i].pos += (a - this.scales[j, i].pos) * 0.6f * Mathf.Pow(this.sturdy, 3f);
 				}
@@ -84,7 +85,7 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F7D RID: 8061 RVA: 0x001DEA14 File Offset: 0x001DCC14
-		public override void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
+		public override void InitiateSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam)
 		{
 			for (int i = 0; i < this.scales.GetLength(0); i++)
 			{
@@ -98,11 +99,11 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F7E RID: 8062 RVA: 0x001DEAC8 File Offset: 0x001DCCC8
-		public override void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+		public override void DrawSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam, float timeStacker, Vector2 camPos)
 		{
 			for (int i = 0; i < this.scales.GetLength(1); i++)
 			{
-				LizardGraphics.LizardSpineData lizardSpineData = this.iGraphics.SpinePosition(0.025f + (0.025f + 0.15f * (float)i) * this.posSqueeze, timeStacker);
+				SpineData lizardSpineData = this.iGraphics.SpinePosition(0.025f + (0.025f + 0.15f * (float)i) * this.posSqueeze, timeStacker);
 				for (int j = 0; j < this.scales.GetLength(0); j++)
 				{
 					Vector2 vector = lizardSpineData.pos + lizardSpineData.perp * ((j != 0) ? 1f : -1f) * lizardSpineData.rad * (1f - Mathf.Abs(lizardSpineData.depthRotation));
@@ -116,7 +117,7 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F7F RID: 8063 RVA: 0x001DEC3C File Offset: 0x001DCE3C
-		public override void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
+		public override void ApplyPalette(LeaserAdaptor sLeaser, CameraAdaptor rCam, PaletteAdaptor palette)
 		{
 			for (int i = 0; i < this.numberOfSprites; i++)
 			{
@@ -125,7 +126,7 @@ namespace LizardSkin
 		}
 
 		// Token: 0x0400220D RID: 8717
-		public GenericBodyPart[,] scales;
+		public GenericBodyPartAdaptor[,] scales;
 
 		// Token: 0x0400220E RID: 8718
 		private int graphic;

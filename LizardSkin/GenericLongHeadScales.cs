@@ -17,7 +17,7 @@ namespace LizardSkin
 			this.GenerateTwoHorns();
 			//float num2 = Mathf.Pow(UnityEngine.Random.value, 0.7f) * iGraphics.lizard.lizardParams.headSize;
 			//this.colored = (UnityEngine.Random.value < 0.5f && iGraphics.lizard.Template.type != CreatureTemplate.Type.WhiteLizard);
-			float num2 = Mathf.Pow(UnityEngine.Random.value, 0.7f) * iGraphics.cosmeticsParams.headSize;
+			float num2 = Mathf.Pow(UnityEngine.Random.value, 0.7f);
 			this.colored = (UnityEngine.Random.value < 0.5f); // && iGraphics.lizard.Template.type != CreatureTemplate.Type.WhiteLizard);
 			this.graphic = UnityEngine.Random.Range(4, 6);
 			if (num2 < 0.5f && UnityEngine.Random.value < 0.5f)
@@ -65,7 +65,7 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F54 RID: 8020 RVA: 0x001DAF1C File Offset: 0x001D911C
-		public override void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+		public override void DrawSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam, float timeStacker, Vector2 camPos)
 		{
 			base.DrawSprites(sLeaser, rCam, timeStacker, camPos);
 			for (int i = this.startSprite + this.scalesPositions.Length - 1; i >= this.startSprite; i--)

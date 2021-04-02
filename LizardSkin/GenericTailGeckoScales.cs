@@ -40,7 +40,7 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F76 RID: 8054 RVA: 0x001DDB54 File Offset: 0x001DBD54
-		public override void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
+		public override void InitiateSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam)
 		{
 			for (int i = 0; i < this.rows; i++)
 			{
@@ -60,16 +60,16 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F77 RID: 8055 RVA: 0x001DDC08 File Offset: 0x001DBE08
-		public override void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+		public override void DrawSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam, float timeStacker, Vector2 camPos)
 		{
 			if (this.bigScales)
 			{
-				LizardGraphics.LizardSpineData lizardSpineData = this.iGraphics.SpinePosition(0.4f, timeStacker);
+				SpineData lizardSpineData = this.iGraphics.SpinePosition(0.4f, timeStacker);
 				for (int i = 0; i < this.rows; i++)
 				{
 					float num = Mathf.InverseLerp(0f, (float)(this.rows - 1), (float)i);
 					float num2 = Mathf.Lerp(0.5f, 0.99f, Mathf.Pow(num, 0.8f));
-					LizardGraphics.LizardSpineData lizardSpineData2 = this.iGraphics.SpinePosition(num2, timeStacker);
+					SpineData lizardSpineData2 = this.iGraphics.SpinePosition(num2, timeStacker);
 					Color a = this.iGraphics.BodyColor(num2);
 					for (int j = 0; j < this.lines; j++)
 					{
@@ -124,7 +124,7 @@ namespace LizardSkin
 				{
 					float f = Mathf.InverseLerp(0f, (float)(this.rows - 1), (float)k);
 					float num5 = Mathf.Lerp(0.4f, 0.95f, Mathf.Pow(f, 0.8f));
-					LizardGraphics.LizardSpineData lizardSpineData3 = this.iGraphics.SpinePosition(num5, timeStacker);
+					SpineData lizardSpineData3 = this.iGraphics.SpinePosition(num5, timeStacker);
 					Color color = Color.Lerp(this.iGraphics.BodyColor(num5), this.iGraphics.effectColor, 0.2f + 0.8f * Mathf.Pow(f, 0.5f));
 					for (int l = 0; l < this.lines; l++)
 					{
@@ -153,7 +153,7 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F78 RID: 8056 RVA: 0x001DE358 File Offset: 0x001DC558
-		public override void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
+		public override void ApplyPalette(LeaserAdaptor sLeaser, CameraAdaptor rCam, PaletteAdaptor palette)
 		{
 		}
 
