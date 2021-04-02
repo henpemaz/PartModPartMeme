@@ -37,6 +37,9 @@
     <Reference Include="Colorfoot">
       <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\Colorfoot.dll</HintPath>
     </Reference>
+    <Reference Include="ConfigMachine">
+      <HintPath>..\..\References\ConfigMachine.dll</HintPath>
+    </Reference>
     <Reference Include="CustomTail">
       <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\CustomTail.dll</HintPath>
     </Reference>
@@ -84,6 +87,7 @@
     <Compile Include="GenericWingScales.cs" />
     <Compile Include="ICosmeticsAdaptor.cs" />
     <Compile Include="GraphicsModuleCosmeticsAdaptor.cs" />
+    <Compile Include="MenuCosmeticsAdaptor.cs" />
     <Compile Include="PlayerGraphicsCosmeticsAdaptor.cs" />
     <Compile Include="GenericCosmeticTemplate.cs" />
     <Compile Include="GenericLizardScale.cs" />

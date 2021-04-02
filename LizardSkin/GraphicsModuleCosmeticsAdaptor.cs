@@ -74,7 +74,7 @@ namespace LizardSkin
         internal LeaserAdaptor _leaserAdaptor;
         internal LeaserAdaptor GetLeaserAdaptor(RoomCamera.SpriteLeaser sLeaser)
         {
-            if (_leaserAdaptor == null || sLeaser != _leaserAdaptor.sLeaser)
+            if (_leaserAdaptor == null || !_leaserAdaptor.IsAdptorForLeaser(sLeaser))
                 _leaserAdaptor = new LeaserAdaptor(sLeaser);
 
             return _leaserAdaptor;
@@ -83,13 +83,13 @@ namespace LizardSkin
         internal CameraAdaptor _cameraAdaptor;
         internal CameraAdaptor GetCameraAdaptor(RoomCamera rCam)
         {
-            if (_cameraAdaptor == null || rCam != _cameraAdaptor.rCam)
+            if (_cameraAdaptor == null || !_cameraAdaptor.IsAdaptorForCamera(rCam))
                 _cameraAdaptor = new CameraAdaptor(rCam);
 
             return _cameraAdaptor;
         }
 
-        internal PaletteAdaptor _paletteAdaptor;
+        //internal PaletteAdaptor _paletteAdaptor;
         internal PaletteAdaptor GetPaletteAdaptor(RoomPalette palette)
         {
             // focking structs man

@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 using System.Security.Permissions;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using OptionalUI;
 
 [assembly: IgnoresAccessChecksTo("Assembly-CSharp")]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
@@ -46,11 +47,45 @@ namespace LizardSkin
 
         public static LizardSkin instance;
 
+        public static OptionalUI.OptionInterface LoadOI()
+        {
+            return new MyOI();
+        }
+        internal class MyOI : OptionalUI.OptionInterface
+        {
+            public MyOI() : base(mod: LizardSkin.instance)
+            {
+
+            }
+
+            public override void Initialize()
+            {
+                base.Initialize();
+
+                this.Tabs = new OptionalUI.OpTab[1];
+                this.Tabs[0] = new OptionalUI.OpTab();
+
+                OpContainer myContainer = new MenuCosmeticsAdaptor(new Vector2(300, 300));
+
+
+                this.Tabs[0].AddItems(myContainer);
+
+                OpLabel myLabel = new OpLabel(new Vector2(300, 300), new Vector2(60, 30), "Lizcat preview :)");
+
+                this.Tabs[0].AddItems(myLabel);
+            }
+
+            public override void Update(float dt)
+            {
+                base.Update(dt);
+            }
+        }
+
+
         internal static Type fpg;
         internal static Type jolly_ref;
         internal static Type custail_ref;
         internal static Type colorfoot_ref;
-
 
         public override void OnEnable()
         {

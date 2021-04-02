@@ -6,12 +6,7 @@ namespace LizardSkin
 {
     public interface ICosmeticsAdaptor
     {
-        // Tightly paired with GenericCosmeticsAdaptor... Helps me keep track of what needs new implementations
-
-        // no, bad
-        //PhysicalObject owner { get; }
-        //GraphicsModule graphics { get; }
-
+        RainWorld rainWorld { get; }
         List<GenericCosmeticTemplate> cosmetics { get;}
         float BodyAndTailLength { get; }
         float bodyLength { get;}
@@ -34,15 +29,14 @@ namespace LizardSkin
         float headDepthRotation { get; }
         float lastDepthRotation { get; }
         float lastHeadDepthRotation { get; }
-        RainWorld rainWorld { get; }
 
         bool PointSubmerged(Vector2 pos);
         void AddCosmetic(GenericCosmeticTemplate cosmetic);
         //void ApplyPalette(LeaserAdaptor sLeaser, CameraAdaptor rCam, PaletteAdaptor palette);
         //void InitiateSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam);
         //void DrawSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam, float timeStacker, Vector2 camPos);
-        void Reset();
-        void Update();
+        //void Reset();
+        //void Update();
         Color BodyColor(float y);
         Color HeadColor(float v);
         float HeadRotation(float timeStacker);
@@ -51,29 +45,50 @@ namespace LizardSkin
 
     public class LeaserAdaptor
     {
-        internal RoomCamera.SpriteLeaser sLeaser;
+        private RoomCamera.SpriteLeaser sLeaser;
         internal FSprite[] sprites;
+
+        public LeaserAdaptor(int totalSprites)
+        {
+            sprites = new FSprite[totalSprites];
+        }
 
         public LeaserAdaptor(RoomCamera.SpriteLeaser sLeaser)
         {
             this.sLeaser = sLeaser;
             this.sprites = sLeaser.sprites;
         }
+
+        internal bool IsAdptorForLeaser(RoomCamera.SpriteLeaser sLeaser)
+        {
+            return sLeaser == this.sLeaser;
+        }
     }
 
     public class CameraAdaptor
     {
-        internal RoomCamera rCam;
+        private RoomCamera rCam;
+        private FContainer _defaultContainer;
 
         public CameraAdaptor(RoomCamera rCam)
         {
             this.rCam = rCam;
         }
 
+        public CameraAdaptor(FContainer defaultContainer)
+        {
+            this._defaultContainer = defaultContainer;
+        }
+
         internal FContainer ReturnFContainer(string v)
         {
             if (rCam != null) return rCam.ReturnFContainer(v);
-            throw new NotImplementedException();
+            return _defaultContainer;
+        }
+
+        internal bool IsAdaptorForCamera(RoomCamera rCam)
+        {
+            return rCam == this.rCam;
         }
     }
 
@@ -83,6 +98,13 @@ namespace LizardSkin
         internal Color blackColor;
         internal Color skyColor;
         internal float darkness;
+
+        public PaletteAdaptor()
+        {
+            blackColor = new Color(0.05f, 0.05f, 0.05f);
+            skyColor = Color.white;
+            darkness = 0.5f;
+        }
 
         public PaletteAdaptor(RoomPalette palette)
         {

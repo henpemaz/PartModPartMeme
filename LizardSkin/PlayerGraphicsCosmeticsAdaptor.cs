@@ -243,6 +243,7 @@ namespace LizardSkin
             //this.AddCosmetic(new GenericWhiskers(this));
             //this.AddCosmetic(new GenericAntennae(this));
 
+            UnityEngine.Random.seed = 1337;
             this.AddCosmetic(new GenericTailTuft(this));
             this.AddCosmetic(new GenericTailTuft(this));
             this.AddCosmetic(new GenericLongHeadScales(this));
