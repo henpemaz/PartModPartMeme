@@ -10,7 +10,6 @@ using System.Runtime.CompilerServices;
 using System.Security.Permissions;
 using System.Runtime.InteropServices;
 using UnityEngine;
-using OptionalUI;
 
 [assembly: IgnoresAccessChecksTo("Assembly-CSharp")]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
@@ -49,38 +48,8 @@ namespace LizardSkin
 
         public static OptionalUI.OptionInterface LoadOI()
         {
-            return new MyOI();
+            return new LizardSkinOI();
         }
-        internal class MyOI : OptionalUI.OptionInterface
-        {
-            public MyOI() : base(mod: LizardSkin.instance)
-            {
-
-            }
-
-            public override void Initialize()
-            {
-                base.Initialize();
-
-                this.Tabs = new OptionalUI.OpTab[1];
-                this.Tabs[0] = new OptionalUI.OpTab();
-
-                OpContainer myContainer = new MenuCosmeticsAdaptor(new Vector2(300, 300));
-
-
-                this.Tabs[0].AddItems(myContainer);
-
-                OpLabel myLabel = new OpLabel(new Vector2(300, 300), new Vector2(60, 30), "Lizcat preview :)");
-
-                this.Tabs[0].AddItems(myLabel);
-            }
-
-            public override void Update(float dt)
-            {
-                base.Update(dt);
-            }
-        }
-
 
         internal static Type fpg;
         internal static Type jolly_ref;
@@ -123,7 +92,7 @@ namespace LizardSkin
             if (custail_ref != null)
             {
                 Debug.Log("LizardSkin: FOUND CustomTail");
-                // No hookies :)
+                // No hookies needed, good mod :)
             }
             else
             {
@@ -139,6 +108,56 @@ namespace LizardSkin
             {
                 Debug.Log("LizardSkin: NOT FOUND Colorfoot");
             }
+
+
+            // Json goes brrrr
+            On.Json.Serializer.SerializeOther += Serializer_SerializeOther;
+
+            TestSerialization();
+
+        }
+
+        private static void TestSerialization()
+        {
+            Debug.Log("Serialization tests start");
+
+            LizKinProfileData myProfile = new LizKinProfileData();
+            myProfile.profileName = "hehehe";
+            CosmeticTailTuftData myCosmetic1 = new CosmeticTailTuftData();
+            CosmeticTailTuftData myCosmetic2 = new CosmeticTailTuftData();
+            myCosmetic1.veryCute = true;
+            myProfile.cosmetics.Add(myCosmetic1);
+            myProfile.cosmetics.Add(myCosmetic2);
+
+            Debug.Log("init ok");
+            Debug.Log(myProfile);
+
+            //On.Json.Serializer.SerializeOther += Serializer_SerializeOther;
+
+            string serialized = Json.Serialize(myProfile);
+
+            Debug.Log("serialized ok");
+            Debug.Log(serialized);
+
+            LizKinProfileData deserialized = LizKinProfileData.FromJson(Json.Deserialize(serialized) as Dictionary<string, object>);
+
+            Debug.Log("deserialized ok");
+            Debug.Log(deserialized);
+            Debug.Log(deserialized.profileName);
+            Debug.Log((deserialized.cosmetics[0] as CosmeticTailTuftData).veryCute);
+            Debug.Log((deserialized.cosmetics[1] as CosmeticTailTuftData).veryCute);
+
+            string serialized2 = Json.Serialize(deserialized);
+            Debug.Log(serialized2);
+            Debug.Log("Old equals new: " + (serialized == serialized2));
+
+            Debug.Log("Serialization tests ok");
+        }
+
+        private static void Serializer_SerializeOther(On.Json.Serializer.orig_SerializeOther orig, Json.Serializer self, object value)
+        {
+            if (value is IJsonSerializable) self.SerializeObject((value as IJsonSerializable).ToJson());
+            else orig(self, value);
         }
     }
 }

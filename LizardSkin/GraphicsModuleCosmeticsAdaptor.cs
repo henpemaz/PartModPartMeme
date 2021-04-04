@@ -74,7 +74,7 @@ namespace LizardSkin
         internal LeaserAdaptor _leaserAdaptor;
         internal LeaserAdaptor GetLeaserAdaptor(RoomCamera.SpriteLeaser sLeaser)
         {
-            if (_leaserAdaptor == null || !_leaserAdaptor.IsAdptorForLeaser(sLeaser))
+            if (_leaserAdaptor == null || !_leaserAdaptor.IsAdaptorForLeaser(sLeaser))
                 _leaserAdaptor = new LeaserAdaptor(sLeaser);
 
             return _leaserAdaptor;
@@ -99,7 +99,6 @@ namespace LizardSkin
             //return _paletteAdaptor;
             return new PaletteAdaptor(palette);
         }
-
 
 
         public virtual void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)

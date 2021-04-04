@@ -46,20 +46,38 @@ namespace LizardSkin
     public class LeaserAdaptor
     {
         private RoomCamera.SpriteLeaser sLeaser;
-        internal FSprite[] sprites;
+        private FSprite[] _sprites;
+        public FSprite[] sprites {
+            get
+            {
+                if (this.sLeaser != null) return this.sLeaser.sprites;
+                return this._sprites;
+            }
+            set
+            {
+                if (this.sLeaser != null) this.sLeaser.sprites = value;
+                else this._sprites = value;
+            }
+        }
+        
 
         public LeaserAdaptor(int totalSprites)
         {
-            sprites = new FSprite[totalSprites];
+            _sprites = new FSprite[totalSprites];
+        }
+
+        public LeaserAdaptor(FSprite[] fSprites)
+        {
+            _sprites = fSprites;
         }
 
         public LeaserAdaptor(RoomCamera.SpriteLeaser sLeaser)
         {
             this.sLeaser = sLeaser;
-            this.sprites = sLeaser.sprites;
+            //this.sprites = sLeaser.sprites;
         }
 
-        internal bool IsAdptorForLeaser(RoomCamera.SpriteLeaser sLeaser)
+        public bool IsAdaptorForLeaser(RoomCamera.SpriteLeaser sLeaser)
         {
             return sLeaser == this.sLeaser;
         }
@@ -80,13 +98,13 @@ namespace LizardSkin
             this._defaultContainer = defaultContainer;
         }
 
-        internal FContainer ReturnFContainer(string v)
+        public FContainer ReturnFContainer(string v)
         {
             if (rCam != null) return rCam.ReturnFContainer(v);
             return _defaultContainer;
         }
 
-        internal bool IsAdaptorForCamera(RoomCamera rCam)
+        public bool IsAdaptorForCamera(RoomCamera rCam)
         {
             return rCam == this.rCam;
         }
@@ -95,9 +113,9 @@ namespace LizardSkin
     public class PaletteAdaptor
     {
         //internal RoomPalette? palette;
-        internal Color blackColor;
-        internal Color skyColor;
-        internal float darkness;
+        public Color blackColor;
+        public Color skyColor;
+        public float darkness;
 
         public PaletteAdaptor()
         {
@@ -171,7 +189,7 @@ namespace LizardSkin
             }
         }
 
-        internal void ConnectToPoint(Vector2 pnt, float connectionRad, bool push, float elasticMovement, Vector2 hostVel, float adaptVel, float exaggerateVel)
+        public void ConnectToPoint(Vector2 pnt, float connectionRad, bool push, float elasticMovement, Vector2 hostVel, float adaptVel, float exaggerateVel)
         {
             if (this._genericBodyPart != null) this._genericBodyPart.ConnectToPoint(pnt, connectionRad, push, elasticMovement, hostVel, adaptVel, exaggerateVel);
             else
@@ -194,7 +212,7 @@ namespace LizardSkin
             }
         }
 
-        internal void Reset(Vector2 vector2)
+        public void Reset(Vector2 vector2)
         {
             if(this._genericBodyPart != null)
             {
@@ -208,7 +226,7 @@ namespace LizardSkin
             }
         }
 
-        internal void Update()
+        public void Update()
         {
             if (this._genericBodyPart != null)
             {

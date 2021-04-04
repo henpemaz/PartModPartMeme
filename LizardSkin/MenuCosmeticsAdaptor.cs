@@ -15,11 +15,15 @@ namespace LizardSkin
             {
                 this.cosmetics = new List<GenericCosmeticTemplate>();
 
-                UnityEngine.Random.seed = 1337;
-                this.AddCosmetic(new GenericTailTuft(this));
-                this.AddCosmetic(new GenericTailTuft(this));
-                this.AddCosmetic(new GenericLongHeadScales(this));
-                this.AddCosmetic(new GenericAntennae(this));
+                //if (bool.Parse(LizardSkinOI.config["LizSkinEnable"]))
+                //{
+                    UnityEngine.Random.seed = 1337;
+                    this.AddCosmetic(new GenericTailTuft(this));
+                    this.AddCosmetic(new GenericTailTuft(this));
+                    this.AddCosmetic(new GenericLongHeadScales(this));
+                    this.AddCosmetic(new GenericAntennae(this));
+                //}
+                
 
                 this.leaserAdaptor = new LeaserAdaptor(this.firstSprite + totalSprites);
 
@@ -33,8 +37,6 @@ namespace LizardSkin
                     this.cosmetics[j].ApplyPalette(leaserAdaptor, cameraAdaptor, paletteAdaptor);
                     this.cosmetics[j].AddToContainer(leaserAdaptor, cameraAdaptor, cameraAdaptor.ReturnFContainer(null));
                 }
-
-                this.Show();
             }
         }
 
@@ -55,6 +57,7 @@ namespace LizardSkin
             {
                 this.cosmetics[j].DrawSprites(leaserAdaptor, cameraAdaptor, 1f, Vector2.zero);
             }
+            this.myContainer.scale = 3f;
         }
 
         public List<GenericCosmeticTemplate> cosmetics { get; protected set; }

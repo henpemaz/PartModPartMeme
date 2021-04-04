@@ -36,39 +36,50 @@
     </Reference>
     <Reference Include="Colorfoot">
       <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\Colorfoot.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="ConfigMachine">
       <HintPath>..\..\References\ConfigMachine.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="CustomTail">
       <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\CustomTail.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="FancySlugcats">
       <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\FancySlugcats.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="HOOKS-Assembly-CSharp">
       <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\HOOKS-Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="JollyCoop">
       <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\JollyCoop.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="MonoMod">
       <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\MonoMod.exe</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="MonoMod.RuntimeDetour">
       <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\MonoMod.RuntimeDetour.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Partiality">
       <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\Partiality.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine">
       <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\UnityEngine.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -87,6 +98,8 @@
     <Compile Include="GenericWingScales.cs" />
     <Compile Include="ICosmeticsAdaptor.cs" />
     <Compile Include="GraphicsModuleCosmeticsAdaptor.cs" />
+    <Compile Include="LizardSkinOI.cs" />
+    <Compile Include="LizKinProfileData.cs" />
     <Compile Include="MenuCosmeticsAdaptor.cs" />
     <Compile Include="PlayerGraphicsCosmeticsAdaptor.cs" />
     <Compile Include="GenericCosmeticTemplate.cs" />
