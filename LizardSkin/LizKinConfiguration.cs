@@ -23,7 +23,109 @@ namespace LizardSkin
         Dictionary<string, object> ToJson();
     }
 
-    internal class LizKinProfileData : IJsonSerializable
+
+    public class LizKinConfiguration : IJsonSerializable
+    {
+        const int version = 1;
+        private const int maxProfileCount = 10;
+        public List<LizKinProfileData> profiles;
+
+        public LizKinConfiguration()
+        {
+            profiles = new List<LizKinProfileData>();
+        }
+
+        public Dictionary<string, object> ToJson()
+        {
+            return new Dictionary<string, object>()
+                {
+                    {"LizKinConfiguration.version", (long)version },
+                    {"profiles", profiles }
+                };
+        }
+        public static LizKinConfiguration FromJson(Dictionary<string, object> json)
+        {
+            if ((long)json["LizKinConfiguration.version"] == 1)
+            {
+                LizKinConfiguration instance = new LizKinConfiguration()
+                {
+                    profiles = ((List<object>)json["profiles"]).Cast<Dictionary<string, object>>().ToList().ConvertAll(
+                    new Converter<Dictionary<string, object>, LizKinProfileData>(LizKinProfileData.FromJson))
+                };
+
+                return instance;
+            }
+
+            throw new SerializationException("LizKinConfiguration version unsuported");
+        }
+
+        public bool AddDefaultProfile()
+        {
+            if (profiles.Count >= maxProfileCount) return false;
+            profiles.Add(GetDefaultProfile());
+            return true;
+        }
+
+        private LizKinProfileData GetDefaultProfile()
+        {
+            LizKinProfileData myProfile = new LizKinProfileData();
+            myProfile.profileName = "New Profile";
+            return myProfile;
+        }
+
+        internal bool MoveProfileUp(LizKinProfileData profileData)
+        {
+            int index = profiles.IndexOf(profileData);
+            if (index > 0)
+            {
+                profiles.RemoveAt(index);
+                profiles.Insert(index - 1, profileData);
+                return true;
+            }
+            return false;
+        }
+
+        internal bool MoveProfileDown(LizKinProfileData profileData)
+        {
+            int index = profiles.IndexOf(profileData);
+            if (index < profiles.Count-1)
+            {
+                profiles.RemoveAt(index);
+                profiles.Insert(index + 1, profileData);
+                return true;
+            }
+            return false;
+        }
+
+        internal bool DuplicateProfile(LizKinProfileData profileData)
+        {
+            if (profiles.Count >= maxProfileCount) return false;
+            profiles.Add(LizKinProfileData.Clone(profileData));
+            return true;
+        }
+
+        internal bool DeleteProfile(LizKinProfileData profileData)
+        {
+            if (profiles.Count == 1) return false;
+            profiles.Remove(profileData);
+            return true;
+        }
+
+        internal List<LizKinCosmeticData> GetCosmeticsForSlugcat(int difficulty, int character, int player)
+        {
+            List<LizKinCosmeticData> cosmetics = new List<LizKinCosmeticData>();
+            foreach (LizKinProfileData profile in profiles)
+            {
+                if (profile.MatchesSlugcat(difficulty, character, player))
+                {
+                    cosmetics.AddRange(profile.cosmetics);
+                }
+            }
+            return cosmetics;
+        }
+    }
+
+    public class LizKinProfileData : IJsonSerializable
     {
         const int version = 1;
 
@@ -31,20 +133,18 @@ namespace LizardSkin
 
         public enum ProfileAppliesToMode
         {
-            Null,
-            AppliesToBasic,
-            AppliesToAdvanced,
-            AppliesToVeryAdvanced
+            Basic = 1,
+            Advanced,
+            VeryAdvanced
         }
 
         public ProfileAppliesToMode appliesToMode;
 
         public enum ProfileAppliesToSelector
         {
-            Null,
-            AppliesToCharacter,
-            AppliesToDifficulty,
-            AppliesToPlayer
+            Character = 1,
+            Difficulty,
+            Player
         }
 
         public ProfileAppliesToSelector appliesToSelector;
@@ -59,11 +159,11 @@ namespace LizardSkin
 
         public List<LizKinCosmeticData> cosmetics;
 
-        public LizKinProfileData()
+        internal LizKinProfileData()
         {
             profileName = "New Profile";
-            appliesToMode = ProfileAppliesToMode.AppliesToBasic;
-            appliesToSelector = ProfileAppliesToSelector.AppliesToCharacter;
+            appliesToMode = ProfileAppliesToMode.Basic;
+            appliesToSelector = ProfileAppliesToSelector.Character;
             appliesToList = new List<int>() { -1 };
             effectColor = Custom.HSL2RGB(UnityEngine.Random.value, UnityEngine.Random.value * 0.2f + 0.8f, UnityEngine.Random.value * 0.2f + 0.8f);
             overrideBaseColor = false;
@@ -75,15 +175,16 @@ namespace LizardSkin
         {
             return new Dictionary<string, object>()
                 {
-                    {"LizKinProfileData.version", version },
+                    {"LizKinProfileData.version", (long)version },
                     {"profileName", profileName },
-                    {"appliesToMode", (int) appliesToMode },
-                    {"appliesToSelector", (int) appliesToSelector },
-                    {"appliesToList", appliesToList },
+                    {"appliesToMode", (long) appliesToMode },
+                    {"appliesToSelector", (long) appliesToSelector },
+                    {"appliesToList", appliesToList.ConvertAll(Convert.ToInt64).Cast<object>().ToList()},
                     {"effectColor", OptionalUI.OpColorPicker.ColorToHex(effectColor) },
                     {"overrideBaseColor", overrideBaseColor },
                     {"baseColorOverride", OptionalUI.OpColorPicker.ColorToHex(baseColorOverride) },
-                    {"cosmetics", cosmetics },
+                    {"cosmetics", cosmetics.ConvertAll(
+                    new Converter<LizKinCosmeticData, Dictionary<string, object>>(LizKinCosmeticData.ToJsonConverter)).Cast<object>().ToList() },
                 };
         }
         public static LizKinProfileData FromJson(Dictionary<string, object> json)
@@ -100,7 +201,7 @@ namespace LizardSkin
                     overrideBaseColor = (bool)json["overrideBaseColor"],
                     baseColorOverride = OptionalUI.OpColorPicker.HexToColor((string)json["baseColorOverride"]),
                     cosmetics = ((List<object>)json["cosmetics"]).Cast<Dictionary<string, object>>().ToList().ConvertAll(
-                    new Converter<Dictionary<string, object>, LizKinCosmeticData>(LizKinCosmeticData.FromJson))
+                    new Converter<Dictionary<string, object>, LizKinCosmeticData>(LizKinCosmeticData.FromJson)),
                 };
 
                 foreach (LizKinCosmeticData cosmetic in instance.cosmetics)
@@ -109,37 +210,40 @@ namespace LizardSkin
                 }
                 return instance;
             }
-            //LizKinProfileData instance = new LizKinProfileData();
-            //Debug.Log("fromjson start");
-            //if ((long)json["LizKinProfileData.version"] == 1)
-            //{
-
-            //    Debug.Log("assign profileName");
-            //    instance.profileName = (string)json["profileName"];
-            //    Debug.Log("assign appliesToMode");
-            //    instance.appliesToMode = (ProfileAppliesToMode)(long)json["appliesToMode"];
-            //    Debug.Log("assign appliesToSelector");
-            //    instance.appliesToSelector = (ProfileAppliesToSelector)(long)json["appliesToSelector"];
-            //    Debug.Log("assign appliesToList");
-            //    instance.appliesToList = (json["appliesToList"] as List<object>).ConvertAll(Convert.ToInt64).ConvertAll(Convert.ToInt32);
-            //    Debug.Log("assign effectColor");
-            //    instance.effectColor = OptionalUI.OpColorPicker.HexToColor((string)json["effectColor"]);
-            //    Debug.Log("assign overrideBaseColor");
-            //    instance.overrideBaseColor = (bool)json["overrideBaseColor"];
-            //    Debug.Log("assign baseColorOverride");
-            //    instance.baseColorOverride = OptionalUI.OpColorPicker.HexToColor((string)json["baseColorOverride"]);
-            //    Debug.Log("assign cosmetics");
-            //    //instance.cosmetics = ((List<Dictionary<string, object>>)json["cosmetics"]).ConvertAll(new Converter<Dictionary<string, object>, LizKinCosmeticData>(LizKinCosmeticData.FromJson));
-            //    instance.cosmetics = ((List<object>)json["cosmetics"]).Cast<Dictionary<string, object>>().ToList().ConvertAll(new Converter<Dictionary<string, object>, LizKinCosmeticData>(LizKinCosmeticData.FromJson));
-
-            //    Debug.Log("fromjson return");
-            //    return instance;
-            //}
+            
             throw new SerializationException("LizKinProfileData version unsuported");
+        }
+
+        internal static LizKinProfileData Clone(LizKinProfileData instance)
+        {
+            return LizKinProfileData.FromJson(instance.ToJson());
+        }
+
+        public Color baseColor(ICosmeticsAdaptor iGraphics, float y) => overrideBaseColor ? baseColorOverride : iGraphics.BodyColorFallback(y);
+
+        internal bool MatchesSlugcat(int difficulty, int character, int player)
+        {
+            if (appliesToList.Contains(-1)) return true;
+
+            switch (appliesToSelector)
+            {
+                case ProfileAppliesToSelector.Character:
+                    return appliesToList.Contains(character);
+                case ProfileAppliesToSelector.Difficulty:
+                    return appliesToList.Contains(difficulty);
+                case ProfileAppliesToSelector.Player:
+                    return appliesToList.Contains(player);
+            }
+            return false;
+        }
+
+        internal void AddEmptyCosmetic()
+        {
+            this.cosmetics.Add(new CosmeticTailTuftData(){profile = this});
         }
     }
 
-    internal abstract class LizKinCosmeticData : IJsonSerializable
+    public abstract class LizKinCosmeticData : IJsonSerializable
     {
 
         const int version = 1;
@@ -148,8 +252,7 @@ namespace LizardSkin
 
         public enum CosmeticInstanceType
         {
-            Null,
-            Antennae,
+            Antennae = 1,
             AxolotlGills,
             BumpHawk,
             JumpRings,
@@ -165,6 +268,8 @@ namespace LizardSkin
         }
 
         public abstract CosmeticInstanceType instanceType { get; }
+        public Color effectColor => overrideEffectColor ? effectColorOverride : profile.effectColor;
+        public Color baseColor(ICosmeticsAdaptor iGraphics, float y) => overrideBaseColor ? baseColorOverride : profile.baseColor(iGraphics, y);
 
         public int seed;
 
@@ -187,14 +292,19 @@ namespace LizardSkin
         {
             return new Dictionary<string, object>()
                 {
-                    {"LizKinCosmeticData.version", version },
-                    {"instanceType", (int) instanceType },
-                    {"seed", seed },
+                    {"LizKinCosmeticData.version", (long)version },
+                    {"instanceType", (long) instanceType },
+                    {"seed", (long) seed },
                     {"overrideEffectColor", overrideEffectColor },
                     {"effectColorOverride", OptionalUI.OpColorPicker.ColorToHex(effectColorOverride) },
                     {"overrideBaseColor", overrideBaseColor },
                     {"baseColorOverride", OptionalUI.OpColorPicker.ColorToHex(baseColorOverride) },
                 };
+        }
+
+        public static Dictionary<string, object> ToJsonConverter(LizKinCosmeticData instance)
+        {
+            return instance.ToJson();
         }
         public static LizKinCosmeticData FromJson(Dictionary<string, object> json)
         {
@@ -261,14 +371,27 @@ namespace LizardSkin
     internal class CosmeticAntennaeData : LizKinCosmeticData
     {
         const int version = 1;
+        public float length;
+        public float alpha;
+        public Color tintColor;
+
+        public CosmeticAntennaeData()
+        {
+            length = 0.5f;
+            alpha = 0.45f;
+            this.tintColor = new Color(0.9f, 0.3f, 0.3f);
+        }
+
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.Antennae;
 
         public static new CosmeticAntennaeData FromJson(Dictionary<string, object> json)
         {
             if ((long)json["CosmeticAntennaeData.version"] == 1) return new CosmeticAntennaeData()
             {
-
-            };
+                length = (float)(double)json["length"],
+                alpha = (float)(double)json["alpha"],
+                tintColor = OptionalUI.OpColorPicker.HexToColor((string)json["baseColorOverride"])
+        };
             throw new SerializationException("CosmeticAntennaeData version unsuported");
         }
 
@@ -276,7 +399,10 @@ namespace LizardSkin
         {
             return base.ToJson().Concat(new Dictionary<string, object>()
                 {
-                    {"CosmeticAntennaeData.version", version },
+                {"CosmeticAntennaeData.version", (long)version },
+                {"length", (double)length },
+                {"alpha", (double)alpha },
+                {"tintColor",  OptionalUI.OpColorPicker.ColorToHex(tintColor)}
                 }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
     }
@@ -300,7 +426,7 @@ namespace LizardSkin
         {
             return base.ToJson().Concat(new Dictionary<string, object>()
                 {
-                    {"CosmeticAxolotlGillsData.version", version },
+                    {"CosmeticAxolotlGillsData.version", (long)version },
                 }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
     }
@@ -324,7 +450,7 @@ namespace LizardSkin
         {
             return base.ToJson().Concat(new Dictionary<string, object>()
                 {
-                    {"CosmeticBumpHawkData.version", version },
+                    {"CosmeticBumpHawkData.version", (long)version },
                 }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
     }
@@ -348,7 +474,7 @@ namespace LizardSkin
         {
             return base.ToJson().Concat(new Dictionary<string, object>()
                 {
-                    {"CosmeticJumpRingsData.version", version },
+                    {"CosmeticJumpRingsData.version", (long)version },
                 }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
     }
@@ -372,7 +498,7 @@ namespace LizardSkin
         {
             return base.ToJson().Concat(new Dictionary<string, object>()
                 {
-                    {"CosmeticLongHeadScalesData.version", version },
+                    {"CosmeticLongHeadScalesData.version", (long)version },
                 }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
     }
@@ -396,7 +522,7 @@ namespace LizardSkin
         {
             return base.ToJson().Concat(new Dictionary<string, object>()
                 {
-                    {"CosmeticLongShoulderScalesData.version", version },
+                    {"CosmeticLongShoulderScalesData.version", (long)version },
                 }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
     }
@@ -418,7 +544,7 @@ namespace LizardSkin
         {
             return base.ToJson().Concat(new Dictionary<string, object>()
                 {
-                    {"CosmeticShortBodyScalesData.version", version },
+                    {"CosmeticShortBodyScalesData.version", (long)version },
                 }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
     }
@@ -440,7 +566,7 @@ namespace LizardSkin
         {
             return base.ToJson().Concat(new Dictionary<string, object>()
                 {
-                    {"CosmeticSpineSpikesData.version", version },
+                    {"CosmeticSpineSpikesData.version", (long)version },
                 }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
     }
@@ -462,7 +588,7 @@ namespace LizardSkin
         {
             return base.ToJson().Concat(new Dictionary<string, object>()
                 {
-                    {"CosmeticTailFinData.version", version },
+                    {"CosmeticTailFinData.version", (long)version },
                 }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
     }
@@ -484,7 +610,7 @@ namespace LizardSkin
         {
             return base.ToJson().Concat(new Dictionary<string, object>()
                 {
-                    {"CosmeticTailGeckoScalesData.version", version },
+                    {"CosmeticTailGeckoScalesData.version", (long)version },
                 }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
     }
@@ -508,7 +634,7 @@ namespace LizardSkin
         {
             return base.ToJson().Concat(new Dictionary<string, object>()
                 {
-                    {"CosmeticTailTuftData.version", version },
+                    {"CosmeticTailTuftData.version", (long)version },
                     {"veryCute", veryCute }
                 }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
@@ -531,7 +657,7 @@ namespace LizardSkin
         {
             return base.ToJson().Concat(new Dictionary<string, object>()
                 {
-                    {"CosmeticWhiskersData.version", version },
+                    {"CosmeticWhiskersData.version", (long)version },
                 }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
     }
@@ -553,7 +679,7 @@ namespace LizardSkin
         {
             return base.ToJson().Concat(new Dictionary<string, object>()
                 {
-                    {"CosmeticWingScalesData.version", version },
+                    {"CosmeticWingScalesData.version", (long)version },
                 }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
     }

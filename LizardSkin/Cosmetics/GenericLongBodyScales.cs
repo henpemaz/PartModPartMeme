@@ -10,7 +10,7 @@ namespace LizardSkin
 	public class GenericLongBodyScales : GenericBodyScales
 	{
 		// Token: 0x06001F48 RID: 8008 RVA: 0x001D9994 File Offset: 0x001D7B94
-		public GenericLongBodyScales(ICosmeticsAdaptor iGraphics) : base(iGraphics)
+		public GenericLongBodyScales(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
 
 		}
@@ -86,6 +86,7 @@ namespace LizardSkin
 			//{
 			//	this.ApplyPalette(sLeaser, rCam, this.palette);
 			//}
+			this.ApplyPalette(sLeaser, rCam, this.palette);
 		}
 
 		// Token: 0x06001F4C RID: 8012 RVA: 0x001D9FDC File Offset: 0x001D81DC
@@ -93,7 +94,7 @@ namespace LizardSkin
 		{
 			for (int i = this.startSprite + this.scalesPositions.Length - 1; i >= this.startSprite; i--)
 			{
-				sLeaser.sprites[i].color = this.iGraphics.BodyColor(this.scalesPositions[i - this.startSprite].y);
+				sLeaser.sprites[i].color = this.cosmeticData.baseColor(iGraphics, this.scalesPositions[i - this.startSprite].y);
 				if (this.colored)
 				{
 					//if (this.pGraphics.lizard.Template.type == CreatureTemplate.Type.WhiteLizard)
@@ -104,7 +105,7 @@ namespace LizardSkin
 					//{
 					//	sLeaser.sprites[i + this.scalesPositions.Length].color = this.pGraphics.effectColor;
 					//}
-					sLeaser.sprites[i + this.scalesPositions.Length].color = this.iGraphics.effectColor;
+					sLeaser.sprites[i + this.scalesPositions.Length].color = this.cosmeticData.effectColor;
 				}
 			}
 			base.ApplyPalette(sLeaser, rCam, palette);

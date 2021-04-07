@@ -5,22 +5,23 @@ namespace LizardSkin
 {
     internal class GenericAntennae : GenericCosmeticTemplate
     {
-        public GenericAntennae(ICosmeticsAdaptor iGraphics) : base(iGraphics)
+		internal CosmeticAntennaeData antennaeData => cosmeticData as CosmeticAntennaeData;
+        public GenericAntennae(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
 			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.InFront;
-			this.length = UnityEngine.Random.value;
+			this.length = antennaeData.length; //UnityEngine.Random.value;
 			this.segments = Mathf.FloorToInt(Mathf.Lerp(3f, 8f, Mathf.Pow(this.length, Mathf.Lerp(1f, 6f, this.length))));
-			this.alpha = this.length * 0.9f + UnityEngine.Random.value * 0.1f;
+			this.alpha = antennaeData.alpha; // this.length * 0.9f + UnityEngine.Random.value * 0.1f;
 			this.antennae = new GenericBodyPartAdaptor[2, this.segments];
 			for (int i = 0; i < this.segments; i++)
 			{
 				this.antennae[0, i] = new GenericBodyPartAdaptor(iGraphics, 1f, 0.6f, 0.9f);
 				this.antennae[1, i] = new GenericBodyPartAdaptor(iGraphics, 1f, 0.6f, 0.9f);
 			}
-			this.redderTint = iGraphics.effectColor;
-			this.redderTint.g *= 0.5f;
-			this.redderTint.b *= 0.5f;
-			this.redderTint.r = Mathf.Lerp(this.redderTint.r, 1f, 0.75f);
+			this.redderTint = Color.Lerp(this.cosmeticData.effectColor, antennaeData.tintColor, 0.66f); // iGraphics.effectColor;
+			//this.redderTint.g *= 0.5f;
+			//this.redderTint.b *= 0.5f;
+			//this.redderTint.r = Mathf.Lerp(this.redderTint.r, 1f, 0.75f);
 			this.numberOfSprites = 4;
 		}
 
@@ -149,7 +150,7 @@ namespace LizardSkin
 			Vector2 vector = Custom.DegToVec(this.iGraphics.HeadRotation(timeStacker));
 			for (int i = 0; i < 2; i++)
 			{
-				sLeaser.sprites[this.startSprite + i].color = this.iGraphics.HeadColor(timeStacker);
+				sLeaser.sprites[this.startSprite + i].color = this.cosmeticData.baseColor(iGraphics, 0);
 				Vector2 vector2 = Vector2.Lerp(Vector2.Lerp(this.iGraphics.headLastPos, this.iGraphics.headPos, timeStacker), this.AnchorPoint(i, timeStacker), 0.5f);
 				float num = 1f;
 				float num2 = 0f;
@@ -192,7 +193,7 @@ namespace LizardSkin
 			tip = Mathf.Pow(Mathf.InverseLerp(0f, 0.6f, tip), 0.5f);
 			if (part == 0)
 			{
-				return Color.Lerp(this.iGraphics.HeadColor(timeStacker), Color.Lerp(this.iGraphics.effectColor, this.iGraphics.palette.blackColor, flicker), tip);
+				return Color.Lerp(this.cosmeticData.baseColor(iGraphics, 0), Color.Lerp(this.cosmeticData.effectColor, this.iGraphics.palette.blackColor, flicker), tip);
 			}
 			return Color.Lerp(new Color(this.redderTint.r, this.redderTint.g, this.redderTint.b, this.alpha), new Color(1f, 1f, 1f, this.alpha), flicker);
 		}

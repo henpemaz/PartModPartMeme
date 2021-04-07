@@ -4,7 +4,7 @@ namespace LizardSkin
 {
     internal class GenericLongHeadScales : GenericLongBodyScales
 	{
-        public GenericLongHeadScales(ICosmeticsAdaptor iGraphics) : base(iGraphics)
+        public GenericLongHeadScales(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
 			this.rigor = UnityEngine.Random.value;
 			//if (iGraphics.lizard.Template.type != CreatureTemplate.Type.PinkLizard || UnityEngine.Random.value < 0.33333334f)
@@ -70,10 +70,10 @@ namespace LizardSkin
 			base.DrawSprites(sLeaser, rCam, timeStacker, camPos);
 			for (int i = this.startSprite + this.scalesPositions.Length - 1; i >= this.startSprite; i--)
 			{
-				sLeaser.sprites[i].color = this.iGraphics.HeadColor(timeStacker);
+				sLeaser.sprites[i].color = this.cosmeticData.baseColor(iGraphics, 0);
 				if (this.colored)
 				{
-					sLeaser.sprites[i + this.scalesPositions.Length].color = this.iGraphics.effectColor;
+					sLeaser.sprites[i + this.scalesPositions.Length].color = this.cosmeticData.effectColor;
 				}
 			}
 		}

@@ -5,7 +5,7 @@ namespace LizardSkin
 {
     internal class GenericWhiskers : GenericCosmeticTemplate
     {
-        public GenericWhiskers(ICosmeticsAdaptor iGraphics) : base(iGraphics)
+        public GenericWhiskers(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
 			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.InFront;
 			this.amount = UnityEngine.Random.Range(3, 5);
@@ -146,7 +146,7 @@ namespace LizardSkin
 						float num3 = Custom.LerpMap((float)k, 0f, 3f, this.whiskerProps[i, 4], 0.5f);
 						for (int l = k * 4; l < k * 4 + ((k != 3) ? 4 : 3); l++)
 						{
-							(sLeaser.sprites[this.startSprite + i * 2 + j] as TriangleMesh).verticeColors[l] = Color.Lerp(this.iGraphics.HeadColor(timeStacker), new Color(1f, 1f, 1f), (float)(k - 1) / 2f * Mathf.Lerp(this.whiskerLightUp[i, j, 1], this.whiskerLightUp[i, j, 0], timeStacker));
+							(sLeaser.sprites[this.startSprite + i * 2 + j] as TriangleMesh).verticeColors[l] = Color.Lerp(this.cosmeticData.baseColor(iGraphics, 0), new Color(1f, 1f, 1f), (float)(k - 1) / 2f * Mathf.Lerp(this.whiskerLightUp[i, j, 1], this.whiskerLightUp[i, j, 0], timeStacker));
 						}
 						(sLeaser.sprites[this.startSprite + i * 2 + j] as TriangleMesh).MoveVertice(k * 4, vector3 - a2 * (num3 + num) * 0.5f + normalized * d - camPos);
 						(sLeaser.sprites[this.startSprite + i * 2 + j] as TriangleMesh).MoveVertice(k * 4 + 1, vector3 + a2 * (num3 + num) * 0.5f + normalized * d - camPos);

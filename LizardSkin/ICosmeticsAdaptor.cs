@@ -11,8 +11,6 @@ namespace LizardSkin
         float BodyAndTailLength { get; }
         float bodyLength { get;}
         float tailLength { get;}
-        Color effectColor { get;}
-        PaletteAdaptor palette { get;}
         int firstSprite { get;}
 
         Vector2 headPos { get; }
@@ -37,8 +35,13 @@ namespace LizardSkin
         //void DrawSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam, float timeStacker, Vector2 camPos);
         //void Reset();
         //void Update();
-        Color BodyColor(float y);
-        Color HeadColor(float v);
+
+
+        PaletteAdaptor palette { get; }
+        // Color now comes from cosmeticData, falls back to adaptor if unset in the profile
+        // Color effectColor { get;}
+        Color BodyColorFallback(float y);
+        //Color HeadColor(float v);
         float HeadRotation(float timeStacker);
         SpineData SpinePosition(float spineFactor, float timeStacker);
     }

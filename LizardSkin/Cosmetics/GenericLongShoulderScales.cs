@@ -5,7 +5,7 @@ namespace LizardSkin
 {
     internal class GenericLongShoulderScales : GenericLongBodyScales
 	{
-        public GenericLongShoulderScales(ICosmeticsAdaptor iGraphics) : base(iGraphics)
+        public GenericLongShoulderScales(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
 			this.rigor = 0f;
 			int num = 0;

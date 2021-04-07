@@ -6,7 +6,7 @@ namespace LizardSkin
     internal class GenericJumpRings : GenericCosmeticTemplate
 	{
 		// Token: 0x06001F6E RID: 8046 RVA: 0x001DD3F0 File Offset: 0x001DB5F0
-		public GenericJumpRings(ICosmeticsAdaptor iGraphics) : base(iGraphics)
+		public GenericJumpRings(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
 			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.InFront;
 			this.numberOfSprites = 8;
@@ -43,7 +43,7 @@ namespace LizardSkin
 		{
 			float to = Mathf.Lerp(this.iGraphics.lastDepthRotation, this.iGraphics.depthRotation, timeStacker);
 			float from = Mathf.Lerp(this.iGraphics.lastHeadDepthRotation, this.iGraphics.headDepthRotation, timeStacker);
-			Color color = this.iGraphics.HeadColor(timeStacker);
+			Color color = this.cosmeticData.baseColor(iGraphics, 0);
 			float num = 1f;
 			//if (this.iGraphics.lizard.animation == Lizard.Animation.PrepareToJump)
 			//{

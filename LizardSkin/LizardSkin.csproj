@@ -84,31 +84,36 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FancyPlayerGraphicsCosmeticsAdaptor.cs" />
-    <Compile Include="GenericAntennae.cs" />
-    <Compile Include="GenericAxolotlGills.cs" />
-    <Compile Include="GenericBumpHawk.cs" />
-    <Compile Include="GenericJumpRings.cs" />
-    <Compile Include="GenericLongHeadScales.cs" />
-    <Compile Include="GenericLongShoulderScales.cs" />
-    <Compile Include="GenericShortBodyScales.cs" />
-    <Compile Include="GenericSpineSpikes.cs" />
-    <Compile Include="GenericTailFin.cs" />
-    <Compile Include="GenericTailGeckoScales.cs" />
-    <Compile Include="GenericWhiskers.cs" />
-    <Compile Include="GenericWingScales.cs" />
+    <Compile Include="Cosmetics\GenericAntennae.cs" />
+    <Compile Include="Cosmetics\GenericAxolotlGills.cs" />
+    <Compile Include="Cosmetics\GenericBumpHawk.cs" />
+    <Compile Include="Cosmetics\GenericJumpRings.cs" />
+    <Compile Include="Cosmetics\GenericLongHeadScales.cs" />
+    <Compile Include="Cosmetics\GenericLongShoulderScales.cs" />
+    <Compile Include="Cosmetics\GenericShortBodyScales.cs" />
+    <Compile Include="Cosmetics\GenericSpineSpikes.cs" />
+    <Compile Include="Cosmetics\GenericTailFin.cs" />
+    <Compile Include="Cosmetics\GenericTailGeckoScales.cs" />
+    <Compile Include="Cosmetics\GenericWhiskers.cs" />
+    <Compile Include="Cosmetics\GenericWingScales.cs" />
     <Compile Include="ICosmeticsAdaptor.cs" />
     <Compile Include="GraphicsModuleCosmeticsAdaptor.cs" />
     <Compile Include="LizardSkinOI.cs" />
-    <Compile Include="LizKinProfileData.cs" />
+    <Compile Include="LizKinConfiguration.cs" />
     <Compile Include="MenuCosmeticsAdaptor.cs" />
     <Compile Include="PlayerGraphicsCosmeticsAdaptor.cs" />
-    <Compile Include="GenericCosmeticTemplate.cs" />
-    <Compile Include="GenericLizardScale.cs" />
-    <Compile Include="GenericLongBodyScales.cs" />
+    <Compile Include="Cosmetics\GenericCosmeticTemplate.cs" />
+    <Compile Include="Cosmetics\GenericLizardScale.cs" />
+    <Compile Include="Cosmetics\GenericLongBodyScales.cs" />
     <Compile Include="LizardSkin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="GenericBodyScales.cs" />
-    <Compile Include="GenericTailTuft.cs" />
+    <Compile Include="Cosmetics\GenericBodyScales.cs" />
+    <Compile Include="Cosmetics\GenericTailTuft.cs" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\LizKinIcons.png" />
+    <EmbeddedResource Include="Resources\LizKinIcons.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

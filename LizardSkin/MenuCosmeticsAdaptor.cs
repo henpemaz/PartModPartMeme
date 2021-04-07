@@ -1,43 +1,41 @@
 ﻿using Menu;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace LizardSkin
 {
-    public class MenuCosmeticsAdaptor : OptionalUI.OpContainer, ICosmeticsAdaptor
+    internal class MenuCosmeticsAdaptor : OptionalUI.OpContainer, ICosmeticsAdaptor
     {
         public RainWorld rainWorld => menu.manager.rainWorld;
 
-        public MenuCosmeticsAdaptor(Vector2 pos) : base(pos)
+        public MenuCosmeticsAdaptor(Vector2 pos, LizKinProfileData profileData) : base(pos)
         {
+            this.profileData = profileData;
+            this.cosmetics = new List<GenericCosmeticTemplate>();
 
-            if (_init)
-            {
-                this.cosmetics = new List<GenericCosmeticTemplate>();
+            //if (bool.Parse(LizardSkinOI.config["LizSkinEnable"]))
+            //{
+                //UnityEngine.Random.seed = 1337;
+                //this.AddCosmetic(new GenericTailTuft(this));
+                //this.AddCosmetic(new GenericTailTuft(this));
+                //this.AddCosmetic(new GenericLongHeadScales(this));
+                //this.AddCosmetic(new GenericAntennae(this));
+            //}
 
-                //if (bool.Parse(LizardSkinOI.config["LizSkinEnable"]))
-                //{
-                    UnityEngine.Random.seed = 1337;
-                    this.AddCosmetic(new GenericTailTuft(this));
-                    this.AddCosmetic(new GenericTailTuft(this));
-                    this.AddCosmetic(new GenericLongHeadScales(this));
-                    this.AddCosmetic(new GenericAntennae(this));
-                //}
-                
 
-                this.leaserAdaptor = new LeaserAdaptor(this.firstSprite + totalSprites);
+            //this.leaserAdaptor = new LeaserAdaptor(this.firstSprite + totalSprites);
+            //this.cameraAdaptor = new CameraAdaptor(this.myContainer);
+            //this.paletteAdaptor = new PaletteAdaptor();
+            //this.palette = paletteAdaptor;
 
-                this.cameraAdaptor = new CameraAdaptor(this.myContainer);
-                this.paletteAdaptor = new PaletteAdaptor();
-                this.palette = paletteAdaptor;
-
-                for (int j = 0; j < this.cosmetics.Count; j++)
-                {
-                    this.cosmetics[j].InitiateSprites(leaserAdaptor, cameraAdaptor);
-                    this.cosmetics[j].ApplyPalette(leaserAdaptor, cameraAdaptor, paletteAdaptor);
-                    this.cosmetics[j].AddToContainer(leaserAdaptor, cameraAdaptor, cameraAdaptor.ReturnFContainer(null));
-                }
-            }
+            //for (int j = 0; j < this.cosmetics.Count; j++)
+            //{
+            //    this.cosmetics[j].InitiateSprites(leaserAdaptor, cameraAdaptor);
+            //    this.cosmetics[j].ApplyPalette(leaserAdaptor, cameraAdaptor, paletteAdaptor);
+            //    this.cosmetics[j].AddToContainer(leaserAdaptor, cameraAdaptor, cameraAdaptor.ReturnFContainer(null));
+            //}
+            Reset();
         }
 
         public override void Update(float dt)
@@ -55,9 +53,41 @@ namespace LizardSkin
             base.GrafUpdate(timeStacker);
             for (int j = 0; j < this.cosmetics.Count; j++)
             {
+                this.cosmetics[j].ApplyPalette(leaserAdaptor, cameraAdaptor, paletteAdaptor);
                 this.cosmetics[j].DrawSprites(leaserAdaptor, cameraAdaptor, 1f, Vector2.zero);
             }
             this.myContainer.scale = 3f;
+        }
+
+        public override void Reset()
+        {
+            base.Reset();
+
+            myContainer.RemoveAllChildren();
+            this.cosmetics.Clear();
+            totalSprites = 0;
+
+            foreach (LizKinCosmeticData cosmeticData in profileData.cosmetics)
+            {
+                this.AddCosmetic(GenericCosmeticTemplate.MakeCosmetic(this, cosmeticData));
+            }
+
+            //this.AddCosmetic(new GenericTailTuft(this));
+            //this.AddCosmetic(new GenericTailTuft(this));
+            //this.AddCosmetic(new GenericLongHeadScales(this));
+            //this.AddCosmetic(new GenericAntennae(this));
+
+            this.leaserAdaptor = new LeaserAdaptor(this.firstSprite + totalSprites);
+            this.cameraAdaptor = new CameraAdaptor(this.myContainer);
+            this.paletteAdaptor = new PaletteAdaptor();
+            this.palette = paletteAdaptor;
+
+            for (int j = 0; j < this.cosmetics.Count; j++)
+            {
+                this.cosmetics[j].InitiateSprites(leaserAdaptor, cameraAdaptor);
+                this.cosmetics[j].ApplyPalette(leaserAdaptor, cameraAdaptor, paletteAdaptor);
+                this.cosmetics[j].AddToContainer(leaserAdaptor, cameraAdaptor, cameraAdaptor.ReturnFContainer(null));
+            }
         }
 
         public List<GenericCosmeticTemplate> cosmetics { get; protected set; }
@@ -68,7 +98,8 @@ namespace LizardSkin
 
         public float tailLength => 40f;
 
-        public Color effectColor => new Color(0.05f, 0.87f, 0.92f);
+        //public Color effectColor => new Color(0.05f, 0.87f, 0.92f);
+        //public Color effectColor => profileData.effectColor;
 
         public PaletteAdaptor palette { get; protected set; }
 
@@ -92,19 +123,21 @@ namespace LizardSkin
 
         public float showDominance => 0f;
 
-        public float depthRotation => 0f;
+        public float depthRotation => _rotation;
 
-        public float headDepthRotation => 0f;
+        public float headDepthRotation => _rotation;
 
-        public float lastDepthRotation => 0f;
+        public float lastDepthRotation => _rotation;
 
-        public float lastHeadDepthRotation => 0f;
+        public float lastHeadDepthRotation => _rotation;
 
 
         private int totalSprites = 0;
         private LeaserAdaptor leaserAdaptor;
         private CameraAdaptor cameraAdaptor;
         private PaletteAdaptor paletteAdaptor;
+        private float _rotation;
+        private readonly LizKinProfileData profileData;
 
         public void AddCosmetic(GenericCosmeticTemplate cosmetic)
         {
@@ -113,15 +146,15 @@ namespace LizardSkin
             this.totalSprites += cosmetic.numberOfSprites;
         }
 
-        public Color BodyColor(float y)
+        public Color BodyColorFallback(float y)
         {
             return Color.white;
         }
 
-        public Color HeadColor(float v)
-        {
-            return Color.white;
-        }
+        //public Color HeadColor(float v)
+        //{
+        //    return Color.white;
+        //}
 
         public float HeadRotation(float timeStacker)
         {
@@ -139,8 +172,13 @@ namespace LizardSkin
             float rad = RWCustom.Custom.LerpMap(spineFactor, 0.5f, 1f, 10f, 1f);
             Vector2 normalized = new Vector2(0f, 1f);
             Vector2 perp = new Vector2(1f, 0f);
+            float rot = Mathf.Pow(Mathf.Abs(_rotation), Mathf.Lerp(1.2f, 0.3f, Mathf.Pow(spineFactor, 0.5f))) * Mathf.Sign(_rotation);
+            return new SpineData(spineFactor, pos, pos + perp*rad, normalized, perp, rot, rad);
+        }
 
-            return new SpineData(spineFactor, pos, pos + perp*rad, normalized, perp, 0f, rad);
+        internal void SetRotation(float valueFloat)
+        {
+            this._rotation = valueFloat;
         }
     }
 }

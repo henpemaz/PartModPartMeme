@@ -7,7 +7,7 @@ namespace LizardSkin
 	public class GenericBodyScales : GenericCosmeticTemplate
 	{
 		// Token: 0x06001F3B RID: 7995 RVA: 0x001D9310 File Offset: 0x001D7510
-		public GenericBodyScales(ICosmeticsAdaptor iGraphics) : base(iGraphics)
+		public GenericBodyScales(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
 			//this.spritesOverlap = ((!(this is SlugcatLongHeadScales)) ? SlugcatCosmeticsTemplate.SpritesOverlap.BehindHead : SlugcatCosmeticsTemplate.SpritesOverlap.InFront);
 			//this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.BehindHead;

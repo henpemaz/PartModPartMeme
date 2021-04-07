@@ -10,6 +10,9 @@ using System.Runtime.CompilerServices;
 using System.Security.Permissions;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using System.IO;
+using System.Collections;
+using System.Reflection;
 
 [assembly: IgnoresAccessChecksTo("Assembly-CSharp")]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
@@ -109,12 +112,18 @@ namespace LizardSkin
                 Debug.Log("LizardSkin: NOT FOUND Colorfoot");
             }
 
+            On.RainWorld.Start += RainWorld_Start_hk;
 
             // Json goes brrrr
             On.Json.Serializer.SerializeOther += Serializer_SerializeOther;
 
             TestSerialization();
+        }
 
+        private void RainWorld_Start_hk(On.RainWorld.orig_Start orig, RainWorld self)
+        {
+            orig(self);
+            LoadAtlasStreamIntoManager(Futile.atlasManager, "LizKinIcons.png", Assembly.GetExecutingAssembly().GetManifestResourceStream("LizardSkin.Resources.LizKinIcons.png"), Assembly.GetExecutingAssembly().GetManifestResourceStream("LizardSkin.Resources.LizKinIcons.txt"));
         }
 
         private static void TestSerialization()
@@ -151,6 +160,9 @@ namespace LizardSkin
             Debug.Log(serialized2);
             Debug.Log("Old equals new: " + (serialized == serialized2));
 
+            Debug.Log("testing clone");
+            LizKinProfileData.Clone(myProfile);
+
             Debug.Log("Serialization tests ok");
         }
 
@@ -158,6 +170,92 @@ namespace LizardSkin
         {
             if (value is IJsonSerializable) self.SerializeObject((value as IJsonSerializable).ToJson());
             else orig(self, value);
+        }
+
+
+        static void LoadAtlasStreamIntoManager(FAtlasManager atlasManager, string atlasName, System.IO.Stream textureStream, System.IO.Stream jsonStream)
+        {
+            try
+            {
+                // load texture
+                Texture2D texture2D = new Texture2D(0, 0, TextureFormat.ARGB32, false);
+                byte[] bytes = new byte[textureStream.Length];
+                textureStream.Read(bytes, 0, (int)textureStream.Length);
+                texture2D.LoadImage(bytes);
+                // from rainWorld.png.meta unity magic
+                texture2D.anisoLevel = 1;
+                texture2D.filterMode = 0;
+
+                // make fake singleimage atlas
+                FAtlas fatlas = new FAtlas(atlasName, texture2D, FAtlasManager._nextAtlasIndex++);
+                fatlas._elements.Clear();
+                fatlas._elementsByName.Clear();
+                fatlas._isSingleImage = false;
+
+                // actually load the atlas
+                StreamReader sr = new StreamReader(jsonStream, Encoding.UTF8);
+                Dictionary<string, object> dictionary = sr.ReadToEnd().dictionaryFromJson();
+
+                //ctrl c
+                //ctrl v
+
+                Dictionary<string, object> dictionary2 = (Dictionary<string, object>)dictionary["frames"];
+                float resourceScaleInverse = Futile.resourceScaleInverse;
+                int num = 0;
+                foreach (KeyValuePair<string, object> keyValuePair in dictionary2)
+                {
+                    FAtlasElement fatlasElement = new FAtlasElement();
+                    fatlasElement.indexInAtlas = num++;
+                    string text = keyValuePair.Key;
+                    if (Futile.shouldRemoveAtlasElementFileExtensions)
+                    {
+                        int num2 = text.LastIndexOf(".");
+                        if (num2 >= 0)
+                        {
+                            text = text.Substring(0, num2);
+                        }
+                    }
+                    fatlasElement.name = text;
+                    IDictionary dictionary3 = (IDictionary)keyValuePair.Value;
+                    fatlasElement.isTrimmed = (bool)dictionary3["trimmed"];
+                    if ((bool)dictionary3["rotated"])
+                    {
+                        throw new NotSupportedException("Futile no longer supports TexturePacker's \"rotated\" flag. Please disable it when creating the " + fatlas._dataPath + " atlas.");
+                    }
+                    IDictionary dictionary4 = (IDictionary)dictionary3["frame"];
+                    float num3 = float.Parse(dictionary4["x"].ToString());
+                    float num4 = float.Parse(dictionary4["y"].ToString());
+                    float num5 = float.Parse(dictionary4["w"].ToString());
+                    float num6 = float.Parse(dictionary4["h"].ToString());
+                    Rect uvRect = new Rect(num3 / fatlas._textureSize.x, (fatlas._textureSize.y - num4 - num6) / fatlas._textureSize.y, num5 / fatlas._textureSize.x, num6 / fatlas._textureSize.y);
+                    fatlasElement.uvRect = uvRect;
+                    fatlasElement.uvTopLeft.Set(uvRect.xMin, uvRect.yMax);
+                    fatlasElement.uvTopRight.Set(uvRect.xMax, uvRect.yMax);
+                    fatlasElement.uvBottomRight.Set(uvRect.xMax, uvRect.yMin);
+                    fatlasElement.uvBottomLeft.Set(uvRect.xMin, uvRect.yMin);
+                    IDictionary dictionary5 = (IDictionary)dictionary3["sourceSize"];
+                    fatlasElement.sourcePixelSize.x = float.Parse(dictionary5["w"].ToString());
+                    fatlasElement.sourcePixelSize.y = float.Parse(dictionary5["h"].ToString());
+                    fatlasElement.sourceSize.x = fatlasElement.sourcePixelSize.x * resourceScaleInverse;
+                    fatlasElement.sourceSize.y = fatlasElement.sourcePixelSize.y * resourceScaleInverse;
+                    IDictionary dictionary6 = (IDictionary)dictionary3["spriteSourceSize"];
+                    float left = float.Parse(dictionary6["x"].ToString()) * resourceScaleInverse;
+                    float top = float.Parse(dictionary6["y"].ToString()) * resourceScaleInverse;
+                    float width = float.Parse(dictionary6["w"].ToString()) * resourceScaleInverse;
+                    float height = float.Parse(dictionary6["h"].ToString()) * resourceScaleInverse;
+                    fatlasElement.sourceRect = new Rect(left, top, width, height);
+                    fatlas._elements.Add(fatlasElement);
+                    fatlas._elementsByName.Add(fatlasElement.name, fatlasElement);
+                }
+                //pray
+                atlasManager.AddAtlas(fatlas);
+
+            }
+            finally
+            {
+                textureStream.Close();
+                jsonStream.Close();
+            }
         }
     }
 }

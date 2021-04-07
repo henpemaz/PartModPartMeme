@@ -5,7 +5,7 @@ namespace LizardSkin
     internal class GenericAxolotlGills : GenericLongBodyScales
 
 	{
-		public GenericAxolotlGills(ICosmeticsAdaptor iGraphics) : base(iGraphics)
+		public GenericAxolotlGills(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
 			this.rigor = UnityEngine.Random.value;
 			float num = Mathf.Pow(UnityEngine.Random.value, 0.7f);// * iGraphics.lizard.lizardParams.headSize;
@@ -46,10 +46,10 @@ namespace LizardSkin
 			base.DrawSprites(sLeaser, rCam, timeStacker, camPos);
 			for (int i = this.startSprite + this.scalesPositions.Length - 1; i >= this.startSprite; i--)
 			{
-				sLeaser.sprites[i].color = this.iGraphics.HeadColor(timeStacker);
+				sLeaser.sprites[i].color = this.cosmeticData.baseColor(iGraphics, 0);
 				if (this.colored)
 				{
-					sLeaser.sprites[i + this.scalesPositions.Length].color = this.iGraphics.effectColor;
+					sLeaser.sprites[i + this.scalesPositions.Length].color = this.cosmeticData.effectColor;
 				}
 			}
 		}

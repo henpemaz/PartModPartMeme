@@ -5,7 +5,7 @@ namespace LizardSkin
 {
     internal class GenericWingScales : GenericCosmeticTemplate
     {
-        public GenericWingScales(ICosmeticsAdaptor iGraphics) : base(iGraphics)
+        public GenericWingScales(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
 			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.InFront;
 			this.scales = new GenericBodyPartAdaptor[2, (UnityEngine.Random.value >= 0.2f) ? 2 : 3];

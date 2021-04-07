@@ -5,7 +5,7 @@ namespace LizardSkin
 {
     internal class GenericShortBodyScales : GenericBodyScales
 	{
-        public GenericShortBodyScales(ICosmeticsAdaptor iGraphics) : base(iGraphics)
+        public GenericShortBodyScales(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
 			int num = UnityEngine.Random.Range(0, 3);
 			//if (iGraphics.lizard.Template.type == CreatureTemplate.Type.GreenLizard && UnityEngine.Random.value < 0.7f)
@@ -57,7 +57,7 @@ namespace LizardSkin
 				sLeaser.sprites[i].x = backPos.outerPos.x - camPos.x;
 				sLeaser.sprites[i].y = backPos.outerPos.y - camPos.y;
 				sLeaser.sprites[i].rotation = Custom.AimFromOneVectorToAnother(backPos.dir, -backPos.dir);
-				sLeaser.sprites[i].color = this.iGraphics.HeadColor(timeStacker);
+				sLeaser.sprites[i].color = this.cosmeticData.baseColor(iGraphics, 0);
 			}
 		}
 	}

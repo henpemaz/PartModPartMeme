@@ -5,7 +5,7 @@ namespace LizardSkin
 {
     internal class GenericTailGeckoScales : GenericCosmeticTemplate
     {
-        public GenericTailGeckoScales(ICosmeticsAdaptor iGraphics) : base(iGraphics)
+        public GenericTailGeckoScales(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
 			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.BehindHead;
 			this.rows = UnityEngine.Random.Range(7, 14);
@@ -70,7 +70,7 @@ namespace LizardSkin
 					float num = Mathf.InverseLerp(0f, (float)(this.rows - 1), (float)i);
 					float num2 = Mathf.Lerp(0.5f, 0.99f, Mathf.Pow(num, 0.8f));
 					SpineData lizardSpineData2 = this.iGraphics.SpinePosition(num2, timeStacker);
-					Color a = this.iGraphics.BodyColor(num2);
+					Color a = this.cosmeticData.baseColor(iGraphics, num2);
 					for (int j = 0; j < this.lines; j++)
 					{
 						float num3 = ((float)j + ((i % 2 != 0) ? 0f : 0.5f)) / (float)(this.lines - 1);
@@ -103,11 +103,11 @@ namespace LizardSkin
 							num4 = Mathf.Pow(num4, Mathf.Lerp(2f, 0.5f, num));
 							if (num4 < 0.5f)
 							{
-								sLeaser.sprites[this.startSprite + i * this.lines + j].color = Color.Lerp(a, this.iGraphics.effectColor, Mathf.InverseLerp(0f, 0.5f, num4));
+								sLeaser.sprites[this.startSprite + i * this.lines + j].color = Color.Lerp(a, this.cosmeticData.effectColor, Mathf.InverseLerp(0f, 0.5f, num4));
 							}
 							else
 							{
-								sLeaser.sprites[this.startSprite + i * this.lines + j].color = Color.Lerp(this.iGraphics.effectColor, Color.white, Mathf.InverseLerp(0.5f, 1f, num4));
+								sLeaser.sprites[this.startSprite + i * this.lines + j].color = Color.Lerp(this.cosmeticData.effectColor, Color.white, Mathf.InverseLerp(0.5f, 1f, num4));
 							}
 						//}
 						//else
@@ -125,7 +125,7 @@ namespace LizardSkin
 					float f = Mathf.InverseLerp(0f, (float)(this.rows - 1), (float)k);
 					float num5 = Mathf.Lerp(0.4f, 0.95f, Mathf.Pow(f, 0.8f));
 					SpineData lizardSpineData3 = this.iGraphics.SpinePosition(num5, timeStacker);
-					Color color = Color.Lerp(this.iGraphics.BodyColor(num5), this.iGraphics.effectColor, 0.2f + 0.8f * Mathf.Pow(f, 0.5f));
+					Color color = Color.Lerp(this.cosmeticData.baseColor(iGraphics, num5), this.cosmeticData.effectColor, 0.2f + 0.8f * Mathf.Pow(f, 0.5f));
 					for (int l = 0; l < this.lines; l++)
 					{
 						float num6 = ((float)l + ((k % 2 != 0) ? 0f : 0.5f)) / (float)(this.lines - 1);

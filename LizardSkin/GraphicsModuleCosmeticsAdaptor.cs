@@ -5,13 +5,13 @@ using UnityEngine;
 
 namespace LizardSkin
 {
-    public abstract class GraphicsModuleCosmeticsAdaptor : BodyPart, ICosmeticsAdaptor
+    public abstract class GraphicsModuleCosmeticsAdaptor : BodyPart, ICosmeticsAdaptor, IDrawable
     {
         public RainWorld rainWorld => graphics.owner.room.game.rainWorld;
         public GraphicsModule graphics { get ; protected set; }
 
         public float BodyAndTailLength { get => this.bodyLength + this.tailLength; }
-        public Color effectColor { get; protected set; }
+        // public Color effectColor { get; protected set; }
         public float bodyLength { get; protected set; }
         public float tailLength { get; protected set; }
         public PaletteAdaptor palette { get; protected set; }
@@ -40,9 +40,9 @@ namespace LizardSkin
 
         public abstract SpineData SpinePosition(float spineFactor, float timeStacker);
 
-        public abstract Color BodyColor(float y);
+        public abstract Color BodyColorFallback(float y);
 
-        public abstract Color HeadColor(float timeStacker);
+        // public abstract Color HeadColor(float timeStacker);
 
         public bool PointSubmerged(Vector2 pos)
         {

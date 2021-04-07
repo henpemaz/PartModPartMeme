@@ -5,7 +5,7 @@ namespace LizardSkin
 {
     internal class GenericBumpHawk : GenericCosmeticTemplate
     {
-        public GenericBumpHawk(ICosmeticsAdaptor iGraphics) : base(iGraphics)
+        public GenericBumpHawk(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
 			this.coloredHawk = (UnityEngine.Random.value < 0.5f);
 			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.BehindHead;
@@ -60,7 +60,7 @@ namespace LizardSkin
 					if (this.coloredHawk)
 					{
 					//sLeaser.sprites[i].color = Color.Lerp(this.iGraphics.HeadColor(timeStacker), this.iGraphics.BodyColor(num2), num);
-					sLeaser.sprites[i].color = Color.Lerp(this.iGraphics.effectColor, this.iGraphics.BodyColor(num2), num);
+					sLeaser.sprites[i].color = Color.Lerp(this.cosmeticData.effectColor, this.cosmeticData.baseColor(iGraphics, num2), num);
 				}
 				//	else
 				//	{
@@ -78,7 +78,7 @@ namespace LizardSkin
 				for (int i = this.startSprite; i < this.startSprite + this.numberOfSprites; i++)
 				{
 					float f = Mathf.Lerp(0.05f, this.spineLength / this.iGraphics.BodyAndTailLength, Mathf.InverseLerp((float)this.startSprite, (float)(this.startSprite + this.numberOfSprites - 1), (float)i));
-					sLeaser.sprites[i].color = this.iGraphics.BodyColor(f);
+					sLeaser.sprites[i].color = this.cosmeticData.baseColor(iGraphics, f);
 				}
 			}
 		}

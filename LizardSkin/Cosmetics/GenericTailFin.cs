@@ -5,7 +5,7 @@ namespace LizardSkin
 {
     internal class GenericTailFin : GenericCosmeticTemplate
     {
-        public GenericTailFin(ICosmeticsAdaptor iGraphics) : base(iGraphics)
+        public GenericTailFin(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
 			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.BehindHead;
 			float num = Mathf.Lerp(4f, 7f, Mathf.Pow(UnityEngine.Random.value, 0.7f));
@@ -126,10 +126,10 @@ namespace LizardSkin
 				for (int j = this.startSprite; j < this.startSprite + this.bumps; j++)
 				{
 					float f = Mathf.Lerp(0.05f, this.spineLength / this.iGraphics.BodyAndTailLength, Mathf.InverseLerp((float)this.startSprite, (float)(this.startSprite + this.bumps - 1), (float)j));
-					sLeaser.sprites[j + num].color = this.iGraphics.BodyColor(f);
+					sLeaser.sprites[j + num].color = this.cosmeticData.baseColor(iGraphics, f);
 					if (this.colored)
 					{
-						sLeaser.sprites[j + this.bumps + num].color = this.iGraphics.effectColor;
+						sLeaser.sprites[j + this.bumps + num].color = this.cosmeticData.effectColor;
 					}
 				}
 			}

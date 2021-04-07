@@ -220,7 +220,16 @@ namespace LizardSkin
             this.depthRotation = 0;
             this.lastDepthRotation = this.depthRotation;
 
-            this.effectColor = Custom.HSL2RGB(Custom.WrappedRandomVariation(0.49f, 0.04f, 0.6f), 1f, Custom.ClampedRandomVariation(0.5f, 0.15f, 0.1f));
+            List<LizKinCosmeticData> cosmeticDefs = LizardSkinOI.configuration.GetCosmeticsForSlugcat((int)player.slugcatStats.name, player.playerState.slugcatCharacter, player.playerState.playerNumber);
+
+
+            foreach (LizKinCosmeticData cosmeticData in cosmeticDefs)
+            {
+                this.AddCosmetic(GenericCosmeticTemplate.MakeCosmetic(this, cosmeticData));
+            }
+
+
+            //this.effectColor = Custom.HSL2RGB(Custom.WrappedRandomVariation(0.49f, 0.04f, 0.6f), 1f, Custom.ClampedRandomVariation(0.5f, 0.15f, 0.1f));
             //this.effectColor = Custom.HSL2RGB(0.08f, 1.00f, 0.68f);
 
             //this.AddCosmetic(new GenericTailTuft(this));
@@ -243,11 +252,11 @@ namespace LizardSkin
             //this.AddCosmetic(new GenericWhiskers(this));
             //this.AddCosmetic(new GenericAntennae(this));
 
-            UnityEngine.Random.seed = 1337;
-            this.AddCosmetic(new GenericTailTuft(this));
-            this.AddCosmetic(new GenericTailTuft(this));
-            this.AddCosmetic(new GenericLongHeadScales(this));
-            this.AddCosmetic(new GenericAntennae(this));
+            //UnityEngine.Random.seed = 1337;
+            //this.AddCosmetic(new GenericTailTuft(this));
+            //this.AddCosmetic(new GenericTailTuft(this));
+            //this.AddCosmetic(new GenericLongHeadScales(this));
+            //this.AddCosmetic(new GenericAntennae(this));
 
 
             //for(int i = 0; i < (this.cosmetics[0] as SlugcatTailTuft).scalesPositions.Length; i++)
@@ -478,7 +487,7 @@ namespace LizardSkin
             return color;
         }
 
-        public override Color BodyColor(float y)
+        public override Color BodyColorFallback(float y)
         {
 
             if (y < this.bodyLength / this.BodyAndTailLength || LizardSkin.custail_ref == null)
@@ -532,10 +541,10 @@ namespace LizardSkin
             return Color.Lerp(color2, color3, tailFactor);
         }
 
-        public override Color HeadColor(float timeStacker)
-        {
-            //return PlayerGraphics.SlugcatColor((pGraphics.player.State as PlayerState).slugcatCharacter);
-            return BaseBodyColor();
-        }
+        //public override Color HeadColor(float timeStacker)
+        //{
+        //    //return PlayerGraphics.SlugcatColor((pGraphics.player.State as PlayerState).slugcatCharacter);
+        //    return BaseBodyColor();
+        //}
     }
 }
