@@ -366,7 +366,95 @@ namespace LizardSkin
             }
             else throw new SerializationException("LizKinCosmeticData version unsuported");
         }
+
+        internal static LizKinCosmeticData Clone(LizKinCosmeticData instance)
+        {
+            return LizKinCosmeticData.FromJson(instance.ToJson());
+        }
+
+        virtual internal CosmeticPanel MakeEditPanel(LizardSkinOI.ProfileManager manager)
+        {
+            return new CosmeticPanel(60, this, manager);
+        }
+
+        virtual internal void ReadEditPanel(CosmeticPanel panel)
+        {
+
+        }
+
+        //abstract
+        internal class CosmeticPanel : LizardSkinOI.GroupPanel
+        {
+            const float pannelWidth = 360f;
+            private LizardSkinOI.EventfulComboBox typeBox;
+            internal LizKinCosmeticData data;
+            private LizardSkinOI.ProfileManager manager;
+
+            LizardSkinOI.EventfulTextBox seedBox;
+
+            public virtual float pannelHeight => 360f;
+            //protected
+            internal CosmeticPanel(float height, LizKinCosmeticData data, LizardSkinOI.ProfileManager manager) : base(Vector2.zero, new Vector2(pannelWidth, height))
+            {
+
+                this.data = data;
+                this.manager = manager;
+                // Group panel Y coordinates are top-to-bottom
+                // add type selector
+                this.typeBox = new LizardSkinOI.EventfulComboBox(new Vector2(3, -27), 140, "", Enum.GetNames(typeof(LizKinCosmeticData.CosmeticInstanceType)), data.instanceType.ToString());
+                typeBox.OnChangeEvent += TypeBox_OnChangeEvent;
+                children.Add(typeBox);
+                // add basic buttons
+                LizardSkinOI.EventfulImageButton btnClip = new LizardSkinOI.EventfulImageButton(new Vector2(150, -27), new Vector2(24, 24), "", "LizKinClipboard");
+                btnClip.OnSignal += ()=> { this.manager.SetClipboard(data); };
+                children.Add(btnClip);
+                LizardSkinOI.EventfulImageButton btnDuplicate = new LizardSkinOI.EventfulImageButton(new Vector2(180, -27), new Vector2(24, 24), "", "LizKinDuplicate");
+                btnDuplicate.OnSignal += () => { this.manager.DuplicateCosmetic(data); };
+                children.Add(btnDuplicate);
+                LizardSkinOI.EventfulImageButton btnDelete = new LizardSkinOI.EventfulImageButton(new Vector2(210, -27), new Vector2(24, 24), "", "LizKinDelete");
+                btnDelete.OnSignal += () => { this.manager.DeleteCosmetic(data); };
+                children.Add(btnDelete);
+
+                // seeeeed
+                children.Add(new OptionalUI.OpLabel(new Vector2(245, -24), new Vector2(50, 24), "Seed:", FLabelAlignment.Left));
+                seedBox = new LizardSkinOI.EventfulTextBox(new Vector2(275, -27), 75, "", data.seed.ToString());
+                seedBox.OnChangeEvent += DataChanged;
+                children.Add(seedBox);
+                seedBox.Show(); // hmmmmm
+
+                // color overrides
+                // TODO
+
+
+
+            }
+
+            protected virtual void DataChanged()
+            {
+                this.data.seed = seedBox.valueInt;
+
+            }
+
+            private void TypeBox_OnChangeEvent()
+            {
+                if (data.instanceType.ToString() == typeBox.value) return;
+
+                // Not sure what happens here
+                // do we try and clone a common ancestor of data to keep some of the info ?
+                OnTypeChanged?.Invoke(this);
+
+            }
+
+            public delegate void TypeChangedEvent(CosmeticPanel panel);
+            public event TypeChangedEvent OnTypeChanged;
+
+
+
+        }
+
     }
+
+
 
     internal class CosmeticAntennaeData : LizKinCosmeticData
     {
