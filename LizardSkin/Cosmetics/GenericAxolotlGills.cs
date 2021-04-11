@@ -46,7 +46,7 @@ namespace LizardSkin
 			base.DrawSprites(sLeaser, rCam, timeStacker, camPos);
 			for (int i = this.startSprite + this.scalesPositions.Length - 1; i >= this.startSprite; i--)
 			{
-				sLeaser.sprites[i].color = this.cosmeticData.baseColor(iGraphics, 0);
+				sLeaser.sprites[i].color = this.cosmeticData.GetBaseColor(iGraphics, 0);
 				if (this.colored)
 				{
 					sLeaser.sprites[i + this.scalesPositions.Length].color = this.cosmeticData.effectColor;

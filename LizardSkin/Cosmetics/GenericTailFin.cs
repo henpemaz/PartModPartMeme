@@ -126,7 +126,7 @@ namespace LizardSkin
 				for (int j = this.startSprite; j < this.startSprite + this.bumps; j++)
 				{
 					float f = Mathf.Lerp(0.05f, this.spineLength / this.iGraphics.BodyAndTailLength, Mathf.InverseLerp((float)this.startSprite, (float)(this.startSprite + this.bumps - 1), (float)j));
-					sLeaser.sprites[j + num].color = this.cosmeticData.baseColor(iGraphics, f);
+					sLeaser.sprites[j + num].color = this.cosmeticData.GetBaseColor(iGraphics, f);
 					if (this.colored)
 					{
 						sLeaser.sprites[j + this.bumps + num].color = this.cosmeticData.effectColor;

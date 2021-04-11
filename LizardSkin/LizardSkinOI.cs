@@ -30,11 +30,13 @@ namespace LizardSkin
 
         private ProfileManager activeManager;
         private static LizKinCosmeticData cosmeticOnClipboard;
-        private List<GroupPanel> panelsToAdd;
+        private List<LizKinCosmeticData.CosmeticPanel> panelsToRemove;
+        private readonly List<LizKinCosmeticData.CosmeticPanel> panelsToAdd;
 
         public LizardSkinOI() : base(mod: LizardSkin.instance)
         {
-            panelsToAdd = new List<GroupPanel>();
+            panelsToAdd = new List<LizKinCosmeticData.CosmeticPanel>();
+            panelsToRemove = new List<LizKinCosmeticData.CosmeticPanel>();
         }
 
         const string modDescription =
@@ -42,7 +44,7 @@ namespace LizardSkin
 
 When on a profile tab, you can select which characters that profile should apply to. If more than one profile applies to a slugcat, all cosmetics found will be applied. Advanced mode lets you specify difficulty, player-number or character-number so that you can get it working with custom slugcats too.
 
-Inside a profile you can add Cosmetics by clicking on the box with a +. Cosmetics can be reordered, copied, pasted, duplicated and deleted. You can also control the base color and effect color for your slugcat to match any custom sprites or skins.
+Inside a profile you can add Cosmetics by clicking on the box with a +. Cosmetics can be reordered, copied, pasted, duplicated and deleted. You can also control the base color and effect color for your slugcat to match any custom sprites or skins. For the color override to take effect you must tick the checkbox next to the color picker.
 
 You can pick Cosmetics of several types, edit their settings and configure randomization. When you're done customizing, hit refresh on the preview panel to see what your sluggo looks like :3";
 
@@ -104,12 +106,21 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 loadingFromRefresh = true;
             }
 
-            foreach (GroupPanel panel in panelsToAdd)
+            foreach (LizKinCosmeticData.CosmeticPanel panel in panelsToAdd)
             {
                 Debug.Log("adding panel to manager");
-                activeManager.addPanel(panel);
+                activeManager.AddPanel(panel);
             }
             panelsToAdd.Clear();
+
+            foreach (LizKinCosmeticData.CosmeticPanel panel in panelsToRemove)
+            {
+                Debug.Log("removing panel");
+                activeManager.RemovePanel(panel);
+            }
+            panelsToRemove.Clear();
+
+            
 
 
         }
@@ -298,10 +309,15 @@ You can pick Cosmetics of several types, edit their settings and configure rando
         }
 
 
-        private void RequestNewPanel(GroupPanel panel)
+        private void RequestNewPanel(LizKinCosmeticData.CosmeticPanel panel)
         {
             Debug.Log("LizardSkinOI RequestNewPanel");
             this.panelsToAdd.Add(panel);
+        }
+        private void RequestPanelRemoval(LizKinCosmeticData.CosmeticPanel panel)
+        {
+            Debug.Log("LizardSkinOI RequestPanelRemoval");
+            this.panelsToRemove.Add(panel);
         }
 
         internal class ProfileManager : UIelement
@@ -328,6 +344,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             private OpScrollBox cosmeticsBox;
             private List<GroupPanel> cosmPanels;
             private AddCosmeticPanelPanel addPanelPanel;
+            private bool organizePending;
 
             public ProfileManager(LizardSkinOI lizardSkinOI, LizKinProfileData lizKinProfileData, OpTab opTab) : base(new Vector2(0, 0), new Vector2(600, 600))
             {
@@ -371,9 +388,9 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 this.overrideBaseCkb = new OpCheckBox(colorMngmtPos + new Vector2(130, -30), "", profileData.overrideBaseColor) { description = "Use a different Base Color than the slugcat's default color" });
                 
                 // see iHaveChildren
-                this.effectColorPicker = new OpTinyColorPicker(colorMngmtPos + new Vector2(130, 0), "btnProfileEffectColor", OpColorPicker.ColorToHex(profileData.effectColor)) { description = "Pick the Effect Color for the highlights" };
+                this.effectColorPicker = new OpTinyColorPicker(colorMngmtPos + new Vector2(130, 0), "", OpColorPicker.ColorToHex(profileData.effectColor)) { description = "Pick the Effect Color for the highlights" };
                 effectColorPicker.AddSelfAndChildrenToTab(opTab);
-                this.baseColorPicker = new OpTinyColorPicker(colorMngmtPos + new Vector2(160, -30), "btnProfileBaseColor", OpColorPicker.ColorToHex(profileData.baseColorOverride)) { description = "Pick the Base Color for the cosmetics" };
+                this.baseColorPicker = new OpTinyColorPicker(colorMngmtPos + new Vector2(160, -30), "", OpColorPicker.ColorToHex(profileData.baseColorOverride)) { description = "Pick the Base Color for the cosmetics" };
                 baseColorPicker.AddSelfAndChildrenToTab(opTab);
 
                 effectColorPicker.OnChanged += ColorPicker_OnChanged;
@@ -388,14 +405,14 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                     new OpRect(previewPanelPos + new Vector2(0, -420), new Vector2(220, 420)),
                     cosmeticsPreview = new MenuCosmeticsAdaptor(previewPanelPos + new Vector2(110, -100), profileData),
                     previewRotationSlider = new EventfulFloatSlider(previewPanelPos + new Vector2(30, -45), "", new Vector2(-1, 1), 160),
-                    refreshBtn = new EventfulImageButton(previewPanelPos + new Vector2(5, -29), new Vector2(24,24), "btnProfileRefresh", "LizKinReload")
+                    refreshBtn = new EventfulImageButton(previewPanelPos + new Vector2(5, -29), new Vector2(24,24), "", "LizKinReload")
                     );
 
-                previewRotationSlider.OnChanged += PreviewRotationSlider_OnChanged;
-                previewRotationSlider.OnFrozenUpdate += FreezingButtons_OnFrozenUpdate;
+                previewRotationSlider.OnChangeEvent += PreviewRotationSlider_OnChanged;
+                previewRotationSlider.OnFrozenUpdate += KeepPreviewUpdated;
 
-                refreshBtn.OnSignal += RefreshBtn_OnSignal;
-                refreshBtn.OnFrozenUpdate += FreezingButtons_OnFrozenUpdate;
+                refreshBtn.OnSignal += RefreshPreview;
+                refreshBtn.OnFrozenUpdate += KeepPreviewUpdated;
 
                 // Cosmetics Panenl
                 Debug.Log("Cosmetic panel start");
@@ -421,15 +438,30 @@ You can pick Cosmetics of several types, edit their settings and configure rando
 
                 MakeCosmEditPannels();
 
-                OrganizePannels();
+                //OrganizePannels();
+                this.organizePending = true;
 
                 Debug.Log("ProfileTabManager done");
+            }
 
+            Vector2 profileMngmtPos => new Vector2(15, 570);
+            Vector2 characterMngmtPos => new Vector2(380, 540);
+            Vector2 colorMngmtPos => new Vector2(380, 450);
+            Vector2 previewPanelPos => new Vector2(380, 420);
+            Vector2 cosmeticsPanelPos => new Vector2(0, 0);
+
+            private void AddPanelPanel_OnAdd()
+            {
+                profileData.AddEmptyCosmetic();
+                LizKinCosmeticData.CosmeticPanel panel = profileData.cosmetics[profileData.cosmetics.Count - 1].MakeEditPanel(this);
+                cosmeticsPreview.Reset();
+                cosmPanels.Add(panel);
+                lizardSkinOI.RequestNewPanel(panel);
             }
 
             private void AddPanelPanel_OnPaste()
             {
-                DuplicateCosmetic(LizardSkinOI.cosmeticOnClipboard);
+                if(LizardSkinOI.cosmeticOnClipboard != null ) DuplicateCosmetic(LizardSkinOI.cosmeticOnClipboard);
             }
 
             internal void SetClipboard(LizKinCosmeticData data)
@@ -441,15 +473,19 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             {
                 profileData.cosmetics.Add(LizKinCosmeticData.Clone(data));
                 profileData.cosmetics[profileData.cosmetics.Count - 1].profile = profileData;
-                GroupPanel panel = profileData.cosmetics[profileData.cosmetics.Count - 1].MakeEditPanel(this);
+                cosmeticsPreview.Reset();
+                LizKinCosmeticData.CosmeticPanel panel = profileData.cosmetics[profileData.cosmetics.Count - 1].MakeEditPanel(this);
+                cosmPanels.Add(panel);
                 lizardSkinOI.RequestNewPanel(panel);
             }
 
-            internal void DeleteCosmetic(LizKinCosmeticData data)
+            internal void DeleteCosmetic(LizKinCosmeticData.CosmeticPanel panel)
             {
-                profileData.cosmetics.Remove(data);
-                // currently cannot remove elements from CM
-                lizardSkinOI.RequestRefresh();
+                profileData.cosmetics.Remove(panel.data);
+                panel.data.profile = null;
+                cosmeticsPreview.Reset();
+                cosmPanels.Remove(panel);
+                lizardSkinOI.RequestPanelRemoval(panel);
             }
 
             internal void MakeCosmEditPannels()
@@ -459,8 +495,8 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 {
                     Debug.Log("Makin new panel");
 
-                    GroupPanel panel = cosmeticData.MakeEditPanel(this);
-                    //CosmeticEditPanel editPanel = new CosmeticEditPanel(new Vector2(5, 0), new Vector2(360, 100));
+                    LizKinCosmeticData.CosmeticPanel panel = cosmeticData.MakeEditPanel(this);
+                    //CosmeticEditPanel editPanel = new CosmeticEditPanel(new Vector2(5, 0), new Vector2(360, 100));Moving child element
                     cosmPanels.Add(panel);
                     panel.AddSelfAndChildrenToScroll(cosmeticsBox);
                 }
@@ -472,51 +508,60 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 Debug.Log("OrganizePannels");
                 float cosmEditPanelMarginVert = 6;
                 float totalheight = cosmEditPanelMarginVert + addPanelPanel.size.y;
-                foreach (GroupPanel panel in cosmPanels)
+                foreach (LizKinCosmeticData.CosmeticPanel panel in cosmPanels)
                 {
                     totalheight += panel.size.y + cosmEditPanelMarginVert;
                 }
 
                 // these two loops could happen at once.
-                Debug.Log("calculating heights");
                 totalheight = Mathf.Max(totalheight, cosmeticsBox.GetContentSize());
-                Debug.Log("setting height");
 
                 if (totalheight != cosmeticsBox.GetContentSize()) cosmeticsBox.SetContentSize(totalheight);
 
 
                 float topleftpos = cosmEditPanelMarginVert/2;
-                foreach (GroupPanel panel in cosmPanels)
+                foreach (LizKinCosmeticData.CosmeticPanel panel in cosmPanels)
                 {
                     
                     panel.topLeft = new Vector2(3, totalheight - topleftpos);
-                    Debug.Log("Moved panel to " + (totalheight - topleftpos));
+                    // Debug.Log("Moved panel to " + (totalheight - topleftpos));
                     topleftpos += panel.size.y + cosmEditPanelMarginVert;
                 }
 
-                Debug.Log("Moved add panel to " + (totalheight - topleftpos));
+                // Debug.Log("Moved add panel to " + (totalheight - topleftpos));
                 addPanelPanel.topLeft = new Vector2(3, totalheight - topleftpos);
 
                 Debug.Log("OrganizePannels done");
             }
 
 
-            private void AddPanelPanel_OnAdd()
+            internal void ChangeCosmeticType(LizKinCosmeticData.CosmeticPanel panel, LizKinCosmeticData.CosmeticInstanceType newType)
             {
-                Debug.Log("AddPanelPanel_OnAdd");
+                Debug.Log("ChangeCosmeticType");
+                LizKinCosmeticData newCosmetic = LizKinCosmeticData.MakeCosmeticOfType(newType);
+                newCosmetic.ReadFromOther(panel.data);
+                newCosmetic.profile = profileData;
 
-                profileData.AddEmptyCosmetic();
-                GroupPanel panel = profileData.cosmetics[profileData.cosmetics.Count - 1].MakeEditPanel(this);
-                lizardSkinOI.RequestNewPanel(panel);
+                profileData.cosmetics[profileData.cosmetics.IndexOf(panel.data)] = newCosmetic;
+                panel.data.profile = null; // Cosmetic is dead
+                cosmeticsPreview.Reset(); // Preview cannot use dead cosms
 
-                Debug.Log("AddPanelPanel_OnAdd done");
+                LizKinCosmeticData.CosmeticPanel newPanel = newCosmetic.MakeEditPanel(this);
+                cosmPanels[cosmPanels.IndexOf(panel)] = newPanel;
+                lizardSkinOI.RequestPanelRemoval(panel);
+                lizardSkinOI.RequestNewPanel(newPanel);
             }
 
             // Called from OI
-            internal void addPanel(GroupPanel panel)
+            internal void AddPanel(LizKinCosmeticData.CosmeticPanel panel)
             {
-                cosmPanels.Add(panel);
                 panel.AddSelfAndChildrenToScroll(cosmeticsBox);
+                OrganizePannels();
+            }
+            // Called from OI
+            internal void RemovePanel(LizKinCosmeticData.CosmeticPanel panel)
+            {
+                panel.DestroySelfAndChildren();
                 OrganizePannels();
             }
 
@@ -535,12 +580,12 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 public event OnButtonSignalHandler OnPaste { add { pastebutton.OnSignal += value; } remove { pastebutton.OnSignal -= value; } }
             }
 
-            private void RefreshBtn_OnSignal()
+            internal void RefreshPreview()
             {
                 cosmeticsPreview.Reset();
             }
 
-            private void FreezingButtons_OnFrozenUpdate(float dt)
+            internal void KeepPreviewUpdated(float dt)
             {
                 cosmeticsPreview.Update(dt);
             }
@@ -564,6 +609,12 @@ You can pick Cosmetics of several types, edit their settings and configure rando
 
             public override void Update(float dt)
             {
+                if (organizePending)
+                {
+                    OrganizePannels();
+                    organizePending = false;
+                }
+
                 base.Update(dt);
 
                 if (profileData.appliesToMode != (LizKinProfileData.ProfileAppliesToMode)Enum.Parse(typeof(LizKinProfileData.ProfileAppliesToMode), appliesToModeSelector.value)
@@ -573,7 +624,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                     FiltersGrabConfig();
                     // might need layout change
                     FiltersConformToConfig();
-                }
+                } else FiltersGrabConfig();
 
                 //profileData.effectColor = effectColorPicker.valuecolor;
                 //profileData.overrideBaseColor = overrideBaseCkb.valueBool;
@@ -611,10 +662,8 @@ You can pick Cosmetics of several types, edit their settings and configure rando
 
             internal void Signal(UItrigger trigger, string signal)
             {
-                //throw new NotImplementedException();
+                throw new NotImplementedException("Cannot handle signal: " + signal);
             }
-
-            #region FILTERSTUFF
 
             private void FiltersGrabConfig()
             {
@@ -649,8 +698,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                         string[] rawsplit = raw.Split(',');
                         foreach (string rawsingle in rawsplit)
                         {
-                            int myint;
-                            if (int.TryParse(rawsingle.Trim(), out myint)) profileData.appliesToList.Add(myint);
+                            if (int.TryParse(rawsingle.Trim(), out int myint)) profileData.appliesToList.Add(myint);
                         }
 
                         break;
@@ -734,18 +782,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 }
                 //Debug.Log("profileData.appliesToList now is  " + String.Join(", ", profileData.appliesToList.Select(n => n.ToString()).ToArray()));
             }
-
-            #endregion FILTERSTUFF
-
-            Vector2 profileMngmtPos => new Vector2(15, 570);
-            Vector2 characterMngmtPos => new Vector2(380, 540);
-            Vector2 colorMngmtPos => new Vector2(380, 450);
-            Vector2 previewPanelPos => new Vector2(380, 420);
-            Vector2 cosmeticsPanelPos => new Vector2(0, 0);
-
-
         }
-
 
         internal interface IHaveChildren
         {
@@ -753,10 +790,9 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             void AddSelfAndChildrenToScroll(OpScrollBox scroll);
             //void RemoveSelfAndChildrenFromTab(OpTab tab);
             //void RemoveSelfAndChildrenFromScroll(OpScrollBox scroll);
+            void DestroySelfAndChildren();
 
         }
-
-        internal delegate void OnChangeHendler();
 
         internal class GroupPanel : OpRect, IHaveChildren
         {
@@ -828,6 +864,16 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             //    children.Clear();
             //}
 
+            public void DestroySelfAndChildren()
+            {
+                foreach (UIelement child in children)
+                {
+                    if (child is IHaveChildren) (child as IHaveChildren).DestroySelfAndChildren();
+                    else OpTab.DestroyItems(child);
+                }
+                OpTab.DestroyItems(this);
+            }
+
             public override void OnChange()
             {
                 base.OnChange();
@@ -835,14 +881,70 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 for (int i = 0; i < children.Count; i++)
                 {
                     children[i].pos = topLeft + originalPositions[i];
-                    Debug.Log("Moving child element to " + (topLeft + originalPositions[i]));
+                    //Debug.Log("Moving child element to " + (topLeft + originalPositions[i]));
                 }
             }
 
             public Vector2 topLeft { get { return GetPos() + new Vector2(0, size.y); } set { pos = value - new Vector2(0, size.y); OnChange(); } } // Setting this should call onchange and move children
         }
 
+        internal delegate void OnChangeHendler();
+        internal delegate void OnButtonSignalHandler();
         public delegate void OnFrozenUpdateHandler(float dt);
+
+        internal class EventfulButton : OpSimpleButton
+        {
+            public EventfulButton(Vector2 pos, Vector2 size, string signal, string text = "") : base(pos, size, signal, text)
+            {
+            }
+            
+            public event OnButtonSignalHandler OnSignal;
+            public override void Signal()
+            {
+                if (!string.IsNullOrEmpty(signal)) base.Signal();
+                OnSignal?.Invoke();
+            }
+
+            public event OnFrozenUpdateHandler OnFrozenUpdate;
+            public override void Update(float dt)
+            {
+                bool wasHeld = held;
+                base.Update(dt);
+
+                if (wasHeld && held) OnFrozenUpdate?.Invoke(dt);
+            }
+
+        }
+
+        internal class EventfulImageButton : OpSimpleImageButton
+        {
+            public EventfulImageButton(Vector2 pos, Vector2 size, string signal, string fAtlasElement) : base(pos, size, signal, fAtlasElement)
+            {
+            }
+
+            public EventfulImageButton(Vector2 pos, Vector2 size, string signal, Texture2D image) : base(pos, size, signal, image)
+            {
+            }
+
+            public event OnButtonSignalHandler OnSignal;
+            public override void Signal()
+            {
+                if(!string.IsNullOrEmpty(signal)) base.Signal();
+                OnSignal?.Invoke();
+            }
+
+
+            public event OnFrozenUpdateHandler OnFrozenUpdate;
+            public override void Update(float dt)
+            {
+                bool wasHeld = held;
+                base.Update(dt);
+
+                if (wasHeld && held) OnFrozenUpdate?.Invoke(dt);
+            }
+
+        }
+
         internal class OpTinyColorPicker : EventfulButton, IHaveChildren
         {
             private OpColorPicker colorPicker;
@@ -869,25 +971,16 @@ You can pick Cosmetics of several types, edit their settings and configure rando
 
             public void AddSelfAndChildrenToScroll(OpScrollBox scroll)
             {
-                scroll.AddItems(this,
-                    colorPicker);
+                //scroll.AddItems(this,
+                //    colorPicker);
+                scroll.AddItems(this);
+                this.tab.AddItems(colorPicker);
                 this.colorPicker.Hide();
             }
 
-            public void RemoveSelfAndChildrenFromTab(OpTab tab)
+            public void DestroySelfAndChildren()
             {
-                tab.RemoveItems(this,
-                    colorPicker);
-                this.Unload();
-                colorPicker.Unload();
-            }
-
-            public void RemoveSelfAndChildrenFromScroll(OpScrollBox scroll)
-            {
-                OpScrollBox.RemoveItemsFromScrollBox(this,
-                    colorPicker);
-                this.Unload();
-                colorPicker.Unload();
+                OpTab.DestroyItems(colorPicker, this);
             }
 
             public override void Signal()
@@ -895,6 +988,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 // base.Signal();
                 if (!currentlyPicking)
                 {
+                    this.colorPicker.pos = (this.inScrollBox ? (this.GetPos() + scrollBox.GetPos()) : this.GetPos()) + new Vector2(-60, 24);
                     colorPicker.Show();
                     currentlyPicking = true;
                 }
@@ -904,16 +998,12 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                     colorFill = colorPicker.valueColor;
                     OnChanged?.Invoke();
                     colorPicker.Hide();
+                    //if (!string.IsNullOrEmpty(signal)) base.Signal(); // uses eventful now, has to trigger event
                     base.Signal();
                 }
             }
 
             public event OnChangeHendler OnChanged;
-            //public override void OnChange()
-            //{
-            //    base.OnChange();
-
-            //}
 
             public Color valuecolor => colorPicker.valueColor;
 
@@ -1002,69 +1092,14 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 if(wasHeld && held) OnFrozenUpdate?.Invoke(dt);
             }
 
-            public event OnChangeHendler OnChanged;
+            public event OnChangeHendler OnChangeEvent;
 
             public override void OnChange()
             {
                 base.OnChange();
-                OnChanged?.Invoke();
+                OnChangeEvent?.Invoke();
                 //Debug.Log("floatval is " + valueFloat);
             }
-        }
-
-        internal delegate void OnButtonSignalHandler();
-
-        internal class EventfulButton : OpSimpleButton
-        {
-            public EventfulButton(Vector2 pos, Vector2 size, string signal, string text = "") : base(pos, size, signal, text)
-            {
-            }
-            
-            public event OnButtonSignalHandler OnSignal;
-            public override void Signal()
-            {
-                base.Signal();
-                OnSignal?.Invoke();
-            }
-
-            public event OnFrozenUpdateHandler OnFrozenUpdate;
-            public override void Update(float dt)
-            {
-                bool wasHeld = held;
-                base.Update(dt);
-
-                if (wasHeld && held) OnFrozenUpdate?.Invoke(dt);
-            }
-
-        }
-
-        internal class EventfulImageButton : OpSimpleImageButton
-        {
-            public EventfulImageButton(Vector2 pos, Vector2 size, string signal, string fAtlasElement) : base(pos, size, signal, fAtlasElement)
-            {
-            }
-
-            public EventfulImageButton(Vector2 pos, Vector2 size, string signal, Texture2D image) : base(pos, size, signal, image)
-            {
-            }
-
-            public event OnButtonSignalHandler OnSignal;
-            public override void Signal()
-            {
-                base.Signal();
-                OnSignal?.Invoke();
-            }
-
-
-            public event OnFrozenUpdateHandler OnFrozenUpdate;
-            public override void Update(float dt)
-            {
-                bool wasHeld = held;
-                base.Update(dt);
-
-                if (wasHeld && held) OnFrozenUpdate?.Invoke(dt);
-            }
-
         }
 
         internal class EventfulComboBox : OpComboBox
@@ -1097,6 +1132,60 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             {
                 base.OnChange();
                 OnChangeEvent?.Invoke();
+            }
+
+            public event OnFrozenUpdateHandler OnFrozenUpdate;
+            public override void Update(float dt)
+            {
+                bool wasHeld = held;
+                base.Update(dt);
+
+                if (wasHeld && held) OnFrozenUpdate?.Invoke(dt);
+            }
+        }
+
+        internal class EventfulCheckBox : OpCheckBox
+        {
+            public EventfulCheckBox(Vector2 pos, string key, bool defaultBool = false) : base(pos, key, defaultBool)
+            {
+            }
+
+            public EventfulCheckBox(float posX, float posY, string key, bool defaultBool = false) : base(posX, posY, key, defaultBool)
+            {
+            }
+
+            public event OnChangeHendler OnChangeEvent;
+            public override void OnChange()
+            {
+                base.OnChange();
+                OnChangeEvent?.Invoke();
+            }
+        }
+
+        internal class EventfulUpdown : OpUpdown
+        {
+            public EventfulUpdown(Vector2 pos, float sizeX, string key, int defaultInt) : base(pos, sizeX, key, defaultInt)
+            {
+            }
+
+            public EventfulUpdown(Vector2 pos, float sizeX, string key, float defaultFloat, byte decimalNum = 1) : base(pos, sizeX, key, defaultFloat, decimalNum)
+            {
+            }
+
+            public event OnChangeHendler OnChangeEvent;
+            public override void OnChange()
+            {
+                base.OnChange();
+                OnChangeEvent?.Invoke();
+            }
+
+            public event OnFrozenUpdateHandler OnFrozenUpdate;
+            public override void Update(float dt)
+            {
+                bool wasHeld = held;
+                base.Update(dt);
+
+                if (wasHeld && held) OnFrozenUpdate?.Invoke(dt);
             }
         }
     }

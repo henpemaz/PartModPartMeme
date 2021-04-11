@@ -94,7 +94,7 @@ namespace LizardSkin
 		{
 			for (int i = this.startSprite + this.scalesPositions.Length - 1; i >= this.startSprite; i--)
 			{
-				sLeaser.sprites[i].color = this.cosmeticData.baseColor(iGraphics, this.scalesPositions[i - this.startSprite].y);
+				sLeaser.sprites[i].color = this.cosmeticData.GetBaseColor(iGraphics, this.scalesPositions[i - this.startSprite].y);
 				if (this.colored)
 				{
 					//if (this.pGraphics.lizard.Template.type == CreatureTemplate.Type.WhiteLizard)

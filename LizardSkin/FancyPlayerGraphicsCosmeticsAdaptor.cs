@@ -52,7 +52,7 @@ namespace LizardSkin
             FancyPlayerGraphicsCosmeticsAdaptor adaptor = new FancyPlayerGraphicsCosmeticsAdaptor(instance);
             System.Array.Resize(ref instance.bodyParts, instance.bodyParts.Length + 1);
             instance.bodyParts[instance.bodyParts.Length - 1] = adaptor;
-            addAdaptor(adaptor);
+            AddAdaptor(adaptor);
             //addAdaptor(new FancyPlayerGraphicsCosmeticsAdaptor(instance));
         }
 

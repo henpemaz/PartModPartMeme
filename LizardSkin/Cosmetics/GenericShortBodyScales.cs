@@ -57,7 +57,7 @@ namespace LizardSkin
 				sLeaser.sprites[i].x = backPos.outerPos.x - camPos.x;
 				sLeaser.sprites[i].y = backPos.outerPos.y - camPos.y;
 				sLeaser.sprites[i].rotation = Custom.AimFromOneVectorToAnother(backPos.dir, -backPos.dir);
-				sLeaser.sprites[i].color = this.cosmeticData.baseColor(iGraphics, 0);
+				sLeaser.sprites[i].color = this.cosmeticData.GetBaseColor(iGraphics, 0);
 			}
 		}
 	}

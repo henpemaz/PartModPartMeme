@@ -61,19 +61,19 @@ namespace LizardSkin
             PlayerGraphicsCosmeticsAdaptor adaptor = new PlayerGraphicsCosmeticsAdaptor(instance);
             System.Array.Resize(ref instance.bodyParts, instance.bodyParts.Length + 1);
             instance.bodyParts[instance.bodyParts.Length - 1] = adaptor;
-            addAdaptor(adaptor);
+            AddAdaptor(adaptor);
         }
 
         protected static void PlayerGraphics_Reset_hk(On.PlayerGraphics.orig_Reset orig, PlayerGraphics instance)
         {
             orig(instance);
-            getAdaptor(instance).Reset();
+            GetAdaptor(instance).Reset();
         }
 
         protected static void PlayerGraphics_ApplyPalette_hk(On.PlayerGraphics.orig_ApplyPalette orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
         {
             orig(instance, sLeaser, rCam, palette);
-            getAdaptor(instance).ApplyPalette(sLeaser, rCam, palette);
+            GetAdaptor(instance).ApplyPalette(sLeaser, rCam, palette);
         }
 
         public delegate void jolly_ApplyPalette_hook(On.PlayerGraphics.orig_ApplyPalette orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette);
@@ -81,7 +81,7 @@ namespace LizardSkin
         {
             // Who hooks the hookers ???
             orig_hook(orig, instance, sLeaser, rCam, palette);
-            getAdaptor(instance).ApplyPalette(sLeaser, rCam, palette);
+            GetAdaptor(instance).ApplyPalette(sLeaser, rCam, palette);
         }
 
         public delegate void SwichtLayersVanilla(PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, bool newOverlap);
@@ -89,7 +89,7 @@ namespace LizardSkin
         {
             orig(instance, sLeaser, rCam, newOverlap);
             FContainer fcontainer = rCam.ReturnFContainer(newOverlap ? "Background" : "Midground");
-            getAdaptor(instance).AddToContainer(sLeaser, rCam, fcontainer);
+            GetAdaptor(instance).AddToContainer(sLeaser, rCam, fcontainer);
         }
 
         public delegate void Colorfoot_ApplyPalette(On.PlayerGraphics.orig_ApplyPalette orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette);
@@ -98,14 +98,14 @@ namespace LizardSkin
             orig_hook(orig, instance, sLeaser, rCam, palette);
             if (Colorfoot.LegMod.config.setting == 2)
             {
-                getAdaptor(instance).ApplyPalette(sLeaser, rCam, palette);
+                GetAdaptor(instance).ApplyPalette(sLeaser, rCam, palette);
             }
         }
 
         protected static void PlayerGraphics_DrawSprites_hk(On.PlayerGraphics.orig_DrawSprites orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
         {
             orig(instance, sLeaser, rCam, timeStacker, camPos);
-            getAdaptor(instance).DrawSprites(sLeaser, rCam, timeStacker, camPos);
+            GetAdaptor(instance).DrawSprites(sLeaser, rCam, timeStacker, camPos);
         }
 
         protected static bool orig_InitiateSprites_lock; // initialize calls palette lock
@@ -115,7 +115,7 @@ namespace LizardSkin
             orig(instance, sLeaser, rCam);
             orig_InitiateSprites_lock = false;
 
-            getAdaptor(instance).InitiateSprites(sLeaser, rCam);
+            GetAdaptor(instance).InitiateSprites(sLeaser, rCam);
         }
 
         protected static void PlayerGraphics_AddToContainer_hk(On.PlayerGraphics.orig_AddToContainer orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
@@ -127,14 +127,14 @@ namespace LizardSkin
             }
             else
             {
-                getAdaptor(instance).AddToContainer(sLeaser, rCam, newContatiner);
+                GetAdaptor(instance).AddToContainer(sLeaser, rCam, newContatiner);
             }
         }
 
         protected static void PlayerGraphics_Update_hk(On.PlayerGraphics.orig_Update orig, PlayerGraphics instance)
         {
             orig(instance);
-            getAdaptor(instance).Update();
+            GetAdaptor(instance).Update();
         }
 
         #endregion Hooks
@@ -145,7 +145,7 @@ namespace LizardSkin
         //public static List<PlayerGraphicsCosmeticsAdaptor> ghostAdaptors = new List<PlayerGraphicsCosmeticsAdaptor>();
         public static WeakReference[] playerAdaptors = new WeakReference[4];
         public static List<WeakReference> ghostAdaptors = new List<WeakReference>();
-        protected static PlayerGraphicsCosmeticsAdaptor getAdaptor(PlayerGraphics instance)
+        protected static PlayerGraphicsCosmeticsAdaptor GetAdaptor(PlayerGraphics instance)
         {
             PlayerState playerState = (instance.owner as Player).playerState;
             if (!playerState.isGhost)
@@ -168,7 +168,7 @@ namespace LizardSkin
             return toReturn;
         }
 
-        protected static void addAdaptor(PlayerGraphicsCosmeticsAdaptor adaptor)
+        protected static void AddAdaptor(PlayerGraphicsCosmeticsAdaptor adaptor)
         {
             PlayerState playerState = (adaptor.graphics.owner as Player).playerState;
             if (!playerState.isGhost)
@@ -276,11 +276,11 @@ namespace LizardSkin
                 this.tailLength += this.pGraphics.tail[l].connectionRad;
             }
 
-            updateRotation();
+            UpdateRotation();
             base.Update();
         }
 
-        protected void updateRotation()
+        protected void UpdateRotation()
         {
             /*
             Completely re-work the rotation system

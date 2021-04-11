@@ -43,7 +43,7 @@ namespace LizardSkin
 		{
 			float to = Mathf.Lerp(this.iGraphics.lastDepthRotation, this.iGraphics.depthRotation, timeStacker);
 			float from = Mathf.Lerp(this.iGraphics.lastHeadDepthRotation, this.iGraphics.headDepthRotation, timeStacker);
-			Color color = this.cosmeticData.baseColor(iGraphics, 0);
+			Color color = this.cosmeticData.GetBaseColor(iGraphics, 0);
 			float num = 1f;
 			//if (this.iGraphics.lizard.animation == Lizard.Animation.PrepareToJump)
 			//{

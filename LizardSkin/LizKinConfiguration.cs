@@ -17,10 +17,11 @@ using System;
 
 namespace LizardSkin
 {
-
+    // Must serialize everything to supported types,
     public interface IJsonSerializable
     {
         Dictionary<string, object> ToJson();
+        void ReadFromJson(Dictionary<string, object> json, bool ignoremissing = false);
     }
 
 
@@ -35,6 +36,7 @@ namespace LizardSkin
             profiles = new List<LizKinProfileData>();
         }
 
+        // TODO make these two idempotent
         public Dictionary<string, object> ToJson()
         {
             return new Dictionary<string, object>()
@@ -43,20 +45,22 @@ namespace LizardSkin
                     {"profiles", profiles }
                 };
         }
-        public static LizKinConfiguration FromJson(Dictionary<string, object> json)
+
+        public void ReadFromJson(Dictionary<string, object> json, bool ignoremissing = false)
         {
             if ((long)json["LizKinConfiguration.version"] == 1)
             {
-                LizKinConfiguration instance = new LizKinConfiguration()
-                {
-                    profiles = ((List<object>)json["profiles"]).Cast<Dictionary<string, object>>().ToList().ConvertAll(
-                    new Converter<Dictionary<string, object>, LizKinProfileData>(LizKinProfileData.FromJson))
-                };
-
-                return instance;
+                profiles = ((List<object>)json["profiles"]).Cast<Dictionary<string, object>>().ToList().ConvertAll(
+                new Converter<Dictionary<string, object>, LizKinProfileData>(LizKinProfileData.MakeFromJson));
             }
 
-            throw new SerializationException("LizKinConfiguration version unsuported");
+            if(!ignoremissing) throw new SerializationException("LizKinConfiguration version unsuported");
+        }
+        public static LizKinConfiguration MakeFromJson(Dictionary<string, object> json)
+        {
+            LizKinConfiguration instance = new LizKinConfiguration();
+            instance.ReadFromJson(json);
+            return instance;
         }
 
         public bool AddDefaultProfile()
@@ -187,39 +191,49 @@ namespace LizardSkin
                     new Converter<LizKinCosmeticData, Dictionary<string, object>>(LizKinCosmeticData.ToJsonConverter)).Cast<object>().ToList() },
                 };
         }
-        public static LizKinProfileData FromJson(Dictionary<string, object> json)
-        {
-            if ((long)json["LizKinProfileData.version"] == 1)
-            {
-                LizKinProfileData instance = new LizKinProfileData()
-                {
-                    profileName = (string)json["profileName"],
-                    appliesToMode = (ProfileAppliesToMode)(long)json["appliesToMode"],
-                    appliesToSelector = (ProfileAppliesToSelector)(long)json["appliesToSelector"],
-                    appliesToList = (json["appliesToList"] as List<object>).ConvertAll(Convert.ToInt64).ConvertAll(Convert.ToInt32),
-                    effectColor = OptionalUI.OpColorPicker.HexToColor((string)json["effectColor"]),
-                    overrideBaseColor = (bool)json["overrideBaseColor"],
-                    baseColorOverride = OptionalUI.OpColorPicker.HexToColor((string)json["baseColorOverride"]),
-                    cosmetics = ((List<object>)json["cosmetics"]).Cast<Dictionary<string, object>>().ToList().ConvertAll(
-                    new Converter<Dictionary<string, object>, LizKinCosmeticData>(LizKinCosmeticData.FromJson)),
-                };
 
-                foreach (LizKinCosmeticData cosmetic in instance.cosmetics)
+        public virtual void ReadFromJson(Dictionary<string, object> json, bool ignoremissing = false)
+        {
+            if (json.ContainsKey("LizKinProfileData.version"))
+            {
+                if ((long)json["LizKinProfileData.version"] == 1)
                 {
-                    cosmetic.profile = instance;
+                    profileName = (string)json["profileName"];
+                    appliesToMode = (ProfileAppliesToMode)(long)json["appliesToMode"];
+                    appliesToSelector = (ProfileAppliesToSelector)(long)json["appliesToSelector"];
+                    appliesToList = (json["appliesToList"] as List<object>).ConvertAll(Convert.ToInt64).ConvertAll(Convert.ToInt32);
+                    effectColor = OptionalUI.OpColorPicker.HexToColor((string)json["effectColor"]);
+                    overrideBaseColor = (bool)json["overrideBaseColor"];
+                    baseColorOverride = OptionalUI.OpColorPicker.HexToColor((string)json["baseColorOverride"]);
+                    cosmetics = ((List<object>)json["cosmetics"]).Cast<Dictionary<string, object>>().ToList().ConvertAll(
+                    new Converter<Dictionary<string, object>, LizKinCosmeticData>(LizKinCosmeticData.MakeFromJson));
+
+                    foreach (LizKinCosmeticData cosmetic in cosmetics)
+                    {
+                        cosmetic.profile = this;
+                    }
+
+                    return;
                 }
-                return instance;
             }
-            
-            throw new SerializationException("LizKinProfileData version unsuported");
+            if(!ignoremissing) throw new SerializationException("LizKinProfileData version unsuported");
         }
 
+        public static LizKinProfileData MakeFromJson(Dictionary<string, object> json)
+        {
+            // just one type of profile for now
+            LizKinProfileData instance = new LizKinProfileData();
+            instance.ReadFromJson(json);
+            return instance;
+        }
+
+        // Hmmmmmmm
         internal static LizKinProfileData Clone(LizKinProfileData instance)
         {
-            return LizKinProfileData.FromJson(instance.ToJson());
+            return LizKinProfileData.MakeFromJson(instance.ToJson());
         }
 
-        public Color baseColor(ICosmeticsAdaptor iGraphics, float y) => overrideBaseColor ? baseColorOverride : iGraphics.BodyColorFallback(y);
+        public Color GetBaseColor(ICosmeticsAdaptor iGraphics, float y) => overrideBaseColor ? baseColorOverride : iGraphics.BodyColorFallback(y);
 
         internal bool MatchesSlugcat(int difficulty, int character, int player)
         {
@@ -269,7 +283,7 @@ namespace LizardSkin
 
         public abstract CosmeticInstanceType instanceType { get; }
         public Color effectColor => overrideEffectColor ? effectColorOverride : profile.effectColor;
-        public Color baseColor(ICosmeticsAdaptor iGraphics, float y) => overrideBaseColor ? baseColorOverride : profile.baseColor(iGraphics, y);
+        public Color GetBaseColor(ICosmeticsAdaptor iGraphics, float y) => overrideBaseColor ? baseColorOverride : profile.GetBaseColor(iGraphics, y);
 
         public int seed;
 
@@ -302,84 +316,96 @@ namespace LizardSkin
                 };
         }
 
+        // linq go brr
         public static Dictionary<string, object> ToJsonConverter(LizKinCosmeticData instance)
         {
             return instance.ToJson();
         }
-        public static LizKinCosmeticData FromJson(Dictionary<string, object> json)
+
+        public virtual void ReadFromJson(Dictionary<string, object> json, bool ignoremissing=false)
         {
-            if ((long)json["LizKinCosmeticData.version"] == 1)
+            if (json.ContainsKey("LizKinCosmeticData.version"))
             {
-                LizKinCosmeticData instance;
-                switch ((CosmeticInstanceType)(long)json["instanceType"])
+                if ((long)json["LizKinCosmeticData.version"] == 1)
                 {
-                    case CosmeticInstanceType.Antennae:
-                        instance = CosmeticAntennaeData.FromJson(json);
-                        break;
-                    case CosmeticInstanceType.AxolotlGills:
-                        instance = CosmeticAxolotlGillsData.FromJson(json);
-                        break;
-                    case CosmeticInstanceType.BumpHawk:
-                        instance = CosmeticBumpHawkData.FromJson(json);
-                        break;
-                    case CosmeticInstanceType.JumpRings:
-                        instance = CosmeticJumpRingsData.FromJson(json);
-                        break;
-                    case CosmeticInstanceType.LongHeadScales:
-                        instance = CosmeticLongHeadScalesData.FromJson(json);
-                        break;
-                    case CosmeticInstanceType.LongShoulderScales:
-                        instance = CosmeticLongShoulderScalesData.FromJson(json);
-                        break;
-                    case CosmeticInstanceType.ShortBodyScales:
-                        instance = CosmeticShortBodyScalesData.FromJson(json);
-                        break;
-                    case CosmeticInstanceType.SpineSpikes:
-                        instance = CosmeticSpineSpikesData.FromJson(json);
-                        break;
-                    case CosmeticInstanceType.TailFin:
-                        instance = CosmeticTailFinData.FromJson(json);
-                        break;
-                    case CosmeticInstanceType.TailGeckoScales:
-                        instance = CosmeticTailGeckoScalesData.FromJson(json);
-                        break;
-                    case CosmeticInstanceType.TailTuft:
-                        instance = CosmeticTailTuftData.FromJson(json);
-                        break;
-                    case CosmeticInstanceType.Whiskers:
-                        instance = CosmeticWhiskersData.FromJson(json);
-                        break;
-                    case CosmeticInstanceType.WingScales:
-                        instance = CosmeticWingScalesData.FromJson(json);
-                        break;
-                    default:
-                        throw new SerializationException("LizKinCosmeticData CosmeticInstanceType not found");
+                    seed = (int)(long)json["seed"];
+                    overrideEffectColor = (bool)json["overrideEffectColor"];
+                    effectColorOverride = OptionalUI.OpColorPicker.HexToColor((string)json["effectColorOverride"]);
+                    overrideBaseColor = (bool)json["overrideBaseColor"];
+                    baseColorOverride = OptionalUI.OpColorPicker.HexToColor((string)json["baseColorOverride"]);
+
+                    return;
                 }
-
-                instance.seed = (int)(long)json["seed"];
-                instance.overrideEffectColor = (bool)json["overrideEffectColor"];
-                instance.effectColorOverride = OptionalUI.OpColorPicker.HexToColor((string)json["effectColorOverride"]);
-                instance.overrideBaseColor = (bool)json["overrideBaseColor"];
-                instance.baseColorOverride = OptionalUI.OpColorPicker.HexToColor((string)json["baseColorOverride"]);
-
-                return instance;
             }
-            else throw new SerializationException("LizKinCosmeticData version unsuported");
+            if(!ignoremissing) throw new SerializationException("LizKinCosmeticData version unsuported");
+        }
+
+
+        public static LizKinCosmeticData MakeFromJson(Dictionary<string, object> json)
+        {
+            LizKinCosmeticData instance = MakeCosmeticOfType((CosmeticInstanceType)(long)json["instanceType"]);
+            instance.ReadFromJson(json);
+            return instance;
+        }
+
+        internal static LizKinCosmeticData MakeCosmeticOfType(CosmeticInstanceType newType)
+        {
+            switch (newType)
+            {
+                case CosmeticInstanceType.Antennae:
+                    return new CosmeticAntennaeData();
+                case CosmeticInstanceType.AxolotlGills:
+                    return new CosmeticAxolotlGillsData();
+                case CosmeticInstanceType.BumpHawk:
+                    return new CosmeticBumpHawkData();
+                case CosmeticInstanceType.JumpRings:
+                    return new CosmeticJumpRingsData();
+                case CosmeticInstanceType.LongHeadScales:
+                    return new CosmeticLongHeadScalesData();
+                case CosmeticInstanceType.LongShoulderScales:
+                    return new CosmeticLongShoulderScalesData();
+                case CosmeticInstanceType.ShortBodyScales:
+                    return new CosmeticShortBodyScalesData();
+                case CosmeticInstanceType.SpineSpikes:
+                    return new CosmeticSpineSpikesData();
+                case CosmeticInstanceType.TailFin:
+                    return new CosmeticTailFinData();
+                case CosmeticInstanceType.TailGeckoScales:
+                    return new CosmeticTailGeckoScalesData();
+                case CosmeticInstanceType.TailTuft:
+                    return new CosmeticTailTuftData();
+                case CosmeticInstanceType.Whiskers:
+                    return new CosmeticWhiskersData();
+                case CosmeticInstanceType.WingScales:
+                    return new CosmeticWingScalesData();
+                default:
+                    throw new ArgumentException("Unsupported instance type");
+            }
+        }
+
+        internal virtual void ReadFromOther(LizKinCosmeticData other)
+        {
+            ReadFromJson(other.ToJson(), ignoremissing: true);
         }
 
         internal static LizKinCosmeticData Clone(LizKinCosmeticData instance)
         {
-            return LizKinCosmeticData.FromJson(instance.ToJson());
+            return LizKinCosmeticData.MakeFromJson(instance.ToJson());
         }
 
         virtual internal CosmeticPanel MakeEditPanel(LizardSkinOI.ProfileManager manager)
         {
-            return new CosmeticPanel(60, this, manager);
+            return new CosmeticPanel(this, manager);
         }
 
         virtual internal void ReadEditPanel(CosmeticPanel panel)
         {
-
+            //throw new NotImplementedException("Data wasn't read");
+            this.seed = panel.seedBox.valueInt;
+            this.overrideEffectColor = panel.effectCkb.valueBool;
+            this.effectColorOverride = panel.effectColorPicker.valuecolor;
+            this.overrideBaseColor = panel.baseCkb.valueBool;
+            this.baseColorOverride = panel.baseColorPicker.valuecolor;
         }
 
         //abstract
@@ -387,14 +413,18 @@ namespace LizardSkin
         {
             const float pannelWidth = 360f;
             private LizardSkinOI.EventfulComboBox typeBox;
-            internal LizKinCosmeticData data;
             private LizardSkinOI.ProfileManager manager;
+            internal LizKinCosmeticData data;
 
-            LizardSkinOI.EventfulTextBox seedBox;
+            internal LizardSkinOI.EventfulTextBox seedBox;
+            internal LizardSkinOI.EventfulCheckBox effectCkb;
+            internal LizardSkinOI.OpTinyColorPicker effectColorPicker;
+            internal LizardSkinOI.EventfulCheckBox baseCkb;
+            internal LizardSkinOI.OpTinyColorPicker baseColorPicker;
 
-            public virtual float pannelHeight => 360f;
+            protected virtual float pannelHeight => 360f;
             //protected
-            internal CosmeticPanel(float height, LizKinCosmeticData data, LizardSkinOI.ProfileManager manager) : base(Vector2.zero, new Vector2(pannelWidth, height))
+            internal CosmeticPanel(LizKinCosmeticData data, LizardSkinOI.ProfileManager manager, float height=56) : base(Vector2.zero, new Vector2(pannelWidth, height))
             {
 
                 this.data = data;
@@ -406,32 +436,53 @@ namespace LizardSkin
                 children.Add(typeBox);
                 // add basic buttons
                 LizardSkinOI.EventfulImageButton btnClip = new LizardSkinOI.EventfulImageButton(new Vector2(150, -27), new Vector2(24, 24), "", "LizKinClipboard");
-                btnClip.OnSignal += ()=> { this.manager.SetClipboard(data); };
+                btnClip.OnSignal += () => { this.manager.SetClipboard(data); };
                 children.Add(btnClip);
                 LizardSkinOI.EventfulImageButton btnDuplicate = new LizardSkinOI.EventfulImageButton(new Vector2(180, -27), new Vector2(24, 24), "", "LizKinDuplicate");
                 btnDuplicate.OnSignal += () => { this.manager.DuplicateCosmetic(data); };
                 children.Add(btnDuplicate);
                 LizardSkinOI.EventfulImageButton btnDelete = new LizardSkinOI.EventfulImageButton(new Vector2(210, -27), new Vector2(24, 24), "", "LizKinDelete");
-                btnDelete.OnSignal += () => { this.manager.DeleteCosmetic(data); };
+                btnDelete.OnSignal += () => { this.manager.DeleteCosmetic(this); };
                 children.Add(btnDelete);
 
                 // seeeeed
-                children.Add(new OptionalUI.OpLabel(new Vector2(245, -24), new Vector2(50, 24), "Seed:", FLabelAlignment.Left));
-                seedBox = new LizardSkinOI.EventfulTextBox(new Vector2(275, -27), 75, "", data.seed.ToString());
-                seedBox.OnChangeEvent += DataChanged;
-                children.Add(seedBox);
-                seedBox.Show(); // hmmmmm
+                children.Add(new OptionalUI.OpLabel(new Vector2(240, -27), new Vector2(69, 24), "Seed:", FLabelAlignment.Right));
+                children.Add(seedBox = new LizardSkinOI.EventfulTextBox(new Vector2(312, -27), 45, "", data.seed.ToString()));
+                seedBox.OnChangeEvent += DataChangedRefreshNeeded;
+                seedBox.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
+                // Second row
                 // color overrides
-                // TODO
+                children.Add(new OptionalUI.OpLabel(new Vector2(3, -53), new Vector2(97, 24), "Effect Override:", FLabelAlignment.Right));
+                children.Add(effectCkb = new LizardSkinOI.EventfulCheckBox(new Vector2(105, -53), "", data.overrideEffectColor));
+                effectCkb.OnChangeEvent += DataChanged;
+                children.Add(effectColorPicker = new LizardSkinOI.OpTinyColorPicker(new Vector2(135, -53), "", OptionalUI.OpColorPicker.ColorToHex(data.effectColorOverride)));
+                effectColorPicker.OnChanged += DataChanged;
+                effectColorPicker.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
+                children.Add(new OptionalUI.OpLabel(new Vector2(180, -53), new Vector2(100, 24), "Base Override:", FLabelAlignment.Right));
+                children.Add(baseCkb = new LizardSkinOI.EventfulCheckBox(new Vector2(285, -53), "", data.overrideBaseColor));
+                baseCkb.OnChangeEvent += DataChanged;
+                children.Add(baseColorPicker = new LizardSkinOI.OpTinyColorPicker(new Vector2(315, -53), "", OptionalUI.OpColorPicker.ColorToHex(data.baseColorOverride)));
+                baseColorPicker.OnChanged += DataChanged;
+                baseColorPicker.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
+            }
 
+            protected void TriggerUpdateWhileFrozen(float dt)
+            {
+                manager.KeepPreviewUpdated(dt);
             }
 
             protected virtual void DataChanged()
             {
-                this.data.seed = seedBox.valueInt;
+                this.data.ReadEditPanel(this);
+
+            }
+            protected virtual void DataChangedRefreshNeeded()
+            {
+                this.data.ReadEditPanel(this);
+                manager.RefreshPreview();
 
             }
 
@@ -441,17 +492,10 @@ namespace LizardSkin
 
                 // Not sure what happens here
                 // do we try and clone a common ancestor of data to keep some of the info ?
-                OnTypeChanged?.Invoke(this);
-
+                if (data.profile == null) return; // Already removed, combox dying triggers onchange :/
+                manager.ChangeCosmeticType(this, (CosmeticInstanceType) Enum.Parse(typeof(CosmeticInstanceType), typeBox.value));
             }
-
-            public delegate void TypeChangedEvent(CosmeticPanel panel);
-            public event TypeChangedEvent OnTypeChanged;
-
-
-
         }
-
     }
 
 
@@ -467,20 +511,25 @@ namespace LizardSkin
         {
             length = 0.5f;
             alpha = 0.45f;
-            this.tintColor = new Color(0.9f, 0.3f, 0.3f);
+            tintColor = new Color(0.9f, 0.3f, 0.3f);
         }
 
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.Antennae;
 
-        public static new CosmeticAntennaeData FromJson(Dictionary<string, object> json)
+        public override void ReadFromJson(Dictionary<string, object> json, bool ignoremissing = false)
         {
-            if ((long)json["CosmeticAntennaeData.version"] == 1) return new CosmeticAntennaeData()
+            base.ReadFromJson(json, ignoremissing);
+            if (json.ContainsKey("CosmeticAntennaeData.version"))
             {
-                length = (float)(double)json["length"],
-                alpha = (float)(double)json["alpha"],
-                tintColor = OptionalUI.OpColorPicker.HexToColor((string)json["baseColorOverride"])
-        };
-            throw new SerializationException("CosmeticAntennaeData version unsuported");
+                if ((long)json["CosmeticAntennaeData.version"] == 1)
+                {
+                    length = (float)(double)json["length"];
+                    alpha = (float)(double)json["alpha"];
+                    tintColor = OptionalUI.OpColorPicker.HexToColor((string)json["tintColor"]);
+                    return;
+                }
+            }
+            if(!ignoremissing)throw new SerializationException("CosmeticAntennaeData version unsuported");
         }
 
         public override Dictionary<string, object> ToJson()
@@ -493,21 +542,66 @@ namespace LizardSkin
                 {"tintColor",  OptionalUI.OpColorPicker.ColorToHex(tintColor)}
                 }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
+
+        internal override CosmeticPanel MakeEditPanel(LizardSkinOI.ProfileManager manager)
+        {
+            return new AntennaePanel(this, manager);
+        }
+
+        internal override void ReadEditPanel(CosmeticPanel panel)
+        {
+            base.ReadEditPanel(panel);
+            this.length = (panel as AntennaePanel).lengthControl.valueFloat;
+            this.alpha = (panel as AntennaePanel).alphaControl.valueFloat;
+            this.tintColor = (panel as AntennaePanel).tintPicker.valuecolor;
+        }
+
+        internal class AntennaePanel : CosmeticPanel
+        {
+            internal LizardSkinOI.EventfulUpdown lengthControl;
+            internal LizardSkinOI.EventfulUpdown alphaControl;
+            internal LizardSkinOI.OpTinyColorPicker tintPicker;
+
+            internal AntennaePanel(CosmeticAntennaeData data, LizardSkinOI.ProfileManager manager, float height = 88) : base(data, manager, height)
+            {
+                children.Add(new OptionalUI.OpLabel(new Vector2(5, -81), new Vector2(60, 24), "Length:", FLabelAlignment.Right));
+                children.Add(this.lengthControl = new LizardSkinOI.EventfulUpdown(new Vector2(70, -85), 55, "", data.length, 2));
+                lengthControl.SetRange(0f, 1f);
+                lengthControl.OnChangeEvent += DataChangedRefreshNeeded;
+                lengthControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
+
+                children.Add(new OptionalUI.OpLabel(new Vector2(120, -81), new Vector2(60, 24), "Alpha:", FLabelAlignment.Right));
+                children.Add(this.alphaControl = new LizardSkinOI.EventfulUpdown(new Vector2(185, -85), 55, "", data.alpha, 2));
+                alphaControl.SetRange(0f, 1f);
+                alphaControl.OnChangeEvent += DataChangedRefreshNeeded;
+                alphaControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
+
+                children.Add(new OptionalUI.OpLabel(new Vector2(245, -81), new Vector2(60, 24), "Tint:", FLabelAlignment.Right));
+                children.Add(tintPicker = new LizardSkinOI.OpTinyColorPicker(new Vector2(310, -83), "", OptionalUI.OpColorPicker.ColorToHex(data.tintColor)));
+                tintPicker.OnChanged += DataChanged;
+                tintPicker.OnFrozenUpdate += TriggerUpdateWhileFrozen;
+                tintPicker.OnSignal += DataChangedRefreshNeeded;
+            }
+        }
+
     }
-
-
     internal class CosmeticAxolotlGillsData : LizKinCosmeticData
     {
         const int version = 1;
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.AxolotlGills;
 
-        public static new CosmeticAxolotlGillsData FromJson(Dictionary<string, object> json)
+        public override void ReadFromJson(Dictionary<string, object> json, bool ignoremissing = false)
         {
-            if ((long)json["CosmeticAxolotlGillsData.version"] == 1) return new CosmeticAxolotlGillsData()
+            base.ReadFromJson(json, ignoremissing);
+            if (json.ContainsKey("CosmeticAxolotlGillsData.version"))
             {
+                if ((long)json["CosmeticAxolotlGillsData.version"] == 1)
+                {
 
-            };
-            throw new SerializationException("CosmeticAxolotlGillsData version unsuported");
+                    return;
+                }
+            }
+            if (!ignoremissing) throw new SerializationException("CosmeticAxolotlGillsData version unsuported");
         }
 
         public override Dictionary<string, object> ToJson()
@@ -518,257 +612,70 @@ namespace LizardSkin
                 }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
     }
-
-
     internal class CosmeticBumpHawkData : LizKinCosmeticData
     {
         const int version = 1;
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.BumpHawk;
 
-        public static new CosmeticBumpHawkData FromJson(Dictionary<string, object> json)
-        {
-            if ((long)json["CosmeticBumpHawkData.version"] == 1) return new CosmeticBumpHawkData()
-            {
-
-            };
-            throw new SerializationException("CosmeticBumpHawkData version unsuported");
-        }
-
-        public override Dictionary<string, object> ToJson()
-        {
-            return base.ToJson().Concat(new Dictionary<string, object>()
-                {
-                    {"CosmeticBumpHawkData.version", (long)version },
-                }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        }
     }
-
-
     internal class CosmeticJumpRingsData : LizKinCosmeticData
     {
         const int version = 1;
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.JumpRings;
 
-        public static new CosmeticJumpRingsData FromJson(Dictionary<string, object> json)
-        {
-            if ((long)json["CosmeticJumpRingsData.version"] == 1) return new CosmeticJumpRingsData()
-            {
-
-            };
-            throw new SerializationException("CosmeticJumpRingsData version unsuported");
-        }
-
-        public override Dictionary<string, object> ToJson()
-        {
-            return base.ToJson().Concat(new Dictionary<string, object>()
-                {
-                    {"CosmeticJumpRingsData.version", (long)version },
-                }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        }
     }
-
-
     internal class CosmeticLongHeadScalesData : LizKinCosmeticData
     {
         const int version = 1;
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.LongHeadScales;
 
-        public static new CosmeticLongHeadScalesData FromJson(Dictionary<string, object> json)
-        {
-            if ((long)json["CosmeticLongHeadScalesData.version"] == 1) return new CosmeticLongHeadScalesData()
-            {
-
-            };
-            throw new SerializationException("CosmeticLongHeadScalesData version unsuported");
-        }
-
-        public override Dictionary<string, object> ToJson()
-        {
-            return base.ToJson().Concat(new Dictionary<string, object>()
-                {
-                    {"CosmeticLongHeadScalesData.version", (long)version },
-                }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        }
     }
-
-
     internal class CosmeticLongShoulderScalesData : LizKinCosmeticData
     {
         const int version = 1;
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.LongShoulderScales;
 
-        public static new CosmeticLongShoulderScalesData FromJson(Dictionary<string, object> json)
-        {
-            if ((long)json["CosmeticLongShoulderScalesData.version"] == 1) return new CosmeticLongShoulderScalesData()
-            {
-
-            };
-            throw new SerializationException("CosmeticLongShoulderScalesData version unsuported");
-        }
-
-        public override Dictionary<string, object> ToJson()
-        {
-            return base.ToJson().Concat(new Dictionary<string, object>()
-                {
-                    {"CosmeticLongShoulderScalesData.version", (long)version },
-                }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        }
     }
     internal class CosmeticShortBodyScalesData : LizKinCosmeticData
     {
         const int version = 1;
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.ShortBodyScales;
 
-        public static new CosmeticShortBodyScalesData FromJson(Dictionary<string, object> json)
-        {
-            if ((long)json["CosmeticShortBodyScalesData.version"] == 1) return new CosmeticShortBodyScalesData()
-            {
-
-            };
-            throw new SerializationException("CosmeticShortBodyScalesData version unsuported");
-        }
-
-        public override Dictionary<string, object> ToJson()
-        {
-            return base.ToJson().Concat(new Dictionary<string, object>()
-                {
-                    {"CosmeticShortBodyScalesData.version", (long)version },
-                }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        }
     }
     internal class CosmeticSpineSpikesData : LizKinCosmeticData
     {
         const int version = 1;
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.SpineSpikes;
 
-        public static new CosmeticSpineSpikesData FromJson(Dictionary<string, object> json)
-        {
-            if ((long)json["CosmeticSpineSpikesData.version"] == 1) return new CosmeticSpineSpikesData()
-            {
-
-            };
-            throw new SerializationException("CosmeticSpineSpikesData version unsuported");
-        }
-
-        public override Dictionary<string, object> ToJson()
-        {
-            return base.ToJson().Concat(new Dictionary<string, object>()
-                {
-                    {"CosmeticSpineSpikesData.version", (long)version },
-                }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        }
     }
     internal class CosmeticTailFinData : LizKinCosmeticData
     {
         const int version = 1;
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.TailFin;
 
-        public static new CosmeticTailFinData FromJson(Dictionary<string, object> json)
-        {
-            if ((long)json["CosmeticTailFinData.version"] == 1) return new CosmeticTailFinData()
-            {
-
-            };
-            throw new SerializationException("CosmeticTailFinData version unsuported");
-        }
-
-        public override Dictionary<string, object> ToJson()
-        {
-            return base.ToJson().Concat(new Dictionary<string, object>()
-                {
-                    {"CosmeticTailFinData.version", (long)version },
-                }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        }
     }
     internal class CosmeticTailGeckoScalesData : LizKinCosmeticData
     {
         const int version = 1;
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.TailGeckoScales;
 
-        public static new CosmeticTailGeckoScalesData FromJson(Dictionary<string, object> json)
-        {
-            if ((long)json["CosmeticTailGeckoScalesData.version"] == 1) return new CosmeticTailGeckoScalesData()
-            {
-
-            };
-            throw new SerializationException("CosmeticTailGeckoScalesData version unsuported");
-        }
-
-        public override Dictionary<string, object> ToJson()
-        {
-            return base.ToJson().Concat(new Dictionary<string, object>()
-                {
-                    {"CosmeticTailGeckoScalesData.version", (long)version },
-                }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        }
     }
     internal class CosmeticTailTuftData : LizKinCosmeticData
     {
         const int version = 1;
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.TailTuft;
 
-        public bool veryCute;
-
-        public static new CosmeticTailTuftData FromJson(Dictionary<string, object> json)
-        {
-            if ((long)json["CosmeticTailTuftData.version"] == 1) return new CosmeticTailTuftData()
-            {
-                veryCute = (bool)json["veryCute"]
-            };
-            throw new SerializationException("CosmeticTailTuftData version unsuported");
-        }
-
-        public override Dictionary<string, object> ToJson()
-        {
-            return base.ToJson().Concat(new Dictionary<string, object>()
-                {
-                    {"CosmeticTailTuftData.version", (long)version },
-                    {"veryCute", veryCute }
-                }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        }
     }
     internal class CosmeticWhiskersData : LizKinCosmeticData
     {
         const int version = 1;
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.Whiskers;
 
-        public static new CosmeticWhiskersData FromJson(Dictionary<string, object> json)
-        {
-            if ((long)json["CosmeticWhiskersData.version"] == 1) return new CosmeticWhiskersData()
-            {
-
-            };
-            throw new SerializationException("CosmeticWhiskersData version unsuported");
-        }
-
-        public override Dictionary<string, object> ToJson()
-        {
-            return base.ToJson().Concat(new Dictionary<string, object>()
-                {
-                    {"CosmeticWhiskersData.version", (long)version },
-                }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        }
     }
     internal class CosmeticWingScalesData : LizKinCosmeticData
     {
         const int version = 1;
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.WingScales;
 
-        public static new CosmeticWingScalesData FromJson(Dictionary<string, object> json)
-        {
-            if ((long)json["CosmeticWingScalesData.version"] == 1) return new CosmeticWingScalesData()
-            {
-
-            };
-            throw new SerializationException("CosmeticWingScalesData version unsuported");
-        }
-
-        public override Dictionary<string, object> ToJson()
-        {
-            return base.ToJson().Concat(new Dictionary<string, object>()
-                {
-                    {"CosmeticWingScalesData.version", (long)version },
-                }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        }
     }
 }

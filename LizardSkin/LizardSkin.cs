@@ -134,7 +134,7 @@ namespace LizardSkin
             myProfile.profileName = "hehehe";
             CosmeticTailTuftData myCosmetic1 = new CosmeticTailTuftData();
             CosmeticTailTuftData myCosmetic2 = new CosmeticTailTuftData();
-            myCosmetic1.veryCute = true;
+            myCosmetic1.seed = 69;
             myProfile.cosmetics.Add(myCosmetic1);
             myProfile.cosmetics.Add(myCosmetic2);
 
@@ -148,13 +148,13 @@ namespace LizardSkin
             Debug.Log("serialized ok");
             Debug.Log(serialized);
 
-            LizKinProfileData deserialized = LizKinProfileData.FromJson(Json.Deserialize(serialized) as Dictionary<string, object>);
+            LizKinProfileData deserialized = LizKinProfileData.MakeFromJson(Json.Deserialize(serialized) as Dictionary<string, object>);
 
             Debug.Log("deserialized ok");
             Debug.Log(deserialized);
             Debug.Log(deserialized.profileName);
-            Debug.Log((deserialized.cosmetics[0] as CosmeticTailTuftData).veryCute);
-            Debug.Log((deserialized.cosmetics[1] as CosmeticTailTuftData).veryCute);
+            Debug.Log((deserialized.cosmetics[0] as CosmeticTailTuftData).seed);
+            Debug.Log((deserialized.cosmetics[1] as CosmeticTailTuftData).seed);
 
             string serialized2 = Json.Serialize(deserialized);
             Debug.Log(serialized2);
