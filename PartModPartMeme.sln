@@ -39,6 +39,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProgrammerCat", "Programmer
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoreSlugcats", "MoooreSlugcats\MoreSlugcats.csproj", "{024A8D31-9CA5-442F-A477-5BAF59B75EC0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnTopOfTerrainHandFix", "OnTopOfTerrainHandFix\OnTopOfTerrainHandFix.csproj", "{46A66AB7-B959-4846-9B0B-78D9CB3BE916}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -117,6 +119,10 @@ Global
 		{024A8D31-9CA5-442F-A477-5BAF59B75EC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{024A8D31-9CA5-442F-A477-5BAF59B75EC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{024A8D31-9CA5-442F-A477-5BAF59B75EC0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46A66AB7-B959-4846-9B0B-78D9CB3BE916}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46A66AB7-B959-4846-9B0B-78D9CB3BE916}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46A66AB7-B959-4846-9B0B-78D9CB3BE916}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46A66AB7-B959-4846-9B0B-78D9CB3BE916}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
