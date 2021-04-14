@@ -117,15 +117,6 @@ namespace LizardSkin
 		//	base.ApplyPalette(sLeaser, rCam, palette);
 		//}
 
-		// Token: 0x040021EE RID: 8686
-		public int graphic;
-
-		// Token: 0x040021EF RID: 8687
-		public float scaleX;
-
-		// Token: 0x040021F0 RID: 8688
-		public bool colored;
-
 		// Token: 0x040021F1 RID: 8689
 		public Vector2[] scalesPositions;
 	}

@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace LizardSkin
 {
+	// This used to be a genericbodyobject but it really only used a subset of its features so it was easily detachable
 	public class GenericLizardScale
 	{
 		public GenericLizardScale(GenericCosmeticTemplate gCosmetics)

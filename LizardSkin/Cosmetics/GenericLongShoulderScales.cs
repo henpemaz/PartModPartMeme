@@ -7,7 +7,7 @@ namespace LizardSkin
 	{
         public GenericLongShoulderScales(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
-			this.rigor = 0f;
+			//this.rigor = 0f;
 			int num = 0;
 			//if (iGraphics.lizard.Template.type != CreatureTemplate.Type.PinkLizard || UnityEngine.Random.value < 0.33333334f)
 			//{
@@ -46,15 +46,15 @@ namespace LizardSkin
 			//}
 
 			//this.colored = (iGraphics.lizard.Template.type == CreatureTemplate.Type.GreenLizard || iGraphics.lizard.Template.type == CreatureTemplate.Type.RedLizard || UnityEngine.Random.value < 0.4f);
-			this.colored = (UnityEngine.Random.value < 0.6f);
-			if (UnityEngine.Random.value < 0.1f)
-			{
-				this.graphic = UnityEngine.Random.Range(0, 7);
-			}
-			else
-			{
-				this.graphic = UnityEngine.Random.Range(3, 6);
-			}
+			//this.colored = (UnityEngine.Random.value < 0.6f);
+			//if (UnityEngine.Random.value < 0.1f)
+			//{
+			//	this.graphic = UnityEngine.Random.Range(0, 7);
+			//}
+			//else
+			//{
+			//	this.graphic = UnityEngine.Random.Range(3, 6);
+			//}
 			//if (iGraphics.lizard.Template.type == CreatureTemplate.Type.PinkLizard && UnityEngine.Random.value < 0.25f)
 			//{
 			//	this.graphic = 0;
@@ -68,10 +68,10 @@ namespace LizardSkin
 			//		this.scaleX = ((UnityEngine.Random.value >= 0.5f) ? 1f : -1f);
 			//	}
 			//}
-			if (UnityEngine.Random.value < 0.25f)
-            {
-                this.graphic = 0;
-            }
+			//if (UnityEngine.Random.value < 0.25f)
+			//{
+			//	this.graphic = 0;
+			//}
 
             this.graphicHeight = Futile.atlasManager.GetElementWithName("LizardScaleA" + this.graphic).sourcePixelSize.y;
 			this.scaleObjects = new GenericLizardScale[this.scalesPositions.Length];

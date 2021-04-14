@@ -58,7 +58,7 @@ namespace LizardSkin
 				Vector2 pos = lizardSpineData.pos;
 				if (i == 0)
 				{
-					vector = (vector - Custom.DegToVec(this.iGraphics.HeadRotation(timeStacker))).normalized;
+					vector = (vector - this.iGraphics.SpinePosition(0f, timeStacker).dir).normalized;
 				}
 				Vector2 a = Custom.PerpendicularVector(vector);
 				float num2 = 50f * Mathf.Lerp(from, to, (i != 0) ? 0.5f : 0.25f);

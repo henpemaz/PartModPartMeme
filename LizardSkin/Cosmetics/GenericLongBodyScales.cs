@@ -6,25 +6,33 @@ using UnityEngine;
 
 namespace LizardSkin
 {
-	// Token: 0x020004C0 RID: 1216
 	public class GenericLongBodyScales : GenericBodyScales
 	{
-		// Token: 0x06001F48 RID: 8008 RVA: 0x001D9994 File Offset: 0x001D7B94
+
+		internal LongBodyScalesData longBodyScalesData => this.cosmeticData as LongBodyScalesData;
+
 		public GenericLongBodyScales(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
+			this.rigor = longBodyScalesData.rigor;
+			this.graphic = longBodyScalesData.graphic;
+			this.colored = longBodyScalesData.colored;
+
+
+			// Would make sense to put scale and thickness here too ?
 
 		}
 
 		// Token: 0x06001F49 RID: 8009 RVA: 0x001D99A0 File Offset: 0x001D7BA0
 		public override void Update()
 		{
+			SpineData headSpine = iGraphics.SpinePosition(0f, 1f);
 			for (int i = 0; i < this.scaleObjects.Length; i++)
 			{
 				SpineData backPos = base.GetBackPos(i, 1f, true);
 				Vector2 vector = Vector2.Lerp(backPos.dir, Custom.DirVec(backPos.pos, backPos.outerPos), Mathf.Abs(backPos.depthRotation));
 				if (this.scalesPositions[i].y < 0.2f)
 				{
-					vector -= Custom.DegToVec(this.iGraphics.HeadRotation(1f)) * Mathf.Pow(Mathf.InverseLerp(0.2f, 0f, this.scalesPositions[i].y), 2f) * 2f;
+					vector -= headSpine.dir * Mathf.Pow(Mathf.InverseLerp(0.2f, 0f, this.scalesPositions[i].y), 2f) * 2f;
 				}
 				vector = Vector2.Lerp(vector, backPos.dir, Mathf.Pow(this.backwardsFactors[i], Mathf.Lerp(1f, 15f, this.iGraphics.showDominance))).normalized;
 				Vector2 vector2 = backPos.outerPos + vector * this.scaleObjects[i].length;
@@ -118,12 +126,27 @@ namespace LizardSkin
 		public float[] backwardsFactors;
 
 		// Token: 0x040021F4 RID: 8692
-		public new int graphic;
+		// why ?
+		//public new int graphic;
 
 		// Token: 0x040021F5 RID: 8693
 		public float graphicHeight;
 
 		// Token: 0x040021F6 RID: 8694
 		public float rigor;
+
+
+		// Moved from GenericBodyScales
+		// Token: 0x040021EE RID: 8686
+		// could be moved to GenericLongBodyScales
+		public int graphic;
+
+		// Token: 0x040021EF RID: 8687
+		// seemingly unnused ?
+		//public float scaleX;
+
+		// Token: 0x040021F0 RID: 8688
+		// could be moved to GenericLongBodyScales
+		public bool colored;
 	}
 }

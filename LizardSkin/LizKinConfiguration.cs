@@ -17,11 +17,13 @@ using System;
 
 namespace LizardSkin
 {
+    // So minijson serialize can handle my data
     // Must serialize everything to supported types,
     public interface IJsonSerializable
     {
         Dictionary<string, object> ToJson();
-        void ReadFromJson(Dictionary<string, object> json, bool ignoremissing = false);
+        // Irrelevant
+        //void ReadFromJson(Dictionary<string, object> json, bool ignoremissing = false);
     }
 
 
@@ -42,7 +44,8 @@ namespace LizardSkin
             return new Dictionary<string, object>()
                 {
                     {"LizKinConfiguration.version", (long)version },
-                    {"profiles", profiles }
+                    {"profiles", profiles.ConvertAll( // We preemptively convert everything here to Dictionary<string, object> so we can do cloning without going through string serialization
+                    new Converter<LizKinProfileData, Dictionary<string, object>>(LizKinProfileData.ToJsonConverter)).Cast<object>().ToList() }
                 };
         }
 
@@ -52,6 +55,8 @@ namespace LizardSkin
             {
                 profiles = ((List<object>)json["profiles"]).Cast<Dictionary<string, object>>().ToList().ConvertAll(
                 new Converter<Dictionary<string, object>, LizKinProfileData>(LizKinProfileData.MakeFromJson));
+
+                return;
             }
 
             if(!ignoremissing) throw new SerializationException("LizKinConfiguration version unsuported");
@@ -126,6 +131,11 @@ namespace LizardSkin
                 }
             }
             return cosmetics;
+        }
+
+        internal static LizKinConfiguration Clone(LizKinConfiguration instance)
+        {
+            return LizKinConfiguration.MakeFromJson(instance.ToJson());
         }
     }
 
@@ -227,10 +237,15 @@ namespace LizardSkin
             return instance;
         }
 
-        // Hmmmmmmm
+
         internal static LizKinProfileData Clone(LizKinProfileData instance)
         {
             return LizKinProfileData.MakeFromJson(instance.ToJson());
+        }
+
+        internal static Dictionary<string, object> ToJsonConverter(LizKinProfileData instance)
+        {
+            return instance.ToJson();
         }
 
         public Color GetBaseColor(ICosmeticsAdaptor iGraphics, float y) => overrideBaseColor ? baseColorOverride : iGraphics.BodyColorFallback(y);
@@ -422,13 +437,30 @@ namespace LizardSkin
             internal LizardSkinOI.EventfulCheckBox baseCkb;
             internal LizardSkinOI.OpTinyColorPicker baseColorPicker;
 
-            protected virtual float pannelHeight => 360f;
+            //protected virtual float pannelHeight => 360f;
             //protected
+            private Vector2 currentPlacement;
+            private float heightOfCurrentRow;
+            protected void NewRow(float height = 30)
+            {
+                heightOfCurrentRow = height;
+                currentPlacement.y += height;
+                currentPlacement.x = 3;
+            }
+
+            protected Vector2 PlaceInRow(float heightOfElement, float widthOfElement, float marginLeft =2)
+            {
+                Vector2 placement = currentPlacement + new Vector2(marginLeft, (heightOfCurrentRow / 2 - heightOfElement / 2));
+                currentPlacement.x += marginLeft + widthOfElement;
+                return placement;
+            }
+
             internal CosmeticPanel(LizKinCosmeticData data, LizardSkinOI.ProfileManager manager, float height=56) : base(Vector2.zero, new Vector2(pannelWidth, height))
             {
-
                 this.data = data;
                 this.manager = manager;
+
+                NewRow();
                 // Group panel Y coordinates are top-to-bottom
                 // add type selector
                 this.typeBox = new LizardSkinOI.EventfulComboBox(new Vector2(3, -27), 140, "", Enum.GetNames(typeof(LizKinCosmeticData.CosmeticInstanceType)), data.instanceType.ToString());
@@ -503,15 +535,27 @@ namespace LizardSkin
     internal class CosmeticAntennaeData : LizKinCosmeticData
     {
         const int version = 1;
-        public float length;
-        public float alpha;
-        public Color tintColor;
+        internal float length;
+        internal float alpha;
+        internal Color tintColor;
+        internal int segments;
+        internal float spinepos;
+        internal float angle;
+        internal float distance;
+        internal float width;
+        internal float offset;
 
         public CosmeticAntennaeData()
         {
-            length = 0.5f;
-            alpha = 0.45f;
-            tintColor = new Color(0.9f, 0.3f, 0.3f);
+            length = 30f;
+            alpha = 0.9f;
+            tintColor = new Color(1f, 0f, 0f);
+            segments = 4;
+            spinepos = 0f;
+            angle = 0f;
+            distance = 3f;
+            width = 3f;
+            offset = 0f;
         }
 
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.Antennae;
@@ -526,6 +570,12 @@ namespace LizardSkin
                     length = (float)(double)json["length"];
                     alpha = (float)(double)json["alpha"];
                     tintColor = OptionalUI.OpColorPicker.HexToColor((string)json["tintColor"]);
+                    segments = (int)(long)json["segments"];
+                    spinepos = (float)(double)json["spinepos"];
+                    angle = (float)(double)json["angle"];
+                    distance = (float)(double)json["distance"];
+                    width = (float)(double)json["width"];
+                    offset = (float)(double)json["offset"];
                     return;
                 }
             }
@@ -539,7 +589,13 @@ namespace LizardSkin
                 {"CosmeticAntennaeData.version", (long)version },
                 {"length", (double)length },
                 {"alpha", (double)alpha },
-                {"tintColor",  OptionalUI.OpColorPicker.ColorToHex(tintColor)}
+                {"tintColor",  OptionalUI.OpColorPicker.ColorToHex(tintColor)},
+                {"segments", (long)segments },
+                {"spinepos", (double)spinepos },
+                {"angle", (double)angle },
+                {"distance", (double)distance },
+                {"width", (double)width },
+                {"offset", (double)offset },
                 }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
 
@@ -554,6 +610,12 @@ namespace LizardSkin
             this.length = (panel as AntennaePanel).lengthControl.valueFloat;
             this.alpha = (panel as AntennaePanel).alphaControl.valueFloat;
             this.tintColor = (panel as AntennaePanel).tintPicker.valuecolor;
+            segments = (panel as AntennaePanel).segmentsControl.valueInt;
+            spinepos = (panel as AntennaePanel).spineposControl.valueFloat;
+            angle = (panel as AntennaePanel).angleControl.valueFloat;
+            distance = (panel as AntennaePanel).distanceControl.valueFloat;
+            width = (panel as AntennaePanel).widthControl.valueFloat;
+            offset = (panel as AntennaePanel).offsetControl.valueFloat;
         }
 
         internal class AntennaePanel : CosmeticPanel
@@ -561,33 +623,144 @@ namespace LizardSkin
             internal LizardSkinOI.EventfulUpdown lengthControl;
             internal LizardSkinOI.EventfulUpdown alphaControl;
             internal LizardSkinOI.OpTinyColorPicker tintPicker;
+            internal LizardSkinOI.EventfulUpdown segmentsControl;
+            internal LizardSkinOI.EventfulUpdown spineposControl;
+            internal LizardSkinOI.EventfulUpdown angleControl;
+            internal LizardSkinOI.EventfulUpdown distanceControl;
+            internal LizardSkinOI.EventfulUpdown widthControl;
+            internal LizardSkinOI.EventfulUpdown offsetControl;
 
-            internal AntennaePanel(CosmeticAntennaeData data, LizardSkinOI.ProfileManager manager, float height = 88) : base(data, manager, height)
+            internal AntennaePanel(CosmeticAntennaeData data, LizardSkinOI.ProfileManager manager, float height = 151) : base(data, manager, height)
             {
+                // 1st row
                 children.Add(new OptionalUI.OpLabel(new Vector2(5, -81), new Vector2(60, 24), "Length:", FLabelAlignment.Right));
-                children.Add(this.lengthControl = new LizardSkinOI.EventfulUpdown(new Vector2(70, -85), 55, "", data.length, 2));
-                lengthControl.SetRange(0f, 1f);
-                lengthControl.OnChangeEvent += DataChangedRefreshNeeded;
+                children.Add(this.lengthControl = new LizardSkinOI.EventfulUpdown(new Vector2(70, -85), 55, "", data.length, 0));
+                lengthControl.SetRange(1f, 400f);
+                lengthControl.OnChangeEvent += DataChanged;
                 lengthControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(new Vector2(120, -81), new Vector2(60, 24), "Alpha:", FLabelAlignment.Right));
                 children.Add(this.alphaControl = new LizardSkinOI.EventfulUpdown(new Vector2(185, -85), 55, "", data.alpha, 2));
                 alphaControl.SetRange(0f, 1f);
-                alphaControl.OnChangeEvent += DataChangedRefreshNeeded;
+                alphaControl.OnChangeEvent += DataChanged;
                 alphaControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
-                children.Add(new OptionalUI.OpLabel(new Vector2(245, -81), new Vector2(60, 24), "Tint:", FLabelAlignment.Right));
-                children.Add(tintPicker = new LizardSkinOI.OpTinyColorPicker(new Vector2(310, -83), "", OptionalUI.OpColorPicker.ColorToHex(data.tintColor)));
+                children.Add(new OptionalUI.OpLabel(new Vector2(250, -81), new Vector2(60, 24), "Tint:", FLabelAlignment.Right));
+                children.Add(tintPicker = new LizardSkinOI.OpTinyColorPicker(new Vector2(315, -83), "", OptionalUI.OpColorPicker.ColorToHex(data.tintColor)));
                 tintPicker.OnChanged += DataChanged;
                 tintPicker.OnFrozenUpdate += TriggerUpdateWhileFrozen;
-                tintPicker.OnSignal += DataChangedRefreshNeeded;
+                //tintPicker.OnSignal += DataChangedRefreshNeeded;
+
+
+                // 2nd row
+                children.Add(new OptionalUI.OpLabel(new Vector2(5, -113), new Vector2(60, 24), "Segments:", FLabelAlignment.Right));
+                children.Add(this.segmentsControl = new LizardSkinOI.EventfulUpdown(new Vector2(70, -117), 55, "", data.segments));
+                segmentsControl.SetRange(2, 20);
+                segmentsControl.OnChangeEvent += DataChangedRefreshNeeded;
+                segmentsControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
+
+                children.Add(new OptionalUI.OpLabel(new Vector2(120, -113), new Vector2(60, 24), "Spinepos:", FLabelAlignment.Right));
+                children.Add(this.spineposControl = new LizardSkinOI.EventfulUpdown(new Vector2(185, -117), 55, "", data.spinepos, 2));
+                spineposControl.SetRange(0f, 1f);
+                spineposControl.OnChangeEvent += DataChanged;
+                spineposControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
+
+                children.Add(new OptionalUI.OpLabel(new Vector2(237, -113), new Vector2(60, 24), "Angle:", FLabelAlignment.Right));
+                children.Add(this.angleControl = new LizardSkinOI.EventfulUpdown(new Vector2(302, -117), 55, "", data.angle, 2));
+                angleControl.SetRange(-1f, 1f);
+                angleControl.OnChangeEvent += DataChanged;
+                angleControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
+
+                // 3rd row
+                children.Add(new OptionalUI.OpLabel(new Vector2(5, -144), new Vector2(60, 24), "Distance:", FLabelAlignment.Right));
+                children.Add(this.distanceControl = new LizardSkinOI.EventfulUpdown(new Vector2(70, -148), 55, "", data.distance, 1));
+                distanceControl.SetRange(-10f, 20f);
+                distanceControl.OnChangeEvent += DataChanged;
+                distanceControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
+
+                children.Add(new OptionalUI.OpLabel(new Vector2(120, -144), new Vector2(60, 24), "Width:", FLabelAlignment.Right));
+                children.Add(this.widthControl = new LizardSkinOI.EventfulUpdown(new Vector2(185, -148), 55, "", data.width, 1));
+                widthControl.SetRange(0f, 20f);
+                widthControl.OnChangeEvent += DataChanged;
+                widthControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
+
+                children.Add(new OptionalUI.OpLabel(new Vector2(237, -144), new Vector2(60, 24), "Offset:", FLabelAlignment.Right));
+                children.Add(this.offsetControl = new LizardSkinOI.EventfulUpdown(new Vector2(302, -148), 55, "", data.offset, 1));
+                offsetControl.SetRange(-10f, 20f);
+                offsetControl.OnChangeEvent += DataChanged;
+                offsetControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
+
             }
         }
-
     }
-    internal class CosmeticAxolotlGillsData : LizKinCosmeticData
+
+
+
+    internal abstract class LongBodyScalesData : LizKinCosmeticData
     {
         const int version = 1;
+        internal float rigor;
+        internal int graphic;
+        internal bool colored;
+        internal float scale;
+        internal float thickness;
+
+        protected LongBodyScalesData()
+        {
+            rigor = 0f;
+            graphic = 0;
+            colored = true;
+            scale = 1f;
+            thickness = 1f;
+        }
+
+        //public override CosmeticInstanceType instanceType => CosmeticInstanceType.???;
+
+        public override void ReadFromJson(Dictionary<string, object> json, bool ignoremissing = false)
+        {
+            base.ReadFromJson(json, ignoremissing);
+            if (json.ContainsKey("LongBodyScalesData.version"))
+            {
+                if ((long)json["LongBodyScalesData.version"] == 1)
+                {
+
+                    return;
+                }
+            }
+            if (!ignoremissing) throw new SerializationException("LongBodyScalesData version unsuported");
+        }
+
+        public override Dictionary<string, object> ToJson()
+        {
+            return base.ToJson().Concat(new Dictionary<string, object>()
+                {
+                    {"LongBodyScalesData.version", (long)version },
+                }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        }
+
+        internal override void ReadEditPanel(CosmeticPanel panel)
+        {
+            base.ReadEditPanel(panel);
+            LongBodyScalesPanel lbsp = panel as LongBodyScalesPanel;
+
+
+        }
+
+        internal abstract class LongBodyScalesPanel : CosmeticPanel
+        {
+            internal LongBodyScalesPanel(LizKinCosmeticData data, LizardSkinOI.ProfileManager manager, float height = 56) : base(data, manager, height)
+            {
+
+            }
+        }
+    }
+
+    internal class CosmeticAxolotlGillsData : LongBodyScalesData
+    {
+        const int version = 1;
+        internal int count;
+        internal float spread;
+
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.AxolotlGills;
 
         public override void ReadFromJson(Dictionary<string, object> json, bool ignoremissing = false)

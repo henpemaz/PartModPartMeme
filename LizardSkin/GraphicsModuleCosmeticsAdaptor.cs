@@ -36,8 +36,6 @@ namespace LizardSkin
         public abstract Vector2 mainBodyChunkVel { get; }
         public abstract BodyChunk mainBodyChunckSecret { get; }
 
-        public abstract float HeadRotation(float timeStacker);
-
         public abstract SpineData SpinePosition(float spineFactor, float timeStacker);
 
         public abstract Color BodyColorFallback(float y);
@@ -100,7 +98,10 @@ namespace LizardSkin
             return new PaletteAdaptor(palette);
         }
 
-
+        /// TODO
+        /// allow switching containers during ondraw
+        /// store weakrefs to containers
+        /// expose SwitchContainers(sprite, newoverlap)
         public virtual void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
         {
             this.firstSprite = sLeaser.sprites.Length;

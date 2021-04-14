@@ -58,6 +58,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
 
             if (!OptionInterface.isOptionMenu)
             {
+                // OI Crashes with no tabs :/
                 this.Tabs = new OpTab[1] { new OptionalUI.OpTab("Dummy") };
                 return;
             }

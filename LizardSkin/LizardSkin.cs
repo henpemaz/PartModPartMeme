@@ -129,39 +129,22 @@ namespace LizardSkin
         private static void TestSerialization()
         {
             Debug.Log("Serialization tests start");
+            LizKinConfiguration myConfig = new LizKinConfiguration();
+            myConfig.AddDefaultProfile();
 
-            LizKinProfileData myProfile = new LizKinProfileData();
-            myProfile.profileName = "hehehe";
-            CosmeticTailTuftData myCosmetic1 = new CosmeticTailTuftData();
-            CosmeticTailTuftData myCosmetic2 = new CosmeticTailTuftData();
-            myCosmetic1.seed = 69;
-            myProfile.cosmetics.Add(myCosmetic1);
-            myProfile.cosmetics.Add(myCosmetic2);
+            string serialized = Json.Serialize(myConfig);
 
-            Debug.Log("init ok");
-            Debug.Log(myProfile);
-
-            //On.Json.Serializer.SerializeOther += Serializer_SerializeOther;
-
-            string serialized = Json.Serialize(myProfile);
-
-            Debug.Log("serialized ok");
-            Debug.Log(serialized);
-
-            LizKinProfileData deserialized = LizKinProfileData.MakeFromJson(Json.Deserialize(serialized) as Dictionary<string, object>);
-
-            Debug.Log("deserialized ok");
-            Debug.Log(deserialized);
-            Debug.Log(deserialized.profileName);
-            Debug.Log((deserialized.cosmetics[0] as CosmeticTailTuftData).seed);
-            Debug.Log((deserialized.cosmetics[1] as CosmeticTailTuftData).seed);
+            LizKinConfiguration deserialized = LizKinConfiguration.MakeFromJson(Json.Deserialize(serialized) as Dictionary<string, object>);
 
             string serialized2 = Json.Serialize(deserialized);
-            Debug.Log(serialized2);
-            Debug.Log("Old equals new: " + (serialized == serialized2));
 
-            Debug.Log("testing clone");
-            LizKinProfileData.Clone(myProfile);
+            if (serialized != serialized2) throw new System.Runtime.Serialization.SerializationException("Reserialization check failed");
+
+            LizKinConfiguration cloned = LizKinConfiguration.Clone(myConfig);
+
+            string serialized3 = Json.Serialize(cloned);
+
+            if (serialized2 != serialized3) throw new System.Runtime.Serialization.SerializationException("Clone check failed");
 
             Debug.Log("Serialization tests ok");
         }

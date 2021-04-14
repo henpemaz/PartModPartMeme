@@ -7,7 +7,7 @@ namespace LizardSkin
         public GenericLongHeadScales(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
 
-			this.rigor = UnityEngine.Random.value;
+			// this.rigor = UnityEngine.Random.value;
 			//if (iGraphics.lizard.Template.type != CreatureTemplate.Type.PinkLizard || UnityEngine.Random.value < 0.33333334f)
 			//{
 			//	int num = UnityEngine.Random.Range(0, 3);
@@ -19,21 +19,21 @@ namespace LizardSkin
 			//float num2 = Mathf.Pow(UnityEngine.Random.value, 0.7f) * iGraphics.lizard.lizardParams.headSize;
 			//this.colored = (UnityEngine.Random.value < 0.5f && iGraphics.lizard.Template.type != CreatureTemplate.Type.WhiteLizard);
 			float num2 = Mathf.Pow(UnityEngine.Random.value, 0.7f);
-			this.colored = (UnityEngine.Random.value < 0.5f); // && iGraphics.lizard.Template.type != CreatureTemplate.Type.WhiteLizard);
-			this.graphic = UnityEngine.Random.Range(4, 6);
-			if (num2 < 0.5f && UnityEngine.Random.value < 0.5f)
-			{
-				this.graphic = 6;
-			}
-			else if (num2 > 0.8f)
-			{
-				this.graphic = 5;
-			}
-			// if (num2 < 0.2f && iGraphics.lizard.Template.type != CreatureTemplate.Type.WhiteLizard)
-			if (num2 < 0.2f)// && iGraphics.lizard.Template.type != CreatureTemplate.Type.WhiteLizard)
-			{
-				this.colored = true;
-			}
+			//this.colored = (UnityEngine.Random.value < 0.5f); // && iGraphics.lizard.Template.type != CreatureTemplate.Type.WhiteLizard);
+			//this.graphic = UnityEngine.Random.Range(4, 6);
+			//if (num2 < 0.5f && UnityEngine.Random.value < 0.5f)
+			//{
+			//	this.graphic = 6;
+			//}
+			//else if (num2 > 0.8f)
+			//{
+			//	this.graphic = 5;
+			//}
+			//// if (num2 < 0.2f && iGraphics.lizard.Template.type != CreatureTemplate.Type.WhiteLizard)
+			//if (num2 < 0.2f)// && iGraphics.lizard.Template.type != CreatureTemplate.Type.WhiteLizard)
+			//{
+			//	this.colored = true;
+			//}
 			//if (iGraphics.lizard.Template.type == CreatureTemplate.Type.BlackLizard)
 			//{
 			//	this.colored = false;

@@ -42,7 +42,7 @@ namespace LizardSkin
         // Color effectColor { get;}
         Color BodyColorFallback(float y);
         //Color HeadColor(float v);
-        float HeadRotation(float timeStacker);
+        //float HeadRotation(float timeStacker);
         SpineData SpinePosition(float spineFactor, float timeStacker);
     }
 

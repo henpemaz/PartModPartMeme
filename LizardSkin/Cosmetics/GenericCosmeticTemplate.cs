@@ -9,6 +9,7 @@ namespace LizardSkin
 		{
 			this.iGraphics = iGraphics;
 			this.cosmeticData = cosmeticData;
+			UnityEngine.Random.seed = cosmeticData.seed;
 		}
 
 		public static GenericCosmeticTemplate MakeCosmetic(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData)

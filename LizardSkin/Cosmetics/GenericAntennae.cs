@@ -9,9 +9,9 @@ namespace LizardSkin
         public GenericAntennae(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
 			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.InFront;
-			this.length = antennaeData.length; //UnityEngine.Random.value;
+			//this.length = antennaeData.length; //UnityEngine.Random.value;
 			this.segments = antennaeData.segments; //Mathf.FloorToInt(Mathf.Lerp(3f, 8f, Mathf.Pow(this.length, Mathf.Lerp(1f, 6f, this.length))));
-			this.alpha = antennaeData.alpha; // this.length * 0.9f + UnityEngine.Random.value * 0.1f;
+			//this.alpha = antennaeData.alpha; // this.length * 0.9f + UnityEngine.Random.value * 0.1f;
 			this.antennae = new GenericBodyPartAdaptor[2, this.segments];
 			for (int i = 0; i < this.segments; i++)
 			{
@@ -35,11 +35,12 @@ namespace LizardSkin
 		public override void Reset()
 		{
 			base.Reset();
+			SpineData spine = iGraphics.SpinePosition(antennaeData.spinepos, 1f);
 			for (int i = 0; i < 2; i++)
 			{
 				for (int j = 0; j < this.segments; j++)
 				{
-					this.antennae[i, j].Reset(this.AnchorPoint(i, 1f));
+					this.antennae[i, j].Reset(this.AnchorPoint(i, 1f, spine));
 				}
 			}
 		}
@@ -47,59 +48,60 @@ namespace LizardSkin
 		// Token: 0x06001F67 RID: 8039 RVA: 0x001DC89C File Offset: 0x001DAA9C
 		public override void Update()
 		{
-			float num = 0; //  this.iGraphics.lizard.AI.yellowAI.commFlicker;
+			float flicker = this.iGraphics.showDominance; //  this.iGraphics.lizard.AI.yellowAI.commFlicker;
 			//if (!this.iGraphics.lizard.Consious)
 			//{
 			//	num = 0f;
 			//}
 			//float num2 = Mathf.Lerp(10f, 7f, this.length);
-			float num2 = Mathf.Lerp(0f, 100f, this.length) / (float)(this.segments - 1);
+			float lengthPerSegment = antennaeData.length / (float)(this.segments - 1);
+			SpineData spine = iGraphics.SpinePosition(antennaeData.spinepos, 1f);
 			for (int i = 0; i < 2; i++)
 			{
 				for (int j = 0; j < this.segments; j++)
 				{
-					float num3 = (float)j / (float)(this.segments - 1);
-					num3 = Mathf.Lerp(num3, Mathf.InverseLerp(0f, 5f, (float)j), 0.2f);
-					this.antennae[i, j].vel += this.AntennaDir(i, 1f) * (1f - num3 + 0.6f * num);
+					float tipFactor = (float)j / (float)(this.segments - 1);
+					tipFactor = Mathf.Lerp(tipFactor, Mathf.InverseLerp(0f, 5f, (float)j), 0.2f); // accelerate tippening
+					this.antennae[i, j].vel += this.AntennaDir(i, 1f, spine) * (1f - tipFactor + 0.6f * flicker); // Pull outwards
 					if (this.iGraphics.PointSubmerged(this.antennae[i, j].pos))
 					{
-						this.antennae[i, j].vel *= 0.8f;
+						this.antennae[i, j].vel *= 0.8f; // floaty
 					}
 					else
 					{
-						GenericBodyPartAdaptor genericBodyPart = this.antennae[i, j];
-						genericBodyPart.vel.y = genericBodyPart.vel.y - 0.4f * num3 * (1f - num);
+						this.antennae[i, j].vel.y -= 0.4f * tipFactor * (1f - flicker); // droopey
 					}
 					this.antennae[i, j].Update();
-					this.antennae[i, j].pos += Custom.RNV() * 3f * num;
-					Vector2 p;
+					this.antennae[i, j].pos += Custom.RNV() * 3f * flicker;
+					Vector2 previousPrevious;
 					if (j == 0)
 					{
-						this.antennae[i, j].vel += this.AntennaDir(i, 1f) * 5f;
-						p = this.iGraphics.headPos;
-						this.antennae[i, j].ConnectToPoint(this.AnchorPoint(i, 1f), num2, true, 0f, this.iGraphics.mainBodyChunkVel, 0f, 0f);
+						this.antennae[i, j].vel += this.AntennaDir(i, 1f, spine) * 5f;
+						//p = this.iGraphics.headPos;
+						previousPrevious = spine.pos;
+						this.antennae[i, j].ConnectToPoint(this.AnchorPoint(i, 1f, spine), lengthPerSegment*0.2f, true, 0f, this.iGraphics.mainBodyChunkVel, 0f, 0f);
 					}
 					else
 					{
 						if (j == 1)
 						{
-							p = this.AnchorPoint(i, 1f);
+							previousPrevious = this.AnchorPoint(i, 1f, spine);
 						}
 						else
 						{
-							p = this.antennae[i, j - 2].pos;
+							previousPrevious = this.antennae[i, j - 2].pos;
 						}
-						Vector2 a = Custom.DirVec(this.antennae[i, j].pos, this.antennae[i, j - 1].pos);
-						float num4 = Vector2.Distance(this.antennae[i, j].pos, this.antennae[i, j - 1].pos);
-						this.antennae[i, j].pos -= a * (num2 - num4) * 0.5f;
-						this.antennae[i, j].vel -= a * (num2 - num4) * 0.5f;
-						this.antennae[i, j - 1].pos += a * (num2 - num4) * 0.5f;
-						this.antennae[i, j - 1].vel += a * (num2 - num4) * 0.5f;
+						Vector2 toPrevious = Custom.DirVec(this.antennae[i, j].pos, this.antennae[i, j - 1].pos);
+						float dist = Vector2.Distance(this.antennae[i, j].pos, this.antennae[i, j - 1].pos);
+						this.antennae[i, j].pos -= toPrevious * (lengthPerSegment - dist) * 0.5f;
+						this.antennae[i, j].vel -= toPrevious * (lengthPerSegment - dist) * 0.5f;
+						this.antennae[i, j - 1].pos += toPrevious * (lengthPerSegment - dist) * 0.5f;
+						this.antennae[i, j - 1].vel += toPrevious * (lengthPerSegment - dist) * 0.5f;
 					}
-					this.antennae[i, j].vel += Custom.DirVec(p, this.antennae[i, j].pos) * 3f * Mathf.Pow(1f - num3, 0.3f);
+					this.antennae[i, j].vel += Custom.DirVec(previousPrevious, this.antennae[i, j].pos) * 3f * Mathf.Pow(1f - tipFactor, 0.3f);
 					if (j > 1)
 					{
-						this.antennae[i, j - 2].vel += Custom.DirVec(this.antennae[i, j].pos, this.antennae[i, j - 2].pos) * 3f * Mathf.Pow(1f - num3, 0.3f);
+						this.antennae[i, j - 2].vel += Custom.DirVec(this.antennae[i, j].pos, this.antennae[i, j - 2].pos) * 3f * Mathf.Pow(1f - tipFactor, 0.3f);
 					}
 					//if (!Custom.DistLess(this.iGraphics.headPos, this.antennae[i, j].pos, 200f))
 					//{
@@ -110,18 +112,19 @@ namespace LizardSkin
 		}
 
 		// Token: 0x06001F68 RID: 8040 RVA: 0x001DCD54 File Offset: 0x001DAF54
-		private Vector2 AntennaDir(int side, float timeStacker)
+		private Vector2 AntennaDir(int side, float timeStacker, SpineData spine)
 		{
-			float num = Mathf.Lerp(this.iGraphics.lastHeadDepthRotation, this.iGraphics.headDepthRotation, timeStacker);
-			Vector2 vector = new Vector2(((side != 0) ? 1f : -1f) * (1f - Mathf.Abs(num)) * 1.5f + num * 3.5f, -1f);
-			return Custom.RotateAroundOrigo(vector.normalized, ((side != 0) ? 1f : -1f) * antennaeData.angle + Custom.AimFromOneVectorToAnother(Vector2.Lerp(this.iGraphics.mainBodyChunkLastPos, this.iGraphics.mainBodyChunkPos, timeStacker), Vector2.Lerp(this.iGraphics.headLastPos, this.iGraphics.headPos, timeStacker)));
+			//float num = Mathf.Lerp(this.iGraphics.lastHeadDepthRotation, this.iGraphics.headDepthRotation, timeStacker);
+			Vector2 vector = new Vector2(((side != 0) ? 1f : -1f) * (1f - Mathf.Abs(spine.depthRotation)) * 1.5f + spine.depthRotation * 3.5f, -1f);
+			return Custom.RotateAroundOrigo(vector.normalized, ((side != 0) ? 90f : -90f) * antennaeData.angle + Custom.VecToDeg(-spine.dir)); // Custom.AimFromOneVectorToAnother(Vector2.Lerp(this.iGraphics.mainBodyChunkLastPos, this.iGraphics.mainBodyChunkPos, timeStacker), Vector2.Lerp(this.iGraphics.headLastPos, this.iGraphics.headPos, timeStacker)));
 		}
 
 		// Token: 0x06001F69 RID: 8041 RVA: 0x001DCE1C File Offset: 0x001DB01C
-		private Vector2 AnchorPoint(int side, float timeStacker)
+		private Vector2 AnchorPoint(int side, float timeStacker, SpineData spine)
 		{
-			// anchor shoudl be offsetable
-			//return Vector2.Lerp(this.iGraphics.mainBodyChunkLastPos, this.iGraphics.mainBodyChunkPos, timeStacker) + this.AntennaDir(side, timeStacker) * 3f;
+			// anchor should be offsetable
+			//float num = Mathf.Lerp(this.iGraphics.lastHeadDepthRotation, this.iGraphics.headDepthRotation, timeStacker);
+			return spine.pos + spine.perp*(((side != 0) ? -1f : 1f) * (1f - Mathf.Abs(spine.depthRotation)) * 1.5f + spine.depthRotation * 3.5f)*antennaeData.offset + this.AntennaDir(side, timeStacker, spine) * antennaeData.distance;
 		}
 
 		// Token: 0x06001F6A RID: 8042 RVA: 0x001DCE80 File Offset: 0x001DB080
@@ -144,16 +147,17 @@ namespace LizardSkin
 		public override void DrawSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam, float timeStacker, Vector2 camPos)
 		{
 			base.DrawSprites(sLeaser, rCam, timeStacker, camPos);
-			float flicker = 0; // Mathf.Pow(UnityEngine.Random.value, 1f - 0.5f * this.iGraphics.lizard.AI.yellowAI.commFlicker) * this.iGraphics.lizard.AI.yellowAI.commFlicker;
+			float flicker = Mathf.Pow(UnityEngine.Random.value, 1f - 0.5f * this.iGraphics.showDominance) * this.iGraphics.showDominance;
 			//if (!this.iGraphics.lizard.Consious)
 			//{
 			//	flicker = 0f;
 			//}
-			Vector2 vector = Custom.DegToVec(this.iGraphics.HeadRotation(timeStacker));
+			//Vector2 vector = Custom.DegToVec(this.iGraphics.HeadRotation(timeStacker));
+			SpineData spine = iGraphics.SpinePosition(antennaeData.spinepos, timeStacker);
 			for (int i = 0; i < 2; i++)
 			{
 				sLeaser.sprites[this.startSprite + i].color = this.cosmeticData.GetBaseColor(iGraphics, 0);
-				Vector2 vector2 = Vector2.Lerp(Vector2.Lerp(this.iGraphics.headLastPos, this.iGraphics.headPos, timeStacker), this.AnchorPoint(i, timeStacker), 0.5f);
+				Vector2 vector2 = Vector2.Lerp(spine.pos, this.AnchorPoint(i, timeStacker, spine), 0.5f);
 				float num = 1f;
 				float num2 = 0f;
 				for (int j = 0; j < this.segments; j++)
@@ -163,7 +167,7 @@ namespace LizardSkin
 					Vector2 normalized = (vector3 - vector2).normalized;
 					Vector2 a = Custom.PerpendicularVector(normalized);
 					float d = Vector2.Distance(vector3, vector2) / 5f;
-					float num4 = Mathf.Lerp(3f, 1f, Mathf.Pow(num3, 0.8f));
+					float num4 = Mathf.Lerp(antennaeData.width, 1f, Mathf.Pow(num3, 0.8f));
 					for (int k = 0; k < 2; k++)
 					{
 						(sLeaser.sprites[this.Sprite(i, k)] as TriangleMesh).MoveVertice(j * 4, vector2 - a * (num + num4) * 0.5f + normalized * d - camPos);
@@ -198,7 +202,7 @@ namespace LizardSkin
 				return Color.Lerp(this.cosmeticData.GetBaseColor(iGraphics, 0), Color.Lerp(this.cosmeticData.effectColor, this.iGraphics.palette.blackColor, flicker), tip);
 			}
 			Color tint = redderTint;
-			return Color.Lerp(new Color(tint.r, tint.g, tint.b, this.alpha), new Color(1f, 1f, 1f, this.alpha), flicker);
+			return Color.Lerp(new Color(tint.r, tint.g, tint.b, antennaeData.alpha), new Color(1f, 1f, 1f, antennaeData.alpha), flicker);
 		}
 
 		// Token: 0x06001F6D RID: 8045 RVA: 0x001DD3E4 File Offset: 0x001DB5E4
@@ -216,10 +220,10 @@ namespace LizardSkin
 		// Token: 0x04002207 RID: 8711
 		private int segments;
 
-		// Token: 0x04002208 RID: 8712
-		private float length;
+		//// Token: 0x04002208 RID: 8712
+		//private float length;
 
 		// Token: 0x04002209 RID: 8713
-		private float alpha;
+		//private float alpha;
 	}
 }
