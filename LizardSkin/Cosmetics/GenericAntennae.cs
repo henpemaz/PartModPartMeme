@@ -54,7 +54,7 @@ namespace LizardSkin
 			//	num = 0f;
 			//}
 			//float num2 = Mathf.Lerp(10f, 7f, this.length);
-			float lengthPerSegment = antennaeData.length / (float)(this.segments - 1);
+			float lengthPerSegment = Mathf.Max(0f, antennaeData.length - 4f*(this.segments - 1)) / (float)(this.segments - 1);
 			SpineData spine = iGraphics.SpinePosition(antennaeData.spinepos, 1f);
 			for (int i = 0; i < 2; i++)
 			{

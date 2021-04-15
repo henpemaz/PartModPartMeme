@@ -92,11 +92,11 @@ namespace LizardSkin
 
         public List<GenericCosmeticTemplate> cosmetics { get; protected set; }
 
-        public float BodyAndTailLength => 80f;
+        public float BodyAndTailLength => 60f;
 
-        public float bodyLength => 40f;
+        public float bodyLength => 30f;
 
-        public float tailLength => 40f;
+        public float tailLength => 30f;
 
         //public Color effectColor => new Color(0.05f, 0.87f, 0.92f);
         //public Color effectColor => profileData.effectColor;
@@ -173,7 +173,7 @@ namespace LizardSkin
             Vector2 direction = new Vector2(0f, -1f);
             Vector2 perp = new Vector2(1f, 0f);
             float rot = Mathf.Pow(Mathf.Abs(_rotation), Mathf.Lerp(1.2f, 0.3f, Mathf.Pow(spineFactor, 0.5f))) * Mathf.Sign(_rotation);
-            return new SpineData(spineFactor, pos, pos + perp*rad, direction, perp, rot, rad);
+            return new SpineData(spineFactor, pos, pos + perp*rad*rot, direction, perp, rot, rad);
         }
 
         internal void SetRotation(float valueFloat)

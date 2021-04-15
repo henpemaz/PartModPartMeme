@@ -877,8 +877,9 @@ You can pick Cosmetics of several types, edit their settings and configure rando
 
             public override void OnChange()
             {
+
                 base.OnChange();
-                //if (children == null) return; // called from ctor before initialized ????
+                if (originalPositions.Count == 0) return; // called from ctor before initialized
                 for (int i = 0; i < children.Count; i++)
                 {
                     children[i].pos = topLeft + originalPositions[i];
