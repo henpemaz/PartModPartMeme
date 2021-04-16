@@ -39,7 +39,7 @@ namespace CustomSpritesLoader
         public CustomSpritesLoader()
         {
             this.ModID = modid;
-            this.Version = "1.0";
+            this.Version = "1.1";
             this.author = "Henpemaz";
 
             instance = this;
@@ -52,6 +52,8 @@ Allows you to load, replace, or partially overwrite game sprites in a much much 
 Sprites or atlases placed inside the Load folder will be automatically loaded when the game starts and will be available for mods to use (ie FancySlugcats) or will be used instead of vanilla assets. Elements with names that match vanilla elements will effectivelly overwrite the old ones. These atlases will not be unloaded by the game and can cause performance issues.
 
 Sprites or atlases placed inside the Replace folder will be loaded instead when the game attempts to load an atlas or image of the same name, it is important that it has the same format (atlas or single image) that the game expects to find and that in the case of an atlas it has all the Elements that the original one had. These atlases can be unloaded by the game if the vanilla ones would be unloaded at any point.
+
+You can organize your sprites in sub-folders inside of Load or Replace. If a folder's name starts with ""_"" (underscore), or if the folder contains a file named ""disabled.txt"", then that folder and sub-folders are ignored.
 
 Note to FancySlugcats users: You can simply put your all your atlases inside `CustomSpritesLoader\Load` instead of adding files to `CustomHeads` and atlases to `Futile\Atlases`, and you'll be able to use them the same way.
 
@@ -82,76 +84,97 @@ Happy modding
 
         private FAtlas FAtlasManager_ActuallyLoadAtlasOrImage(On.FAtlasManager.orig_ActuallyLoadAtlasOrImage orig, FAtlasManager self, string name, string imagePath, string dataPath)
         {
-            if (TryLoadReplacement(name)) return lastLoadedAtlas;
+            FAtlas replacement = TryLoadReplacement(name);
+            if (replacement != null) return replacement;
             return orig(self, name, imagePath, dataPath);
         }
 
         private FAtlas FAtlasManager_LoadImage(On.FAtlasManager.orig_LoadImage orig, FAtlasManager self, string imagePath)
         {
-            if (TryLoadReplacement(imagePath)) return lastLoadedAtlas;
+            FAtlas replacement = TryLoadReplacement(imagePath);
+            if (replacement != null) return replacement;
             return orig(self, imagePath);
         }
 
         private FAtlas FAtlasManager_LoadAtlas(On.FAtlasManager.orig_LoadAtlas orig, FAtlasManager self, string atlasPath)
         {
-            if (TryLoadReplacement(atlasPath)) return lastLoadedAtlas;
+            FAtlas replacement = TryLoadReplacement(atlasPath);
+            if (replacement != null) return replacement;
             return orig(self, atlasPath);
         }
 
         private FAtlas FAtlasManager_LoadAtlasFromTexture_1(On.FAtlasManager.orig_LoadAtlasFromTexture_1 orig, FAtlasManager self, string name, string dataPath, Texture texture)
         {
-            if (TryLoadReplacement(name)) return lastLoadedAtlas;
+            FAtlas replacement = TryLoadReplacement(name);
+            if (replacement != null)
+            {
+                CopyTextureSettingsToAtlas(texture, replacement);
+                return replacement;
+            }
             return orig(self, name, dataPath,texture);
         }
 
         private FAtlas FAtlasManager_LoadAtlasFromTexture(On.FAtlasManager.orig_LoadAtlasFromTexture orig, FAtlasManager self, string name, Texture texture)
         {
-            if (TryLoadReplacement(name)) return lastLoadedAtlas;
+            FAtlas replacement = TryLoadReplacement(name);
+            if (replacement != null)
+            {
+                CopyTextureSettingsToAtlas(texture, replacement);
+                return replacement;
+            }
             return orig (self, name, texture);
         }
 
-        private FAtlas lastLoadedAtlas;
+        private void CopyTextureSettingsToAtlas(Texture from, FAtlas to)
+        {
+            if (from == null || to == null || to.texture == null) return;
+            to._texture.wrapMode = from.wrapMode;
+            to._texture.anisoLevel = from.anisoLevel;
+            to._texture.filterMode = from.filterMode;
+            // more ?
+        }
 
-        public bool TryLoadReplacement(string atlasname)
+        public FAtlas TryLoadReplacement(string atlasname)
         {
             if (atlasname.StartsWith("Atlases/"))
             {
                 atlasname = atlasname.Substring(8);
-                if (!DoIHaveAReplacementForThis(atlasname)) return false;
+                if (!DoIHaveAReplacementForThis(atlasname)) return null;
                 if (!ShouldAtlasBeLoadedWithPrefix(atlasname)) knownPrefixedAtlases.Add(atlasname);
-            } else if (!DoIHaveAReplacementForThis(atlasname)) return false;
+            } else if (!DoIHaveAReplacementForThis(atlasname)) return null;
             try
             {
                 Debug.Log("CustomSpritesLoader: Loading replacement for " + atlasname);
-                lastLoadedAtlas = ReadAndLoadCustomAtlas(atlasname, ReplaceAtlasesFolder);
-                return true;
+                return ReadAndLoadCustomAtlas(atlasname, new FileInfo(knownAtlasReplacements[atlasname]).DirectoryName);
             }
             catch (Exception e)
             {
                 Debug.LogError("CustomSpritesLoader: Error loading replacement atlas " + atlasname + ", skipping");
                 Debug.LogException(e);
-                return false;
+                return null;
             }
         }
 
         public bool DoIHaveAReplacementForThis(string atlasname)
         {
             //if (initialLoadLock) return false;
-            if (knownAtlasReplacements.Contains(atlasname)) return true;
+            if (knownAtlasReplacements.ContainsKey(atlasname)) return true;
             return false;
         }
 
-        List<string> knownAtlasReplacements = new List<string>();
+        //List<string> knownAtlasReplacements = new List<string>();
+        Dictionary<string, string> knownAtlasReplacements = new Dictionary<string, string>();
 
         private void CheckMyFolders()
         {
             Directory.CreateDirectory(CustomSpritesLoaderFolder);
-            if(!File.Exists(Path.Combine(CustomSpritesLoaderFolder, "Readme.txt")))
+            FileInfo readme = new FileInfo(Path.Combine(CustomSpritesLoaderFolder, "Readme.txt"));
+            if(!readme.Exists || readme.Length != description.Length)
             {
-                StreamWriter readme = File.CreateText(Path.Combine(CustomSpritesLoaderFolder, "Readme.txt"));
-                readme.Write(description);
-                readme.Flush();
-                readme.Close();
+                StreamWriter readmeWriter = readme.CreateText();
+                readmeWriter.Write(description);
+                readmeWriter.Flush();
+                readmeWriter.Close();
             }
             Directory.CreateDirectory(LoadAtlasesFolder);
             File.Create(Path.Combine(LoadAtlasesFolder, "Place new atlases to be automatically loaded here"));
@@ -160,13 +183,27 @@ Happy modding
 
             Debug.Log("CustomSpritesLoader: Scanning for atlas replacements");
             DirectoryInfo atlasesFolder = new DirectoryInfo(ReplaceAtlasesFolder);
-            FileInfo[] atlasFiles = atlasesFolder.GetFiles("*.png", SearchOption.TopDirectoryOnly);
+            FileInfo[] atlasFiles = atlasesFolder.GetFiles("*.png", SearchOption.AllDirectories);
             foreach (FileInfo atlasFile in atlasFiles)
             {
+                if (IsDirectoryDisabled(atlasFile, atlasesFolder)) continue;
+                if (!atlasFile.Name.EndsWith(".png")) continue; // fake results ffs
                 string basename = atlasFile.Name.Substring(0, atlasFile.Name.Length - 4); // remove .png
-                knownAtlasReplacements.Add(basename);
+                knownAtlasReplacements.Add(basename, atlasFile.FullName);
                 Debug.Log("CustomSpritesLoader: Atlas replacement " + basename + " registered");
             }
+            Debug.Log("CustomSpritesLoader: Done scanning");
+        }
+
+        private bool IsDirectoryDisabled(FileInfo file, DirectoryInfo root)
+        {
+            DirectoryInfo parentDir = file.Directory;
+            while(String.Compare(parentDir.FullName, root.FullName, StringComparison.OrdinalIgnoreCase) != 0)
+            {
+                if (parentDir.Name.StartsWith("_") || File.Exists(Path.Combine(parentDir.FullName, "disabled.txt")) || File.Exists(Path.Combine(parentDir.FullName, "disabled.txt.txt")) || File.Exists(Path.Combine(parentDir.FullName, "disabled"))) return true;
+                parentDir = parentDir.Parent;
+            }
+            return false;
         }
 
         private void FAtlasManager_AddAtlas_fix(On.FAtlasManager.orig_AddAtlas orig, FAtlasManager self, FAtlas atlas)
@@ -258,13 +295,15 @@ Happy modding
         {
             Debug.Log("CustomSpritesLoader: LoadCustomAtlases");
             DirectoryInfo atlasesFolder = new DirectoryInfo(LoadAtlasesFolder);
-            FileInfo[] atlasFiles = atlasesFolder.GetFiles("*.png", SearchOption.TopDirectoryOnly);
+            FileInfo[] atlasFiles = atlasesFolder.GetFiles("*.png", SearchOption.AllDirectories);
             foreach (FileInfo atlasFile in atlasFiles)
             {
+                if (IsDirectoryDisabled(atlasFile, atlasesFolder)) continue;
+                if (!atlasFile.Name.EndsWith(".png")) continue; // fake results ffs
                 try
                 {
                     string basename = atlasFile.Name.Substring(0, atlasFile.Name.Length - 4); // remove .png
-                    ReadAndLoadCustomAtlas(basename, LoadAtlasesFolder);
+                    ReadAndLoadCustomAtlas(basename, atlasFile.Directory.FullName);
                 }
                 catch (Exception e)
                 {
@@ -301,12 +340,17 @@ Happy modding
         public static List<string> loadedCustomAtlases = new List<string>();
         public static FAtlas LoadCustomAtlas(string atlasName, Texture2D imageData, Dictionary<string, object> slicerData, Dictionary<string, string> metaData)
         {
+
+            // TODO rework how defaults are applied
+            // if -1 -> should apply default
             if (metaData != null)
             {
                 metaData.TryGetValue("aniso", out string anisoValue);
                 if (!string.IsNullOrEmpty(anisoValue) && int.Parse(anisoValue) > -1) imageData.anisoLevel = int.Parse(anisoValue);
                 metaData.TryGetValue("filterMode", out string filterMode);
                 if (!string.IsNullOrEmpty(filterMode) && int.Parse(filterMode) > -1) imageData.filterMode = (FilterMode)int.Parse(filterMode);
+                metaData.TryGetValue("wrapMode", out string wrapMode);
+                if (!string.IsNullOrEmpty(wrapMode) && int.Parse(wrapMode) > -1) imageData.wrapMode = (TextureWrapMode)int.Parse(wrapMode);
                 // Todo -  the other 100 useless params
             }
             else
@@ -317,6 +361,10 @@ Happy modding
                     Debug.Log("CustomSpritesLoader: Applying default image setting for image");
                     imageData.anisoLevel = 1;
                     imageData.filterMode = 0;
+                }
+                else // Single-image should clamp
+                {
+                    imageData.wrapMode = TextureWrapMode.Clamp;
                 }
             }
 
