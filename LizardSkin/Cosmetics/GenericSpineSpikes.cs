@@ -5,77 +5,31 @@ namespace LizardSkin
 {
     internal class GenericSpineSpikes : GenericCosmeticTemplate
     {
-        public GenericSpineSpikes(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
+		CosmeticSpineSpikesData spineSpikesData => cosmeticData as CosmeticSpineSpikesData;
+		public GenericSpineSpikes(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
 			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.BehindHead;
-			float num = Mathf.Lerp(5f, 8f, Mathf.Pow(UnityEngine.Random.value, 0.7f));
-			this.spineLength = Mathf.Lerp(0.2f, 0.95f, UnityEngine.Random.value) * iGraphics.BodyAndTailLength;
+
+			// float num = Mathf.Lerp(5f, 8f, Mathf.Pow(UnityEngine.Random.value, 0.7f));
+
+			//this.spineLength = Mathf.Lerp(0.2f, 0.95f, UnityEngine.Random.value);
 			this.sizeRangeMin = Mathf.Lerp(0.1f, 0.5f, Mathf.Pow(UnityEngine.Random.value, 2f));
 			this.sizeRangeMax = Mathf.Lerp(this.sizeRangeMin, 1.1f, UnityEngine.Random.value);
-			if (UnityEngine.Random.value < 0.5f)
-			{
-				this.sizeRangeMax = 1f;
-			}
-			//if (iGraphics.lizard.Template.type == CreatureTemplate.Type.BlueLizard)
-			//{
-			//	this.sizeRangeMin = Mathf.Min(this.sizeRangeMin, 0.3f);
-			//	this.sizeRangeMax = Mathf.Min(this.sizeRangeMax, 0.6f);
-			//}
-			//else if (iGraphics.lizard.Template.type != CreatureTemplate.Type.GreenLizard && UnityEngine.Random.value < 0.7f)
-			//{
-			//	this.sizeRangeMin *= 0.7f;
-			//	this.sizeRangeMax *= 0.7f;
-			//}
-			//else if (iGraphics.lizard.Template.type == CreatureTemplate.Type.GreenLizard && UnityEngine.Random.value < 0.7f)
-			//{
-			//	this.sizeRangeMin = Mathf.Lerp(this.sizeRangeMin, 1.1f, 0.1f);
-			//	this.sizeRangeMax = Mathf.Lerp(this.sizeRangeMax, 1.1f, 0.4f);
-			//}
 
 			this.sizeRangeMin = Mathf.Min(this.sizeRangeMin, 0.3f);
 			this.sizeRangeMax = Mathf.Min(this.sizeRangeMax, 0.6f);
 
 			this.sizeSkewExponent = Mathf.Lerp(0.1f, 0.9f, UnityEngine.Random.value);
-			this.bumps = (int)(this.spineLength / num);
+			this.bumps = spineSpikesData.count; // (int)(this.spineLength / num);
 			this.scaleX = 1f;
-			this.graphic = UnityEngine.Random.Range(0, 5);
-			if (this.graphic == 1)
-			{
-				this.graphic = 0;
-			}
-			if (this.graphic == 4)
-			{
-				this.graphic = 3;
-			}
-			else if (this.graphic == 3 && UnityEngine.Random.value < 0.5f)
+			this.graphic = spineSpikesData.graphic; // UnityEngine.Random.Range(0, 5);
+													
+			if (spineSpikesData.flipped)
 			{
 				this.scaleX = -1f;
 			}
-			else if (UnityEngine.Random.value < 0.06666667f)
-			{
-				this.scaleX = -1f;
-			}
-			//if (iGraphics.lizard.Template.type == CreatureTemplate.Type.PinkLizard && UnityEngine.Random.value < 0.7f)
-			//{
-			//	this.graphic = 0;
-			//}
-			//else if (iGraphics.lizard.Template.type == CreatureTemplate.Type.GreenLizard && UnityEngine.Random.value < 0.5f)
-			//{
-			//	this.graphic = 3;
-			//}
-			this.colored = UnityEngine.Random.Range(0, 3);
-			//if (iGraphics.lizard.Template.type == CreatureTemplate.Type.PinkLizard && UnityEngine.Random.value < 0.5f)
-			//{
-			//	this.colored = 0;
-			//}
-			//else if (iGraphics.lizard.Template.type == CreatureTemplate.Type.GreenLizard && UnityEngine.Random.value < 0.5f)
-			//{
-			//	this.colored = 2;
-			//}
-			//else if (iGraphics.lizard.Template.type == CreatureTemplate.Type.GreenLizard && UnityEngine.Random.value < 0.5f)
-			//{
-			//	this.colored = 1;
-			//}
+			this.colored = spineSpikesData.colorMode; // UnityEngine.Random.Range(0, 3);
+
 			this.numberOfSprites = ((this.colored <= 0) ? this.bumps : (this.bumps * 2));
 		}
 
@@ -89,7 +43,7 @@ namespace LizardSkin
 		{
 			for (int i = this.startSprite + this.bumps - 1; i >= this.startSprite; i--)
 			{
-				float num = Mathf.InverseLerp((float)this.startSprite, (float)(this.startSprite + this.bumps - 1), (float)i);
+				// float num = Mathf.InverseLerp((float)this.startSprite, (float)(this.startSprite + this.bumps - 1), (float)i);
 				sLeaser.sprites[i] = new FSprite("LizardScaleA" + this.graphic, true);
 				sLeaser.sprites[i].anchorY = 0.15f;
 				if (this.colored > 0)
@@ -106,7 +60,7 @@ namespace LizardSkin
 			for (int i = this.startSprite + this.bumps - 1; i >= this.startSprite; i--)
 			{
 				float num = Mathf.InverseLerp((float)this.startSprite, (float)(this.startSprite + this.bumps - 1), (float)i);
-				SpineData lizardSpineData = this.iGraphics.SpinePosition(Mathf.Lerp(0.05f, this.spineLength / this.iGraphics.BodyAndTailLength, num), timeStacker);
+				SpineData lizardSpineData = this.iGraphics.SpinePosition(Mathf.Lerp(spineSpikesData.start, spineSpikesData.length, num), timeStacker);
 				sLeaser.sprites[i].x = lizardSpineData.outerPos.x - camPos.x;
 				sLeaser.sprites[i].y = lizardSpineData.outerPos.y - camPos.y;
 				sLeaser.sprites[i].rotation = Custom.AimFromOneVectorToAnother(-lizardSpineData.perp * lizardSpineData.depthRotation, lizardSpineData.perp * lizardSpineData.depthRotation);
@@ -129,7 +83,7 @@ namespace LizardSkin
 		{
 			for (int i = this.startSprite; i < this.startSprite + this.bumps; i++)
 			{
-				float f = Mathf.Lerp(0.05f, this.spineLength / this.iGraphics.BodyAndTailLength, Mathf.InverseLerp((float)this.startSprite, (float)(this.startSprite + this.bumps - 1), (float)i));
+				float f = Mathf.Lerp(spineSpikesData.start, spineSpikesData.length, Mathf.InverseLerp((float)this.startSprite, (float)(this.startSprite + this.bumps - 1), (float)i));
 				sLeaser.sprites[i].color = this.cosmeticData.GetBaseColor(iGraphics, f);
 				if (this.colored == 1)
 				{
@@ -138,7 +92,7 @@ namespace LizardSkin
 				else if (this.colored == 2)
 				{
 					float f2 = Mathf.InverseLerp((float)this.startSprite, (float)(this.startSprite + this.bumps - 1), (float)i);
-					sLeaser.sprites[i + this.bumps].color = Color.Lerp(this.cosmeticData.effectColor, this.cosmeticData.GetBaseColor(iGraphics, f), Mathf.Pow(f2, 0.5f));
+					sLeaser.sprites[i + this.bumps].color = Color.Lerp(this.cosmeticData.effectColor, this.cosmeticData.GetBaseColor(iGraphics, f), Mathf.Pow(f2, 0.5f)); // Could make this controlable exponent
 				}
 			}
 		}
@@ -147,7 +101,7 @@ namespace LizardSkin
 		public int bumps;
 
 		// Token: 0x040021E7 RID: 8679
-		public float spineLength;
+		// public float spineLength;
 
 		// Token: 0x040021E8 RID: 8680
 		public float sizeSkewExponent;

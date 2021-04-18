@@ -41,7 +41,7 @@ namespace LizardSkin
         public LizardSkin()
         {
             this.ModID = "LizardSkin";
-            this.Version = "1.0";
+            this.Version = "0.1";
             this.author = "Henpemaz";
 
             instance = this;
@@ -54,7 +54,7 @@ namespace LizardSkin
             return new LizardSkinOI();
         }
 
-        internal static Type fpg;
+        internal static Type fpg_ref;
         internal static Type jolly_ref;
         internal static Type custail_ref;
         internal static Type colorfoot_ref;
@@ -66,50 +66,105 @@ namespace LizardSkin
 
             PlayerGraphicsCosmeticsAdaptor.ApplyHooksToPlayerGraphics();
 
-            // store type to check for instances
-            fpg = Type.GetType("FancySlugcats.FancyPlayerGraphics, FancySlugcats");
-            jolly_ref = Type.GetType("JollyCoop.PlayerGraphicsHK, JollyCoop");
-            custail_ref = Type.GetType("CustomTail.CustomTail, CustomTail");
-            colorfoot_ref = Type.GetType("Colorfoot.LegMod, Colorfoot");
+            // Old mod detection code
+            //// store type to check for instances
+            //fpg = Type.GetType("FancySlugcats.FancyPlayerGraphics, FancySlugcats");
+            //jolly_ref = Type.GetType("JollyCoop.PlayerGraphicsHK, JollyCoop");
+            //custail_ref = Type.GetType("CustomTail.CustomTail, CustomTail");
+            //colorfoot_ref = Type.GetType("Colorfoot.LegMod, Colorfoot");
 
-            if (fpg != null)
+            // New mod detection code
+            foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                if (asm.GetName().Name == "FancySlugcats")
+                {
+                    fpg_ref = asm.GetType("FancySlugcats.FancyPlayerGraphics");
+                }
+                else
+                if (asm.GetName().Name == "JollyCoop")
+                {
+                    jolly_ref = asm.GetType("JollyCoop.PlayerGraphicsHK");
+                }
+                else
+                if (asm.GetName().Name == "CustomTail")
+                {
+                    custail_ref = asm.GetType("CustomTail.CustomTail");
+                }
+                else
+                if (asm.GetName().Name == "Colorfoot")
+                {
+                    colorfoot_ref = asm.GetType("Colorfoot.LegMod");
+                }
+            }
+
+            if (fpg_ref != null)
             {
                 Debug.Log("LizardSkin: FOUND FancyPlayerGraphics");
-                FancyPlayerGraphicsCosmeticsAdaptor.ApplyHooksToFancyPlayerGraphics();
+                try
+                {
+                    FancyPlayerGraphicsCosmeticsAdaptor.ApplyHooksToFancyPlayerGraphics();
+                    Debug.Log("LizardSkin: FancyPlayerGraphics hooks applied");
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError("LizardSkin: ERROR hooking FancyPlayerGraphics, integration disabled, send logs to henpe");
+                    fpg_ref = null;
+                    Debug.LogException(e);
+                }
             }
             else
             {
-                Debug.Log("LizardSkin: NOT FOUND FancyPlayerGraphics");
+                Debug.Log("LizardSkin: NOT FOUND FancyPlayerGraphics, integration disabled");
             }
 
             if (jolly_ref != null)
             {
                 Debug.Log("LizardSkin: FOUND Jolly");
-                PlayerGraphicsCosmeticsAdaptor.ApplyHooksToJollyPlayerGraphicsHK();
+                try
+                {
+                    PlayerGraphicsCosmeticsAdaptor.ApplyHooksToJollyPlayerGraphicsHK();
+                    Debug.Log("LizardSkin: Jolly hooks applied");
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError("LizardSkin: ERROR hooking Jolly, integration disabled, send logs to henpe");
+                    jolly_ref = null;
+                    Debug.LogException(e);
+                }
             }
             else
             {
-                Debug.Log("LizardSkin: NOT FOUND Jolly");
+                Debug.Log("LizardSkin: NOT FOUND Jolly, integration disabled");
             }
 
             if (custail_ref != null)
             {
-                Debug.Log("LizardSkin: FOUND CustomTail");
+                Debug.Log("LizardSkin: FOUND CustomTail, no hooks to apply");
                 // No hookies needed, good mod :)
             }
             else
             {
-                Debug.Log("LizardSkin: NOT FOUND CustomTail");
+                Debug.Log("LizardSkin: NOT FOUND CustomTail, integration disabled");
             }
 
             if (colorfoot_ref != null)
             {
                 Debug.Log("LizardSkin: FOUND Colorfoot");
-                PlayerGraphicsCosmeticsAdaptor.ApplyHooksToColorfootPlayerGraphicsPatch();
+                try
+                {
+                    PlayerGraphicsCosmeticsAdaptor.ApplyHooksToColorfootPlayerGraphicsPatch();
+                    Debug.Log("LizardSkin: Colorfoot hooks applied");
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError("LizardSkin: ERROR hooking Colorfoot, integration disabled, send logs to henpe");
+                    colorfoot_ref = null;
+                    Debug.LogException(e);
+                }
             }
             else
             {
-                Debug.Log("LizardSkin: NOT FOUND Colorfoot");
+                Debug.Log("LizardSkin: NOT FOUND Colorfoot, integration disabled");
             }
 
             On.RainWorld.Start += RainWorld_Start_hk;
@@ -240,5 +295,8 @@ namespace LizardSkin
                 jsonStream.Close();
             }
         }
+
+        // TODO - steal AttachedFields.cs
+
     }
 }

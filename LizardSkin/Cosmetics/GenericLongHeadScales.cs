@@ -8,7 +8,7 @@ namespace LizardSkin
 		public GenericLongHeadScales(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
 			this.scalesPositions = new Vector2[2];
-			this.graphicHeight = Futile.atlasManager.GetElementWithName("LizardScaleA" + this.graphic).sourcePixelSize.y;
+			// this.graphicHeight = Futile.atlasManager.GetElementWithName("LizardScaleA" + this.graphic).sourcePixelSize.y;
 			this.scaleObjects = new GenericLizardScale[this.scalesPositions.Length];
 			this.backwardsFactors = new float[this.scalesPositions.Length];
 			for (int i = 0; i < this.scalesPositions.Length; i++)

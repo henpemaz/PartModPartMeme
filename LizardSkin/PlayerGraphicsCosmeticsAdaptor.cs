@@ -51,7 +51,7 @@ namespace LizardSkin
             orig(instance, ow);
             InitDebugLabels(instance, ow);
 
-            if (LizardSkin.fpg != null && LizardSkin.fpg.IsInstanceOfType(instance))
+            if (LizardSkin.fpg_ref != null && LizardSkin.fpg_ref.IsInstanceOfType(instance))
             {
                 // skip default constructor if Fancy
                 // Debug.Log("LizardSkin: Skipping default adaptor, Fancy detected");
@@ -81,7 +81,7 @@ namespace LizardSkin
         {
             // Who hooks the hookers ???
             orig_hook(orig, instance, sLeaser, rCam, palette);
-            GetAdaptor(instance).ApplyPalette(sLeaser, rCam, palette);
+            // Your code here
         }
 
         public delegate void SwichtLayersVanilla(PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, bool newOverlap);
@@ -591,11 +591,5 @@ namespace LizardSkin
             }
             return Color.Lerp(color2, color3, tailFactor);
         }
-
-        //public override Color HeadColor(float timeStacker)
-        //{
-        //    //return PlayerGraphics.SlugcatColor((pGraphics.player.State as PlayerState).slugcatCharacter);
-        //    return BaseBodyColor();
-        //}
     }
 }

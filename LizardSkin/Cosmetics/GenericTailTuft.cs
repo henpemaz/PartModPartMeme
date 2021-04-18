@@ -23,7 +23,7 @@ namespace LizardSkin
 			//{
 			//	base.GeneratePatchPattern(0f, Random.Range(3, 7), 1.6f, 1.5f);
 			//}
-			base.GenerateTwoLines(0f, 0.5f, 1.2f, 1.3f);
+			base.GenerateTwoLines(); // (0f, 0.5f, 1.2f, 1.3f);
 			this.MoveScalesTowardsTail();
 			float num = Mathf.Lerp(1f, 1f / Mathf.Lerp(1f, (float)this.scalesPositions.Length, Mathf.Pow(Random.value, 2f)), 0.5f);
 			//if (pGraphics.lizard.Template.type == CreatureTemplate.Type.RedLizard)
@@ -58,7 +58,7 @@ namespace LizardSkin
 					//}
 				}
 			}
-			this.graphicHeight = Futile.atlasManager.GetElementWithName("LizardScaleA" + this.graphic).sourcePixelSize.y;
+			// this.graphicHeight = Futile.atlasManager.GetElementWithName("LizardScaleA" + this.graphic).sourcePixelSize.y;
 			this.scaleObjects = new GenericLizardScale[this.scalesPositions.Length];
 			this.backwardsFactors = new float[this.scalesPositions.Length];
 			float num2 = 0f;

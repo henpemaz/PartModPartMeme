@@ -17,13 +17,19 @@ namespace LizardSkin
 			this.graphic = longBodyScalesData.graphic;
 			this.colored = longBodyScalesData.colored;
 
+			this.graphicHeight = Futile.atlasManager.GetElementWithName("LizardScaleA" + this.graphic).sourcePixelSize.y;
 
 			// Would make sense to put scale and thickness here too ?
 
 		}
 
-		// Token: 0x06001F49 RID: 8009 RVA: 0x001D99A0 File Offset: 0x001D7BA0
-		public override void Update()
+        internal void GeneratePatchPattern(object start, object length, object count, object roundness)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        // Token: 0x06001F49 RID: 8009 RVA: 0x001D99A0 File Offset: 0x001D7BA0
+        public override void Update()
 		{
 			SpineData headSpine = iGraphics.SpinePosition(0f, 1f);
 			for (int i = 0; i < this.scaleObjects.Length; i++)

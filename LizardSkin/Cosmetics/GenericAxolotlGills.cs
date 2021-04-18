@@ -8,16 +8,7 @@ namespace LizardSkin
 
 		public GenericAxolotlGills(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
-			//this.rigor = UnityEngine.Random.value;
 			float scale = longBodyScalesData.scale;// Mathf.Pow(UnityEngine.Random.value, 0.7f);// * iGraphics.lizard.lizardParams.headSize;
-			//this.colored = true;
-			//this.graphic = UnityEngine.Random.Range(0, 6);
-			//if (this.graphic == 2)
-			//{
-			//	this.graphic = UnityEngine.Random.Range(0, 6);
-			//}
-			this.graphicHeight = Futile.atlasManager.GetElementWithName("LizardScaleA" + this.graphic).sourcePixelSize.y;
-			float graphicWidth = Futile.atlasManager.GetElementWithName("LizardScaleA" + this.graphic).sourcePixelSize.x;
 			int count = cosmeticAxolotlGillsData.count;// UnityEngine.Random.Range(2, 8);
 			this.scalesPositions = new Vector2[count * 2];
 			this.scaleObjects = new GenericLizardScale[this.scalesPositions.Length];
@@ -30,12 +21,13 @@ namespace LizardSkin
 				float num4 = Mathf.Lerp(0.5f, 1.5f, UnityEngine.Random.value);
 				float num5 = Mathf.Lerp(0.2f, 1f, Mathf.Pow(UnityEngine.Random.value, 0.5f));
 				float num6 = Mathf.Pow(UnityEngine.Random.value, 0.5f);
+				float num7 = Mathf.Pow(num5, 0.5f);
 				for (int j = 0; j < 2; j++)
 				{
 					this.scalesPositions[i * 2 + j] = new Vector2((j != 0) ? num4 : (-num4), y);
 					this.scaleObjects[i * 2 + j] = new GenericLizardScale(this);
 					this.scaleObjects[i * 2 + j].length = graphicHeight * scale * num5; // Mathf.Lerp(5f, 35f, scale * num5);
-					this.scaleObjects[i * 2 + j].width = thickness; // Mathf.Lerp(0.65f, 1.2f, thickness * scale);
+					this.scaleObjects[i * 2 + j].width = thickness * scale * num7; // Mathf.Lerp(0.65f, 1.2f, thickness * scale);
 					this.backwardsFactors[i * 2 + j] = spread * num6;
 				}
 			}

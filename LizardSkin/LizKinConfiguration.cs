@@ -18,11 +18,13 @@ using System;
 namespace LizardSkin
 {
     // So minijson serialize can handle my data
-    // Must serialize everything to supported types,
+    // Must serialize everything to supported types
+    // Limiting it to the types minijson outputs makes it so that fromjson(tojson) works properly
+    // long double string dict<str, obj>
     public interface IJsonSerializable
     {
         Dictionary<string, object> ToJson();
-        // Irrelevant
+        // Irrelevant since you need to know what type of object to expect to even attempt to read it lol
         //void ReadFromJson(Dictionary<string, object> json, bool ignoremissing = false);
     }
 
@@ -632,6 +634,7 @@ namespace LizardSkin
 
             internal AntennaePanel(CosmeticAntennaeData data, LizardSkinOI.ProfileManager manager) : base(data, manager)
             {
+                seedBox.greyedOut = true;
                 // 1st row
                 NewRow(30);
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Length:", FLabelAlignment.Right));
@@ -695,8 +698,126 @@ namespace LizardSkin
         }
     }
 
+    internal abstract class BodyScalesData : LizKinCosmeticData
+    {
+        const int version = 1;
+        public enum GenerationMode
+        {
+            Patch,
+            Lines,
+            Segments
+        }
 
-    internal abstract class LongBodyScalesData : LizKinCosmeticData
+        internal GenerationMode mode;
+        internal int count;
+        internal float start;
+        internal float length;
+        internal float roundness;
+
+        protected BodyScalesData()
+        {
+            mode = GenerationMode.Segments;
+            start = 0.1f;
+            length = 0.6f;
+            count = 16;
+            roundness = 0.6f;
+        }
+
+        public override void ReadFromJson(Dictionary<string, object> json, bool ignoremissing = false)
+        {
+            base.ReadFromJson(json, ignoremissing);
+            if (json.ContainsKey("BodyScalesData.version"))
+            {
+                if ((long)json["BodyScalesData.version"] == 1)
+                {
+                    mode = (GenerationMode)(long)json["mode"];
+                    start = (float)(double)json["start"];
+                    length = (float)(double)json["length"];
+                    count = (int)(long)json["count"];
+                    roundness = (float)(double)json["roundness"];
+                    return;
+                }
+            }
+            if (!ignoremissing) throw new SerializationException("BodyScalesData version unsuported");
+        }
+
+        public override Dictionary<string, object> ToJson()
+        {
+            return base.ToJson().Concat(new Dictionary<string, object>()
+                {
+                    {"BodyScalesData.version", (long)version },
+                    {"mode", (long)mode },
+                    {"start", (double)start },
+                    {"length", (long)length },
+                    {"count", (double)count },
+                    {"roundness", (double)roundness },
+
+                }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        }
+
+        internal override void ReadEditPanel(CosmeticPanel panel)
+        {
+            base.ReadEditPanel(panel);
+            BodyScalesPanel p = panel as BodyScalesPanel;
+            if (!p.hasModeControls) return;
+            mode = (GenerationMode)Enum.Parse(typeof(GenerationMode), p.modeControl.value);
+            start = p.startControl.valueFloat;
+            length = p.lengthControl.valueFloat;
+            count = p.countControl.valueInt;
+            roundness = p.roundnessControl.valueFloat;
+        }
+
+        internal abstract class BodyScalesPanel : CosmeticPanel
+        {
+            internal bool hasModeControls = false;
+            internal LizardSkinOI.EventfulComboBox modeControl;
+            internal LizardSkinOI.EventfulUpdown startControl;
+            internal LizardSkinOI.EventfulUpdown lengthControl;
+            internal LizardSkinOI.EventfulUpdown countControl;
+            internal LizardSkinOI.EventfulUpdown roundnessControl;
+            internal BodyScalesPanel(BodyScalesData data, LizardSkinOI.ProfileManager manager) : base(data, manager)
+            {
+                
+            }
+
+            internal void MakeBodyScalesModeControls()
+            {
+                BodyScalesData data = this.data as BodyScalesData;
+                NewRow(30);
+                this.modeControl = new LizardSkinOI.EventfulComboBox(PlaceInRow(120, 24), 120, "", Enum.GetNames(typeof(BodyScalesData.GenerationMode)), data.mode.ToString());
+                modeControl.OnChangeEvent += DataChangedRefreshNeeded;
+                children.Add(modeControl);
+
+                children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Start:", FLabelAlignment.Right));
+                children.Add(this.startControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.start, 2));
+                startControl.SetRange(0.0f, 0.9f);
+                startControl.OnChangeEvent += DataChangedRefreshNeeded;
+                startControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
+
+                children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Length:", FLabelAlignment.Right));
+                children.Add(this.lengthControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.length, 2));
+                lengthControl.SetRange(0.1f, 1f);
+                lengthControl.OnChangeEvent += DataChangedRefreshNeeded;
+                lengthControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
+
+                NewRow(30);
+                children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Count:", FLabelAlignment.Right));
+                children.Add(this.countControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.count));
+                countControl.SetRange(1, 200);
+                countControl.OnChangeEvent += DataChangedRefreshNeeded;
+                countControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
+
+                children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Roundness:", FLabelAlignment.Right));
+                children.Add(this.roundnessControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.roundness, 2));
+                roundnessControl.SetRange(0.0f, 1.0f);
+                roundnessControl.OnChangeEvent += DataChangedRefreshNeeded;
+                roundnessControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
+                hasModeControls = true;
+            }
+        }
+    }
+
+    internal abstract class LongBodyScalesData : BodyScalesData
     {
         const int version = 1;
         internal float rigor;
@@ -759,7 +880,7 @@ namespace LizardSkin
             thickness = lbsp.thicknessControl.valueFloat;
         }
 
-        internal abstract class LongBodyScalesPanel : CosmeticPanel
+        internal abstract class LongBodyScalesPanel : BodyScalesPanel
         {
             internal LizardSkinOI.EventfulUpdown rigorControl;
             internal LizardSkinOI.EventfulUpdown graphicControl;
@@ -966,6 +1087,7 @@ namespace LizardSkin
 
             public CosmeticBumpHawkPanel(CosmeticBumpHawkData data, LizardSkinOI.ProfileManager manager) : base(data, manager)
             {
+                seedBox.greyedOut = true;
                 NewRow(30);
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Bumps:", FLabelAlignment.Right));
                 children.Add(this.bumpsControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.bumps));
@@ -1123,6 +1245,7 @@ namespace LizardSkin
 
             public CosmeticJumpRingsPanel(CosmeticJumpRingsData data, LizardSkinOI.ProfileManager manager) : base(data, manager)
             {
+                seedBox.greyedOut = true;
                 NewRow(30);
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Count:", FLabelAlignment.Right));
                 children.Add(this.countControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.count));
@@ -1200,6 +1323,13 @@ namespace LizardSkin
         internal float offset;
         internal float angle;
 
+        public CosmeticLongHeadScalesData()
+        {
+            spinePos = 0.05f;
+            offset = 1.5f;
+            angle = 0.6f;
+        }
+
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.LongHeadScales;
 
         public override void ReadFromJson(Dictionary<string, object> json, bool ignoremissing = false)
@@ -1255,6 +1385,7 @@ namespace LizardSkin
 
             public CosmeticLongHeadScalesPanel(CosmeticLongHeadScalesData data, LizardSkinOI.ProfileManager manager) : base(data, manager)
             {
+                seedBox.greyedOut = true;
                 NewRow(30);
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "SpinePos:", FLabelAlignment.Right));
                 children.Add(this.spinePosControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.spinePos, 2));
@@ -1264,7 +1395,7 @@ namespace LizardSkin
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Offset:", FLabelAlignment.Right));
                 children.Add(this.offsetControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.offset, 1));
-                offsetControl.SetRange(0.1f, 10f);
+                offsetControl.SetRange(0f, 10f);
                 offsetControl.OnChangeEvent += DataChanged;
                 offsetControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
@@ -1279,7 +1410,52 @@ namespace LizardSkin
     internal class CosmeticLongShoulderScalesData : LongBodyScalesData
     {
         const int version = 1;
+        internal float minSize;
+        internal float sizeExponent;
+
+        public CosmeticLongShoulderScalesData()
+        {
+            minSize = 0.3f;
+            sizeExponent = 0.8f;
+        }
+
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.LongShoulderScales;
+
+
+        public override void ReadFromJson(Dictionary<string, object> json, bool ignoremissing = false)
+        {
+            base.ReadFromJson(json, ignoremissing);
+            if (json.ContainsKey("CosmeticLongShoulderScalesData.version"))
+            {
+                if ((long)json["CosmeticLongShoulderScalesData.version"] == 1)
+                {
+                    minSize = (float)(double)json["minSize"];
+                    sizeExponent = (float)(double)json["sizeExponent"];
+
+                    return;
+                }
+            }
+            if (!ignoremissing) throw new SerializationException("CosmeticLongShoulderScalesData version unsuported");
+        }
+
+        public override Dictionary<string, object> ToJson()
+        {
+            return base.ToJson().Concat(new Dictionary<string, object>()
+                {
+                    {"CosmeticLongShoulderScalesData.version", (long)version },
+                    {"minSize", (double)minSize },
+                    {"sizeExponent", (double)sizeExponent },
+
+                }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        }
+
+        internal override void ReadEditPanel(CosmeticPanel panel)
+        {
+            base.ReadEditPanel(panel);
+            CosmeticLongShoulderScalesPanel p = panel as CosmeticLongShoulderScalesPanel;
+            minSize = p.minSizeControl.valueFloat;
+            sizeExponent = p.sizeExponentControl.valueFloat;
+        }
 
         internal override CosmeticPanel MakeEditPanel(LizardSkinOI.ProfileManager manager)
         {
@@ -1288,35 +1464,128 @@ namespace LizardSkin
 
         internal class CosmeticLongShoulderScalesPanel : LongBodyScalesPanel
         {
+            internal LizardSkinOI.EventfulUpdown minSizeControl;
+            internal LizardSkinOI.EventfulUpdown sizeExponentControl;
+
             public CosmeticLongShoulderScalesPanel(CosmeticLongShoulderScalesData data, LizardSkinOI.ProfileManager manager) : base(data, manager)
             {
+                children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "MinSize:", FLabelAlignment.Right));
+                children.Add(this.minSizeControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.minSize, 2));
+                minSizeControl.SetRange(0.01f, 1f);
+                minSizeControl.OnChangeEvent += DataChangedRefreshNeeded;
+                minSizeControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
+
+                NewRow(30f);
+                MakeBodyScalesModeControls();
+
+                children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "SizeExpo:", FLabelAlignment.Right));
+                children.Add(this.sizeExponentControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.sizeExponent, 2));
+                sizeExponentControl.SetRange(-10f, 10f);
+                sizeExponentControl.OnChangeEvent += DataChangedRefreshNeeded;
+                sizeExponentControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
             }
         }
     }
-    internal class CosmeticShortBodyScalesData : LizKinCosmeticData
+    internal class CosmeticShortBodyScalesData : BodyScalesData
     {
         const int version = 1;
+        internal float scale;
+        internal float thickness;
+
+        public CosmeticShortBodyScalesData()
+        {
+            scale = 2f;
+            thickness = 1.5f;
+        }
+
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.ShortBodyScales;
 
+        public override void ReadFromJson(Dictionary<string, object> json, bool ignoremissing = false)
+        {
+            base.ReadFromJson(json, ignoremissing);
+            if (json.ContainsKey("CosmeticShortBodyScalesData.version"))
+            {
+                if ((long)json["CosmeticShortBodyScalesData.version"] == 1)
+                {
+                    scale = (float)(double)json["scale"];
+                    thickness = (float)(double)json["thickness"];
+                    return;
+                }
+            }
+            if (!ignoremissing) throw new SerializationException("CosmeticShortBodyScalesData version unsuported");
+        }
+
+        public override Dictionary<string, object> ToJson()
+        {
+            return base.ToJson().Concat(new Dictionary<string, object>()
+                {
+                    {"CosmeticShortBodyScalesData.version", (long)version },
+                    {"scale", (double)scale },
+                    {"thickness", (double)thickness },
+
+                }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        }
+
+        internal override void ReadEditPanel(CosmeticPanel panel)
+        {
+            base.ReadEditPanel(panel);
+            CosmeticShortBodyScalesPanel p = panel as CosmeticShortBodyScalesPanel;
+            scale = p.scaleControl.valueFloat;
+            thickness = p.thicknessControl.valueFloat;
+        }
+
+        internal override CosmeticPanel MakeEditPanel(LizardSkinOI.ProfileManager manager)
+        {
+            return new CosmeticShortBodyScalesPanel(this, manager);
+        }
+
+        internal class CosmeticShortBodyScalesPanel : BodyScalesPanel
+        {
+            internal LizardSkinOI.EventfulUpdown scaleControl;
+            internal LizardSkinOI.EventfulUpdown thicknessControl;
+
+            public CosmeticShortBodyScalesPanel(CosmeticShortBodyScalesData data, LizardSkinOI.ProfileManager manager) : base(data, manager)
+            {
+                NewRow(30f);
+                MakeBodyScalesModeControls();
+
+                NewRow(30);
+                children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Scale:", FLabelAlignment.Right));
+                children.Add(this.scaleControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.scale, 2));
+                scaleControl.SetRange(0.01f, 10f);
+                scaleControl.OnChangeEvent += DataChangedRefreshNeeded;
+                scaleControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
+
+                children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Thickness:", FLabelAlignment.Right));
+                children.Add(this.thicknessControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.thickness, 2));
+                thicknessControl.SetRange(0.01f, 10f);
+                thicknessControl.OnChangeEvent += DataChangedRefreshNeeded;
+                thicknessControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
+            }
+        }
     }
+
     internal class CosmeticSpineSpikesData : LizKinCosmeticData
     {
         const int version = 1;
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.SpineSpikes;
 
     }
+
     internal class CosmeticTailFinData : LizKinCosmeticData
     {
         const int version = 1;
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.TailFin;
 
     }
+
     internal class CosmeticTailGeckoScalesData : LizKinCosmeticData
     {
         const int version = 1;
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.TailGeckoScales;
 
     }
+
     internal class CosmeticTailTuftData : LongBodyScalesData
     {
         const int version = 1;
@@ -1335,12 +1604,14 @@ namespace LizardSkin
             }
         }
     }
+
     internal class CosmeticWhiskersData : LizKinCosmeticData
     {
         const int version = 1;
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.Whiskers;
 
     }
+
     internal class CosmeticWingScalesData : LizKinCosmeticData
     {
         const int version = 1;
