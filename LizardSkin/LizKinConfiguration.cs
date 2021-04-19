@@ -783,7 +783,8 @@ namespace LizardSkin
             {
                 BodyScalesData data = this.data as BodyScalesData;
                 NewRow(30);
-                this.modeControl = new LizardSkinOI.EventfulComboBox(PlaceInRow(120, 24), 120, "", Enum.GetNames(typeof(BodyScalesData.GenerationMode)), data.mode.ToString());
+                PlaceInRow(34, 24); // padding
+                this.modeControl = new LizardSkinOI.EventfulComboBox(PlaceInRow(80, 24), 80, "", Enum.GetNames(typeof(BodyScalesData.GenerationMode)), data.mode.ToString());
                 modeControl.OnChangeEvent += DataChangedRefreshNeeded;
                 children.Add(modeControl);
 
@@ -1474,7 +1475,6 @@ namespace LizardSkin
                 minSizeControl.OnChangeEvent += DataChangedRefreshNeeded;
                 minSizeControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
-                NewRow(30f);
                 MakeBodyScalesModeControls();
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "SizeExpo:", FLabelAlignment.Right));
@@ -1661,6 +1661,7 @@ namespace LizardSkin
         public CosmeticTailFinData()
         {
             undersideSize = 0.6f;
+            count = 8;
         }
 
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.TailFin;
@@ -1813,6 +1814,8 @@ namespace LizardSkin
         public CosmeticTailTuftData()
         {
             this.minSize = 0.2f;
+            count = 8;
+            length = 0.4f;
         }
 
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.TailTuft;
@@ -1863,6 +1866,7 @@ namespace LizardSkin
                 MakeBodyScalesModeControls();
                 modeControl.ForceValue(BodyScalesData.GenerationMode.Lines.ToString());
                 modeControl.greyedOut = true;
+                startControl.greyedOut = true;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "MinSize:", FLabelAlignment.Right));
                 children.Add(this.minSizeControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.minSize, 2));
@@ -1988,11 +1992,42 @@ namespace LizardSkin
         }
     }
 
-    internal class CosmeticWingScalesData : LizKinCosmeticData
+    internal class CosmeticWingScalesData : LongBodyScalesData//LizKinCosmeticData
     {
         const int version = 1;
+
+        public CosmeticWingScalesData()
+        {
+            count = 2;
+            start = 0.15f;
+            length = 0.15f;
+            mode = GenerationMode.Lines;
+        }
+
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.WingScales;
 
+        //internal override void ReadEditPanel(CosmeticPanel panel)
+        //{
+        //    base.ReadEditPanel(panel);
+        //    CosmeticWingScalesPanel p = panel as CosmeticWingScalesPanel;
+        //    spring = p.springControl.valueFloat;
+        //}
 
+        internal override CosmeticPanel MakeEditPanel(LizardSkinOI.ProfileManager manager)
+        {
+            return new CosmeticWingScalesPanel(this, manager);
+        }
+
+        internal class CosmeticWingScalesPanel : LongBodyScalesPanel
+        {
+
+
+            public CosmeticWingScalesPanel(CosmeticWingScalesData data, LizardSkinOI.ProfileManager manager) : base(data, manager)
+            {
+                MakeBodyScalesModeControls();
+                modeControl.ForceValue(BodyScalesData.GenerationMode.Lines.ToString());
+                modeControl.greyedOut = true;
+            }
+        }
     }
 }
