@@ -18,20 +18,14 @@ namespace LizardSkin
 				this.antennae[0, i] = new GenericBodyPartAdaptor(iGraphics, 1f, 0.6f, 0.9f);
 				this.antennae[1, i] = new GenericBodyPartAdaptor(iGraphics, 1f, 0.6f, 0.9f);
 			}
-			// this.redderTint = Color.Lerp(this.cosmeticData.effectColor, antennaeData.tintColor, 0.66f); // iGraphics.effectColor;
-			//this.redderTint.g *= 0.5f;
-			//this.redderTint.b *= 0.5f;
-			//this.redderTint.r = Mathf.Lerp(this.redderTint.r, 1f, 0.75f);
 			this.numberOfSprites = 4;
 		}
 
-		// Token: 0x06001F65 RID: 8037 RVA: 0x001DC830 File Offset: 0x001DAA30
 		private int Sprite(int side, int part)
 		{
 			return this.startSprite + part * 2 + side;
 		}
 
-		// Token: 0x06001F66 RID: 8038 RVA: 0x001DC840 File Offset: 0x001DAA40
 		public override void Reset()
 		{
 			base.Reset();
@@ -45,15 +39,9 @@ namespace LizardSkin
 			}
 		}
 
-		// Token: 0x06001F67 RID: 8039 RVA: 0x001DC89C File Offset: 0x001DAA9C
 		public override void Update()
 		{
 			float flicker = this.iGraphics.showDominance; //  this.iGraphics.lizard.AI.yellowAI.commFlicker;
-			//if (!this.iGraphics.lizard.Consious)
-			//{
-			//	num = 0f;
-			//}
-			//float num2 = Mathf.Lerp(10f, 7f, this.length);
 			float lengthPerSegment = Mathf.Max(0f, antennaeData.length - 4f*(this.segments - 1)) / (float)(this.segments - 1);
 			SpineData spine = iGraphics.SpinePosition(antennaeData.spinepos, 1f);
 			for (int i = 0; i < 2; i++)
@@ -103,6 +91,7 @@ namespace LizardSkin
 					{
 						this.antennae[i, j - 2].vel += Custom.DirVec(this.antennae[i, j].pos, this.antennae[i, j - 2].pos) * 3f * Mathf.Pow(1f - tipFactor, 0.3f);
 					}
+					// But wheres the fun in this
 					//if (!Custom.DistLess(this.iGraphics.headPos, this.antennae[i, j].pos, 200f))
 					//{
 					//	this.antennae[i, j].pos = this.iGraphics.headPos;
@@ -111,7 +100,6 @@ namespace LizardSkin
 			}
 		}
 
-		// Token: 0x06001F68 RID: 8040 RVA: 0x001DCD54 File Offset: 0x001DAF54
 		private Vector2 AntennaDir(int side, float timeStacker, SpineData spine)
 		{
 			//float num = Mathf.Lerp(this.iGraphics.lastHeadDepthRotation, this.iGraphics.headDepthRotation, timeStacker);
@@ -119,7 +107,6 @@ namespace LizardSkin
 			return Custom.RotateAroundOrigo(vector.normalized, ((side != 0) ? 90f : -90f) * antennaeData.angle + Custom.VecToDeg(-spine.dir)); // Custom.AimFromOneVectorToAnother(Vector2.Lerp(this.iGraphics.mainBodyChunkLastPos, this.iGraphics.mainBodyChunkPos, timeStacker), Vector2.Lerp(this.iGraphics.headLastPos, this.iGraphics.headPos, timeStacker)));
 		}
 
-		// Token: 0x06001F69 RID: 8041 RVA: 0x001DCE1C File Offset: 0x001DB01C
 		private Vector2 AnchorPoint(int side, float timeStacker, SpineData spine)
 		{
 			// anchor should be offsetable
@@ -127,7 +114,6 @@ namespace LizardSkin
 			return spine.pos + spine.perp*(((side != 0) ? -1f : 1f) * (1f - Mathf.Abs(spine.depthRotation)) * 1.5f + spine.depthRotation * 3.5f)*antennaeData.offset + this.AntennaDir(side, timeStacker, spine) * antennaeData.distance;
 		}
 
-		// Token: 0x06001F6A RID: 8042 RVA: 0x001DCE80 File Offset: 0x001DB080
 		public override void InitiateSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam)
 		{
 			for (int i = 0; i < 2; i++)
@@ -143,7 +129,6 @@ namespace LizardSkin
 			}
 		}
 
-		// Token: 0x06001F6B RID: 8043 RVA: 0x001DCF14 File Offset: 0x001DB114
 		public override void DrawSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam, float timeStacker, Vector2 camPos)
 		{
 			base.DrawSprites(sLeaser, rCam, timeStacker, camPos);
@@ -193,7 +178,6 @@ namespace LizardSkin
 			}
 		}
 
-		// Token: 0x06001F6C RID: 8044 RVA: 0x001DD330 File Offset: 0x001DB530
 		public Color EffectColor(int part, float tip, float timeStacker, float flicker)
 		{
 			tip = Mathf.Pow(Mathf.InverseLerp(0f, 0.6f, tip), 0.5f);
@@ -201,29 +185,17 @@ namespace LizardSkin
 			{
 				return Color.Lerp(this.cosmeticData.GetBaseColor(iGraphics, 0), Color.Lerp(this.cosmeticData.effectColor, this.iGraphics.palette.blackColor, flicker), tip);
 			}
-			Color tint = redderTint;
+			Color tint = Color.Lerp(this.cosmeticData.effectColor, antennaeData.tintColor, 0.66f);
 			return Color.Lerp(new Color(tint.r, tint.g, tint.b, antennaeData.alpha), new Color(1f, 1f, 1f, antennaeData.alpha), flicker);
 		}
 
-		// Token: 0x06001F6D RID: 8045 RVA: 0x001DD3E4 File Offset: 0x001DB5E4
 		public override void ApplyPalette(LeaserAdaptor sLeaser, CameraAdaptor rCam, PaletteAdaptor palette)
 		{
 			base.ApplyPalette(sLeaser, rCam, palette);
 		}
 
-		// Token: 0x04002205 RID: 8709
 		public GenericBodyPartAdaptor[,] antennae;
 
-		// Token: 0x04002206 RID: 8710
-		private Color redderTint => Color.Lerp(this.cosmeticData.effectColor, antennaeData.tintColor, 0.66f);
-
-		// Token: 0x04002207 RID: 8711
 		private int segments;
-
-		//// Token: 0x04002208 RID: 8712
-		//private float length;
-
-		// Token: 0x04002209 RID: 8713
-		//private float alpha;
 	}
 }

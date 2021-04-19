@@ -5,10 +5,11 @@ namespace LizardSkin
 {
     internal class GenericWhiskers : GenericCosmeticTemplate
     {
-        public GenericWhiskers(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
+		CosmeticWhiskersData whiskersData => cosmeticData as CosmeticWhiskersData;
+		public GenericWhiskers(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
 			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.InFront;
-			this.amount = UnityEngine.Random.Range(3, 5);
+			this.amount = whiskersData.count; // UnityEngine.Random.Range(3, 5);
 			this.whiskers = new GenericBodyPartAdaptor[2, this.amount];
 			this.whiskerDirections = new Vector2[this.amount];
 			this.whiskerProps = new float[this.amount, 5];
@@ -18,11 +19,11 @@ namespace LizardSkin
 				this.whiskers[0, i] = new GenericBodyPartAdaptor(iGraphics, 1f, 0.6f, 0.9f);
 				this.whiskers[1, i] = new GenericBodyPartAdaptor(iGraphics, 1f, 0.6f, 0.9f);
 				this.whiskerDirections[i] = Custom.DegToVec(Mathf.Lerp(4f, 100f, UnityEngine.Random.value));
-				this.whiskerProps[i, 0] = Custom.ClampedRandomVariation(0.5f, 0.4f, 0.5f) * 40f;
-				this.whiskerProps[i, 1] = Mathf.Lerp(-0.5f, 0.8f, UnityEngine.Random.value);
-				this.whiskerProps[i, 2] = Mathf.Lerp(11f, 720f, Mathf.Pow(UnityEngine.Random.value, 1.5f)) / this.whiskerProps[i, 0];
-				this.whiskerProps[i, 3] = UnityEngine.Random.value;
-				this.whiskerProps[i, 4] = Mathf.Lerp(0.6f, 1.2f, Mathf.Pow(UnityEngine.Random.value, 1.6f));
+				this.whiskerProps[i, 0] = Custom.ClampedRandomVariation(0.5f, 0.4f, 0.5f) * 40f * whiskersData.length;
+				this.whiskerProps[i, 1] = whiskersData.spread * Mathf.Lerp(-0.5f, 0.8f, UnityEngine.Random.value); // depth
+				this.whiskerProps[i, 2] = whiskersData.spring * Mathf.Lerp(11f, 720f, Mathf.Pow(UnityEngine.Random.value, 1.5f)) / this.whiskerProps[i, 0];
+				this.whiskerProps[i, 3] = UnityEngine.Random.value; // unused ?
+				this.whiskerProps[i, 4] = whiskersData.thickness * Mathf.Lerp(0.6f, 1.2f, Mathf.Pow(UnityEngine.Random.value, 1.6f));
 				if (i > 0)
 				{
 					for (int j = 0; j < 5; j++)
@@ -74,16 +75,16 @@ namespace LizardSkin
 						this.whiskers[i, j].pos = this.iGraphics.headPos;
 					}
 					this.whiskerLightUp[j, i, 1] = this.whiskerLightUp[j, i, 0];
-					//if (this.whiskerLightUp[j, i, 0] < Mathf.InverseLerp(0f, 0.3f, this.iGraphics.blackLizardLightUpHead))
-					//{
-					//	this.whiskerLightUp[j, i, 0] = Mathf.Lerp(this.whiskerLightUp[j, i, 0], Mathf.InverseLerp(0f, 0.3f, this.iGraphics.blackLizardLightUpHead), 0.7f) + 0.05f;
-					//}
-					//else
-					//{
-					//	this.whiskerLightUp[j, i, 0] -= 0.025f;
-					//}
-					//this.whiskerLightUp[j, i, 0] += Mathf.Lerp(-1f, 1f, UnityEngine.Random.value) * 0.03f * this.iGraphics.blackLizardLightUpHead;
-					this.whiskerLightUp[j, i, 0] = Mathf.Clamp(this.whiskerLightUp[j, i, 0], 0f, 1f);
+                    if (this.whiskerLightUp[j, i, 0] < Mathf.InverseLerp(0f, 0.3f, this.iGraphics.showDominance))
+                    {
+                        this.whiskerLightUp[j, i, 0] = Mathf.Lerp(this.whiskerLightUp[j, i, 0], Mathf.InverseLerp(0f, 0.3f, this.iGraphics.showDominance), 0.7f) + 0.05f;
+                    }
+                    else
+                    {
+                        this.whiskerLightUp[j, i, 0] -= 0.025f;
+                    }
+                    this.whiskerLightUp[j, i, 0] += Mathf.Lerp(-1f, 1f, UnityEngine.Random.value) * 0.03f * this.iGraphics.showDominance;
+                    this.whiskerLightUp[j, i, 0] = Mathf.Clamp(this.whiskerLightUp[j, i, 0], 0f, 1f);
 				}
 			}
 		}

@@ -4,61 +4,21 @@ namespace LizardSkin
 {
     internal class GenericTailTuft : GenericLongBodyScales
     {
-        public GenericTailTuft(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
+		CosmeticTailTuftData tailTuftData => cosmeticData as CosmeticTailTuftData;
+		public GenericTailTuft(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
-			this.rigor = 0f;
-			//if (Random.value < 0.14285715f)// || (Random.value < 0.9f && pGraphics.lizard.Template.type == CreatureTemplate.Type.BlueLizard) || pGraphics.lizard.Template.type == CreatureTemplate.Type.RedLizard)
-			//{
-			//	//if (pGraphics.lizard.Template.type == CreatureTemplate.Type.BlueLizard || pGraphics.lizard.Template.type == CreatureTemplate.Type.RedLizard)
-			//	//{
-			//	//	base.GenerateTwoLines(0f, (pGraphics.lizard.Template.type != CreatureTemplate.Type.RedLizard) ? 0.7f : 0.3f, 1f, 3f);
-			//	//}
-			//	//else
-			//	//{
-			//	//	base.GenerateTwoLines(0f, 0.4f, 1.2f, 1.3f);
-			//	//}
-			//	base.GenerateTwoLines(0f, 0.4f, 1.2f, 1.3f);
-			//}
-			//else
-			//{
-			//	base.GeneratePatchPattern(0f, Random.Range(3, 7), 1.6f, 1.5f);
-			//}
-			base.GenerateTwoLines(); // (0f, 0.5f, 1.2f, 1.3f);
+			base.GenerateTwoLines(bodyScalesData.start, bodyScalesData.length, bodyScalesData.count, bodyScalesData.roundness);
 			this.MoveScalesTowardsTail();
-			float num = Mathf.Lerp(1f, 1f / Mathf.Lerp(1f, (float)this.scalesPositions.Length, Mathf.Pow(Random.value, 2f)), 0.5f);
+			//float num = Mathf.Lerp(1f, 1f / Mathf.Lerp(1f, (float)this.scalesPositions.Length, Mathf.Pow(Random.value, 2f)), 0.5f);
 			//if (pGraphics.lizard.Template.type == CreatureTemplate.Type.RedLizard)
 			//{
 			//	num = Mathf.Max(num, 0.4f) * 1.1f;
 			//}
-			float from = Mathf.Lerp(5f, 10f, Random.value) * num;
-			float to = Mathf.Lerp(from, 25f, Mathf.Pow(Random.value, 0.5f)) * num;
-			this.colored = (Random.value < 0.8f);
-			this.graphic = Random.Range(3, 7);
-			if (this.graphic == 3)
-			{
-				this.graphic = 1;
-			}
-			if (Random.value < 0.033333335f)
-			{
-				this.graphic = Random.Range(0, 7);
-			}
-			if (Random.value < 0.8f)// || pGraphics.lizard.Template.type == CreatureTemplate.Type.RedLizard)
-			{
-				for (int i = 0; i < iGraphics.cosmetics.Count; i++)
-				{
-					if (iGraphics.cosmetics[i] is GenericLongBodyScales)
-					{
-						this.graphic = (iGraphics.cosmetics[i] as GenericLongBodyScales).graphic;
-						break;
-					}
-					//if (pGraphics.cosmetics[i] is SpineSpikes)
-					//{
-					//	this.graphic = (pGraphics.cosmetics[i] as SpineSpikes).graphic;
-					//	break;
-					//}
-				}
-			}
-			// this.graphicHeight = Futile.atlasManager.GetElementWithName("LizardScaleA" + this.graphic).sourcePixelSize.y;
+			//float from = Mathf.Lerp(5f, 10f, Random.value) * num;
+			//float to = Mathf.Lerp(from, 25f, Mathf.Pow(Random.value, 0.5f)) * num;
+			//this.colored = (Random.value < 0.8f);
+			//this.graphic = Random.Range(3, 7);
+			//this.graphicHeight = Futile.atlasManager.GetElementWithName("LizardScaleA" + this.graphic).sourcePixelSize.y;
 			this.scaleObjects = new GenericLizardScale[this.scalesPositions.Length];
 			this.backwardsFactors = new float[this.scalesPositions.Length];
 			float num2 = 0f;
@@ -79,8 +39,8 @@ namespace LizardSkin
 			{
 				this.scaleObjects[k] = new GenericLizardScale(this);
 				float t = Mathf.InverseLerp(num3, num2, this.scalesPositions[k].y);
-				this.scaleObjects[k].length = Mathf.Lerp(from, to, t);
-				this.scaleObjects[k].width = Mathf.Lerp(0.8f, 1.2f, t) * num;
+				this.scaleObjects[k].length = tailTuftData.scale * Mathf.Lerp(tailTuftData.minSize, 1f, t); // Mathf.Lerp(from, to, t);
+				this.scaleObjects[k].width = Mathf.Lerp(0.8f, 1.2f, t) * tailTuftData.scale * tailTuftData.thickness;
 				this.backwardsFactors[k] = 0.3f + 0.7f * Mathf.InverseLerp(0.75f, 1f, this.scalesPositions[k].y);
 				Vector2[] scalesPositions = this.scalesPositions;
 				int num5 = k;

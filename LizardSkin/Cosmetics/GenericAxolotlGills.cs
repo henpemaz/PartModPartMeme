@@ -17,6 +17,7 @@ namespace LizardSkin
 			float spread = cosmeticAxolotlGillsData.spread; //Mathf.Lerp(0.1f, 0.9f, UnityEngine.Random.value);
 			for (int i = 0; i < count; i++)
 			{
+				// Uuuuuuuh
 				float y = Mathf.Lerp(0f, 0.07f, Mathf.Pow(UnityEngine.Random.value, 1.3f));
 				float num4 = Mathf.Lerp(0.5f, 1.5f, UnityEngine.Random.value);
 				float num5 = Mathf.Lerp(0.2f, 1f, Mathf.Pow(UnityEngine.Random.value, 0.5f));
@@ -26,27 +27,12 @@ namespace LizardSkin
 				{
 					this.scalesPositions[i * 2 + j] = new Vector2((j != 0) ? num4 : (-num4), y);
 					this.scaleObjects[i * 2 + j] = new GenericLizardScale(this);
-					this.scaleObjects[i * 2 + j].length = graphicHeight * scale * num5; // Mathf.Lerp(5f, 35f, scale * num5);
+					this.scaleObjects[i * 2 + j].length = scale * num5; // Mathf.Lerp(5f, 35f, scale * num5);
 					this.scaleObjects[i * 2 + j].width = thickness * scale * num7; // Mathf.Lerp(0.65f, 1.2f, thickness * scale);
 					this.backwardsFactors[i * 2 + j] = spread * num6;
 				}
 			}
 			this.numberOfSprites = ((!this.colored) ? this.scalesPositions.Length : (this.scalesPositions.Length * 2));
 		}
-
-		// applying palette ?? not sure if this is really needed unles this was like shifting colors
-		//// Token: 0x06001F56 RID: 8022 RVA: 0x001DB1F0 File Offset: 0x001D93F0
-		//public override void DrawSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam, float timeStacker, Vector2 camPos)
-		//{
-		//	base.DrawSprites(sLeaser, rCam, timeStacker, camPos);
-		//	for (int i = this.startSprite + this.scalesPositions.Length - 1; i >= this.startSprite; i--)
-		//	{
-		//		sLeaser.sprites[i].color = this.cosmeticData.GetBaseColor(iGraphics, 0);
-		//		if (this.colored)
-		//		{
-		//			sLeaser.sprites[i + this.scalesPositions.Length].color = this.cosmeticData.effectColor;
-		//		}
-		//	}
-		//}
 	}
 }

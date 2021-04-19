@@ -28,13 +28,13 @@ namespace LizardSkin
 			this.numberOfSprites = this.scales.GetLength(0) * this.scales.GetLength(1);
 		}
 
-		// Token: 0x06001F7A RID: 8058 RVA: 0x001DE520 File Offset: 0x001DC720
+
 		public int ScaleSprite(int s, int i)
 		{
 			return this.startSprite + s * this.scales.GetLength(1) + i;
 		}
 
-		// Token: 0x06001F7B RID: 8059 RVA: 0x001DE53C File Offset: 0x001DC73C
+
 		public override void Reset()
 		{
 			base.Reset();
@@ -50,25 +50,29 @@ namespace LizardSkin
 			}
 		}
 
-		// Token: 0x06001F7C RID: 8060 RVA: 0x001DE600 File Offset: 0x001DC800
+
 		public override void Update()
 		{
 			for (int i = 0; i < this.scales.GetLength(1); i++)
 			{
 				float num = Custom.LerpMap((float)i, 0f, (float)(this.scales.GetLength(1) - 1), this.frontDir, this.backDir);
-				SpineData lizardSpineData = this.iGraphics.SpinePosition(0.025f + (0.025f + 0.15f * (float)i) * this.posSqueeze, 1f);
-				float f = Mathf.Lerp(this.iGraphics.headDepthRotation, lizardSpineData.depthRotation, 0.3f + 0.2f * (float)i);
+				SpineData spineData = this.iGraphics.SpinePosition(0.025f + (0.025f + 0.15f * (float)i) * this.posSqueeze, 1f);
+				float f = Mathf.Lerp(this.iGraphics.headDepthRotation, spineData.depthRotation, 0.3f + 0.2f * (float)i);
 				for (int j = 0; j < this.scales.GetLength(0); j++)
 				{
-					Vector2 vector = lizardSpineData.pos + lizardSpineData.perp * ((j != 0) ? 1f : -1f) * lizardSpineData.rad * (1f - Mathf.Abs(f));
-					Vector2 vector2 = lizardSpineData.perp * ((j != 0) ? 1f : -1f) * (1f - Mathf.Abs(f));
-					vector2 = Vector3.Slerp(vector2, lizardSpineData.dir * num, Mathf.Abs(num));
-					vector2 = Vector3.Slerp(vector2, lizardSpineData.perp * Mathf.Sign(f), Mathf.Abs(f) * 0.5f);
+					Vector2 vector = spineData.pos + spineData.perp * ((j != 0) ? 1f : -1f) * spineData.rad * (1f - Mathf.Abs(f));
+					Vector2 vector2 = spineData.perp * ((j != 0) ? 1f : -1f) * (1f - Mathf.Abs(f));
+					vector2 = Vector3.Slerp(vector2, spineData.dir * num, Mathf.Abs(num));
+					vector2 = Vector3.Slerp(vector2, spineData.perp * Mathf.Sign(f), Mathf.Abs(f) * 0.5f);
 					Vector2 a = vector + vector2 * this.scaleLength * 1.5f;
 					this.scales[j, i].Update();
 					this.scales[j, i].ConnectToPoint(vector, this.scaleLength * ((i <= 1) ? 1f : 0.6f), false, 0f, this.iGraphics.mainBodyChunkVel, 0.1f + 0.2f * this.sturdy, 0f);
 					this.scales[j, i].vel += (a - this.scales[j, i].pos) * Mathf.Lerp(0.1f, 0.3f, this.sturdy);
 					this.scales[j, i].pos += (a - this.scales[j, i].pos) * 0.6f * Mathf.Pow(this.sturdy, 3f);
+
+					// new :)
+					this.scales[j, i].vel += this.iGraphics.showDominance* (Custom.RNV() * 3f * UnityEngine.Random.value - spineData.dir * 5f * UnityEngine.Random.value);
+					this.scales[j, i].pos += this.iGraphics.showDominance * (Custom.RNV() * 3f * UnityEngine.Random.value);
 				}
 			}
 			//if (this.iGraphics.lizard.animation == Lizard.Animation.PrepareToJump && this.iGraphics.lizard.Consious)
@@ -84,7 +88,7 @@ namespace LizardSkin
 			//}
 		}
 
-		// Token: 0x06001F7D RID: 8061 RVA: 0x001DEA14 File Offset: 0x001DCC14
+
 		public override void InitiateSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam)
 		{
 			for (int i = 0; i < this.scales.GetLength(0); i++)

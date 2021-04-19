@@ -8,7 +8,7 @@ namespace LizardSkin
         private int numberOfRings;
 
         CosmeticJumpRingsData jumpRingsData => cosmeticData as CosmeticJumpRingsData;
-		// Token: 0x06001F6E RID: 8046 RVA: 0x001DD3F0 File Offset: 0x001DB5F0
+
 		public GenericJumpRings(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
 			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.InFront;
@@ -16,19 +16,17 @@ namespace LizardSkin
 			this.numberOfSprites = 4 * numberOfRings;
 		}
 
-		// Token: 0x06001F6F RID: 8047 RVA: 0x001DD408 File Offset: 0x001DB608
+
 		public int RingSprite(int ring, int side, int part)
 		{
 			if(jumpRingsData.invertOverlap) return this.startSprite + part + side * 2 + numberOfSprites - 4 - ring * 4;
 			return this.startSprite + part + side * 2 + ring * 4;
 		}
 
-		// Token: 0x06001F70 RID: 8048 RVA: 0x001DD41C File Offset: 0x001DB61C
 		public override void Update()
 		{
 		}
 
-		// Token: 0x06001F71 RID: 8049 RVA: 0x001DD420 File Offset: 0x001DB620
 		public override void InitiateSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam)
 		{
 			for (int i = 0; i < numberOfRings; i++)
@@ -43,7 +41,6 @@ namespace LizardSkin
 			}
 		}
 
-		// Token: 0x06001F72 RID: 8050 RVA: 0x001DD480 File Offset: 0x001DB680
 		public override void DrawSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam, float timeStacker, Vector2 camPos)
 		{
 			float to = Mathf.Lerp(this.iGraphics.lastDepthRotation, this.iGraphics.depthRotation, timeStacker);
@@ -75,6 +72,7 @@ namespace LizardSkin
 					Vector2 vector2 = Custom.DegToVec(num2 + (((float)j != 0f) ? 40f : -40f));
 					Vector2 vector3 = pos + a * lizardSpineData.rad * vector2.x;
 					Vector2 vector4 = vector;
+					// Added support to adjustable amount of rings
 					//if (i == 0)
 					//{
 					//	vector4 = (vector4 - 2f * Custom.DirVec(vector3, Vector2.Lerp(this.iGraphics.headLastPos, this.iGraphics.headPos, timeStacker)) * Mathf.Abs(vector2.y)).normalized;
@@ -114,7 +112,6 @@ namespace LizardSkin
 			}
 		}
 
-		// Token: 0x06001F73 RID: 8051 RVA: 0x001DD9CC File Offset: 0x001DBBCC
 		public override void ApplyPalette(LeaserAdaptor sLeaser, CameraAdaptor rCam, PaletteAdaptor palette)
 		{
 			for (int i = 0; i < numberOfRings; i++)

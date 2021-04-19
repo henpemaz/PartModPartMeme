@@ -3,9 +3,12 @@ using UnityEngine;
 
 namespace LizardSkin
 {
-	public class GenericBodyScales : GenericCosmeticTemplate
+	public abstract class GenericBodyScales : GenericCosmeticTemplate
 	{
 		internal BodyScalesData bodyScalesData => this.cosmeticData as BodyScalesData;
+
+		public Vector2[] scalesPositions;
+
 		public GenericBodyScales(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
 			//this.spritesOverlap = ((!(this is SlugcatLongHeadScales)) ? SlugcatCosmeticsTemplate.SpritesOverlap.BehindHead : SlugcatCosmeticsTemplate.SpritesOverlap.InFront);
@@ -74,7 +77,8 @@ namespace LizardSkin
 			//{
 			//	num3 = Mathf.Min(num3, 11f) * 0.75f;
 			//}
-			int segments = Mathf.CeilToInt(numOfScales * roundness); // Mathf.Max(3, (int)(num2 / num3));
+			// uuuh could use one more param here...
+			int segments = Mathf.Max(2, Mathf.CeilToInt(numOfScales * roundness / 2f)); // Mathf.Max(3, (int)(num2 / num3));
 			int scalesPerSegment = numOfScales / segments; // Random.Range(1, 4) * 2;
 			this.scalesPositions = new Vector2[segments * scalesPerSegment];
 			for (int i = 0; i < segments; i++)
@@ -104,8 +108,5 @@ namespace LizardSkin
 			}
 			return result;
 		}
-
-
-		public Vector2[] scalesPositions;
 	}
 }

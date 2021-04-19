@@ -5,41 +5,26 @@ namespace LizardSkin
 {
     internal class GenericTailGeckoScales : GenericCosmeticTemplate
     {
-        public GenericTailGeckoScales(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
+		CosmeticTailGeckoScalesData tailGeckoScalesData => cosmeticData as CosmeticTailGeckoScalesData;
+
+		public int rows;
+		public int lines;
+		private bool bigScales;
+
+		public GenericTailGeckoScales(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
 			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.BehindHead;
-			this.rows = UnityEngine.Random.Range(7, 14);
-			this.lines = UnityEngine.Random.Range(3, UnityEngine.Random.Range(3, 4));
-			//if (iGraphics.iVars.tailColor > 0.1f && UnityEngine.Random.value < Mathf.Lerp(0.7f, 0.99f, iGraphics.iVars.tailColor))
-			//{
-			//	this.bigScales = true;
-			//	for (int i = 0; i < iGraphics.cosmetics.Count; i++)
-			//	{
-			//		if (iGraphics.cosmetics[i] is WingScales)
-			//		{
-			//			if ((iGraphics.cosmetics[i] as WingScales).scaleLength > 10f)
-			//			{
-			//				this.bigScales = false;
-			//			}
-			//			break;
-			//		}
-			//	}
-			//}
-			this.bigScales = true; // ooopsie
-			if (UnityEngine.Random.value < 0.5f)
-			{
-				this.rows += UnityEngine.Random.Range(0, UnityEngine.Random.Range(0, 7));
-				this.lines += UnityEngine.Random.Range(0, UnityEngine.Random.Range(0, 3));
-			}
+			this.rows = tailGeckoScalesData.rows; //UnityEngine.Random.Range(7, 14);
+			this.lines = tailGeckoScalesData.lines; //  UnityEngine.Random.Range(3, UnityEngine.Random.Range(3, 4));
+			this.bigScales = tailGeckoScalesData.bigScales; // true; // ooopsie
+			
 			this.numberOfSprites = this.rows * this.lines;
 		}
 
-		// Token: 0x06001F75 RID: 8053 RVA: 0x001DDB50 File Offset: 0x001DBD50
 		public override void Update()
 		{
 		}
 
-		// Token: 0x06001F76 RID: 8054 RVA: 0x001DDB54 File Offset: 0x001DBD54
 		public override void InitiateSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam)
 		{
 			for (int i = 0; i < this.rows; i++)
@@ -59,7 +44,6 @@ namespace LizardSkin
 			}
 		}
 
-		// Token: 0x06001F77 RID: 8055 RVA: 0x001DDC08 File Offset: 0x001DBE08
 		public override void DrawSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam, float timeStacker, Vector2 camPos)
 		{
 			if (this.bigScales)
@@ -93,26 +77,26 @@ namespace LizardSkin
 						sLeaser.sprites[this.startSprite + i * this.lines + j].scaleY = Vector2.Distance(vector, vector2) * 1.1f / 20f;
 						//if (this.iGraphics.iVars.tailColor > 0f)
 						//{
-							float num4 = Mathf.InverseLerp(0.5f, 1f, Mathf.Abs(Vector2.Dot(Custom.DirVec(vector2, vector), Custom.DegToVec(-45f + 120f * num3))));
+						//	float num4 = Mathf.InverseLerp(0.5f, 1f, Mathf.Abs(Vector2.Dot(Custom.DirVec(vector2, vector), Custom.DegToVec(-45f + 120f * num3))));
 						//num4 = Custom.LerpMap(Mathf.Abs(num3), 0.5f, 1f, 0.3f, 0f) + 0.7f * Mathf.Pow(num4 * Mathf.Pow(this.iGraphics.iVars.tailColor, 0.3f), Mathf.Lerp(2f, 0.5f, num));
-						num4 = Custom.LerpMap(Mathf.Abs(num3), 0.5f, 1f, 0.3f, 0f) + 0.7f * Mathf.Pow(num4 * Mathf.Pow(0.5f, 0.3f), Mathf.Lerp(2f, 0.5f, num));
-						if (num < 0.5f)
-							{
-								num4 *= Custom.LerpMap(num, 0f, 0.5f, 0.2f, 1f);
-							}
-							num4 = Mathf.Pow(num4, Mathf.Lerp(2f, 0.5f, num));
-							if (num4 < 0.5f)
-							{
-								sLeaser.sprites[this.startSprite + i * this.lines + j].color = Color.Lerp(a, this.cosmeticData.effectColor, Mathf.InverseLerp(0f, 0.5f, num4));
-							}
-							else
-							{
-								sLeaser.sprites[this.startSprite + i * this.lines + j].color = Color.Lerp(this.cosmeticData.effectColor, Color.white, Mathf.InverseLerp(0.5f, 1f, num4));
-							}
+						//num4 = Custom.LerpMap(Mathf.Abs(num3), 0.5f, 1f, 0.3f, 0f) + 0.7f * Mathf.Pow(num4 * Mathf.Pow(0.5f, 0.3f), Mathf.Lerp(2f, 0.5f, num));
+						//if (num < 0.5f)
+						//	{
+						//		num4 *= Custom.LerpMap(num, 0f, 0.5f, 0.2f, 1f);
+						//	}
+						//	num4 = Mathf.Pow(num4, Mathf.Lerp(2f, 0.5f, num));
+						//	if (num4 < 0.5f)
+						//	{
+						//		sLeaser.sprites[this.startSprite + i * this.lines + j].color = Color.Lerp(a, this.cosmeticData.effectColor, Mathf.InverseLerp(0f, 0.5f, num4));
+						//	}
+						//	else
+						//	{
+						//		sLeaser.sprites[this.startSprite + i * this.lines + j].color = Color.Lerp(this.cosmeticData.effectColor, Color.white, Mathf.InverseLerp(0.5f, 1f, num4));
+						//	}
 						//}
 						//else
 						//{
-						//	sLeaser.sprites[this.startSprite + i * this.lines + j].color = Color.Lerp(a, this.iGraphics.effectColor, Custom.LerpMap(num, 0f, 0.8f, 0.2f, Custom.LerpMap(Mathf.Abs(num3), 0.5f, 1f, 0.8f, 0.4f), 0.8f));
+						sLeaser.sprites[this.startSprite + i * this.lines + j].color = Color.Lerp(a, this.cosmeticData.effectColor, Custom.LerpMap(num, 0f, 0.8f, 0.2f, Custom.LerpMap(Mathf.Abs(num3), 0.5f, 1f, 0.8f, 0.4f), 0.8f));
 						//}
 					}
 					lizardSpineData = lizardSpineData2;
@@ -152,18 +136,9 @@ namespace LizardSkin
 			}
 		}
 
-		// Token: 0x06001F78 RID: 8056 RVA: 0x001DE358 File Offset: 0x001DC558
 		public override void ApplyPalette(LeaserAdaptor sLeaser, CameraAdaptor rCam, PaletteAdaptor palette)
 		{
+		
 		}
-
-		// Token: 0x0400220A RID: 8714
-		public int rows;
-
-		// Token: 0x0400220B RID: 8715
-		public int lines;
-
-		// Token: 0x0400220C RID: 8716
-		private bool bigScales;
 	}
 }

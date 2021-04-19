@@ -6,29 +6,23 @@ using UnityEngine;
 
 namespace LizardSkin
 {
-	public class GenericLongBodyScales : GenericBodyScales
+	public abstract class GenericLongBodyScales : GenericBodyScales
 	{
-
 		internal LongBodyScalesData longBodyScalesData => this.cosmeticData as LongBodyScalesData;
+
+		public GenericLizardScale[] scaleObjects;
+		public float[] backwardsFactors;
+
+		// Moved from GenericBodyScales
+		public int graphic;
+		public bool colored;
 
 		public GenericLongBodyScales(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
-			this.rigor = longBodyScalesData.rigor;
 			this.graphic = longBodyScalesData.graphic;
 			this.colored = longBodyScalesData.colored;
-
-			this.graphicHeight = Futile.atlasManager.GetElementWithName("LizardScaleA" + this.graphic).sourcePixelSize.y;
-
-			// Would make sense to put scale and thickness here too ?
-
 		}
 
-        internal void GeneratePatchPattern(object start, object length, object count, object roundness)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        // Token: 0x06001F49 RID: 8009 RVA: 0x001D99A0 File Offset: 0x001D7BA0
         public override void Update()
 		{
 			SpineData headSpine = iGraphics.SpinePosition(0f, 1f);
@@ -50,8 +44,8 @@ namespace LizardSkin
 					this.scaleObjects[i].pos += a * (num - num2);
 					this.scaleObjects[i].vel += a * (num - num2);
 				}
-				this.scaleObjects[i].vel += Vector2.ClampMagnitude(vector2 - this.scaleObjects[i].pos, Mathf.Lerp(10f, 20f, this.iGraphics.showDominance)) / Mathf.Lerp(5f, 1.5f, this.rigor);
-				this.scaleObjects[i].vel *= Mathf.Lerp(1f, 0.8f, this.rigor);
+				this.scaleObjects[i].vel += Vector2.ClampMagnitude(vector2 - this.scaleObjects[i].pos, Mathf.Lerp(10f, 20f, this.iGraphics.showDominance)) / Mathf.Lerp(5f, 1.5f, longBodyScalesData.rigor);
+				this.scaleObjects[i].vel *= Mathf.Lerp(1f, 0.8f, longBodyScalesData.rigor);
 				if (this.iGraphics.showDominance > 0f)
 				{
 					this.scaleObjects[i].vel += Custom.DegToVec(Random.value * 360f) * Mathf.Lerp(0f, 6f, this.iGraphics.showDominance);
@@ -61,24 +55,20 @@ namespace LizardSkin
 			}
 		}
 
-		// Token: 0x06001F4A RID: 8010 RVA: 0x001D9CBC File Offset: 0x001D7EBC
 		public override void InitiateSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam)
 		{
 			for (int i = this.startSprite + this.scalesPositions.Length - 1; i >= this.startSprite; i--)
 			{
 				sLeaser.sprites[i] = new FSprite("LizardScaleA" + this.graphic, true);
-				sLeaser.sprites[i].scaleY = this.scaleObjects[i - this.startSprite].length / this.graphicHeight;
 				sLeaser.sprites[i].anchorY = 0.1f;
 				if (this.colored)
 				{
 					sLeaser.sprites[i + this.scalesPositions.Length] = new FSprite("LizardScaleB" + this.graphic, true);
-					sLeaser.sprites[i + this.scalesPositions.Length].scaleY = this.scaleObjects[i - this.startSprite].length / this.graphicHeight;
 					sLeaser.sprites[i + this.scalesPositions.Length].anchorY = 0.1f;
 				}
 			}
 		}
 
-		// Token: 0x06001F4B RID: 8011 RVA: 0x001D9DD0 File Offset: 0x001D7FD0
 		public override void DrawSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam, float timeStacker, Vector2 camPos)
 		{
 			for (int i = this.startSprite + this.scalesPositions.Length - 1; i >= this.startSprite; i--)
@@ -87,23 +77,19 @@ namespace LizardSkin
 				sLeaser.sprites[i].x = backPos.outerPos.x - camPos.x;
 				sLeaser.sprites[i].y = backPos.outerPos.y - camPos.y;
 				sLeaser.sprites[i].rotation = Custom.AimFromOneVectorToAnother(backPos.outerPos, Vector2.Lerp(this.scaleObjects[i - this.startSprite].lastPos, this.scaleObjects[i - this.startSprite].pos, timeStacker));
+				sLeaser.sprites[i].scaleY = this.scaleObjects[i - this.startSprite].length;
 				sLeaser.sprites[i].scaleX = this.scaleObjects[i - this.startSprite].width * Mathf.Sign(backPos.depthRotation);
 				if (this.colored)
 				{
 					sLeaser.sprites[i + this.scalesPositions.Length].x = backPos.outerPos.x - camPos.x;
 					sLeaser.sprites[i + this.scalesPositions.Length].y = backPos.outerPos.y - camPos.y;
 					sLeaser.sprites[i + this.scalesPositions.Length].rotation = Custom.AimFromOneVectorToAnother(backPos.outerPos, Vector2.Lerp(this.scaleObjects[i - this.startSprite].lastPos, this.scaleObjects[i - this.startSprite].pos, timeStacker));
+					sLeaser.sprites[i + this.scalesPositions.Length].scaleY = this.scaleObjects[i - this.startSprite].length; 
 					sLeaser.sprites[i + this.scalesPositions.Length].scaleX = this.scaleObjects[i - this.startSprite].width * Mathf.Sign(backPos.depthRotation);
 				}
 			}
-			//if (this.pGraphics.lizard.Template.type == CreatureTemplate.Type.WhiteLizard)
-			//{
-			//	this.ApplyPalette(sLeaser, rCam, this.palette);
-			//}
-			this.ApplyPalette(sLeaser, rCam, this.palette);
 		}
 
-		// Token: 0x06001F4C RID: 8012 RVA: 0x001D9FDC File Offset: 0x001D81DC
 		public override void ApplyPalette(LeaserAdaptor sLeaser, CameraAdaptor rCam, PaletteAdaptor palette)
 		{
 			for (int i = this.startSprite + this.scalesPositions.Length - 1; i >= this.startSprite; i--)
@@ -111,48 +97,10 @@ namespace LizardSkin
 				sLeaser.sprites[i].color = this.cosmeticData.GetBaseColor(iGraphics, this.scalesPositions[i - this.startSprite].y);
 				if (this.colored)
 				{
-					//if (this.pGraphics.lizard.Template.type == CreatureTemplate.Type.WhiteLizard)
-					//{
-					//	sLeaser.sprites[i + this.scalesPositions.Length].color = this.pGraphics.HeadColor(1f);
-					//}
-					//else
-					//{
-					//	sLeaser.sprites[i + this.scalesPositions.Length].color = this.pGraphics.effectColor;
-					//}
 					sLeaser.sprites[i + this.scalesPositions.Length].color = this.cosmeticData.effectColor;
 				}
 			}
 			base.ApplyPalette(sLeaser, rCam, palette);
 		}
-
-		// Token: 0x040021F2 RID: 8690
-		public GenericLizardScale[] scaleObjects;
-
-		// Token: 0x040021F3 RID: 8691
-		public float[] backwardsFactors;
-
-		// Token: 0x040021F4 RID: 8692
-		// why ?
-		//public new int graphic;
-
-		// Token: 0x040021F5 RID: 8693
-		public float graphicHeight;
-
-		// Token: 0x040021F6 RID: 8694
-		public float rigor;
-
-
-		// Moved from GenericBodyScales
-		// Token: 0x040021EE RID: 8686
-		// could be moved to GenericLongBodyScales
-		public int graphic;
-
-		// Token: 0x040021EF RID: 8687
-		// seemingly unnused ?
-		//public float scaleX;
-
-		// Token: 0x040021F0 RID: 8688
-		// could be moved to GenericLongBodyScales
-		public bool colored;
 	}
 }
