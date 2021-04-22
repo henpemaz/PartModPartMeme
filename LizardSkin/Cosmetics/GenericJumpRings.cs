@@ -58,12 +58,12 @@ namespace LizardSkin
 				float s = numberOfRings == 1 ? jumpRingsData.spineStart : Mathf.Lerp(jumpRingsData.spineStart, jumpRingsData.spineStop, Mathf.Pow((float)i / (float)(numberOfRings - 1), jumpRingsData.spineExponent)); //0.06f + 0.12f * (float)i;
 				float scale = numberOfRings == 1 ? jumpRingsData.scaleStart : Mathf.Lerp(jumpRingsData.scaleStart, jumpRingsData.scaleStop, Mathf.Pow((float)i / (float)(numberOfRings - 1), jumpRingsData.scaleExponent));
 				Color color2 = this.cosmeticData.GetBaseColor(iGraphics, s);
-				SpineData lizardSpineData = this.iGraphics.SpinePosition(s, timeStacker);
+				SpineData lizardSpineData = this.iGraphics.SpinePosition(s, true, timeStacker);
 				Vector2 vector = lizardSpineData.dir;
 				Vector2 pos = lizardSpineData.pos;
 				if (i == 0)
 				{
-					vector = (vector + this.iGraphics.SpinePosition(0f, timeStacker).dir).normalized;
+					vector = (vector + this.iGraphics.SpinePosition(0f, true, timeStacker).dir).normalized;
 				}
 				Vector2 a = Custom.PerpendicularVector(vector);
 				float num2 = 50f * Mathf.Lerp(from, to, ((i != 0 && numberOfRings>1) ? 0.5f : 0.33f)*(1f-s));

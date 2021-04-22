@@ -166,13 +166,14 @@ namespace LizardSkin
             return false;
         }
 
-        public SpineData SpinePosition(float spineFactor, float timeStacker)
+        public SpineData SpinePosition(float spineFactor, bool inFront, float timeStacker)
         {
             Vector2 pos = Vector2.Lerp(headPos, tipOfTail, spineFactor);
             float rad = RWCustom.Custom.LerpMap(spineFactor, 0.5f, 1f, 10f, 1f);
             Vector2 direction = new Vector2(0f, -1f);
             Vector2 perp = new Vector2(1f, 0f);
             float rot = Mathf.Pow(Mathf.Abs(_rotation), Mathf.Lerp(1.2f, 0.3f, Mathf.Pow(spineFactor, 0.5f))) * Mathf.Sign(_rotation);
+            if (!inFront) rot *= -1;
             return new SpineData(spineFactor, pos, pos + perp*rad*rot, direction, perp, rot, rad);
         }
 

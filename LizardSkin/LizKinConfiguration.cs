@@ -1960,7 +1960,7 @@ namespace LizardSkin
                 NewRow(30f);
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Count:", FLabelAlignment.Right));
                 children.Add(this.countControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.count));
-                countControl.SetRange(1f, 20f);
+                countControl.SetRange(1, 20);
                 countControl.OnChangeEvent += DataChangedRefreshNeeded;
                 countControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 

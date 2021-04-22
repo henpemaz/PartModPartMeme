@@ -8,7 +8,7 @@ namespace LizardSkin
 		internal CosmeticAntennaeData antennaeData => cosmeticData as CosmeticAntennaeData;
         public GenericAntennae(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
-			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.InFront;
+			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.BehindHead;
 			//this.length = antennaeData.length; //UnityEngine.Random.value;
 			this.segments = antennaeData.segments; //Mathf.FloorToInt(Mathf.Lerp(3f, 8f, Mathf.Pow(this.length, Mathf.Lerp(1f, 6f, this.length))));
 			//this.alpha = antennaeData.alpha; // this.length * 0.9f + UnityEngine.Random.value * 0.1f;
@@ -29,7 +29,7 @@ namespace LizardSkin
 		public override void Reset()
 		{
 			base.Reset();
-			SpineData spine = iGraphics.SpinePosition(antennaeData.spinepos, 1f);
+			SpineData spine = iGraphics.SpinePosition(antennaeData.spinepos, false, 1f);
 			for (int i = 0; i < 2; i++)
 			{
 				for (int j = 0; j < this.segments; j++)
@@ -43,7 +43,7 @@ namespace LizardSkin
 		{
 			float flicker = this.iGraphics.showDominance; //  this.iGraphics.lizard.AI.yellowAI.commFlicker;
 			float lengthPerSegment = Mathf.Max(0f, antennaeData.length - 4f*(this.segments - 1)) / (float)(this.segments - 1);
-			SpineData spine = iGraphics.SpinePosition(antennaeData.spinepos, 1f);
+			SpineData spine = iGraphics.SpinePosition(antennaeData.spinepos, false, 1f);
 			for (int i = 0; i < 2; i++)
 			{
 				for (int j = 0; j < this.segments; j++)
@@ -138,7 +138,7 @@ namespace LizardSkin
 			//	flicker = 0f;
 			//}
 			//Vector2 vector = Custom.DegToVec(this.iGraphics.HeadRotation(timeStacker));
-			SpineData spine = iGraphics.SpinePosition(antennaeData.spinepos, timeStacker);
+			SpineData spine = iGraphics.SpinePosition(antennaeData.spinepos, false, timeStacker);
 			for (int i = 0; i < 2; i++)
 			{
 				sLeaser.sprites[this.startSprite + i].color = this.cosmeticData.GetBaseColor(iGraphics, 0);

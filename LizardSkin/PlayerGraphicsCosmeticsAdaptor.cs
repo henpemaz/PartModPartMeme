@@ -49,7 +49,7 @@ namespace LizardSkin
         protected static void PlayerGraphics_ctor_hk(On.PlayerGraphics.orig_ctor orig, PlayerGraphics instance, PhysicalObject ow)
         {
             orig(instance, ow);
-            InitDebugLabels(instance, ow);
+            //InitDebugLabels(instance, ow);
 
             if (LizardSkin.fpg_ref != null && LizardSkin.fpg_ref.IsInstanceOfType(instance))
             {
@@ -444,8 +444,8 @@ namespace LizardSkin
             {
                 this.pGraphics.DEBUGLABELS[0].label.text = "depthRotation: " + depthRotation;
                 this.pGraphics.DEBUGLABELS[1].label.text = "headDepthRotation: " + depthRotation;
-                SpineData spinehead = SpinePosition(0f, 1f);
-                SpineData spinetail = SpinePosition(1f, 1f);
+                SpineData spinehead = SpinePosition(0f, true, 1f);
+                SpineData spinetail = SpinePosition(1f, true, 1f);
                 this.pGraphics.DEBUGLABELS[2].label.text = "spineDepthAtHead: " + spinehead.depthRotation;
                 this.pGraphics.DEBUGLABELS[3].label.text = "spineDepthAtTail: " + spinetail.depthRotation;
                 this.pGraphics.DEBUGLABELS[4].label.text = "spineAngleAtHead: " + Custom.VecToDeg(spinehead.dir);
@@ -453,7 +453,7 @@ namespace LizardSkin
             }
         }
 
-        public override SpineData SpinePosition(float spineFactor, float timeStacker)
+        public override SpineData SpinePosition(float spineFactor, bool inFront, float timeStacker)
         {
             // float num = this.pGraphics.player.bodyChunkConnections[0].distance + this.pGraphics.player.bodyChunkConnections[1].distance;
             Vector2 topPos;
@@ -467,10 +467,10 @@ namespace LizardSkin
                 float inBodyFactor = Mathf.InverseLerp(0f, this.bodyLength / this.BodyAndTailLength, spineFactor);
 
                 topPos = Vector2.Lerp(this.pGraphics.drawPositions[0, 1], this.pGraphics.drawPositions[0, 0], timeStacker);
-                fromRadius = this.pGraphics.player.bodyChunks[0].rad;
+                fromRadius = this.pGraphics.player.bodyChunks[0].rad * 0.9f;
 
                 bottomPos = Vector2.Lerp(this.pGraphics.drawPositions[1, 1], this.pGraphics.drawPositions[1, 0], timeStacker);
-                toRadius = this.pGraphics.player.bodyChunks[1].rad;
+                toRadius = this.pGraphics.player.bodyChunks[1].rad * 0.95f;
                 direction = Custom.DirVec(topPos, bottomPos);
 
                 t = inBodyFactor;
@@ -508,6 +508,11 @@ namespace LizardSkin
             Vector2 perp = Custom.PerpendicularVector(direction);
             float rad = Mathf.Lerp(fromRadius, toRadius, t);
             float rot = Mathf.Lerp(this.lastDepthRotation, this.depthRotation, timeStacker);
+            if (!inFront)
+            {
+                rot = -rot;
+                // perp = -perp;
+            }
             rot = Mathf.Pow(Mathf.Abs(rot), Mathf.Lerp(1.2f, 0.3f, Mathf.Pow(spineFactor, 0.5f))) * Mathf.Sign(rot);
             Vector2 pos = Vector2.Lerp(topPos, bottomPos, t);
             Vector2 outerPos = pos + perp * rot * rad;

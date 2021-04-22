@@ -62,7 +62,7 @@ namespace LizardSkin
 				for (int j = this.startSprite + this.bumps - 1; j >= this.startSprite; j--)
 				{
 					float num2 = Mathf.InverseLerp((float)this.startSprite, (float)(this.startSprite + this.bumps - 1), (float)j);
-					SpineData lizardSpineData = this.iGraphics.SpinePosition(Mathf.Lerp(1f - tailFinData.length, 1f, num2), timeStacker);
+					SpineData lizardSpineData = this.iGraphics.SpinePosition(Mathf.Lerp(1f - tailFinData.length, 1f, num2), true, timeStacker);
 					if (i == 0)
 					{
 						sLeaser.sprites[j + num].x = lizardSpineData.outerPos.x - camPos.x;

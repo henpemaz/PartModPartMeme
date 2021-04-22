@@ -198,6 +198,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             // read from disk
 
 
+
             // tbd
 
             if (configuration == null || configuration.profiles.Count == 0)
@@ -1125,7 +1126,8 @@ You can pick Cosmetics of several types, edit their settings and configure rando
 
         internal class EventfulTextBox : OpTextBox
         {
-            public EventfulTextBox(Vector2 pos, float sizeX, string key, string defaultValue = "TEXT", Accept accept = Accept.StringASCII) : base(pos, sizeX, key, defaultValue, accept)
+            //public EventfulTextBox(Vector2 pos, float sizeX, string key, string defaultValue = "TEXT", Accept accept = Accept.StringASCII) : base(pos, sizeX, key, defaultValue, accept)
+            public EventfulTextBox(Vector2 pos, float sizeX, string key, string defaultValue = "TEXT") : base(pos, sizeX, key, defaultValue)
             {
             }
 

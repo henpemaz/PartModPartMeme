@@ -34,7 +34,7 @@ namespace LizardSkin
 				float num = Mathf.InverseLerp((float)this.startSprite, (float)(this.startSprite + this.numberOfSprites - 1), (float)i);
 				sLeaser.sprites[i].scale = Mathf.Lerp(cosmeticBumpHawkData.sizeRangeMin, cosmeticBumpHawkData.sizeRangeMax, Mathf.Lerp(Mathf.Sin(Mathf.Pow(num, cosmeticBumpHawkData.sizeSkewExponent) * 3.1415927f), 1f, (num >= 0.5f) ? 0f : 0.5f));
 				float num2 = Mathf.Lerp(0.05f, cosmeticBumpHawkData.spineLength, num);
-				SpineData lizardSpineData = this.iGraphics.SpinePosition(num2, timeStacker);
+				SpineData lizardSpineData = this.iGraphics.SpinePosition(num2, false, timeStacker);
 				sLeaser.sprites[i].x = lizardSpineData.outerPos.x - camPos.x;
 				sLeaser.sprites[i].y = lizardSpineData.outerPos.y - camPos.y;
 			}

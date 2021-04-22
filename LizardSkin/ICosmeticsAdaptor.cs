@@ -43,7 +43,7 @@ namespace LizardSkin
         Color BodyColorFallback(float y);
         //Color HeadColor(float v);
         //float HeadRotation(float timeStacker);
-        SpineData SpinePosition(float spineFactor, float timeStacker);
+        SpineData SpinePosition(float spineFactor, bool inFront, float timeStacker);
     }
 
     public class LeaserAdaptor

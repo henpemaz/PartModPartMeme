@@ -48,12 +48,12 @@ namespace LizardSkin
 		{
 			if (this.bigScales)
 			{
-				SpineData lizardSpineData = this.iGraphics.SpinePosition(0.4f, timeStacker);
+				SpineData lizardSpineData = this.iGraphics.SpinePosition(0.4f, true, timeStacker);
 				for (int i = 0; i < this.rows; i++)
 				{
 					float num = Mathf.InverseLerp(0f, (float)(this.rows - 1), (float)i);
 					float num2 = Mathf.Lerp(0.5f, 0.99f, Mathf.Pow(num, 0.8f));
-					SpineData lizardSpineData2 = this.iGraphics.SpinePosition(num2, timeStacker);
+					SpineData lizardSpineData2 = this.iGraphics.SpinePosition(num2, true, timeStacker);
 					Color a = this.cosmeticData.GetBaseColor(iGraphics, num2);
 					for (int j = 0; j < this.lines; j++)
 					{
@@ -108,7 +108,7 @@ namespace LizardSkin
 				{
 					float f = Mathf.InverseLerp(0f, (float)(this.rows - 1), (float)k);
 					float num5 = Mathf.Lerp(0.4f, 0.95f, Mathf.Pow(f, 0.8f));
-					SpineData lizardSpineData3 = this.iGraphics.SpinePosition(num5, timeStacker);
+					SpineData lizardSpineData3 = this.iGraphics.SpinePosition(num5, true, timeStacker);
 					Color color = Color.Lerp(this.cosmeticData.GetBaseColor(iGraphics, num5), this.cosmeticData.effectColor, 0.2f + 0.8f * Mathf.Pow(f, 0.5f));
 					for (int l = 0; l < this.lines; l++)
 					{

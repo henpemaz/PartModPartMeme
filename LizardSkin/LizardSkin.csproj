@@ -40,7 +40,6 @@
     </Reference>
     <Reference Include="ConfigMachine">
       <HintPath>..\..\References\ConfigMachine.dll</HintPath>
-      <Private>False</Private>
     </Reference>
     <Reference Include="CustomTail">
       <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\CustomTail.dll</HintPath>

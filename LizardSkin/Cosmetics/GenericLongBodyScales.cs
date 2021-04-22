@@ -25,22 +25,22 @@ namespace LizardSkin
 
         public override void Update()
 		{
-			SpineData headSpine = iGraphics.SpinePosition(0f, 1f);
+			SpineData headSpine = iGraphics.SpinePosition(0f, this.spritesOverlap != SpritesOverlap.Behind, 1f);
 			for (int i = 0; i < this.scaleObjects.Length; i++)
 			{
-				SpineData backPos = base.GetBackPos(i, 1f, true);
+				SpineData backPos = base.GetBackPos(i, 1f);
 				Vector2 vector = Vector2.Lerp(backPos.dir, Custom.DirVec(backPos.pos, backPos.outerPos), Mathf.Abs(backPos.depthRotation));
 				if (this.scalesPositions[i].y < 0.2f)
 				{
 					vector -= headSpine.dir * Mathf.Pow(Mathf.InverseLerp(0.2f, 0f, this.scalesPositions[i].y), 2f) * 2f;
 				}
 				vector = Vector2.Lerp(vector, backPos.dir, Mathf.Pow(this.backwardsFactors[i], Mathf.Lerp(1f, 15f, this.iGraphics.showDominance))).normalized;
-				Vector2 vector2 = backPos.outerPos + vector * this.scaleObjects[i].length;
-				if (!Custom.DistLess(this.scaleObjects[i].pos, vector2, this.scaleObjects[i].length / 2f))
+				Vector2 vector2 = backPos.outerPos + vector * this.scaleObjects[i].length *10f;
+				if (!Custom.DistLess(this.scaleObjects[i].pos, vector2, this.scaleObjects[i].length * 10f / 2f))
 				{
 					Vector2 a = Custom.DirVec(this.scaleObjects[i].pos, vector2);
 					float num = Vector2.Distance(this.scaleObjects[i].pos, vector2);
-					float num2 = this.scaleObjects[i].length / 2f;
+					float num2 = this.scaleObjects[i].length * 10f / 2f;
 					this.scaleObjects[i].pos += a * (num - num2);
 					this.scaleObjects[i].vel += a * (num - num2);
 				}
@@ -50,7 +50,7 @@ namespace LizardSkin
 				{
 					this.scaleObjects[i].vel += Custom.DegToVec(Random.value * 360f) * Mathf.Lerp(0f, 6f, this.iGraphics.showDominance);
 				}
-				this.scaleObjects[i].ConnectToPoint(backPos.outerPos, this.scaleObjects[i].length, true, 0f, new Vector2(0f, 0f), 0f, 0f);
+				this.scaleObjects[i].ConnectToPoint(backPos.outerPos, this.scaleObjects[i].length * 10f, false, 0f, new Vector2(0f, 0f), 0f, 0f);
 				this.scaleObjects[i].Update();
 			}
 		}
@@ -73,7 +73,7 @@ namespace LizardSkin
 		{
 			for (int i = this.startSprite + this.scalesPositions.Length - 1; i >= this.startSprite; i--)
 			{
-				SpineData backPos = base.GetBackPos(i - this.startSprite, timeStacker, true);
+				SpineData backPos = base.GetBackPos(i - this.startSprite, timeStacker);
 				sLeaser.sprites[i].x = backPos.outerPos.x - camPos.x;
 				sLeaser.sprites[i].y = backPos.outerPos.y - camPos.y;
 				sLeaser.sprites[i].rotation = Custom.AimFromOneVectorToAnother(backPos.outerPos, Vector2.Lerp(this.scaleObjects[i - this.startSprite].lastPos, this.scaleObjects[i - this.startSprite].pos, timeStacker));

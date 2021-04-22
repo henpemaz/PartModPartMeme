@@ -61,7 +61,7 @@ namespace LizardSkin
 				float num = Mathf.Lerp(-0.05f, 0.05f + wingScalesData.roundness, factor);
 				//float num = Custom.LerpMap((float)i, 0f, (float)(this.scales.GetLength(1) - 1), -0.05f, wingScalesData.roundness);
 				//SpineData spineData = this.iGraphics.SpinePosition(0.025f + (0.025f + 0.15f * (float)i) * this.posSqueeze, 1f);
-				SpineData spineData = this.iGraphics.SpinePosition(wingScalesData.start + wingScalesData.length * factor, 1f);
+				SpineData spineData = this.iGraphics.SpinePosition(wingScalesData.start + wingScalesData.length * factor, true, 1f);
 				float f = Mathf.Lerp(this.iGraphics.headDepthRotation, spineData.depthRotation, 0.3f + 0.2f * (float)i);
 				for (int j = 0; j < this.scales.GetLength(0); j++)
 				{
@@ -69,9 +69,9 @@ namespace LizardSkin
 					Vector2 vector2 = spineData.perp * ((j != 0) ? 1f : -1f) * (1f - Mathf.Abs(f));
 					vector2 = Vector3.Slerp(vector2, spineData.dir * num, Mathf.Abs(num));
 					vector2 = Vector3.Slerp(vector2, spineData.perp * Mathf.Sign(f), Mathf.Abs(f) * 0.5f);
-					Vector2 a = vector + vector2 * wingScalesData.scale * 1.5f;
+					Vector2 a = vector + vector2 * wingScalesData.scale *10f* 1.5f;
 					this.scales[j, i].Update();
-					this.scales[j, i].ConnectToPoint(vector, wingScalesData.scale * ((i <= 1) ? 1f : 0.6f), false, 0f, this.iGraphics.mainBodyChunkVel, 0.1f + 0.2f * wingScalesData.rigor, 0f);
+					this.scales[j, i].ConnectToPoint(vector, wingScalesData.scale *10f* ((i <= 1) ? 1f : 0.6f), false, 0f, this.iGraphics.mainBodyChunkVel, 0.1f + 0.2f * wingScalesData.rigor, 0f);
 					this.scales[j, i].vel += (a - this.scales[j, i].pos) * Mathf.Lerp(0.1f, 0.3f, wingScalesData.rigor);
 					this.scales[j, i].pos += (a - this.scales[j, i].pos) * 0.6f * Mathf.Pow(wingScalesData.rigor, 3f);
 
@@ -101,7 +101,7 @@ namespace LizardSkin
 				for (int j = 0; j < this.scales.GetLength(1); j++)
 				{
 					sLeaser.sprites[this.ScaleSprite(i, j)] = new FSprite("LizardScaleA" + this.graphic, true);
-					sLeaser.sprites[this.ScaleSprite(i, j)].anchorY = 0f;
+					sLeaser.sprites[this.ScaleSprite(i, j)].anchorY = 0.05f;
 					sLeaser.sprites[this.ScaleSprite(i, j)].scaleX = ((i != 0) ? 1f : -1f);
 				}
 			}
@@ -116,14 +116,14 @@ namespace LizardSkin
 				float factor = this.scales.GetLength(1) > 1 ? Mathf.InverseLerp(0, (this.scales.GetLength(1) - 1), i) : 1f;
 				//float num = Custom.LerpMap((float)i, 0f, (float)(this.scales.GetLength(1) - 1), -0.05f, wingScalesData.roundness);
 				//SpineData spineData = this.iGraphics.SpinePosition(0.025f + (0.025f + 0.15f * (float)i) * this.posSqueeze, 1f);
-				SpineData spineData = this.iGraphics.SpinePosition(wingScalesData.start + wingScalesData.length * factor, 1f);
+				SpineData spineData = this.iGraphics.SpinePosition(wingScalesData.start + wingScalesData.length * factor, true, 1f);
 				for (int j = 0; j < this.scales.GetLength(0); j++)
 				{
 					Vector2 vector = spineData.pos + spineData.perp * ((j != 0) ? 1f : -1f) * spineData.rad * (1f - Mathf.Abs(spineData.depthRotation));
 					Vector2 vector2 = Vector2.Lerp(this.scales[j, i].lastPos, this.scales[j, i].pos, timeStacker);
 					sLeaser.sprites[this.ScaleSprite(j, i)].x = vector.x - camPos.x;
 					sLeaser.sprites[this.ScaleSprite(j, i)].y = vector.y - camPos.y;
-					sLeaser.sprites[this.ScaleSprite(j, i)].scaleY = Vector2.Distance(vector, vector2);
+					sLeaser.sprites[this.ScaleSprite(j, i)].scaleY = Vector2.Distance(vector, vector2)/10f;
 					sLeaser.sprites[this.ScaleSprite(j, i)].scaleX = wingScalesData.scale* wingScalesData.thickness* ((j != 0) ? 1f : -1f);
 					sLeaser.sprites[this.ScaleSprite(j, i)].rotation = Custom.AimFromOneVectorToAnother(vector, vector2);
 				}
@@ -143,8 +143,7 @@ namespace LizardSkin
 				float y = wingScalesData.start + wingScalesData.length * factor;
 				for (int j = 0; j < this.scales.GetLength(0); j++)
 				{
-					
-					sLeaser.sprites[this.ScaleSprite(j, i)].color = cosmeticData.GetBaseColor(iGraphics, y);
+					sLeaser.sprites[this.ScaleSprite(j, i)].color = wingScalesData.colored ? cosmeticData.effectColor : cosmeticData.GetBaseColor(iGraphics, y);
 				}
 			}
 		}

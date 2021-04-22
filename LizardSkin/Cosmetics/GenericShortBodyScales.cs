@@ -26,7 +26,7 @@ namespace LizardSkin
 		{
 			for (int i = this.startSprite + this.scalesPositions.Length - 1; i >= this.startSprite; i--)
 			{
-				SpineData backPos = base.GetBackPos(i - this.startSprite, timeStacker, true);
+				SpineData backPos = base.GetBackPos(i - this.startSprite, timeStacker);
 				sLeaser.sprites[i].x = backPos.outerPos.x - camPos.x;
 				sLeaser.sprites[i].y = backPos.outerPos.y - camPos.y;
 				sLeaser.sprites[i].rotation = Custom.AimFromOneVectorToAnother(backPos.dir, -backPos.dir);

@@ -93,19 +93,13 @@ namespace LizardSkin
 			}
 		}
 
-		protected SpineData GetBackPos(int shoulderScale, float timeStacker, bool changeDepthRotation)
+		protected SpineData GetBackPos(int shoulderScale, float timeStacker)
 		{
-			SpineData result = this.iGraphics.SpinePosition(this.scalesPositions[shoulderScale].y, timeStacker);
-			//if(this.spritesOverlap == SpritesOverlap.Behind)
-            //{
-			//	result.depthRotation -= 1;
-			//}
-			float num = Mathf.Clamp(this.scalesPositions[shoulderScale].x + result.depthRotation, -1f, 1f);
+			SpineData result = this.iGraphics.SpinePosition(this.scalesPositions[shoulderScale].y, this.spritesOverlap != SpritesOverlap.Behind, timeStacker);
+
+            float num = Mathf.Clamp(this.scalesPositions[shoulderScale].x + result.depthRotation, -1f, 1f);
 			result.outerPos = result.pos + result.perp * num * result.rad;
-			if (changeDepthRotation)
-			{
-				result.depthRotation = num;
-			}
+			result.depthRotation = num;
 			return result;
 		}
 	}

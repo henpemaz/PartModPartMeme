@@ -116,7 +116,7 @@ namespace LizardSkin
 		public override void DrawSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam, float timeStacker, Vector2 camPos)
 		{
 			base.DrawSprites(sLeaser, rCam, timeStacker, camPos);
-			Vector2 b = iGraphics.SpinePosition(0f, timeStacker).dir; // Custom.DegToVec(this.iGraphics.HeadRotation(timeStacker));
+			Vector2 b = iGraphics.SpinePosition(0f, true, timeStacker).dir; // Custom.DegToVec(this.iGraphics.HeadRotation(timeStacker));
 			for (int i = 0; i < this.amount; i++)
 			{
 				for (int j = 0; j < 2; j++)

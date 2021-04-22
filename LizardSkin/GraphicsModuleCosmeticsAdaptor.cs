@@ -36,7 +36,7 @@ namespace LizardSkin
         public abstract Vector2 mainBodyChunkVel { get; }
         public abstract BodyChunk mainBodyChunckSecret { get; }
 
-        public abstract SpineData SpinePosition(float spineFactor, float timeStacker);
+        public abstract SpineData SpinePosition(float spineFactor, bool inFront, float timeStacker);
 
         public abstract Color BodyColorFallback(float y);
 
