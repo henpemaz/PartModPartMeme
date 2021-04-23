@@ -32,7 +32,9 @@ namespace ConcealedGarden
         public static class EnumExt_ConcealedGarden
         {
             public static PlacedObject.Type CosmeticLeaves;
-
+            public static PlacedObject.Type LifeSimProjectionSegment;
+            //public static PlacedObject.Type LifeSimProjectionPulser;
+            //public static PlacedObject.Type LifeSimProjectionKiller;
 
         }
 
@@ -43,6 +45,20 @@ namespace ConcealedGarden
             {
                 instance.data = new CosmeticLeaves.CosmeticLeavesObjectData(instance);
             }
+            if (instance.type == EnumExt_ConcealedGarden.LifeSimProjectionSegment)
+            {
+                instance.data = new PlacedObject.GridRectObjectData(instance);
+            }
+            //if (instance.type == EnumExt_ConcealedGarden.LifeSimProjectionPulser)
+            //{
+            //    instance.data = new LifeSimProjection.LifeSimProjectionPulserData(instance);
+            //}
+            //if (instance.type == EnumExt_ConcealedGarden.LifeSimProjectionKiller)
+            //{
+            //    instance.data = new LifeSimProjection.LifeSimProjectionKillerData(instance);
+            //}
+
+
         }
 
         private static void ObjectsPage_CreateObjRep_Patch(On.DevInterface.ObjectsPage.orig_CreateObjRep orig, DevInterface.ObjectsPage instance, PlacedObject.Type tp, PlacedObject pObj)
@@ -54,6 +70,15 @@ namespace ConcealedGarden
                 instance.subNodes.Pop();
                 old.ClearSprites();
                 DevInterface.PlacedObjectRepresentation placedObjectRepresentation = new CosmeticLeaves.CosmeticLeavesObjectData.CosmeticLeavesObjectRepresentation(instance.owner, tp.ToString() + "_Rep", instance, old.pObj, tp.ToString());
+                instance.tempNodes.Add(placedObjectRepresentation);
+                instance.subNodes.Add(placedObjectRepresentation);
+            }
+            if (tp == EnumExt_ConcealedGarden.LifeSimProjectionSegment)
+            {
+                DevInterface.PlacedObjectRepresentation old = (DevInterface.PlacedObjectRepresentation)instance.tempNodes.Pop();
+                instance.subNodes.Pop();
+                old.ClearSprites();
+                DevInterface.PlacedObjectRepresentation placedObjectRepresentation = new DevInterface.GridRectObjectRepresentation(instance.owner, tp.ToString() + "_Rep", instance, old.pObj, tp.ToString());
                 instance.tempNodes.Add(placedObjectRepresentation);
                 instance.subNodes.Add(placedObjectRepresentation);
             }
@@ -69,6 +94,23 @@ namespace ConcealedGarden
                 {
                     if (instance.roomSettings.placedObjects[l].type == EnumExt_ConcealedGarden.CosmeticLeaves)
                         instance.AddObject(new CosmeticLeaves(instance.roomSettings.placedObjects[l], instance));
+
+                    if (instance.roomSettings.placedObjects[l].type == EnumExt_ConcealedGarden.LifeSimProjectionSegment)
+                    {
+                        bool hasLifeSimProjection = false;
+                        LifeSimProjection projection = null;
+                        foreach (var item in instance.updateList)
+                        {
+                            if (item is LifeSimProjection)
+                            {
+                                hasLifeSimProjection = true;
+                                projection = item as LifeSimProjection;
+                                break;
+                            }
+                        }
+                        if(!hasLifeSimProjection) instance.AddObject(projection = new LifeSimProjection(instance));
+                        projection.places.Add(instance.roomSettings.placedObjects[l]);
+                    }
                 }
             }
         }
