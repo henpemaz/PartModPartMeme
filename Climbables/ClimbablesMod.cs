@@ -15,10 +15,17 @@ namespace Climbables
             this.author = "Henpemaz";
 
             instance = this;
+
+            //ropeWatch = new System.Diagnostics.Stopwatch();
+            //roomWatch = new System.Diagnostics.Stopwatch();
+            //notRoomWatch = new System.Diagnostics.Stopwatch();
         }
 
         public static ClimbablesMod instance;
 
+        //internal static System.Diagnostics.Stopwatch ropeWatch;
+        //internal static System.Diagnostics.Stopwatch roomWatch;
+        //internal static System.Diagnostics.Stopwatch notRoomWatch;
         public override void OnEnable()
         {
             base.OnEnable();
@@ -27,7 +34,31 @@ namespace Climbables
             On.PlacedObject.GenerateEmptyData += PlacedObject_GenerateEmptyData_Patch;
             On.Room.Loaded += Room_Loaded_Patch;
             On.DevInterface.ObjectsPage.CreateObjRep += ObjectsPage_CreateObjRep_Patch;
+
+            //On.Room.Update += Room_Update_dbg;
         }
+
+        //private void Room_Update_dbg(On.Room.orig_Update orig, Room self)
+        //{
+        //    notRoomWatch.Stop();
+        //    ropeWatch.Reset();
+        //    roomWatch.Reset();
+        //    roomWatch.Start();
+        //    orig(self);
+        //    roomWatch.Stop();
+
+        //    if (UnityEngine.Input.GetKeyDown("x"))
+        //    {
+        //        DateTime date = new DateTime(roomWatch.ElapsedTicks);
+        //        UnityEngine.Debug.Log($"roomWatch [{date.ToString("s.ffff")}s]");
+        //        date = new DateTime(ropeWatch.ElapsedTicks);
+        //        UnityEngine.Debug.Log($"ropeWatch [{date.ToString("s.ffff")}s]");
+        //        date = new DateTime(notRoomWatch.ElapsedTicks);
+        //        UnityEngine.Debug.Log($"notRoomWatch [{date.ToString("s.ffff")}s]");
+        //    }
+        //    notRoomWatch.Reset();
+        //    notRoomWatch.Start();
+        //}
 
         public static class EnumExt_ClimbablesMod
         {
