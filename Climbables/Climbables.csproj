@@ -31,8 +31,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\References\Assembly-CSharp.dll</HintPath>
+    <Reference Include="Assembly-CSharp - publicitystuntd, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
     </Reference>
     <Reference Include="HOOKS-Assembly-CSharp">
       <HintPath>..\..\References\HOOKS-Assembly-CSharp.dll</HintPath>

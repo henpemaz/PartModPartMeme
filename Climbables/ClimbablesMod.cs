@@ -1,8 +1,31 @@
 ﻿using Partiality.Modloader;
+using RWCustom;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Security;
+using System.Security.Permissions;
 using System.Text;
+using UnityEngine;
+
+[assembly: IgnoresAccessChecksTo("Assembly-CSharp")]
+[assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
+[module: UnverifiableCode]
+
+namespace System.Runtime.CompilerServices
+{
+    [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+    public class IgnoresAccessChecksToAttribute : Attribute
+    {
+        public IgnoresAccessChecksToAttribute(string assemblyName)
+        {
+            AssemblyName = assemblyName;
+        }
+
+        public string AssemblyName { get; }
+    }
+}
 
 namespace Climbables
 {
@@ -36,6 +59,57 @@ namespace Climbables
             On.DevInterface.ObjectsPage.CreateObjRep += ObjectsPage_CreateObjRep_Patch;
 
             //On.Room.Update += Room_Update_dbg;
+
+            On.ClimbableVinesSystem.VineSwitch += ClimbableVinesSystem_VineSwitch_hk;
+        }
+
+        private ClimbableVinesSystem.VinePosition ClimbableVinesSystem_VineSwitch_hk(On.ClimbableVinesSystem.orig_VineSwitch orig, ClimbableVinesSystem self, ClimbableVinesSystem.VinePosition vPos, UnityEngine.Vector2 goalPos, float rad)
+        {
+            ClimbableVinesSystem.VinePosition newPos = orig(self, vPos, goalPos, rad);
+
+            if (self.vines[vPos.vine] is ClimbableArc && newPos == null && (vPos.floatPos == 0f || vPos.floatPos == 1f))
+            {
+                // Copypaste from orig but bypassing the dotprod check
+                int num = self.PrevSegAtFloat(vPos.vine, vPos.floatPos);
+                int num2 = Custom.IntClamp(num + 1, 0, self.vines[vPos.vine].TotalPositions() - 1);
+                float t = Mathf.InverseLerp(self.FloatAtSegment(vPos.vine, num), self.FloatAtSegment(vPos.vine, num2), vPos.floatPos);
+                Vector2 vector = Vector2.Lerp(self.vines[vPos.vine].Pos(num), self.vines[vPos.vine].Pos(num2), t);
+                goalPos = vector + (vector - goalPos).normalized * 0.1f; // shorten that range a tiny bit.
+                float f = Vector2.Dot((self.vines[vPos.vine].Pos(num) - self.vines[vPos.vine].Pos(num2)).normalized, (vector - goalPos).normalized);
+                if (Mathf.Abs(f) > 0.5f)
+                {
+                    float num3 = float.MaxValue;
+                    //ClimbableVinesSystem.VinePosition result = null;
+                    for (int i = 0; i < self.vines.Count; i++)
+                    {
+                        for (int j = 0; j < self.vines[i].TotalPositions() - 1; j++)
+                        {
+                            if (self.OverlappingSegment(self.vines[i].Pos(j), self.vines[i].Rad(j), self.vines[i].Pos(j + 1), self.vines[i].Rad(j + 1), vector, rad))
+                            {
+                                Vector2 vector2 = self.ClosestPointOnSegment(self.vines[i].Pos(j), self.vines[i].Pos(j + 1), vector);
+                                float num4 = Vector2.Distance(vector2, goalPos);
+                                num4 *= 1f - 0.25f * Mathf.Abs(Vector2.Dot((self.vines[i].Pos(j) - self.vines[i].Pos(j + 1)).normalized, (vector - goalPos).normalized));
+                                if (i == vPos.vine)
+                                {
+                                    float num5 = Mathf.Lerp(self.FloatAtSegment(i, j), self.FloatAtSegment(i, j + 1), Mathf.InverseLerp(0f, Vector2.Distance(self.vines[i].Pos(j), self.vines[i].Pos(j + 1)), Vector2.Distance(self.vines[i].Pos(j), vector2))) * self.TotalLength(i);
+                                    if (Mathf.Abs(vPos.floatPos * self.TotalLength(vPos.vine) - num5) < 100f)
+                                    {
+                                        num4 = float.MaxValue;
+                                    }
+                                }
+                                if (num4 < num3)
+                                {
+                                    num3 = num4;
+                                    float t2 = Mathf.InverseLerp(0f, Vector2.Distance(self.vines[i].Pos(j), self.vines[i].Pos(j + 1)), Vector2.Distance(self.vines[i].Pos(j), vector2));
+                                    newPos = new ClimbableVinesSystem.VinePosition(i, Mathf.Lerp(self.FloatAtSegment(i, j), self.FloatAtSegment(i, j + 1), t2));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return newPos;
         }
 
         //private void Room_Update_dbg(On.Room.orig_Update orig, Room self)
