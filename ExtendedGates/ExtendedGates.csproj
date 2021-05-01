@@ -61,7 +61,12 @@
     <EmbeddedResource Include="Resources\ExtendedGateSymbols.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\ExtendedGateSymbols.txt" />
+    <EmbeddedResource Include="Resources\ExtendedGateSymbols.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="Resources\README.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AdditionalFiles>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
