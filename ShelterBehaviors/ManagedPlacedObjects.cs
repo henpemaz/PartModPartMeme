@@ -142,6 +142,7 @@ namespace ShelterBehaviors
 
             public override PlacedObject.Type GetObjectType()
             {
+                // unable to access placedType at startup time because enumextend runs later on ???
                 if (placedType == default) placedType = (PlacedObject.Type)Enum.Parse(typeof(PlacedObject.Type), objectType.Name);
                 return placedType;
             }
@@ -202,13 +203,25 @@ namespace ShelterBehaviors
 
             public virtual bool NeedsControlPanel { get => false; }
             public virtual Vector2 PanelUiSize { get => Vector2.zero; }
-            public virtual DevUINode MakeControlPanelNode()
+            
+            public virtual object ReadControlPanelNode(DevUINode node)
             {
                 throw new NotImplementedException();
             }
+
+            public virtual PositionedDevUINode MakeControlPanelNode(ManagedData managedData, ManagedRepresentation managedRepresentation, ManagedControlPanel panel)
+            {
+                throw new NotImplementedException();
+            }
+
+            public virtual PositionedDevUINode MakeAditionalNodes(ManagedData managedData, ManagedRepresentation managedRepresentation)
+            {
+                return null;
+                //throw new NotImplementedException();
+            }
         }
 
-        private class FloatField : ManagedField
+        public class FloatField : ManagedField
         {
             public float min;
             public float max;
@@ -226,20 +239,22 @@ namespace ShelterBehaviors
                 return float.Parse(str);
             }
 
-            public override DevUINode MakeControlPanelNode()
+            public override PositionedDevUINode MakeControlPanelNode(ManagedData managedData, ManagedRepresentation managedRepresentation, ManagedControlPanel panel)
             {
-                return base.MakeControlPanelNode();
+                return new ManagedSlider(this, managedData, panel);
             }
 
         }
 
-        class ManagedData : PlacedObject.Data
+        public class ManagedData : PlacedObject.Data
         {
             public ManagedData(PlacedObject owner, ManagedField[] fields) : base(owner)
             {
                 this.fields = fields;
                 this.fieldsByKey = new Dictionary<string, ManagedField>();
                 this.valuesByKey = new Dictionary<string, object>();
+
+                panelPos = new Vector2(100, 50);
 
                 this.needsControlPanel = false;
                 foreach (var field in fields)
@@ -255,12 +270,16 @@ namespace ShelterBehaviors
             private readonly Dictionary<string, ManagedField> fieldsByKey;
             private readonly Dictionary<string, object> valuesByKey;
             public readonly bool needsControlPanel;
-            private readonly int fieldsWithData;
             private Vector2 panelPos;
 
             public T GetValue<T>(string fieldName)
             {
                 return (T)valuesByKey[fieldName];
+            }
+
+            internal void SetValue<T>(string fieldName, T value)
+            {
+                valuesByKey[fieldName] = (object) value;
             }
 
             public override void FromString(string s)
@@ -284,23 +303,39 @@ namespace ShelterBehaviors
                 return (needsControlPanel ? (panelPos.x.ToString() + "~" + panelPos.y.ToString() + "~") : "") + string.Join("~", Array.ConvertAll(fields, f => f.ToString(valuesByKey[f.key])));
             }
 
-            internal virtual DevUINode[] MakeControls(ManagedRepresentation managedRepresentation, ObjectsPage objPage, PlacedObject pObj)
+            internal virtual void MakeControls(ManagedRepresentation managedRepresentation, ObjectsPage objPage, PlacedObject pObj)
             {
-                List<DevUINode> nodes = new List<DevUINode>();
                 if (needsControlPanel)
                 {
                     ManagedControlPanel panel = new ManagedControlPanel(managedRepresentation.owner, "ManagedControlPanel", managedRepresentation, this.panelPos, Vector2.zero, pObj.type.ToString());
-
-                    Vector2 uiSize = new Vector2(2f,2f);
-                    for (int i = fields.Length - 1; i >= 0; i--)
+                    managedRepresentation.subNodes.Add(panel);
+                    Vector2 uiSize = new Vector2(2f, 2f);
+                    Vector2 uiPos = new Vector2(2f, 2f);
+                    for (int i = fields.Length - 1; i >= 0; i--) // down up
                     {
                         ManagedField field = fields[i];
                         if (field.NeedsControlPanel)
                         {
-                            panel.subNodes.Add(field.MakeControlPanelNode(new Vector2(1, uiSize.y)));
+                            PositionedDevUINode node = field.MakeControlPanelNode(this, managedRepresentation, panel);
+                            panel.managedNodes[field.key] = node;
+                            panel.subNodes.Add(node);
+                            node.pos = uiPos;
                             uiSize.x = Mathf.Max(uiSize.x, field.PanelUiSize.x);
                             uiSize.y += field.PanelUiSize.y;
+                            uiPos.y += field.PanelUiSize.y;
                         }
+                    }
+                    panel.size = uiSize;
+                }
+
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    ManagedField field = fields[i];
+                    PositionedDevUINode node = field.MakeAditionalNodes(this, managedRepresentation);
+                    if (node != null)
+                    {
+                        managedRepresentation.subNodes.Add(node);
+                        managedRepresentation.managedNodes[field.key] = node;
                     }
                 }
             }
@@ -311,7 +346,7 @@ namespace ShelterBehaviors
         {
             private PlacedObject.Type placedType;
             private ObjectsPage objPage;
-            private DevUINode[] controls;
+            public Dictionary<string, DevUINode> managedNodes;
 
             public ManagedRepresentation(PlacedObject.Type placedType, ObjectsPage objPage, PlacedObject pObj) : base(objPage.owner, placedType.ToString() + "_Rep", objPage, pObj, placedType.ToString())
             {
@@ -319,15 +354,19 @@ namespace ShelterBehaviors
                 this.objPage = objPage;
                 this.pObj = pObj;
 
-                this.controls = (pObj.data as ManagedData).MakeControls(this, objPage, pObj);
+                this.managedNodes = new Dictionary<string, DevUINode>();
+                (pObj.data as ManagedData).MakeControls(this, objPage, pObj);
             }
         }
 
         internal class ManagedControlPanel : Panel
         {
+            public Dictionary<string, DevUINode> managedNodes;
+
             public ManagedControlPanel(DevUI owner, string IDstring, ManagedRepresentation parentNode, Vector2 pos, Vector2 size, string title) : base(owner, IDstring, parentNode, pos, size, title)
             {
                 managedRepresentation = parentNode;
+                managedNodes = new Dictionary<string, DevUINode>();
             }
 
             public ManagedRepresentation managedRepresentation { get; }
@@ -335,48 +374,31 @@ namespace ShelterBehaviors
 
         public class ManagedSlider : Slider
         {
-            public ManagedSlider(DevUI owner, string IDstring, DevUINode parentNode, Vector2 pos, string title) : base(owner, IDstring, parentNode, pos, title, false, 110f)
+            public FloatField floatField { get; }
+            public ManagedData data { get; }
+            public ManagedControlPanel managedControlPanel { get; }
+
+            public ManagedSlider(FloatField floatField, ManagedData data, ManagedControlPanel panel) : base(panel.owner, floatField.key, panel, Vector2.zero, floatField.displayName, false, 110f)
             {
+                this.floatField = floatField;
+                this.data = data;
+                managedControlPanel = panel;
             }
 
             public override void Refresh()
             {
                 base.Refresh();
-                float num = 0f;
-                string idstring = this.IDstring;
-                if (idstring != null)
-                {
-                    if (idstring == "Depth_Slider")
-                    {
-                        num = ((this.parentNode.parentNode as CosmeticLeavesObjectRepresentation).pObj.data as CosmeticLeavesObjectData).depth;
-                        base.NumberText = ((int)(num * 30f)).ToString();
-                    }
-                    if (idstring == "Useless_Slider")
-                    {
-
-                    }
-                }
-                base.RefreshNubPos(num);
+                float num = data.GetValue<float>(floatField.key);
+                base.NumberText = (num).ToString();
+                base.RefreshNubPos(Mathf.InverseLerp(floatField.min, floatField.max, num));
             }
 
             public override void NubDragged(float nubPos)
             {
-                string idstring = this.IDstring;
-                if (idstring != null)
-                {
-                    if (idstring == "Depth_Slider")
-                    {
-                        ((this.parentNode.parentNode as CosmeticLeavesObjectRepresentation).pObj.data as CosmeticLeavesObjectData).depth = nubPos;
-                    }
-                    if (idstring == "Useless_Slider")
-                    {
-                        base.NumberText = nubPos.ToString();
-                    }
-                    this.parentNode.parentNode.Refresh();
-                    this.Refresh();
-                }
+                data.SetValue<float>(floatField.key, Mathf.Lerp(floatField.min, floatField.max, nubPos));
+                this.managedControlPanel.managedRepresentation.Refresh();
+                this.Refresh();
             }
         }
-
     }
 }
