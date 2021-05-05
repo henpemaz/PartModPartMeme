@@ -52,6 +52,7 @@ namespace ShelterBehaviors
 
         private static void PlacedObject_GenerateEmptyData_Patch(On.PlacedObject.orig_GenerateEmptyData orig, PlacedObject self)
         {
+            orig(self);
             ManagedObjectType manager = GetManagerForType(self.type);
             if (manager != null)
             {
@@ -64,6 +65,7 @@ namespace ShelterBehaviors
         public static void MySillyExample()
         {
             List<ManagedField> fields = new List<ManagedField>();
+            fields.Add(new BooleanField("death", false, "Click to Die"));
             for (int i = 0; i < 10; i++)
             {
                 ManagedField field = new FloatField("MyFloat" + i, 0f, (float)i + 1, (float)i);
@@ -93,8 +95,19 @@ namespace ShelterBehaviors
             public override void Update(bool eu)
             {
                 base.Update(eu);
-                UnityEngine.Debug.Log("SillyObject update, now DIE");
-                Destroy();
+                //UnityEngine.Debug.Log("SillyObject update, now DIE");
+                //Destroy();
+                if ((placedObject.data as ManagedData).GetValue<bool>("death"))
+                {
+                    for (int i = room.updateList.Count - 1; i >= 0; i--)
+                    {
+                        UpdatableAndDeletable item = room.updateList[i];
+                        if (item is Player)
+                        {
+                            (item as Player).Die();
+                        }
+                    }
+                }
             }
         }
 
@@ -121,7 +134,8 @@ namespace ShelterBehaviors
             }
             catch (Exception e)
             {
-                UnityEngine.Debug.LogError("Error extending enums " + e);
+                Debug.LogError("Error extending enums");
+                throw e;
             }
             ManagedObjectType fullyManaged = new FullyManagedObjectType(type, managedFields);
             RegisterManagedObject(fullyManaged);
@@ -159,7 +173,6 @@ namespace ShelterBehaviors
 
             public override PlacedObjectRepresentation MakeRepresentation(PlacedObject pObj, ObjectsPage objPage)
             {
-                //return new PlacedObjectRepresentation(objPage.owner, placedType.ToString() + "_Rep", objPage, pObj, placedType.ToString());
                 return new ManagedRepresentation(GetObjectType(), objPage, pObj);
             }
         }
@@ -227,7 +240,7 @@ namespace ShelterBehaviors
             public float max;
             //public float floatValue { get => (float)value; }
             public override bool NeedsControlPanel => true;
-            public override Vector2 PanelUiSize => new Vector2(200f, 20f);
+            public override Vector2 PanelUiSize => new Vector2(220f, 20f);
             public FloatField(string name, float min, float max, float defaultValue, string displayName=null) : base(name, defaultValue, displayName)
             {
                 this.min = min;
@@ -378,11 +391,11 @@ namespace ShelterBehaviors
             public ManagedData data { get; }
             public ManagedControlPanel managedControlPanel { get; }
 
-            public ManagedSlider(FloatField floatField, ManagedData data, ManagedControlPanel panel) : base(panel.owner, floatField.key, panel, Vector2.zero, floatField.displayName, false, 110f)
+            public ManagedSlider(FloatField floatField, ManagedData data, ManagedControlPanel panel) : base(panel.owner, floatField.key, panel, Vector2.zero, floatField.displayName, false, 80f)
             {
                 this.floatField = floatField;
                 this.data = data;
-                managedControlPanel = panel;
+                this.managedControlPanel = panel;
             }
 
             public override void Refresh()
@@ -396,9 +409,76 @@ namespace ShelterBehaviors
             public override void NubDragged(float nubPos)
             {
                 data.SetValue<float>(floatField.key, Mathf.Lerp(floatField.min, floatField.max, nubPos));
-                this.managedControlPanel.managedRepresentation.Refresh();
+                this.managedControlPanel.managedRepresentation.Refresh(); // is this relevant ?
                 this.Refresh();
             }
+        }
+
+        public abstract class IterableField : ManagedField
+        {
+            protected IterableField(string key, object defaultValue, string displayName = null) : base(key, defaultValue, displayName)
+            {
+            }
+
+            public abstract object Next(object prev);
+        }
+
+        public class BooleanField : IterableField
+        {
+            public BooleanField(string key, object defaultValue, string displayName = null) : base(key, defaultValue, displayName)
+            {
+            }
+
+            public override bool NeedsControlPanel => true;
+
+            public override Vector2 PanelUiSize => new Vector2(220f, 20f);
+
+            public override object FromString(string str)
+            {
+                return bool.Parse(str);
+            }
+
+            public override PositionedDevUINode MakeControlPanelNode(ManagedData managedData, ManagedRepresentation managedRepresentation, ManagedControlPanel panel)
+            {
+                return new ManagedButton(this, managedData, panel);
+            }
+
+            public override object Next(object prev)
+            {
+                return !(bool)prev;
+            }
+        }
+
+        public class ManagedButton : PositionedDevUINode, IDevUISignals
+        {
+            private Button button;
+
+            public IterableField iterableField { get; }
+            public ManagedData data { get; }
+            public ManagedControlPanel managedControlPanel { get; }
+            public ManagedButton(IterableField iterableField, ManagedData data, ManagedControlPanel panel) : base(panel.owner, iterableField.key, panel, Vector2.zero)
+            {
+                this.iterableField = iterableField;
+                this.data = data;
+                this.managedControlPanel = panel;
+                this.subNodes.Add(new DevUILabel(owner, "Title", this, new Vector2(0f, 0f), 100f, iterableField.displayName));
+                this.subNodes.Add(this.button = new Button(owner, "Button", this, new Vector2(120f, 0f), 100f, iterableField.defaultValue.ToString()));
+
+            }
+
+            public void Signal(DevUISignalType type, DevUINode sender, string message) // from button
+            {
+                object next = iterableField.Next(data.GetValue<object>(iterableField.key));
+                data.SetValue<object>(iterableField.key, next);
+                this.Refresh();
+            }
+
+            public override void Refresh()
+            {
+                base.Refresh();
+                this.button.Text = data.GetValue<object>(iterableField.key).ToString();
+            }
+            
         }
     }
 }
