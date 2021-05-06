@@ -49,6 +49,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExtendedGates", "ExtendedGa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShelterBehaviors", "ShelterBehaviors\ShelterBehaviors.csproj", "{5A1AFAE3-8C39-43ED-A204-0CDEFBD06264}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManagedPlacedObjects", "ManagedPlacedObjects\ManagedPlacedObjects.csproj", "{A5E1E800-EE17-4347-9488-EF8F3E929B78}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -147,6 +149,10 @@ Global
 		{5A1AFAE3-8C39-43ED-A204-0CDEFBD06264}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5A1AFAE3-8C39-43ED-A204-0CDEFBD06264}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5A1AFAE3-8C39-43ED-A204-0CDEFBD06264}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A5E1E800-EE17-4347-9488-EF8F3E929B78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5E1E800-EE17-4347-9488-EF8F3E929B78}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5E1E800-EE17-4347-9488-EF8F3E929B78}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5E1E800-EE17-4347-9488-EF8F3E929B78}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
