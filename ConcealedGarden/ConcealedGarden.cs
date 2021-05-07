@@ -6,7 +6,7 @@ using System.Text;
 
 namespace ConcealedGarden
 {
-    public class ConcealedGarden : PartialityMod
+    public partial class ConcealedGarden : PartialityMod
     {
         public ConcealedGarden()
         {
@@ -27,6 +27,16 @@ namespace ConcealedGarden
             On.PlacedObject.GenerateEmptyData += PlacedObject_GenerateEmptyData_Patch;
             On.Room.Loaded += Room_Loaded_Patch;
             On.DevInterface.ObjectsPage.CreateObjRep += ObjectsPage_CreateObjRep_Patch;
+
+
+            ManagedPlacedObjects.PlacedObjectsManager.RegisterFullyManagedObjectType(new ManagedPlacedObjects.PlacedObjectsManager.ManagedField[]
+            {
+                new ManagedPlacedObjects.PlacedObjectsManager.Vector2Field("h", new UnityEngine.Vector2(100,100), ManagedPlacedObjects.PlacedObjectsManager.Vector2Field.VectorReprType.circle),
+                new ManagedPlacedObjects.PlacedObjectsManager.FloatField("r", 0, 1, 0, 0.01f),
+                new ManagedPlacedObjects.PlacedObjectsManager.FloatField("g", 0, 1, 0, 0.01f),
+                new ManagedPlacedObjects.PlacedObjectsManager.FloatField("b", 0, 1, 0, 0.01f), },
+                typeof(OrganicShelter.OrganicLock), "OrganicShelterLock");
+
         }
 
         public static class EnumExt_ConcealedGarden
@@ -35,6 +45,7 @@ namespace ConcealedGarden
             public static PlacedObject.Type LifeSimProjectionSegment;
             //public static PlacedObject.Type LifeSimProjectionPulser;
             //public static PlacedObject.Type LifeSimProjectionKiller;
+
 
         }
 

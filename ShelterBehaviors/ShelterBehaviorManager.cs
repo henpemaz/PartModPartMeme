@@ -11,6 +11,10 @@ namespace ShelterBehaviors
         {
             return Mathf.Abs(f);
         }
+        public static float Abs(this int f)
+        {
+            return Mathf.Abs(f);
+        }
         public static float Sign(this float f)
         {
             return Mathf.Sign(f);
@@ -28,6 +32,12 @@ namespace ShelterBehaviors
         }
     }
 
+
+    public interface IReactToShelterClosing
+    {
+        void OnShelterClose();
+    }
+
     internal class ShelterBehaviorManager : UpdatableAndDeletable, INotifyWhenRoomIsReady
     {
         //private Room room;
@@ -36,14 +46,11 @@ namespace ShelterBehaviors
         private List<IntVector2> spawnPositions;
         private List<ShelterDoor> customDoors;
         private bool holdToTrigger;
-        private bool holdToTriggerTutorial;
         private List<IntRect> triggers;
         private List<IntRect> noTriggers;
         private bool broken;
-        private int extraTimer;
-        private int extraTimerCounter;
+        private int noMovingCounter;
         private bool closing;
-        private ConsumableShelterObject consumableShelterObject;
 
         private AttachedField<Player, int> actualForceSleepCounter;
 
@@ -53,6 +60,11 @@ namespace ShelterBehaviors
         private bool hasNoDoors;
         private ShelterDoor tempSpawnPosHackDoor;
         private bool deleteHackDoorNextFrame;
+        private bool isConsumed;
+        private int placedObjectIndex;
+        private List<IReactToShelterClosing> subscribers;
+        private readonly PlacedObject pObj;
+        private readonly ManagedPlacedObjects.PlacedObjectsManager.ManagedData data;
 
         private void ContitionalLog(string str)
         {
@@ -62,18 +74,73 @@ namespace ShelterBehaviors
             }
         }
 
-        public ShelterBehaviorManager(Room instance)
+        public ShelterBehaviorManager(Room instance, PlacedObject pObj)
         {
             this.room = instance;
+            this.pObj = pObj;
+            this.data = pObj.data as ManagedPlacedObjects.PlacedObjectsManager.ManagedData;
+            this.placedObjectIndex = room.roomSettings.placedObjects.IndexOf(pObj);
             spawnPositions = new List<IntVector2>();
             customDoors = new List<ShelterDoor>();
             triggers = new List<IntRect>();
             noTriggers = new List<IntRect>();
+            subscribers = new List<IReactToShelterClosing>();
 
+            noVanillaDoors = false;
             this.broken = room.shelterDoor.Broken;
             this.vanillaSpawnPosition = room.shelterDoor.playerSpawnPos;
 
             actualForceSleepCounter = new AttachedField<Player, int>();
+
+            if (data.GetValue<bool>("nvd")) this.RemoveVanillaDoors();
+            if (data.GetValue<bool>("htt")) holdToTrigger = true;
+
+            if (room.game.session is StoryGameSession)
+            {
+                this.isConsumed = (room.game.session as StoryGameSession).saveState.ItemConsumed(room.world, false, this.room.abstractRoom.index, this.placedObjectIndex);
+            }
+            if (this.isConsumed)
+            {
+                this.broken = true;
+                this.room.world.brokenShelters[this.room.abstractRoom.shelterIndex] = true;
+            }
+
+            for (int i = 0; i < instance.roomSettings.placedObjects.Count; i++)
+            {
+                if (instance.roomSettings.placedObjects[i].active)
+                {
+                    if (instance.roomSettings.placedObjects[i].type == ShelterBehaviorsMod.EnumExt_ShelterBehaviorsMod.ShelterBhvrPlacedDoor)
+                    {
+                        this.AddPlacedDoor(instance.roomSettings.placedObjects[i]);
+                    }
+                    else if (instance.roomSettings.placedObjects[i].type == ShelterBehaviorsMod.EnumExt_ShelterBehaviorsMod.ShelterBhvrTriggerZone)
+                    {
+                        this.AddTriggerZone(instance.roomSettings.placedObjects[i]);
+                    }
+                    else if (instance.roomSettings.placedObjects[i].type == ShelterBehaviorsMod.EnumExt_ShelterBehaviorsMod.ShelterBhvrNoTriggerZone)
+                    {
+                        this.AddNoTriggerZone(instance.roomSettings.placedObjects[i]);
+                    }
+                    else if (instance.roomSettings.placedObjects[i].type == ShelterBehaviorsMod.EnumExt_ShelterBehaviorsMod.ShelterBhvrSpawnPosition)
+                    {
+                        this.AddSpawnPosition(instance.roomSettings.placedObjects[i]);
+                    }
+                }
+            }
+        }
+
+        public void Consume()
+        {
+            if (!data.GetValue<bool>("cs")) return;
+            if (this.isConsumed) return;
+            this.isConsumed = true;
+            Debug.Log("CONSUMED: Consumable Shelter ;)");
+            if (room.world.game.session is StoryGameSession)
+            {
+                int minCycles = data.GetValue<int>("csmin");
+                (room.world.game.session as StoryGameSession).saveState.ReportConsumedItem(room.world, false, this.room.abstractRoom.index, this.placedObjectIndex,
+                    (minCycles < 0) ? -1 : UnityEngine.Random.Range(minCycles, data.GetValue<int>("csmax") + 1));
+            }
         }
 
         public void ShortcutsReady()
@@ -84,8 +151,14 @@ namespace ShelterBehaviors
             if (hasNoDoors)
             {
                 this.tempSpawnPosHackDoor = new ShelterDoor(room);
+                tempSpawnPosHackDoor.closeTiles = new IntVector2[0];
                 tempSpawnPosHackDoor.playerSpawnPos = GetSpawnPosition(0);
                 room.AddObject(tempSpawnPosHackDoor);
+            }
+
+            for (int i = 0; i < room.updateList.Count; i++)
+            {
+                if (room.updateList[i] is IReactToShelterClosing) this.subscribers.Add(room.updateList[i] as IReactToShelterClosing);
             }
         }
 
@@ -118,6 +191,7 @@ namespace ShelterBehaviors
                 DoneRemovingLeaser:
                     tempSpawnPosHackDoor = null;
                 }
+                deleteHackDoorNextFrame = false;
             }
 
             base.Update(eu);
@@ -125,17 +199,6 @@ namespace ShelterBehaviors
             if (noVanillaDoors)
             {
                 ContitionalLog("Update no-vanilla-doors");
-                // From HUD update
-                for (int i = 0; i < room.game.cameras.Length; i++)
-                {
-                    if (room.game.cameras[i].room == room && room.game.cameras[i].hud != null)
-                    {
-                        ContitionalLog("Updated HUD");
-                        HUD.HUD hud = room.game.cameras[i].hud;
-                        hud.showKarmaFoodRain = (hud.owner.RevealMap ||
-                            ((hud.owner as Player).room != null && (hud.owner as Player).room.abstractRoom.shelter && (hud.owner as Player).room.abstractRoom.realizedRoom != null && !this.broken));
-                    }
-                }
                 // From Player update
                 for (int i = 0; i < room.game.Players.Count; i++)
                 {
@@ -167,20 +230,22 @@ namespace ShelterBehaviors
                                 p.forceSleepCounter = 0;
                                 ContitionalLog("not ready");
                             }
-                            //if (Custom.ManhattanDistance(p.abstractCreature.pos.Tile, p.room.shortcuts[0].StartTile) > 6)
-                            //{
-                            //    if (p.readyForWin && p.touchedNoInputCounter > 20)
-                            //    {
-                            //        // AAAAAaaa
-                            //        p.room.shelterDoor.Close();
-                            //    }
-                            //    else if (p.forceSleepCounter > 260)
-                            //    {
-                            //        // Aaaaaaa
-                            //        p.sleepCounter = -24;
-                            //        p.room.shelterDoor.Close();
-                            //    }
-                            //}
+                        }
+                    }
+                }
+                // From HUD update
+                for (int i = 0; i < room.game.cameras.Length; i++)
+                {
+                    if (room.game.cameras[i].room == room && room.game.cameras[i].hud != null)
+                    {
+                        ContitionalLog("Updated HUD");
+                        HUD.HUD hud = room.game.cameras[i].hud;
+                        hud.showKarmaFoodRain = (hud.owner.RevealMap ||
+                            ((hud.owner as Player).room != null && (hud.owner as Player).room.abstractRoom.shelter && (hud.owner as Player).room.abstractRoom.realizedRoom != null && !this.broken));
+                        if (holdToTrigger && (hud.owner as Player).readyForWin) // trigger sleep
+                        {
+                            hud.foodMeter.forceSleep = 0;
+                            hud.foodMeter.showSurvLim = (float)hud.foodMeter.survivalLimit;
                         }
                     }
                 }
@@ -200,7 +265,7 @@ namespace ShelterBehaviors
                         if (p.room.abstractRoom.shelter && p.room.game.IsStorySession && !p.dead)// && p.room.shelterDoor != null && !p.room.shelterDoor.Broken)
                         {
                             ContitionalLog("found player " + i);
-                            if (holdToTrigger) p.readyForWin = false;
+                            // if (holdToTrigger) p.readyForWin = false; // lets make a better use of this flag shall we
                             if (!PlayersInTriggerZone())
                             {
                                 ContitionalLog("player NOT in trigger zone");
@@ -209,27 +274,27 @@ namespace ShelterBehaviors
                                 actualForceSleepCounter[p] = 0;
                                 p.touchedNoInputCounter = Mathf.Min(p.touchedNoInputCounter, 19);
                                 p.sleepCounter = 0;
-                                this.extraTimerCounter = extraTimer;
+                                this.noMovingCounter = data.GetValue<int>("ftt");
                             }
                             else
                             {
                                 ContitionalLog("player in trigger zone");
                             }
 
-                            if (p.readyForWin && p.touchedNoInputCounter > 20)
+                            if(p.touchedNoInputCounter == 0)
+                            {
+                                noMovingCounter = data.GetValue<int>("ftt");
+                            }
+                            
+                            if (!holdToTrigger && p.readyForWin && p.touchedNoInputCounter > 1)
                             {
                                 ContitionalLog("ready not moving");
-                                extraTimerCounter--;
-                                if (extraTimerCounter <= 0)
+                                noMovingCounter--;
+                                if (noMovingCounter <= 0)
                                 {
                                     ContitionalLog("CLOSE due to ready");
                                     Close();
                                 }
-                            }
-                            else if (p.readyForWin)
-                            {
-                                ContitionalLog("ready but moving");
-                                extraTimerCounter = extraTimer;
                             }
                             else if (p.forceSleepCounter > 260 || actualForceSleepCounter[p] > 260)
                             {
@@ -237,14 +302,22 @@ namespace ShelterBehaviors
                                 p.sleepCounter = -24;
                                 Close();
                             }
-                            else if (holdToTrigger && p.input[0].y < 0 && !p.input[0].jmp && !p.input[0].thrw && !p.input[0].pckp && p.IsTileSolid(1, 0, -1) && (p.input[0].x == 0 || ((!p.IsTileSolid(1, -1, -1) || !p.IsTileSolid(1, 1, -1)) && p.IsTileSolid(1, p.input[0].x, 0))))
+                            else if (p.readyForWin && holdToTrigger && p.input[0].y < 0 && !p.input[0].jmp && !p.input[0].thrw && !p.input[0].pckp && p.IsTileSolid(1, 0, -1) && (p.input[0].x == 0 || ((!p.IsTileSolid(1, -1, -1) || !p.IsTileSolid(1, 1, -1)) && p.IsTileSolid(1, p.input[0].x, 0))))
                             {
                                 ContitionalLog("force sleep hold to trigger");
-                                // Might need something to preserve last counter through player update, zeroes if ready4win
-                                actualForceSleepCounter[p] += 4; // gets uses default for int so this works
+                                // need something to preserve last counter through player update, zeroes if ready4win
+                                actualForceSleepCounter[p] += data.GetValue<int>("htts") - (noVanillaDoors ? 0 : 1); // gets uses default for int so this works
+                                p.forceSleepCounter = actualForceSleepCounter[p];
+                            } else if (noVanillaDoors && p.input[0].y < 0 && !p.input[0].jmp && !p.input[0].thrw && !p.input[0].pckp && p.IsTileSolid(1, 0, -1) && (p.input[0].x == 0 || ((!p.IsTileSolid(1, -1, -1) || !p.IsTileSolid(1, 1, -1)) && p.IsTileSolid(1, p.input[0].x, 0))))
+                            {
+                                // allow starve
+                                actualForceSleepCounter[p] += 1;
                                 p.forceSleepCounter = actualForceSleepCounter[p];
                             }
-                            //}
+                            else
+                            {
+                                actualForceSleepCounter[p] = 0;
+                            }
                         }
                     }
                 }
@@ -253,9 +326,9 @@ namespace ShelterBehaviors
             if(closing && hasNoDoors)
             {
                 // Manage no-door logic
-                noDoorCloseCount--;
+                noDoorCloseCount++;
 
-                if (noDoorCloseCount == 60)
+                if (noDoorCloseCount == data.GetValue<int>("fts"))
                 {
                     for (int j = 0; j < this.room.game.Players.Count; j++)
                     {
@@ -265,7 +338,7 @@ namespace ShelterBehaviors
                         }
                     }
                 }
-                if (noDoorCloseCount == 20)
+                if (noDoorCloseCount == data.GetValue<int>("ftsv"))
                 {
                     for (int k = 0; k < this.room.game.Players.Count; k++)
                     {
@@ -275,7 +348,7 @@ namespace ShelterBehaviors
                         }
                     }
                 }
-                if(noDoorCloseCount == 0)
+                if(noDoorCloseCount == data.GetValue<int>("ftw"))
                 {
                     bool flag = true;
                     for (int i = 0; i < this.room.game.Players.Count; i++)
@@ -300,13 +373,17 @@ namespace ShelterBehaviors
         private void Close()
         {
             closing = true;
-            noDoorCloseCount = 80;
+            noDoorCloseCount = 0;
             if (!noVanillaDoors) room.shelterDoor.Close();
             foreach (var door in customDoors)
             {
                 door.Close();
             }
-            if (consumableShelterObject != null) consumableShelterObject.Consume(room);
+            foreach (var sub in subscribers)
+            {
+                sub.OnShelterClose();
+            }
+            Consume();
             ContitionalLog("CLOSE");
         }
 
@@ -343,7 +420,6 @@ namespace ShelterBehaviors
                     }
                 }
             }
-
             return true;
         }
 
@@ -394,14 +470,14 @@ namespace ShelterBehaviors
 
             //Vector2 origin = placedObject.pos;
             IntVector2 originTile = room.GetTilePosition(placedObject.pos);
-            Vector2 dir = (placedObject.data as PlacedObject.ResizableObjectData).handlePos.normalized;
-            dir = dir.ToCardinals();
+            IntVector2 dir = (placedObject.data as ManagedPlacedObjects.PlacedObjectsManager.ManagedData).GetValue<IntVector2>("dir");
+            //dir = dir.ToCardinals();
 
             newDoor.pZero = room.MiddleOfTile(originTile);
-            newDoor.dir = dir;
+            newDoor.dir = dir.ToVector2();
             for (int n = 0; n < 4; n++)
             {
-                newDoor.closeTiles[n] = originTile + IntVector2.FromVector2(dir) * (n + 2);
+                newDoor.closeTiles[n] = originTile + dir * (n + 2);
             }
             newDoor.pZero += newDoor.dir * 60f;
             newDoor.perp = Custom.PerpendicularVector(newDoor.dir);
@@ -410,26 +486,6 @@ namespace ShelterBehaviors
 
             customDoors.Add(newDoor);
             room.AddObject(newDoor);
-        }
-
-        internal void IncreaseTimer()
-        {
-            this.extraTimer += 20; ;
-        }
-
-        internal void SetHoldToTrigger()
-        {
-            this.holdToTrigger = true;
-        }
-
-        internal void HoldToTriggerTutorial(int consumableIndex)
-        {
-            if (!holdToTriggerTutorial)
-            {
-                this.holdToTriggerTutorial = true;
-
-                room.AddObject(new HoldToTriggerTutorialObject(room, consumableIndex));
-            }
         }
 
         internal void AddSpawnPosition(PlacedObject placedObject)
@@ -452,56 +508,13 @@ namespace ShelterBehaviors
             this.noTriggers.Add((placedObject.data as PlacedObject.GridRectObjectData).Rect);
         }
 
-        internal void ProcessConsumable(PlacedObject placedObject, int index)
+        public class HoldToTriggerTutorialObject : UpdatableAndDeletable
         {
-            this.consumableShelterObject = new ConsumableShelterObject(room, room.abstractRoom.index, index, placedObject.data as PlacedObject.ConsumableObjectData);
-            if (this.consumableShelterObject.isConsumed)
-            {
-                this.broken = true;
-                this.room.world.brokenShelters[this.room.abstractRoom.shelterIndex] = true;
-            }
-        }
-
-        private class ConsumableShelterObject
-        {
-            private int originRoom;
-            private int placedObjectIndex;
-            private PlacedObject.ConsumableObjectData consumableObjectData;
-            internal bool isConsumed;
-
-            public ConsumableShelterObject(Room room, int roomIndex, int objectIndex, PlacedObject.ConsumableObjectData consumableObjectData)
-            {
-                this.originRoom = roomIndex;
-                this.placedObjectIndex = objectIndex;
-                this.consumableObjectData = consumableObjectData;
-
-                if (room.game.session is StoryGameSession)
-                {
-                    this.isConsumed = (room.game.session as StoryGameSession).saveState.ItemConsumed(room.world, false, roomIndex, objectIndex);
-                }
-            }
-
-            public void Consume(Room room)
-            {
-                if (this.isConsumed)
-                {
-                    return;
-                }
-                this.isConsumed = true;
-                Debug.LogError("CONSUMED: ConsumableShelterObject ;)");
-                if (room.world.game.session is StoryGameSession)
-                {
-                    (room.world.game.session as StoryGameSession).saveState.ReportConsumedItem(room.world, false, this.originRoom, this.placedObjectIndex, UnityEngine.Random.Range(consumableObjectData.minRegen, consumableObjectData.maxRegen + 1));
-                }
-            }
-        }
-
-        private class HoldToTriggerTutorialObject : UpdatableAndDeletable
-        {
-            public HoldToTriggerTutorialObject(Room room, int objectIndex)
+            public HoldToTriggerTutorialObject(Room room, PlacedObject pObj)
             {
                 this.room = room;
-                placedObjectIndex = objectIndex;
+                placedObject = pObj;
+                placedObjectIndex = room.roomSettings.placedObjects.IndexOf(pObj);
                 // player loaded in room
                 foreach (var p in room.game.Players)
                 {
@@ -514,7 +527,7 @@ namespace ShelterBehaviors
                 // recently displayed
                 if (room.game.session is StoryGameSession)
                 {
-                    if((room.game.session as StoryGameSession).saveState.ItemConsumed(room.world, false, room.abstractRoom.index, objectIndex))
+                    if((room.game.session as StoryGameSession).saveState.ItemConsumed(room.world, false, room.abstractRoom.index, placedObjectIndex))
                     {
                         this.Destroy();
                     }
@@ -546,6 +559,7 @@ namespace ShelterBehaviors
                 }
             }
             public int message;
+            private PlacedObject placedObject;
             private int placedObjectIndex;
 
             public void Consume()
@@ -553,7 +567,7 @@ namespace ShelterBehaviors
                 Debug.Log("CONSUMED: HoldToTriggerTutorialObject ;)");
                 if (room.world.game.session is StoryGameSession)
                 {
-                    (room.world.game.session as StoryGameSession).saveState.ReportConsumedItem(room.world, false, room.abstractRoom.index, this.placedObjectIndex, 3);
+                    (room.world.game.session as StoryGameSession).saveState.ReportConsumedItem(room.world, false, room.abstractRoom.index, this.placedObjectIndex, (placedObject.data as ManagedPlacedObjects.PlacedObjectsManager.ManagedData).GetValue<int>("htttcd"));
                 }
                 this.Destroy();
             }

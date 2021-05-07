@@ -63,7 +63,18 @@
     <Compile Include="ConcealedGarden.cs" />
     <Compile Include="CosmeticLeaves.cs" />
     <Compile Include="LifeSimProjection.cs" />
+    <Compile Include="OrganicShelter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ManagedPlacedObjects\ManagedPlacedObjects.csproj">
+      <Project>{a5e1e800-ee17-4347-9488-ef8f3e929b78}</Project>
+      <Name>ManagedPlacedObjects</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ShelterBehaviors\ShelterBehaviors.csproj">
+      <Project>{5a1afae3-8c39-43ed-a204-0cdefbd06264}</Project>
+      <Name>ShelterBehaviors</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

@@ -58,10 +58,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AttachedField.cs" />
-    <Compile Include="ManagedPlacedObjects.cs" />
     <Compile Include="ShelterBehaviorManager.cs" />
     <Compile Include="ShelterBehaviorsMod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ManagedPlacedObjects\ManagedPlacedObjects.csproj">
+      <Project>{a5e1e800-ee17-4347-9488-ef8f3e929b78}</Project>
+      <Name>ManagedPlacedObjects</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

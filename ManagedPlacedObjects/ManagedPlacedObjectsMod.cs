@@ -32,7 +32,7 @@ namespace ManagedPlacedObjects
             base.OnEnable();
             // Hooking code goose hre
 
-            ManagedPlacedObjects.ApplyHooks();
+            PlacedObjectsManager.ApplyHooks();
         }
     }
 }

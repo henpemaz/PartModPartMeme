@@ -5,6 +5,7 @@ using System.Text;
 using System.Security;
 using System.Security.Permissions;
 using Partiality.Modloader;
+using ManagedPlacedObjects;
 
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
@@ -31,174 +32,46 @@ namespace ShelterBehaviors
             base.OnEnable();
             // Hooking code goose hre
 
-            On.PlacedObject.GenerateEmptyData += PlacedObject_GenerateEmptyData_Patch;
-            On.Room.Loaded += Room_Loaded_Patch;
-            On.DevInterface.ObjectsPage.CreateObjRep += ObjectsPage_CreateObjRep_Patch;
+            PlacedObjectsManager.ApplyHooks();
 
-            ManagedPlacedObjects.ApplyHooks();
+            PlacedObjectsManager.RegisterFullyManagedObjectType(new PlacedObjectsManager.ManagedField[]{
+                new PlacedObjectsManager.BooleanField("nvd", true, displayName:"No Vanilla Door"),
+                new PlacedObjectsManager.BooleanField("htt", false, displayName:"Hold To Trigger"),
+                new PlacedObjectsManager.IntegerField("htts", 1, 10, 4, displayName:"HTT Trigger Speed"),
+                new PlacedObjectsManager.BooleanField("cs", false, displayName:"Consumable Shelter"),
+                new PlacedObjectsManager.IntegerField("csmin", -1, 30, 3, displayName:"Consum. Cooldown Min"),
+                new PlacedObjectsManager.IntegerField("csmax", 0, 30, 6, displayName:"Consum. Cooldown Max"),
+                new PlacedObjectsManager.IntegerField("ftt", 0, 400, 20, PlacedObjectsManager.ManagedFieldWithPanel.ControlType.slider, displayName:"Frames to Trigger"),
+                new PlacedObjectsManager.IntegerField("fts", 0, 400, 40, PlacedObjectsManager.ManagedFieldWithPanel.ControlType.slider, displayName:"Frames to Sleep"),
+                new PlacedObjectsManager.IntegerField("ftsv", 0, 400, 60, PlacedObjectsManager.ManagedFieldWithPanel.ControlType.slider, displayName:"Frames to Starvation"),
+                new PlacedObjectsManager.IntegerField("ftw", 0, 400, 120, PlacedObjectsManager.ManagedFieldWithPanel.ControlType.slider, displayName:"Frames to Win"),
+                }, typeof(ShelterBehaviorManager), "ShelterBhvrManager");
+
+            
+
+            PlacedObjectsManager.RegisterFullyManagedObjectType(new PlacedObjectsManager.ManagedField[]{
+                //new PlacedObjectsManager.BooleanField("httt", false, displayName: "HTT Tutorial"),
+                new PlacedObjectsManager.IntegerField("htttcd", -1, 12, 6, displayName: "HTT Tut. Cooldown"), }
+                , typeof(ShelterBehaviorManager.HoldToTriggerTutorialObject), "ShelterBhvrHTTTutorial");
+
+            //PlacedObjectsManager.RegisterEmptyObjectType("ShelterBhvrPlacedDoor", typeof()) TODO directional data and rep;
+            PlacedObjectsManager.RegisterFullyManagedObjectType(new PlacedObjectsManager.ManagedField[]{
+                new PlacedObjectsManager.IntVector2Field("dir", new RWCustom.IntVector2(0,1), PlacedObjectsManager.IntVector2Field.IntVectorReprType.eightdir), }
+            , null, "ShelterBhvrPlacedDoor");
+
+            PlacedObjectsManager.RegisterEmptyObjectType("ShelterBhvrTriggerZone", typeof(PlacedObject.GridRectObjectData), typeof(DevInterface.GridRectObjectRepresentation));
+            PlacedObjectsManager.RegisterEmptyObjectType("ShelterBhvrNoTriggerZone", typeof(PlacedObject.GridRectObjectData), typeof(DevInterface.GridRectObjectRepresentation));
+            PlacedObjectsManager.RegisterEmptyObjectType("ShelterBhvrSpawnPosition", null, null); // No data required :)
         }
 
         public static class EnumExt_ShelterBehaviorsMod
         {
-            public static PlacedObject.Type ShelterBhvrNoVanillaDoor;
+            public static PlacedObject.Type ShelterBhvrManager;
             public static PlacedObject.Type ShelterBhvrPlacedDoor;
-            public static PlacedObject.Type ShelterBhvrHoldToTrigger;
-            public static PlacedObject.Type ShelterBhvrHoldToTriggerTutorial;
             public static PlacedObject.Type ShelterBhvrTriggerZone;
             public static PlacedObject.Type ShelterBhvrNoTriggerZone;
-            public static PlacedObject.Type ShelterBhvrConsumableShelter;
-            public static PlacedObject.Type ShelterBhvrExtraLongTimer;
+            public static PlacedObject.Type ShelterBhvrHTTTutorial;
             public static PlacedObject.Type ShelterBhvrSpawnPosition;
-        }
-
-        public static void PlacedObject_GenerateEmptyData_Patch(On.PlacedObject.orig_GenerateEmptyData orig, PlacedObject instance)
-        {
-            orig(instance);
-
-            // ShelterBhvrNoVanillaDoor;
-            // no data
-            // ShelterBhvrPlacedDoor;
-            if (instance.type == EnumExt_ShelterBehaviorsMod.ShelterBhvrPlacedDoor)
-            {
-                instance.data = new PlacedObject.ResizableObjectData(instance);
-            }
-            // ShelterBhvrHoldToTrigger;
-            // ShelterBhvrHoldToTriggerTutorial;
-            // no data
-            // ShelterBhvrTriggerZone;
-            if (instance.type == EnumExt_ShelterBehaviorsMod.ShelterBhvrTriggerZone)
-            {
-                instance.data = new PlacedObject.GridRectObjectData(instance);
-            }
-            // ShelterBhvrNoTriggerZone;
-            if (instance.type == EnumExt_ShelterBehaviorsMod.ShelterBhvrNoTriggerZone)
-            {
-                instance.data = new PlacedObject.GridRectObjectData(instance);
-            }
-            // ShelterBhvrConsumableShelter;
-            if (instance.type == EnumExt_ShelterBehaviorsMod.ShelterBhvrConsumableShelter)
-            {
-                instance.data = new PlacedObject.ConsumableObjectData(instance);
-                (instance.data as PlacedObject.ConsumableObjectData).minRegen = 3;
-                (instance.data as PlacedObject.ConsumableObjectData).maxRegen = 4;
-            }
-            // ShelterBhvrExtraLongTimer
-            // no data because I'm lazy AND clever
-            // ShelterBhvrSpawnPosition
-            // no data
-        }
-
-        private static void ObjectsPage_CreateObjRep_Patch(On.DevInterface.ObjectsPage.orig_CreateObjRep orig, DevInterface.ObjectsPage instance, PlacedObject.Type tp, PlacedObject pObj)
-        {
-            orig(instance, tp, pObj);
-
-            // ShelterBhvrNoVanillaDoor;
-            // pass
-            // ShelterBhvrPlacedDoor;
-            if (tp == EnumExt_ShelterBehaviorsMod.ShelterBhvrPlacedDoor)
-            {
-                DevInterface.PlacedObjectRepresentation old = (DevInterface.PlacedObjectRepresentation)instance.tempNodes.Pop();
-                instance.subNodes.Pop();
-                old.ClearSprites();
-                DevInterface.PlacedObjectRepresentation placedObjectRepresentation = new DevInterface.ResizeableObjectRepresentation(instance.owner, tp.ToString() + "_Rep", instance, old.pObj, tp.ToString(), false);
-                instance.tempNodes.Add(placedObjectRepresentation);
-                instance.subNodes.Add(placedObjectRepresentation);
-            }
-            // ShelterBhvrHoldToTrigger;
-            // pass
-            // ShelterBhvrHoldToTriggerTutorial;
-            // pass
-            // ShelterBhvrTriggerZone;
-            if (tp == EnumExt_ShelterBehaviorsMod.ShelterBhvrTriggerZone)
-            {
-                DevInterface.PlacedObjectRepresentation old = (DevInterface.PlacedObjectRepresentation)instance.tempNodes.Pop();
-                instance.subNodes.Pop();
-                old.ClearSprites();
-                DevInterface.PlacedObjectRepresentation placedObjectRepresentation = new DevInterface.GridRectObjectRepresentation(instance.owner, tp.ToString() + "_Rep", instance, old.pObj, tp.ToString());
-                instance.tempNodes.Add(placedObjectRepresentation);
-                instance.subNodes.Add(placedObjectRepresentation);
-            }
-            // ShelterBhvrNoTriggerZone;
-            if (tp == EnumExt_ShelterBehaviorsMod.ShelterBhvrNoTriggerZone)
-            {
-                DevInterface.PlacedObjectRepresentation old = (DevInterface.PlacedObjectRepresentation)instance.tempNodes.Pop();
-                instance.subNodes.Pop();
-                old.ClearSprites();
-                DevInterface.PlacedObjectRepresentation placedObjectRepresentation = new DevInterface.GridRectObjectRepresentation(instance.owner, tp.ToString() + "_Rep", instance, old.pObj, tp.ToString());
-                instance.tempNodes.Add(placedObjectRepresentation);
-                instance.subNodes.Add(placedObjectRepresentation);
-            }
-            // ShelterBhvrConsumableShelter;
-            if (tp == EnumExt_ShelterBehaviorsMod.ShelterBhvrConsumableShelter)
-            {
-                DevInterface.PlacedObjectRepresentation old = (DevInterface.PlacedObjectRepresentation)instance.tempNodes.Pop();
-                instance.subNodes.Pop();
-                old.ClearSprites();
-                DevInterface.PlacedObjectRepresentation placedObjectRepresentation = new DevInterface.ConsumableRepresentation(instance.owner, tp.ToString() + "_Rep", instance, old.pObj, tp.ToString());
-                instance.tempNodes.Add(placedObjectRepresentation);
-                instance.subNodes.Add(placedObjectRepresentation);
-            }
-            // ShelterBhvrExtraLongTimer
-            // pass
-            // ShelterBhvrSpawnPosition
-            // pass
-        }
-
-        public static void Room_Loaded_Patch(On.Room.orig_Loaded orig, Room instance)
-        {
-            orig(instance);
-            ShelterBehaviorManager bhvrManager= null;
-            for (int i = 0; i < instance.roomSettings.placedObjects.Count; i++)
-            {
-                if (instance.roomSettings.placedObjects[i].active)
-                {
-                    if (instance.roomSettings.placedObjects[i].type == EnumExt_ShelterBehaviorsMod.ShelterBhvrNoVanillaDoor)
-                    {
-                        if (bhvrManager is null) instance.AddObject(bhvrManager = new ShelterBehaviorManager(instance));
-                        bhvrManager.RemoveVanillaDoors();
-                    }
-                    else if (instance.roomSettings.placedObjects[i].type == EnumExt_ShelterBehaviorsMod.ShelterBhvrPlacedDoor)
-                    {
-                        if (bhvrManager is null) instance.AddObject(bhvrManager = new ShelterBehaviorManager(instance));
-                        bhvrManager.AddPlacedDoor(instance.roomSettings.placedObjects[i]);
-                    }
-                    else if (instance.roomSettings.placedObjects[i].type == EnumExt_ShelterBehaviorsMod.ShelterBhvrHoldToTrigger)
-                    {
-                        if (bhvrManager is null) instance.AddObject(bhvrManager = new ShelterBehaviorManager(instance));
-                        bhvrManager.SetHoldToTrigger();
-                    }
-                    else if (instance.roomSettings.placedObjects[i].type == EnumExt_ShelterBehaviorsMod.ShelterBhvrHoldToTriggerTutorial)
-                    {
-                        if (bhvrManager is null) instance.AddObject(bhvrManager = new ShelterBehaviorManager(instance));
-                        bhvrManager.HoldToTriggerTutorial(i);
-                    }
-                    else if (instance.roomSettings.placedObjects[i].type == EnumExt_ShelterBehaviorsMod.ShelterBhvrTriggerZone)
-                    {
-                        if (bhvrManager is null) instance.AddObject(bhvrManager = new ShelterBehaviorManager(instance));
-                        bhvrManager.AddTriggerZone(instance.roomSettings.placedObjects[i]);
-                    }
-                    else if (instance.roomSettings.placedObjects[i].type == EnumExt_ShelterBehaviorsMod.ShelterBhvrNoTriggerZone)
-                    {
-                        if (bhvrManager is null) instance.AddObject(bhvrManager = new ShelterBehaviorManager(instance));
-                        bhvrManager.AddNoTriggerZone(instance.roomSettings.placedObjects[i]);
-                    }
-                    else if (instance.roomSettings.placedObjects[i].type == EnumExt_ShelterBehaviorsMod.ShelterBhvrConsumableShelter)
-                    {
-                        if (bhvrManager is null) instance.AddObject(bhvrManager = new ShelterBehaviorManager(instance));
-                        bhvrManager.ProcessConsumable(instance.roomSettings.placedObjects[i], i);
-                    }
-                    else if (instance.roomSettings.placedObjects[i].type == EnumExt_ShelterBehaviorsMod.ShelterBhvrExtraLongTimer)
-                    {
-                        if (bhvrManager is null) instance.AddObject(bhvrManager = new ShelterBehaviorManager(instance));
-                        bhvrManager.IncreaseTimer();
-                    }
-                    else if (instance.roomSettings.placedObjects[i].type == EnumExt_ShelterBehaviorsMod.ShelterBhvrSpawnPosition)
-                    {
-                        if (bhvrManager is null) instance.AddObject(bhvrManager = new ShelterBehaviorManager(instance));
-                        bhvrManager.AddSpawnPosition(instance.roomSettings.placedObjects[i]);
-                    }
-                }
-            }
         }
     }
 }

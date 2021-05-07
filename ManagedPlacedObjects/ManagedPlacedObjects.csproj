@@ -58,7 +58,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ManagedPlacedObjectsMod.cs" />
-    <Compile Include="ManagedPlacedObjects.cs" />
+    <Compile Include="PlacedObjectsManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
