@@ -401,7 +401,7 @@ namespace ShelterBehaviors
                 for (int i = 0; i < room.game.Players.Count; i++) // Any alive players missing ?
                 {
                     AbstractCreature ap = room.game.Players[i];
-                    if (Custom.ManhattanDistance(ap.pos.Tile, this.room.shortcuts[0].StartTile) > 6) return false;
+                    if (Custom.ManhattanDistance(ap.pos.Tile, this.room.shortcuts[0].StartTile) <= 6) return false;
                 }
                 return true;
             }

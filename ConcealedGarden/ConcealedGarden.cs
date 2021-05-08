@@ -28,14 +28,37 @@ namespace ConcealedGarden
             On.Room.Loaded += Room_Loaded_Patch;
             On.DevInterface.ObjectsPage.CreateObjRep += ObjectsPage_CreateObjRep_Patch;
 
+            ManagedPlacedObjects.PlacedObjectsManager.RegisterFullyManagedObjectType(new ManagedPlacedObjects.PlacedObjectsManager.ManagedField[]
+            {
+                new ManagedPlacedObjects.PlacedObjectsManager.FloatField("rmin", 0, 1, 0.1f, 0.001f),
+                new ManagedPlacedObjects.PlacedObjectsManager.FloatField("rmax", 0, 1, 0.3f, 0.001f),
+                new ManagedPlacedObjects.PlacedObjectsManager.FloatField("gmin", 0, 1, 0.05f, 0.001f),
+                new ManagedPlacedObjects.PlacedObjectsManager.FloatField("gmax", 0, 1, 0.2f, 0.001f),
+                new ManagedPlacedObjects.PlacedObjectsManager.FloatField("bmin", 0, 1, 0.5f, 0.001f),
+                new ManagedPlacedObjects.PlacedObjectsManager.FloatField("bmax", 0, 1, 0.25f, 0.001f),
+                new ManagedPlacedObjects.PlacedObjectsManager.FloatField("stiff", 0, 1, 0.5f, 0.01f),
+                new ManagedPlacedObjects.PlacedObjectsManager.IntegerField("ftc", 0, 400, 120, ManagedPlacedObjects.PlacedObjectsManager.ManagedFieldWithPanel.ControlType.slider),
+            }, typeof(OrganicShelter.OrganicShelterCoordinator), "OrganicShelterCoordinator");
 
             ManagedPlacedObjects.PlacedObjectsManager.RegisterFullyManagedObjectType(new ManagedPlacedObjects.PlacedObjectsManager.ManagedField[]
             {
-                new ManagedPlacedObjects.PlacedObjectsManager.Vector2Field("h", new UnityEngine.Vector2(100,100), ManagedPlacedObjects.PlacedObjectsManager.Vector2Field.VectorReprType.circle),
-                new ManagedPlacedObjects.PlacedObjectsManager.FloatField("r", 0, 1, 0, 0.01f),
-                new ManagedPlacedObjects.PlacedObjectsManager.FloatField("g", 0, 1, 0, 0.01f),
-                new ManagedPlacedObjects.PlacedObjectsManager.FloatField("b", 0, 1, 0, 0.01f), },
-                typeof(OrganicShelter.OrganicLock), "OrganicShelterLock");
+                new ManagedPlacedObjects.PlacedObjectsManager.Vector2Field("size", new UnityEngine.Vector2(40,40), ManagedPlacedObjects.PlacedObjectsManager.Vector2Field.VectorReprType.circle),
+                new ManagedPlacedObjects.PlacedObjectsManager.Vector2Field("dest", new UnityEngine.Vector2(0,50), ManagedPlacedObjects.PlacedObjectsManager.Vector2Field.VectorReprType.line),
+                new ManagedPlacedObjects.PlacedObjectsManager.FloatField("stiff", 0, 1, 0.5f, 0.01f),
+            }, null, "OrganicLockPart");
+
+            ManagedPlacedObjects.PlacedObjectsManager.RegisterFullyManagedObjectType(new ManagedPlacedObjects.PlacedObjectsManager.ManagedField[]
+            {
+                new ManagedPlacedObjects.PlacedObjectsManager.Vector2Field("size", new UnityEngine.Vector2(-100,100), ManagedPlacedObjects.PlacedObjectsManager.Vector2Field.VectorReprType.circle),
+                new ManagedPlacedObjects.PlacedObjectsManager.FloatField("sizemin", 1, 200, 12f, 1f),
+                new ManagedPlacedObjects.PlacedObjectsManager.FloatField("sizemax", 1, 200, 20f, 1f),
+                new ManagedPlacedObjects.PlacedObjectsManager.FloatField("depth", -100, 100, 4f, 1f),
+                new ManagedPlacedObjects.PlacedObjectsManager.FloatField("density", 0, 5, 0.5f, 0.01f),
+                new ManagedPlacedObjects.PlacedObjectsManager.FloatField("stiff", 0, 1, 0.5f, 0.01f),
+                new ManagedPlacedObjects.PlacedObjectsManager.FloatField("spread", 0, 20f, 2f, 0.1f),
+                new ManagedPlacedObjects.PlacedObjectsManager.IntegerField("seed", 0, 9999, 0),
+            }, null, "OrganicLining");
+
 
         }
 
