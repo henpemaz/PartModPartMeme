@@ -1,22 +1,27 @@
 ﻿using DevInterface;
+using MonoMod.RuntimeDetour;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
-using System.Linq;
 
 namespace ManagedPlacedObjects
 {
     public static class PlacedObjectsManager
     {
         private static bool _hooked = false;
-        public static void ApplyHooks()
+        public static void Apply()
         {
             if (_hooked) return;
             _hooked = true;
+
+            SetupInputDetours();
+
             On.PlacedObject.GenerateEmptyData += PlacedObject_GenerateEmptyData_Patch;
             On.Room.Loaded += Room_Loaded_Patch;
             On.DevInterface.ObjectsPage.CreateObjRep += ObjectsPage_CreateObjRep_Patch;
+            On.RainWorldGame.RawUpdate += RainWorldGame_RawUpdate;
 
             MySillyExample();
         }
@@ -66,7 +71,85 @@ namespace ManagedPlacedObjects
                 self.data = manager.MakeEmptyData(self);
             }
         }
+
+        private static void RainWorldGame_RawUpdate(On.RainWorldGame.orig_RawUpdate orig, RainWorldGame self, float dt)
+        {
+            orig(self, dt);
+            if (self.devUI == null)
+            {
+                ManagedStringControl.activeStringControl = null;     // remove string control focus when dev tools are closed
+            }
+        }
+
         #endregion HOOKS
+
+        #region NATIVEDETOURS
+
+        private static void SetupInputDetours()
+        {
+            System.Reflection.BindingFlags bindingFlags =
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static;
+            System.Reflection.MethodBase getKeyMethod;
+            System.Reflection.MethodBase captureInputMethod;
+
+            getKeyMethod = typeof(Input).GetMethod("GetKey", new Type[] { typeof(string) });
+            captureInputMethod = typeof(PlacedObjectsManager)
+                    .GetMethod("CaptureInput", bindingFlags, null, new Type[] { typeof(string) }, null);
+            inputDetour_string = new NativeDetour(getKeyMethod, captureInputMethod);
+
+            getKeyMethod = typeof(Input).GetMethod("GetKey", new Type[] { typeof(KeyCode) });
+            captureInputMethod = typeof(PlacedObjectsManager)
+                    .GetMethod("CaptureInput", bindingFlags, null, new Type[] { typeof(KeyCode) }, null);
+            inputDetour_code = new NativeDetour(getKeyMethod, captureInputMethod);
+        }
+        private static NativeDetour inputDetour_string;
+        private static NativeDetour inputDetour_code;
+
+        private static void UndoInputDetours()
+        {
+            inputDetour_string.Undo();
+            inputDetour_code.Undo();
+        }
+
+        private static bool CaptureInput(string key)
+        {
+            key = key.ToUpper();
+            KeyCode code = (KeyCode)Enum.Parse(typeof(KeyCode), key);
+            return CaptureInput(code);
+        }
+
+        private static bool CaptureInput(KeyCode code)
+        {
+            bool res;
+
+            if (ManagedStringControl.activeStringControl == null)
+            {
+                res = orig_GetKey(code);
+            }
+            else
+            {
+                if (code == KeyCode.Escape)
+                {
+                    res = orig_GetKey(code);
+                }
+                else
+                {
+                    res = false;
+                }
+            }
+
+            return res;
+        }
+
+        private static bool orig_GetKey(KeyCode code)
+        {
+            inputDetour_code.Undo();
+            bool res = Input.GetKey(code);
+            inputDetour_code.Apply();
+            return res;
+        }
+
+        #endregion NATIVEDETOURS
 
         #region EXAMPLE
 
@@ -94,13 +177,13 @@ namespace ManagedPlacedObjects
             fields.Add(new Vector2Field("vf2", Vector2.one, Vector2Field.VectorReprType.circle));
             fields.Add(new Vector2Field("vf3", Vector2.one, Vector2Field.VectorReprType.rect));
 
-            fields.Add(new IntVector2Field("ivf1", new RWCustom.IntVector2(1,1), IntVector2Field.IntVectorReprType.line));
+            fields.Add(new IntVector2Field("ivf1", new RWCustom.IntVector2(1, 1), IntVector2Field.IntVectorReprType.line));
             fields.Add(new IntVector2Field("ivf2", new RWCustom.IntVector2(1, 1), IntVector2Field.IntVectorReprType.tile));
             fields.Add(new IntVector2Field("ivf3", new RWCustom.IntVector2(1, 1), IntVector2Field.IntVectorReprType.fourdir));
             fields.Add(new IntVector2Field("ivf4", new RWCustom.IntVector2(1, 1), IntVector2Field.IntVectorReprType.eightdir));
             fields.Add(new IntVector2Field("ivf5", new RWCustom.IntVector2(1, 1), IntVector2Field.IntVectorReprType.rect));
 
-            fields.Add(new StringField("si1", "SomeString", 30, "My String"));
+            fields.Add(new StringField("str1", "spaghetti", "String"));
 
 
             // Data serialization and UI are taken care of by the manageddata and managedrepresentation types
@@ -494,7 +577,8 @@ namespace ManagedPlacedObjects
                 none,
                 slider,
                 arrows,
-                button
+                button,
+                text
             }
 
             protected ManagedFieldWithPanel(string key, object defaultValue, ControlType control = ControlType.none, string displayName = null) : base(key, defaultValue)
@@ -514,6 +598,7 @@ namespace ManagedPlacedObjects
                 switch (control)
                 {
                     case ControlType.slider:
+                    case ControlType.text:
                         return new Vector2(118f, 20f);
 
                     case ControlType.arrows:
@@ -546,6 +631,8 @@ namespace ManagedPlacedObjects
                         return new ManagedArrowSelector(this, managedData, panel, sizeOfDisplayname);
                     case ControlType.button:
                         return new ManagedButton(this, managedData, panel, sizeOfDisplayname);
+                    case ControlType.text:
+                        return new ManagedStringControl(this, managedData, panel, sizeOfDisplayname);
                 }
                 return null;
             }
@@ -554,6 +641,11 @@ namespace ManagedPlacedObjects
             {
                 // field tostring
                 return ToString(data.GetValue<object>(key));
+            }
+
+            public virtual void SetDisplayValueForNode(PositionedDevUINode node, ManagedData data, object newValue)
+            {
+                data.SetValue(key, newValue);
             }
         }
 
@@ -934,35 +1026,23 @@ namespace ManagedPlacedObjects
 
         public class StringField : ManagedFieldWithPanel
         {
-            private readonly int maxChars;
-
-            public StringField(string key, string defaultValue, int maxChars, string displayName = null) : base(key, defaultValue, ControlType.none, displayName)
-            {
-                this.maxChars = maxChars;
-            }
+            public StringField(string key, string defaultValue, string displayName)
+                    : base(key, defaultValue, ControlType.text, displayName)
+            { }
 
             public override object FromString(string str)
             {
                 return str;
             }
 
+            public override string ToString(object value)
+            {
+                return value.ToString();        // should already be a string
+            }
+
             public override float SizeOfLargestDisplayValue()
             {
-                return HUD.DialogBox.meanCharWidth * (maxChars + 2);
-            }
-
-            public override PositionedDevUINode MakeControlPanelNode(ManagedData managedData, ManagedControlPanel panel, float sizeOfDisplayname)
-            {
-                return new ManagedStringInput(this, managedData, panel, sizeOfDisplayname, maxChars);
-            }
-
-            public override Vector2 PanelUiSizeMinusName
-            {
-                get
-                {
-                    float f = SizeOfLargestDisplayValue();
-                    return new Vector2(Mathf.Max(f + 52f, 130f), 40f); // from slider}
-                }
+                return HUD.DialogBox.meanCharWidth * 25;
             }
         }
 
@@ -1531,6 +1611,102 @@ namespace ManagedPlacedObjects
                 base.Refresh();
             }
         }
+
+        internal class ManagedStringControl : PositionedDevUINode, IDevUISignals
+        {
+            public ManagedStringControl(ManagedFieldWithPanel field, ManagedData data,
+                    ManagedControlPanel panel, float sizeOfDisplayname)
+                    : base(panel.owner, "ManagedStringControl", panel, Vector2.zero)
+            {
+                this.field = field;
+                this.data = data;
+
+                subNodes.Add(new DevUILabel(owner, "Title", this, new Vector2(0, 0), sizeOfDisplayname, field.displayName));
+                subNodes.Add(new DevUILabel(owner, "Text", this, new Vector2(60, 0), 136, ""));
+
+                Text = field.DisplayValueForNode(this, data);
+
+                DevUILabel textLabel = (this.subNodes[1] as DevUILabel);
+                textLabel.pos.x = sizeOfDisplayname + 10f;
+                textLabel.size.x = field.SizeOfLargestDisplayValue();
+                textLabel.fSprites[0].scaleX = textLabel.size.x;
+            }
+
+            readonly ManagedFieldWithPanel field;
+            readonly ManagedData data;
+
+            public string Text
+            {
+                get
+                {
+                    return subNodes[1].fLabels[0].text;
+                }
+                set
+                {
+                    subNodes[1].fLabels[0].text = value;
+                }
+            }
+
+            public override void Refresh()
+            {
+                field.SetDisplayValueForNode(this, data, Text);
+                base.Refresh();
+            }
+
+            public override void Update()
+            {
+                if (owner.mouseClick && !clickedLastUpdate)
+                {
+                    if ((subNodes[1] as RectangularDevUINode).MouseOver && activeStringControl != this)
+                    {
+                        // replace whatever instance/null that was focused
+                        activeStringControl = this;
+                        subNodes[1].fLabels[0].color = new Color(0.1f, 0.4f, 0.2f);
+                    }
+                    else if (activeStringControl == this)
+                    {
+                        activeStringControl = null;
+                        subNodes[1].fLabels[0].color = Color.black;
+                    }
+
+                    clickedLastUpdate = true;
+                }
+                else if (!owner.mouseClick)
+                {
+                    clickedLastUpdate = false;
+                }
+
+                if (activeStringControl == this)
+                {
+                    foreach (char c in Input.inputString)
+                    {
+                        if (c == '\b')
+                        {
+                            if (Text.Length != 0)
+                                Text = Text.Substring(0, Text.Length - 1);
+                        }
+                        else if (c == '\n' || c == '\r')
+                        {
+                            SetValue(Text);
+                        }
+                        else
+                        {
+                            Text += c;
+                        }
+                    }
+                }
+            }
+            bool clickedLastUpdate = false;
+            public static ManagedStringControl activeStringControl = null;
+
+            public virtual void SetValue(string newValue) { }
+
+            public void Signal(DevUISignalType type, DevUINode sender, string message)
+            {
+                // shhh
+            }
+        }
+
         #endregion CONTROLS
     }
 }
