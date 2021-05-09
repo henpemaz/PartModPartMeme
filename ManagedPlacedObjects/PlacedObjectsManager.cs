@@ -167,7 +167,7 @@ namespace ManagedPlacedObjects
         {
             foreach (var manager in managedObjectTypes)
             {
-                if (manager.CanManageType(tp)) return manager;
+                if (tp == manager.GetObjectType() && tp != PlacedObject.Type.None) return manager;
             }
             return null;
         }
@@ -205,7 +205,7 @@ namespace ManagedPlacedObjects
             managedObjectTypes.Add(obj);
         }
 
-        // Some shorthand
+        // Some shorthands
 
         /// <summary>
         /// Shorthand for registering a FullyManagedObjectType.
@@ -253,28 +253,22 @@ namespace ManagedPlacedObjects
             protected readonly Type objectType;
             protected readonly Type dataType;
             protected readonly Type reprType;
+            protected readonly bool singleInstance;
 
-            public ManagedObjectType(string name, Type objectType, Type dataType, Type reprType)
+            public ManagedObjectType(string name, Type objectType, Type dataType, Type reprType, bool singleInstance=false)
             {
                 this.placedType = default; // type parsing deferred until actualy used
                 this.name = name;
                 this.objectType = objectType;
                 this.dataType = dataType;
                 this.reprType = reprType;
-            }
-
-            /// <summary>
-            /// Wether this manager should be used for this PlacedObject.Type
-            /// </summary>
-            public virtual bool CanManageType(PlacedObject.Type type)
-            {
-                return type == GetObjectType();
+                this.singleInstance = singleInstance;
             }
 
             /// <summary>
             /// The PlacedObject.Type this is the manager for.
             /// </summary>
-            protected virtual PlacedObject.Type GetObjectType()
+            public virtual PlacedObject.Type GetObjectType()
             {
                 return placedType == default ? placedType = DeclareOrGetEnum(name) : placedType;
             }
@@ -286,11 +280,30 @@ namespace ManagedPlacedObjects
             {
                 if (objectType == null) return null;
 
-                try { return (UpdatableAndDeletable) Activator.CreateInstance(objectType, new object[] { room, placedObject }); }
-                catch 
-                { 
-                    try { return (UpdatableAndDeletable) Activator.CreateInstance(objectType, new object[] { placedObject, room }); }
-                    catch { throw new ArgumentException("EmptyObjectType.MakeObject : objectType must have a constructor like (Room room, PlacedObject pObj) or (PlacedObject pObj, Room room)"); }
+                if (singleInstance) // Only one per room
+                {
+                    UpdatableAndDeletable instance = null;
+                    foreach (var item in room.updateList)
+                    {
+                        if (item.GetType().IsAssignableFrom(objectType))
+                        {
+                            instance = item;
+                            break;
+                        }
+                    }
+                    if (instance != null) return null;
+                }
+
+                try { return (UpdatableAndDeletable)Activator.CreateInstance(objectType, new object[] { room, placedObject }); }
+                catch
+                {
+                    try { return (UpdatableAndDeletable)Activator.CreateInstance(objectType, new object[] { placedObject, room }); }
+                    catch
+                    {
+                        try { return (UpdatableAndDeletable)Activator.CreateInstance(objectType, new object[] { room }); } // Objects that scan room for data or no data;
+                        catch { throw new ArgumentException("ManagedObjectType.MakeObject : objectType must have a constructor like (Room room, PlacedObject pObj) or (PlacedObject pObj, Room room) or (Room room)"); }
+
+                    }
                 }
             }
 
@@ -304,8 +317,8 @@ namespace ManagedPlacedObjects
                 try { return (PlacedObject.Data)Activator.CreateInstance(dataType, new object[] { pObj }); }
                 catch
                 {
-                    try { return (PlacedObject.Data)Activator.CreateInstance(dataType, new object[] { pObj, PlacedObject.LightFixtureData.Type.RedLight }); }
-                    catch { throw new ArgumentException("EmptyObjectType.MakeEmptyData : dataType must have a constructor like (PlacedObject pObj)"); }
+                    try { return (PlacedObject.Data)Activator.CreateInstance(dataType, new object[] { pObj, PlacedObject.LightFixtureData.Type.RedLight }); } // Redlights man
+                    catch { throw new ArgumentException("ManagedObjectType.MakeEmptyData : dataType must have a constructor like (PlacedObject pObj)"); }
                 }
             }
 
@@ -319,8 +332,8 @@ namespace ManagedPlacedObjects
                 try { return (PlacedObjectRepresentation)Activator.CreateInstance(reprType, new object[] { objPage.owner, placedType.ToString() + "_Rep", objPage, pObj, placedType.ToString() }); }
                 catch
                 {
-                    try { return (PlacedObjectRepresentation)Activator.CreateInstance(reprType, new object[] { objPage.owner, placedType.ToString() + "_Rep", objPage, pObj, placedType.ToString(), false }); }
-                    catch { throw new ArgumentException("EmptyObjectType.MakeRepresentation : reprType must have a constructor like (DevUI owner, string IDstring, DevUINode parentNode, PlacedObject pObj, string name)"); }
+                    try { return (PlacedObjectRepresentation)Activator.CreateInstance(reprType, new object[] { objPage.owner, placedType.ToString() + "_Rep", objPage, pObj, placedType.ToString(), false }); } // Resizeables man
+                    catch { throw new ArgumentException("ManagedObjectType.MakeRepresentation : reprType must have a constructor like (DevUI owner, string IDstring, DevUINode parentNode, PlacedObject pObj, string name)"); }
                 }
             }
         }
@@ -331,7 +344,7 @@ namespace ManagedPlacedObjects
         /// </summary>
         public class FullyManagedObjectType : ManagedObjectType
         {
-            private readonly ManagedField[] managedFields;
+            protected readonly ManagedField[] managedFields;
 
             public FullyManagedObjectType(string name, Type objectType, ManagedField[] managedFields) : base(name, objectType, null, null)
             {

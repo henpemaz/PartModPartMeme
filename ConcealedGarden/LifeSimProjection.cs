@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ManagedPlacedObjects;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -31,10 +32,16 @@ namespace ConcealedGarden
             Done
         }
 
+
         public LifeSimProjection(Room owner)
         {
             this.room = owner;
             this.places = new List<PlacedObject>();
+
+            foreach (var pobj in room.roomSettings.placedObjects)
+            {
+                if (pobj.active && pobj.type.ToString() == "LifeSimProjectionSegment") places.Add(pobj);
+            }
 
             loadingState = LoadingState.Start;
             this.ticksPerUpdate = 20;

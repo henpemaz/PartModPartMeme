@@ -51,7 +51,6 @@ namespace ConcealedGarden
             }
 
             this.leaves = leavesList.ToArray();
-
         }
 
         private Vector2 Varmag(float iu, float iv)
