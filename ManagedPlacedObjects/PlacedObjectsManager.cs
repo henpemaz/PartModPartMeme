@@ -346,7 +346,7 @@ namespace ManagedPlacedObjects
         {
             protected readonly ManagedField[] managedFields;
 
-            public FullyManagedObjectType(string name, Type objectType, ManagedField[] managedFields) : base(name, objectType, null, null)
+            public FullyManagedObjectType(string name, Type objectType, ManagedField[] managedFields, bool singleInstance = false) : base(name, objectType, null, null, singleInstance)
             {
                 this.managedFields = managedFields;
             }

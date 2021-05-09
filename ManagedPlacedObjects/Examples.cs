@@ -109,7 +109,7 @@ namespace ManagedPlacedObjects
             }
 
             // Override at your own risk ? the default behaviour works just fine, but maybe you know what you're doign
-            protected override PlacedObject.Type GetObjectType()
+            public override PlacedObject.Type GetObjectType()
             {
                 return EnumExt_ManagedPlacedObjects.CuriousObject;
             }
