@@ -32,7 +32,7 @@ namespace ShelterBehaviors
             base.OnEnable();
             // Hooking code goose hre
 
-            PlacedObjectsManager.ApplyHooks();
+            //PlacedObjectsManager.ApplyHooks();
 
             PlacedObjectsManager.RegisterFullyManagedObjectType(new PlacedObjectsManager.ManagedField[]{
                 new PlacedObjectsManager.BooleanField("nvd", true, displayName:"No Vanilla Door"),
@@ -56,7 +56,7 @@ namespace ShelterBehaviors
 
             //PlacedObjectsManager.RegisterEmptyObjectType("ShelterBhvrPlacedDoor", typeof()) TODO directional data and rep;
             PlacedObjectsManager.RegisterFullyManagedObjectType(new PlacedObjectsManager.ManagedField[]{
-                new PlacedObjectsManager.IntVector2Field("dir", new RWCustom.IntVector2(0,1), PlacedObjectsManager.IntVector2Field.IntVectorReprType.eightdir), }
+                new PlacedObjectsManager.IntVector2Field("dir", new RWCustom.IntVector2(0,1), PlacedObjectsManager.IntVector2Field.IntVectorReprType.fourdir), }
             , null, "ShelterBhvrPlacedDoor");
 
             PlacedObjectsManager.RegisterEmptyObjectType("ShelterBhvrTriggerZone", typeof(PlacedObject.GridRectObjectData), typeof(DevInterface.GridRectObjectRepresentation));

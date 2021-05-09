@@ -164,10 +164,10 @@ namespace ConcealedGarden
                 {
                     //Debug.Log("a");
                     int len = line.Count;
-                    float avrDensity = line.Aggregate<TileInterface, float>(0f, (f, t) => f + t.density) / len;
-                    float avrMinSize = line.Aggregate<TileInterface, float>(0f, (f, t) => f + t.smin) / len;
-                    float avrMaxSize = line.Aggregate<TileInterface, float>(0f, (f, t) => f + t.smax) / len;
-                    UnityEngine.Random.seed = line.Aggregate<TileInterface, int>(0, (i, t) => i + t.seed);
+                    float avrDensity = line.Aggregate(0f, (f, t) => f + t.density) / len;
+                    float avrMinSize = line.Aggregate(0f, (f, t) => f + t.smin) / len;
+                    float avrMaxSize = line.Aggregate(0f, (f, t) => f + t.smax) / len;
+                    UnityEngine.Random.seed = line.Aggregate(0, (i, t) => i + t.seed);
                     int nodes = Mathf.FloorToInt(UnityEngine.Random.Range(0.5f,1.5f) * len * avrDensity * 20f/(0.5f* avrMinSize + 0.5f* avrMaxSize));
                     //Debug.Log("b");
                     for (int i = 0; i < nodes; i++)

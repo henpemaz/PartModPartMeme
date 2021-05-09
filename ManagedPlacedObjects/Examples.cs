@@ -11,38 +11,40 @@ namespace ManagedPlacedObjects
         internal static void PlacedObjectsExample()
         {
             // Registers a type with a loooooot of fields
-            List<ManagedField> fields = new List<ManagedField>();
-            //fields.Add(new FloatField("f1", 0f, 1f, 0.2f, 0.01f, ManagedFieldWithPanel.ControlType.slider, "Float Slider"));
-            //fields.Add(new FloatField("f2", 0f, 1f, 0.5f, 0.1f, ManagedFieldWithPanel.ControlType.button, "Float Button"));
-            //fields.Add(new FloatField("f3", 0f, 1f, 0.8f, 0.1f, ManagedFieldWithPanel.ControlType.arrows, "Float Arrows"));
-            //fields.Add(new FloatField("f4", 0f, 1f, 0.8f, 0.1f, ManagedFieldWithPanel.ControlType.text, "Float Text"));
+            List<ManagedField> fields = new List<ManagedField>
+            {
+                new FloatField("f1", 0f, 1f, 0.2f, 0.01f, ManagedFieldWithPanel.ControlType.slider, "Float Slider"),
+                new FloatField("f2", 0f, 1f, 0.5f, 0.1f, ManagedFieldWithPanel.ControlType.button, "Float Button"),
+                new FloatField("f3", 0f, 1f, 0.8f, 0.1f, ManagedFieldWithPanel.ControlType.arrows, "Float Arrows"),
+                new FloatField("f4", 0f, 1f, 0.8f, 0.1f, ManagedFieldWithPanel.ControlType.text, "Float Text"),
 
-            //fields.Add(new BooleanField("b1", false, ManagedFieldWithPanel.ControlType.slider, "Bool Slider"));
-            //fields.Add(new BooleanField("b2", true, ManagedFieldWithPanel.ControlType.button, "Bool Button"));
-            fields.Add(new BooleanField("b3", false, ManagedFieldWithPanel.ControlType.arrows, "Bool Arrows"));
-            //fields.Add(new BooleanField("b4", true, ManagedFieldWithPanel.ControlType.text, "Bool Text"));
+                new BooleanField("b1", false, ManagedFieldWithPanel.ControlType.slider, "Bool Slider"),
+                new BooleanField("b2", true, ManagedFieldWithPanel.ControlType.button, "Bool Button"),
+                new BooleanField("b3", false, ManagedFieldWithPanel.ControlType.arrows, "Bool Arrows"),
+                new BooleanField("b4", true, ManagedFieldWithPanel.ControlType.text, "Bool Text"),
 
-            //fields.Add(new EnumField("e1", typeof(PlacedObject.Type), PlacedObject.Type.None, null, ManagedFieldWithPanel.ControlType.slider, "Enum Slider"));
-            //fields.Add(new EnumField("e2", typeof(PlacedObject.Type), PlacedObject.Type.Mushroom, null, ManagedFieldWithPanel.ControlType.button, "Enum Button"));
-            //fields.Add(new EnumField("e3", typeof(PlacedObject.Type), PlacedObject.Type.SuperStructureFuses, null, ManagedFieldWithPanel.ControlType.arrows, "Enum Arrows"));
-            //fields.Add(new EnumField("e4", typeof(PlacedObject.Type), PlacedObject.Type.GhostSpot, null, ManagedFieldWithPanel.ControlType.text, "Enum Text"));
+                new EnumField("e1", typeof(PlacedObject.Type), PlacedObject.Type.None, new System.Enum[] { PlacedObject.Type.BlueToken, PlacedObject.Type.GoldToken }, ManagedFieldWithPanel.ControlType.slider, "Enum Slider"),
+                new EnumField("e2", typeof(PlacedObject.Type), PlacedObject.Type.Mushroom, null, ManagedFieldWithPanel.ControlType.button, "Enum Button"),
+                new EnumField("e3", typeof(PlacedObject.Type), PlacedObject.Type.SuperStructureFuses, null, ManagedFieldWithPanel.ControlType.arrows, "Enum Arrows"),
+                new EnumField("e4", typeof(PlacedObject.Type), PlacedObject.Type.GhostSpot, null, ManagedFieldWithPanel.ControlType.text, "Enum Text"),
 
-            //fields.Add(new IntegerField("i1", 0, 10, 1, ManagedFieldWithPanel.ControlType.slider, "Integer Slider"));
-            //fields.Add(new IntegerField("i2", 0, 10, 2, ManagedFieldWithPanel.ControlType.button, "Integer Button"));
-            //fields.Add(new IntegerField("i3", 0, 10, 3, ManagedFieldWithPanel.ControlType.arrows, "Integer Arrows"));
-            //fields.Add(new IntegerField("i4", 0, 10, 3, ManagedFieldWithPanel.ControlType.text, "Integer Text"));
+                new IntegerField("i1", 0, 10, 1, ManagedFieldWithPanel.ControlType.slider, "Integer Slider"),
+                new IntegerField("i2", 0, 10, 2, ManagedFieldWithPanel.ControlType.button, "Integer Button"),
+                new IntegerField("i3", 0, 10, 3, ManagedFieldWithPanel.ControlType.arrows, "Integer Arrows"),
+                new IntegerField("i4", 0, 10, 3, ManagedFieldWithPanel.ControlType.text, "Integer Text"),
 
-            // fields.Add(new StringField("str1", "spaghetti", "String"));
+                new StringField("str1", "your text here", "String"),
 
-            //fields.Add(new Vector2Field("vf1", Vector2.one, Vector2Field.VectorReprType.line));
-            //fields.Add(new Vector2Field("vf2", Vector2.one, Vector2Field.VectorReprType.circle));
-            //fields.Add(new Vector2Field("vf3", Vector2.one, Vector2Field.VectorReprType.rect));
+                new Vector2Field("vf1", Vector2.one, Vector2Field.VectorReprType.line),
+                new Vector2Field("vf2", Vector2.one, Vector2Field.VectorReprType.circle),
+                new Vector2Field("vf3", Vector2.one, Vector2Field.VectorReprType.rect),
 
-            //fields.Add(new IntVector2Field("ivf1", new RWCustom.IntVector2(1, 1), IntVector2Field.IntVectorReprType.line));
-            //fields.Add(new IntVector2Field("ivf2", new RWCustom.IntVector2(1, 1), IntVector2Field.IntVectorReprType.tile));
-            //fields.Add(new IntVector2Field("ivf3", new RWCustom.IntVector2(1, 1), IntVector2Field.IntVectorReprType.fourdir));
-            //fields.Add(new IntVector2Field("ivf4", new RWCustom.IntVector2(1, 1), IntVector2Field.IntVectorReprType.eightdir));
-            //fields.Add(new IntVector2Field("ivf5", new RWCustom.IntVector2(1, 1), IntVector2Field.IntVectorReprType.rect));
+                new IntVector2Field("ivf1", new RWCustom.IntVector2(1, 1), IntVector2Field.IntVectorReprType.line),
+                new IntVector2Field("ivf2", new RWCustom.IntVector2(1, 1), IntVector2Field.IntVectorReprType.tile),
+                new IntVector2Field("ivf3", new RWCustom.IntVector2(1, 1), IntVector2Field.IntVectorReprType.fourdir),
+                new IntVector2Field("ivf4", new RWCustom.IntVector2(1, 1), IntVector2Field.IntVectorReprType.eightdir),
+                new IntVector2Field("ivf5", new RWCustom.IntVector2(1, 1), IntVector2Field.IntVectorReprType.rect)
+            };
 
             // Data serialization and UI are taken care of by the manageddata and managedrepresentation types
             // And that's about it, now sillyobject will receive a placedobject with manageddata and that data will have all these fields
@@ -64,7 +66,7 @@ namespace ManagedPlacedObjects
         // Juuuuust an object, yet, we can place it. Data and UI are generated automatically
         internal class SillyObject : UpdatableAndDeletable
         {
-            private PlacedObject placedObject;
+            private readonly PlacedObject placedObject;
 
             public SillyObject(PlacedObject pObj, Room room)
             {
@@ -89,7 +91,7 @@ namespace ManagedPlacedObjects
         }
 
         // An empty placedobject for making places in a room
-        // Oooops we don't have to extend it for that huh, just call MangedObjectType with your type
+        // Oooops we don't even have to extend it for that, just call MangedObjectType with your type
         //internal class CuriousObjectLocation : ManagedObjectType
         //{
         //    public CuriousObjectLocation() : base(EnumExt_ManagedPlacedObjects.CuriousObjectLocation, null, null, null)
@@ -106,8 +108,8 @@ namespace ManagedPlacedObjects
             {
             }
 
-            // Override at your own risk ?
-            public override PlacedObject.Type GetObjectType()
+            // Override at your own risk ? the default behaviour works just fine, but maybe you know what you're doign
+            protected override PlacedObject.Type GetObjectType()
             {
                 return EnumExt_ManagedPlacedObjects.CuriousObject;
             }
@@ -130,9 +132,8 @@ namespace ManagedPlacedObjects
             // Our curious and useful object
             class CuriousObject : UpdatableAndDeletable, IDrawable
             {
-                private PlacedObject placedObject;
-
-                private List<PlacedObject> otherPlaces;
+                private readonly PlacedObject placedObject;
+                private readonly List<PlacedObject> otherPlaces;
 
                 public CuriousObject(PlacedObject placedObject, Room room)
                 {
