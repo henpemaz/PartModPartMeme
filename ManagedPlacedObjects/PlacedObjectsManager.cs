@@ -6,27 +6,31 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
+using System.Security;
+using System.Security.Permissions;
+
+[module: UnverifiableCode]
+[assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
+
 namespace ManagedPlacedObjects
 {
     public static class PlacedObjectsManager
     {
+        #region HOOKS
         private static bool _hooked = false;
-        public static void Apply()
+        private static void Apply()
         {
             if (_hooked) return;
             _hooked = true;
-
-            SetupInputDetours();
 
             On.PlacedObject.GenerateEmptyData += PlacedObject_GenerateEmptyData_Patch;
             On.Room.Loaded += Room_Loaded_Patch;
             On.DevInterface.ObjectsPage.CreateObjRep += ObjectsPage_CreateObjRep_Patch;
             On.RainWorldGame.RawUpdate += RainWorldGame_RawUpdate;
 
-            MySillyExample();
+            //PlacedObjectsExample();
         }
 
-        #region HOOKS
         private static void ObjectsPage_CreateObjRep_Patch(On.DevInterface.ObjectsPage.orig_CreateObjRep orig, ObjectsPage self, PlacedObject.Type tp, PlacedObject pObj)
         {
             orig(self, tp, pObj);
@@ -84,9 +88,12 @@ namespace ManagedPlacedObjects
         #endregion HOOKS
 
         #region NATIVEDETOURS
-
+        private static bool _stringsdetoured = false;
         private static void SetupInputDetours()
         {
+            if (_stringsdetoured) return;
+            _stringsdetoured = true;
+
             System.Reflection.BindingFlags bindingFlags =
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static;
             System.Reflection.MethodBase getKeyMethod;
@@ -151,247 +158,8 @@ namespace ManagedPlacedObjects
 
         #endregion NATIVEDETOURS
 
-        #region EXAMPLE
-
-        internal static void MySillyExample()
-        {
-            // Registers a type with a loooooot of fields
-            List<ManagedField> fields = new List<ManagedField>();
-            fields.Add(new FloatField("f1", 0f, 1f, 0.2f, 0.01f, ManagedFieldWithPanel.ControlType.slider, "Float Slider"));
-            fields.Add(new FloatField("f2", 0f, 1f, 0.5f, 0.1f, ManagedFieldWithPanel.ControlType.button, "Float Button"));
-            fields.Add(new FloatField("f3", 0f, 1f, 0.8f, 0.1f, ManagedFieldWithPanel.ControlType.arrows, "Float Arrows"));
-
-            fields.Add(new BooleanField("b1", false, ManagedFieldWithPanel.ControlType.slider, "Bool Slider"));
-            fields.Add(new BooleanField("b2", true, ManagedFieldWithPanel.ControlType.button, "Bool Button"));
-            fields.Add(new BooleanField("b3", false, ManagedFieldWithPanel.ControlType.arrows, "Bool Arrows"));
-
-            fields.Add(new EnumField("e1", typeof(PlacedObject.Type), PlacedObject.Type.None, null, ManagedFieldWithPanel.ControlType.slider, "Enum Slider"));
-            fields.Add(new EnumField("e2", typeof(PlacedObject.Type), PlacedObject.Type.Mushroom, null, ManagedFieldWithPanel.ControlType.button, "Enum Button"));
-            fields.Add(new EnumField("e3", typeof(PlacedObject.Type), PlacedObject.Type.SuperStructureFuses, null, ManagedFieldWithPanel.ControlType.arrows, "Enum Arrows"));
-
-            fields.Add(new IntegerField("i1", 0, 10, 1, ManagedFieldWithPanel.ControlType.slider, "Integer Slider"));
-            fields.Add(new IntegerField("i2", 0, 10, 2, ManagedFieldWithPanel.ControlType.button, "Integer Button"));
-            fields.Add(new IntegerField("i3", 0, 10, 3, ManagedFieldWithPanel.ControlType.arrows, "Integer Arrows"));
-
-            fields.Add(new Vector2Field("vf1", Vector2.one, Vector2Field.VectorReprType.line));
-            fields.Add(new Vector2Field("vf2", Vector2.one, Vector2Field.VectorReprType.circle));
-            fields.Add(new Vector2Field("vf3", Vector2.one, Vector2Field.VectorReprType.rect));
-
-            fields.Add(new IntVector2Field("ivf1", new RWCustom.IntVector2(1, 1), IntVector2Field.IntVectorReprType.line));
-            fields.Add(new IntVector2Field("ivf2", new RWCustom.IntVector2(1, 1), IntVector2Field.IntVectorReprType.tile));
-            fields.Add(new IntVector2Field("ivf3", new RWCustom.IntVector2(1, 1), IntVector2Field.IntVectorReprType.fourdir));
-            fields.Add(new IntVector2Field("ivf4", new RWCustom.IntVector2(1, 1), IntVector2Field.IntVectorReprType.eightdir));
-            fields.Add(new IntVector2Field("ivf5", new RWCustom.IntVector2(1, 1), IntVector2Field.IntVectorReprType.rect));
-
-            fields.Add(new StringField("str1", "spaghetti", "String"));
-
-
-            // Data serialization and UI are taken care of by the manageddata and managedrepresentation types
-            // And that's about it, now sillyobject will receive a placedobject with manageddata and that data will have all these fields
-            RegisterFullyManagedObjectType(fields.ToArray(), typeof(SillyObject));
-            // Trust me I just spared you from writing some 300 lines of code with this.
-
-            // A type with no object, no data, no repr, just for marking places
-            ManagedObjectType curiousObjectLocation = new ManagedObjectType("CuriousObjectLocation", null, null, null);
-            RegisterManagedObject(curiousObjectLocation);
-            // Could also be done with RegisterEmptyObjectType("CuriousObjectLocation", null, null);
-
-            // Registers my self implemented Manager
-            // It handles spawning its object, data and representation 
-            RegisterManagedObject(new CuriousObjectType());
-            // Could also be achieved with RegisterManagedObject(new ManagedObjectType("CuriousObject", typeof(CuriousObjectType.CuriousObject), typeof(CuriousObjectType.CuriousData), typeof(CuriousObjectType.CuriousRepresentation)));
-            // but at the expense of some extra reflection calls
-        }
-
-        // Juuuuust an object, yet, we can place it. Data and UI are generated automatically
-        internal class SillyObject : UpdatableAndDeletable
-        {
-            private PlacedObject placedObject;
-
-            public SillyObject(PlacedObject pObj, Room room)
-            {
-                this.room = room;
-                this.placedObject = pObj;
-                UnityEngine.Debug.Log("SillyObject create");
-            }
-
-            public override void Update(bool eu)
-            {
-                base.Update(eu);
-                if (room.game.clock % 100 == 0)
-                    Debug.Log("SillyObject vf1.x is " + (placedObject.data as ManagedData).GetValue<Vector2>("vf1").x);
-            }
-        }
-
-        // Some other objects, this time we're registering type, object, data and representation
-        public static class EnumExt_ManagedPlacedObjects
-        {
-            public static PlacedObject.Type CuriousObject;
-            public static PlacedObject.Type CuriousObjectLocation;
-        }
-
-        // An empty placedobject for making places in a room
-        // Oooops we don't have to extend it for that huh, just call MangedObjectType with your type
-        //internal class CuriousObjectLocation : ManagedObjectType
-        //{
-        //    public CuriousObjectLocation() : base(EnumExt_ManagedPlacedObjects.CuriousObjectLocation, null, null, null)
-        //    {
-        //    }
-        //}
-
-        // A very curious object, part managed part manual
-        // Overriding the base class here was optional, it's just that flexible lol
-        internal class CuriousObjectType : ManagedObjectType
-        {
-            // Ignore the stuff in the baseclass and write your own if you want
-            public CuriousObjectType() : base("CuriousObject", null, null, null) // this could have been (PlacedObjects.CuriousObject, typeof(CuriousObject), typeof(...)...)
-            {
-            }
-
-            // Override at your own risk ?
-            public override PlacedObject.Type GetObjectType()
-            {
-                return EnumExt_ManagedPlacedObjects.CuriousObject;
-            }
-
-            public override PlacedObject.Data MakeEmptyData(PlacedObject pObj)
-            {
-                return new CuriousData(pObj);
-            }
-
-            public override UpdatableAndDeletable MakeObject(PlacedObject placedObject, Room room)
-            {
-                return new CuriousObject(placedObject, room);
-            }
-
-            public override PlacedObjectRepresentation MakeRepresentation(PlacedObject pObj, ObjectsPage objPage)
-            {
-                return new CuriousRepresentation(GetObjectType(), objPage, pObj);
-            }
-
-            // Our curious and useful object
-            class CuriousObject : UpdatableAndDeletable, IDrawable
-            {
-                private PlacedObject placedObject;
-
-                private List<PlacedObject> otherPlaces;
-
-                public CuriousObject(PlacedObject placedObject, Room room)
-                {
-                    this.placedObject = placedObject;
-                    this.room = room;
-                    otherPlaces = new List<PlacedObject>();
-
-                    // Finds aditional info from other objects
-                    foreach (PlacedObject pobj in room.roomSettings.placedObjects)
-                    {
-                        if (pobj.type == EnumExt_ManagedPlacedObjects.CuriousObjectLocation && pobj.active)
-                            otherPlaces.Add(pobj);
-                    }
-
-                    UnityEngine.Debug.Log("CuriousObject started and found " + otherPlaces.Count + " location");
-                }
-                 // IDrawable stuff
-                public void AddToContainer(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
-                {
-                    if (newContatiner == null) newContatiner = rCam.ReturnFContainer("Midground");
-                    for (int i = 0; i < sLeaser.sprites.Length; i++)
-                    {
-                        newContatiner.AddChild(sLeaser.sprites[i]);
-                    }
-                }
-
-                public void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
-                {
-                    for (int i = 0; i < sLeaser.sprites.Length; i++)
-                    {
-                        sLeaser.sprites[i].color = PlayerGraphics.SlugcatColor(UnityEngine.Random.Range(0, 4));
-                    }
-                }
-
-                public void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
-                {
-                    for (int i = 0; i < sLeaser.sprites.Length; i++)
-                    {
-                        sLeaser.sprites[i].SetPosition(otherPlaces[i].pos - camPos);
-                        sLeaser.sprites[i].scale = (this.placedObject.data as CuriousData).GetValue<float>("scale");
-                        sLeaser.sprites[i].rotation = (this.placedObject.data as CuriousData).rotation;
-                    }
-                }
-
-                public void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
-                {
-                    sLeaser.sprites = new FSprite[otherPlaces.Count];
-                    for (int i = 0; i < sLeaser.sprites.Length; i++)
-                    {
-                        sLeaser.sprites[i] = new FSprite("HeadA0");
-                    }
-                    this.AddToContainer(sLeaser, rCam, null);
-                }
-            }
-
-            // The data for our curious object
-            // We declare a managed field called "scale", and we create another one called rotation because why not
-            class CuriousData : ManagedData
-            {
-                public float rotation;
-
-                public CuriousData(PlacedObject owner) : base(owner, new ManagedField[] { new FloatField("scale", 0.1f, 10f, 1f, displayName:"Scale") })
-                {
-                    this.rotation = UnityEngine.Random.value * 360f;
-                }
-
-                // Serialization has to include our manual field
-                public override string ToString()
-                {
-                    //Debug.Log("CuriousData serializing as " + base.ToString() + "~" + rotation);
-                    return base.ToString() + "~" + rotation;
-                }
-
-                public override void FromString(string s)
-                {
-                    //Debug.Log("CuriousData deserializing from "+ s);
-                    base.FromString(s);
-                    string[] arr = Regex.Split(s, "~");
-                    rotation = float.Parse(arr[fields.Length + (needsControlPanel ? 2 : 0) + 0]); // a bit iffy
-                    //Debug.Log("CuriousData got rotation = " + rotation);
-                }
-            }
-
-            // Representation... ManagedData takes care of creating controls for managed fields
-            // but we have one unmanaged field to control
-            class CuriousRepresentation : ManagedRepresentation
-            {
-                public CuriousRepresentation(PlacedObject.Type placedType, ObjectsPage objPage, PlacedObject pObj) : base(placedType, objPage, pObj)
-                {
-
-                }
-
-                public override void Update()
-                {
-                    base.Update();
-                    if (UnityEngine.Input.GetKey("b")) return;
-                    (pObj.data as CuriousData).rotation = RWCustom.Custom.VecToDeg(this.owner.mousePos - absPos);
-                }
-            }
-        }
-
-        // And that was it, 3 somewhat functional objects in some... 220 lines of code.
-        #endregion EXAMPLE
-
-        #region MANAGED
-        // How objects are registered and stored
+        #region INTERNALS
         private static List<ManagedObjectType> managedObjectTypes = new List<ManagedObjectType>();
-
-        /// <summary>
-        /// Register a managed type to handle room and devtool hooks
-        /// </summary>
-        /// <param name="obj"></param>
-        public static void RegisterManagedObject(ManagedObjectType obj)
-        {
-            managedObjectTypes.Add(obj);
-        }
-
         private static ManagedObjectType GetManagerForType(PlacedObject.Type tp)
         {
             foreach (var manager in managedObjectTypes)
@@ -401,9 +169,10 @@ namespace ManagedPlacedObjects
             return null;
         }
 
-        // bee needs to let mods add enums during onload or this will be always super annoying to use
-        public static PlacedObject.Type DeclareOrGetEnum(string name)
+        private static PlacedObject.Type DeclareOrGetEnum(string name)
         {
+            // enum handling is delayed because of how enumextend works
+            // bee needs to let mods add enums during onload or this will be always super annoying to use
             if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name is empty");
             // nope, this crashes because enumextender hasnt readied its pants yet
             //if (PastebinMachine.EnumExtender.EnumExtender.declarations.Count > 0) PastebinMachine.EnumExtender.EnumExtender.ExtendEnumsAgain();
@@ -418,17 +187,29 @@ namespace ManagedPlacedObjects
                 PastebinMachine.EnumExtender.EnumExtender.ExtendEnumsAgain();
                 tp = (PlacedObject.Type)Enum.Parse(typeof(PlacedObject.Type), name);
             }
-            
+
             return tp;
+        }
+        #endregion INTERNALS
+
+        /// <summary>
+        /// Register a managed type to handle room and devtools hooks
+        /// </summary>
+        /// <param name="obj"></param>
+        public static void RegisterManagedObject(ManagedObjectType obj)
+        {
+            Apply();
+            managedObjectTypes.Add(obj);
         }
 
         /// <summary>
-        /// Wraps an UpdateableAndDeletable into a managed type with managed data and UI
-        /// Must have a constructor that takes (Room, PlacedObject) or (PlacedObject, Room)
+        /// Wraps an UpdateableAndDeletable into a managed type with managed data and UI.
+        /// Can also be used with a null type to spawn a Managed data+representation with no object on room.load
+        /// If the object isn't null its Constructor should take (Room, PlacedObject) or (PlacedObject, Room)
         /// </summary>
         /// <param name="managedFields"></param>
         /// <param name="type">An UpdateableAndDeletable</param>
-        /// <param name="name">Optional enum-name for your object, otherwise infered from type. Can be an enum you've already created with Enumextend</param>
+        /// <param name="name">Optional enum-name for your object, otherwise infered from type. Can be an enum you've already created with Enumextend. Do NOT use enum.ToString() on an enumextend'd enum, it wont work during Init() or Load()</param>
         public static void RegisterFullyManagedObjectType(ManagedField[] managedFields, Type type, string name=null)
         {
             if (string.IsNullOrEmpty(name)) name = type.Name;
@@ -437,12 +218,21 @@ namespace ManagedPlacedObjects
             RegisterManagedObject(fullyManaged);
         }
 
+        /// <summary>
+        /// Creates an empty data-holding placed object.
+        /// Data and Repr must work well together (typically rep tries to cast data to a specific type to use it).
+        /// Either can be left null, so no data or no specific representation will be created for the placedobject.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="dataType"></param>
+        /// <param name="reprType"></param>
         public static void RegisterEmptyObjectType(string name, Type dataType, Type reprType)
         {
             ManagedObjectType emptyObjectType = new ManagedObjectType(name, null, dataType, reprType);
             RegisterManagedObject(emptyObjectType);
         }
 
+        #region MANAGED
         /// <summary>
         /// Main class for managed object types
         /// Make-calls CAN return null, causing the object to not be created, or have no data, or use the default handle representation
@@ -459,7 +249,7 @@ namespace ManagedPlacedObjects
 
             public ManagedObjectType(string name, Type objectType, Type dataType, Type reprType)
             {
-                this.placedType = default;
+                this.placedType = default; // type parsing deferred until actualy used
                 this.name = name;
                 this.objectType = objectType;
                 this.dataType = dataType;
@@ -539,8 +329,8 @@ namespace ManagedPlacedObjects
         }
 
         /// <summary>
-        /// A field that can handle serialization and generate UI
-        /// This field is merely a recipe, the actual data is stored in the data object for each pObj
+        /// A field to handle serialization and generate UI for data
+        /// A field is merely a recipe/interface, the actual data is stored in the data object for each pObj
         /// </summary>
         public abstract class ManagedField
         {
@@ -598,14 +388,14 @@ namespace ManagedPlacedObjects
                 switch (control)
                 {
                     case ControlType.slider:
-                    case ControlType.text:
-                        return new Vector2(118f, 20f);
+                        return new Vector2(116f, 20f);
 
                     case ControlType.arrows:
-                        return new Vector2(54f, 20f);
+                        return new Vector2(52f, 20f);
 
+                    case ControlType.text:
                     case ControlType.button:
-                        return new Vector2(14f, 20f);
+                        return new Vector2(12f, 20f);
 
                     default:
                         break;
@@ -632,6 +422,7 @@ namespace ManagedPlacedObjects
                     case ControlType.button:
                         return new ManagedButton(this, managedData, panel, sizeOfDisplayname);
                     case ControlType.text:
+                        SetupInputDetours();
                         return new ManagedStringControl(this, managedData, panel, sizeOfDisplayname);
                 }
                 return null;
@@ -643,9 +434,13 @@ namespace ManagedPlacedObjects
                 return ToString(data.GetValue<object>(key));
             }
 
-            public virtual void SetDisplayValueForNode(PositionedDevUINode node, ManagedData data, object newValue)
+            //public virtual void SetDisplayValueForNode(PositionedDevUINode node, ManagedData data, object newValue)
+            //{
+            //    data.SetValue(key, newValue);
+            //}
+            public virtual void ParseFromText(PositionedDevUINode node, ManagedData data, string newValue)
             {
-                data.SetValue(key, newValue);
+                data.SetValue(key, this.FromString(newValue));
             }
         }
 
@@ -1042,7 +837,7 @@ namespace ManagedPlacedObjects
 
             public override float SizeOfLargestDisplayValue()
             {
-                return HUD.DialogBox.meanCharWidth * 25;
+                return HUD.DialogBox.meanCharWidth * 25; // No character limit but this is the expected reasonable max anyone would be using ?
             }
         }
 
@@ -1121,95 +916,6 @@ namespace ManagedPlacedObjects
         #endregion FIELDS
 
         #region CONTROLS
-        public class ManagedStringInput : PositionedDevUINode, IDevUISignals
-        {
-            private StringField stringField;
-            private ManagedData managedData;
-            private ManagedControlPanel panel;
-            private readonly int maxChars;
-            private Button clearBtn;
-            private ArrowButton bkspc;
-            private CharacterSelectSlider slider;
-            private DevUILabel display;
-
-            public ManagedStringInput(StringField field, ManagedData managedData, ManagedControlPanel panel, float sizeOfDisplayname, int maxChars) : base(panel.owner, field.key, panel, Vector2.zero)
-            {
-                this.stringField = field;
-                this.managedData = managedData;
-                this.panel = panel;
-                this.maxChars = maxChars;
-                this.subNodes.Add(new DevUILabel(owner, "Title", this, new Vector2(0f, 20f), sizeOfDisplayname, field.displayName));
-                this.subNodes.Add(this.display = new DevUILabel(owner, "disp", this, new Vector2(sizeOfDisplayname + 50f, 0f), field.SizeOfLargestDisplayValue(), managedData.GetValue<string>(field.key)));
-                this.subNodes.Add(this.clearBtn = new Button(owner, "btn", this, new Vector2(sizeOfDisplayname + 10f, 0f), 30, "Clear"));
-                this.subNodes.Add(this.bkspc = new ArrowButton(owner, "btn2", this, new Vector2(sizeOfDisplayname + 10f, 20f), -90f));
-                this.subNodes.Add(this.slider = new CharacterSelectSlider(owner, "sld", this, new Vector2(sizeOfDisplayname + 20f, 20f)));
-            }
-
-            public void Signal(DevUISignalType type, DevUINode sender, string message) // from button
-            {
-                string buildingstring = managedData.GetValue<string>(stringField.key);
-                if (sender == clearBtn) buildingstring = string.Empty;
-                else if (sender == bkspc && buildingstring.Length > 0) buildingstring = buildingstring.Substring(0, buildingstring.Length - 1);
-                else if (sender == slider && buildingstring.Length < maxChars) buildingstring += slider.selectedChar;
-                managedData.SetValue<string>(stringField.key, buildingstring);
-
-                this.Refresh();
-            }
-
-            public override void Refresh()
-            {
-                display.Text = stringField.DisplayValueForNode(this, managedData);
-                base.Refresh();
-            }
-
-            private class CharacterSelectSlider : Slider
-            {
-                static char[] characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz _0123456789!?".ToArray();
-                public char selectedChar = 'A';
-                private float value;
-                private bool lastheld;
-                private char valueBeforeDrag;
-
-                public CharacterSelectSlider(DevUI owner, string IDstring, DevUINode parentNode, Vector2 pos) : base(owner, IDstring, parentNode, pos, "", false, 0f)
-                {
-                }
-
-                public override void Update()
-                {
-                    base.Update();
-                    bool held = (this.subNodes[(!this.inheritButton) ? 2 : 3] as Slider.SliderNub).held;
-                    if (!lastheld && held) this.valueBeforeDrag = selectedChar;
-                    if (lastheld && !held && valueBeforeDrag == selectedChar) Clicked();
-                    lastheld = held;
-                }
-
-                public virtual void Clicked() // stolen from btns
-                {
-                    DevUINode devUINode = this;
-                    while (devUINode != null)
-                    {
-                        devUINode = devUINode.parentNode;
-                        if (devUINode is IDevUISignals)
-                        {
-                            (devUINode as IDevUISignals).Signal(DevUISignalType.ButtonClick, this, string.Empty);
-                            break;
-                        }
-                    }
-                }
-                public override void NubDragged(float nubPos)
-                {
-                    selectedChar = characters[Mathf.FloorToInt(nubPos * (characters.Length - 0.1f))];
-                    this.value = nubPos;
-                    this.Refresh();
-                }
-                public override void Refresh()
-                {
-                    base.Refresh();
-                    base.NumberText = selectedChar.ToString();
-                    base.RefreshNubPos(value);
-                }
-            }
-        }
 
         public class ManagedVectorHandle : Handle // All-in-one super handle
         {
@@ -1612,8 +1318,9 @@ namespace ManagedPlacedObjects
             }
         }
 
-        internal class ManagedStringControl : PositionedDevUINode, IDevUISignals
+        internal class ManagedStringControl : PositionedDevUINode
         {
+            public static ManagedStringControl activeStringControl = null;
             public ManagedStringControl(ManagedFieldWithPanel field, ManagedData data,
                     ManagedControlPanel panel, float sizeOfDisplayname)
                     : base(panel.owner, "ManagedStringControl", panel, Vector2.zero)
@@ -1649,7 +1356,8 @@ namespace ManagedPlacedObjects
 
             public override void Refresh()
             {
-                field.SetDisplayValueForNode(this, data, Text);
+                // No data refresh until the transaction is complete :/
+                // TrySet happens on input and focus loss
                 base.Refresh();
             }
 
@@ -1665,8 +1373,10 @@ namespace ManagedPlacedObjects
                     }
                     else if (activeStringControl == this)
                     {
+                        // focus lost
                         activeStringControl = null;
                         subNodes[1].fLabels[0].color = Color.black;
+                        TrySetValue(Text, true);
                     }
 
                     clickedLastUpdate = true;
@@ -1683,27 +1393,46 @@ namespace ManagedPlacedObjects
                         if (c == '\b')
                         {
                             if (Text.Length != 0)
+                            {
                                 Text = Text.Substring(0, Text.Length - 1);
+                                TrySetValue(Text, false);
+                            }
                         }
                         else if (c == '\n' || c == '\r')
                         {
-                            SetValue(Text);
+                            // should lose focus
+                            TrySetValue(Text, true);
+                            activeStringControl = null;
+                            subNodes[1].fLabels[0].color = Color.black;
                         }
                         else
                         {
                             Text += c;
+                            TrySetValue(Text, false);
                         }
                     }
                 }
             }
             bool clickedLastUpdate = false;
-            public static ManagedStringControl activeStringControl = null;
 
-            public virtual void SetValue(string newValue) { }
-
-            public void Signal(DevUISignalType type, DevUINode sender, string message)
-            {
-                // shhh
+            public virtual void TrySetValue(string newValue, bool restoreOnFail) {
+                try
+                {
+                    field.ParseFromText(this, data, newValue);
+                    subNodes[1].fLabels[0].color = new Color(0.1f, 0.4f, 0.2f);
+                }
+                catch (Exception)
+                {
+                    if (restoreOnFail)
+                    {
+                        Text = field.DisplayValueForNode(this, data);
+                        Refresh();
+                    }
+                    else
+                    {
+                        subNodes[1].fLabels[0].color = Color.red;
+                    }
+                }
             }
         }
 
