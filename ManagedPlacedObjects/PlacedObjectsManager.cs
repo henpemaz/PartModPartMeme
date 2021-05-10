@@ -18,6 +18,10 @@ namespace ManagedPlacedObjects
     {
         #region HOOKS
         private static bool _hooked = false;
+        /// <summary>
+        /// Applies the necessary hooks for the framework to do its thing.
+        /// Called when any managed object is registered.
+        /// </summary>
         private static void Apply()
         {
             if (_hooked) return;
@@ -89,6 +93,10 @@ namespace ManagedPlacedObjects
 
         #region NATIVEDETOURS
         private static bool _stringsdetoured = false;
+        /// <summary>
+        /// Applies the Input detours required for text input.
+        /// Called when any string input reprs are created.
+        /// </summary>
         private static void SetupInputDetours()
         {
             if (_stringsdetoured) return;
@@ -163,6 +171,9 @@ namespace ManagedPlacedObjects
 
         #region INTERNALS
         private static readonly List<ManagedObjectType> managedObjectTypes = new List<ManagedObjectType>();
+        /// <summary>
+        /// Called from the hooks, finds the manager for the type, if any.
+        /// </summary>
         private static ManagedObjectType GetManagerForType(PlacedObject.Type tp)
         {
             foreach (var manager in managedObjectTypes)
@@ -384,7 +395,7 @@ namespace ManagedPlacedObjects
             public virtual string ToString(object value) => value.ToString();
 
             /// <summary>
-            /// Deserialization method called from ManagedData
+            /// Deserialization method called from ManagedData. Don't forget to sanitize your data.
             /// </summary>
             public abstract object FromString(string str);
 
@@ -495,6 +506,7 @@ namespace ManagedPlacedObjects
 
             /// <summary>
             /// Used internally for text input parsing.
+            /// Should raise an exception if the value is invalid or can't be parsed (used for visual feedback on textinput)
             /// </summary>
             public virtual void ParseFromText(PositionedDevUINode node, ManagedData data, string newValue)
             {
@@ -850,7 +862,7 @@ namespace ManagedPlacedObjects
                     {
                         if (val.ToString().ToLowerInvariant() == newValue.ToLowerInvariant())
                         {
-                            // This check is flawed if we have for instance "aa" and "AAA" it becomes impossible to type in the second one
+                            // This check is flawed if we have for instance "aa" and "AAA" and "aaa" it becomes impossible to type in the second one
                             // But honestly who would name their enums like that...
                             data.SetValue(key, val);
                             return;
