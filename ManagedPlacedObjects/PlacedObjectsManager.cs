@@ -208,7 +208,7 @@ namespace ManagedPlacedObjects
         #endregion INTERNALS
 
         /// <summary>
-        /// Register a <see cref="ManagedObjectType"/> to handle object, data and repr initialization during room load and devtools hooks
+        /// Register a <see cref="ManagedObjectType"/> or <see cref="FullyManagedObjectType"/> to handle object, data and repr initialization during room load and devtools hooks
         /// </summary>
         /// <param name="obj"></param>
         public static void RegisterManagedObject(ManagedObjectType obj)
@@ -216,8 +216,6 @@ namespace ManagedPlacedObjects
             Apply();
             managedObjectTypes.Add(obj);
         }
-
-        // Some shorthands
 
         /// <summary>
         /// Shorthand for registering a <see cref="FullyManagedObjectType"/>.
@@ -228,10 +226,10 @@ namespace ManagedPlacedObjects
         /// <param name="managedFields"></param>
         /// <param name="type">An UpdateableAndDeletable</param>
         /// <param name="name">Optional enum-name for your object, otherwise infered from type. Can be an enum already created with Enumextend. Do NOT use enum.ToString() on an enumextend'd enum, it wont work during Init() or Load()</param>
-        public static void RegisterFullyManagedObjectType(ManagedField[] managedFields, Type type, string name=null)
+        public static void RegisterFullyManagedObjectType(ManagedField[] managedFields, Type type, string name = null)
         {
             if (string.IsNullOrEmpty(name)) name = type.Name;
-            
+
             ManagedObjectType fullyManaged = new FullyManagedObjectType(name, type, managedFields);
             RegisterManagedObject(fullyManaged);
         }
@@ -267,7 +265,7 @@ namespace ManagedPlacedObjects
             protected readonly Type reprType;
             protected readonly bool singleInstance;
 
-            public ManagedObjectType(string name, Type objectType, Type dataType, Type reprType, bool singleInstance=false)
+            public ManagedObjectType(string name, Type objectType, Type dataType, Type reprType, bool singleInstance = false)
             {
                 this.placedType = default; // type parsing deferred until actualy used
                 this.name = name;
@@ -307,13 +305,13 @@ namespace ManagedPlacedObjects
                 }
 
                 try { return (UpdatableAndDeletable)Activator.CreateInstance(objectType, new object[] { room, placedObject }); }
-                catch
+                catch (MissingMethodException)
                 {
                     try { return (UpdatableAndDeletable)Activator.CreateInstance(objectType, new object[] { placedObject, room }); }
-                    catch
+                    catch (MissingMethodException)
                     {
                         try { return (UpdatableAndDeletable)Activator.CreateInstance(objectType, new object[] { room }); } // Objects that scan room for data or no data;
-                        catch { throw new ArgumentException("ManagedObjectType.MakeObject : objectType " + objectType.Name + " must have a constructor like (Room room, PlacedObject pObj) or (PlacedObject pObj, Room room) or (Room room)"); }
+                        catch (MissingMethodException) { throw new ArgumentException("ManagedObjectType.MakeObject : objectType " + objectType.Name + " must have a constructor like (Room room, PlacedObject pObj) or (PlacedObject pObj, Room room) or (Room room)"); }
 
                     }
                 }
@@ -327,10 +325,10 @@ namespace ManagedPlacedObjects
                 if (dataType == null) return null;
 
                 try { return (PlacedObject.Data)Activator.CreateInstance(dataType, new object[] { pObj }); }
-                catch
+                catch (MissingMethodException)
                 {
                     try { return (PlacedObject.Data)Activator.CreateInstance(dataType, new object[] { pObj, PlacedObject.LightFixtureData.Type.RedLight }); } // Redlights man
-                    catch { throw new ArgumentException("ManagedObjectType.MakeEmptyData : dataType " + dataType.Name + " must have a constructor like (PlacedObject pObj)"); }
+                    catch (MissingMethodException) { throw new ArgumentException("ManagedObjectType.MakeEmptyData : dataType " + dataType.Name + " must have a constructor like (PlacedObject pObj)"); }
                 }
             }
 
@@ -342,13 +340,13 @@ namespace ManagedPlacedObjects
                 if (reprType == null) return null;
 
                 try { return (PlacedObjectRepresentation)Activator.CreateInstance(reprType, new object[] { objPage.owner, placedType.ToString() + "_Rep", objPage, pObj, placedType.ToString() }); }
-                catch
+                catch (MissingMethodException)
                 {
                     try { return (PlacedObjectRepresentation)Activator.CreateInstance(reprType, new object[] { objPage.owner, placedType.ToString() + "_Rep", objPage, pObj, placedType.ToString(), false }); } // Resizeables man
-                    catch
+                    catch (MissingMethodException)
                     {
                         try { return (PlacedObjectRepresentation)Activator.CreateInstance(reprType, new object[] { pObj.type, objPage, pObj }); } // Our own silly types
-                        catch { throw new ArgumentException("ManagedObjectType.MakeRepresentation : reprType " + reprType.Name + " must have a constructor like (DevUI owner, string IDstring, DevUINode parentNode, PlacedObject pObj, string name) or (PlacedObject.Type placedType, ObjectsPage objPage, PlacedObject pObj)"); }
+                        catch (MissingMethodException) { throw new ArgumentException("ManagedObjectType.MakeRepresentation : reprType " + reprType.Name + " must have a constructor like (DevUI owner, string IDstring, DevUINode parentNode, PlacedObject pObj, string name) or (PlacedObject.Type placedType, ObjectsPage objPage, PlacedObject pObj)"); }
                     }
                 }
             }
@@ -381,7 +379,7 @@ namespace ManagedPlacedObjects
         /// <summary>
         /// A field to handle serialization and generate UI for your data, for use with <see cref="ManagedData"/>.
         /// A field is merely a recipe/interface, the actual data is stored in the <see cref="ManagedData"/> data object for each pObj.
-        /// You can use a field as an <see cref="Attribute"/> anotating data fields in your class that inherits <see cref="ManagedData"/>.
+        /// You can use a field as an <see cref="Attribute"/> anotating data fields in your class that inherits <see cref="ManagedData"/> so they stay in sync.
         /// </summary>
         [AttributeUsage(AttributeTargets.Field)]
         public abstract class ManagedField : Attribute
@@ -418,6 +416,11 @@ namespace ManagedPlacedObjects
             {
                 return null;
             }
+
+            // Stop inheriting crap :/
+            public sealed override bool IsDefaultAttribute() { return base.IsDefaultAttribute(); }
+            public sealed override bool Match(object obj) { return base.Match(obj); }
+            public sealed override object TypeId => base.TypeId;
         }
 
         /// <summary>
@@ -572,7 +575,7 @@ namespace ManagedPlacedObjects
                 List<ManagedField> attrFields = new List<ManagedField>();
                 foreach (FieldInfo fieldInfo in this.GetType().GetFields())
                 {
-                    object[] customAttributes = fieldInfo.GetCustomAttributes(typeof(ManagedField),true);
+                    object[] customAttributes = fieldInfo.GetCustomAttributes(typeof(ManagedField), true);
 
                     foreach (var attr in customAttributes) // There should be only one or zero anyways
                     {
@@ -582,7 +585,7 @@ namespace ManagedPlacedObjects
                         fieldInfo.SetValue(this, fieldAttr.DefaultValue);
                     }
                 }
-                if(attrFields.Count > 0) // any annotated fields
+                if (attrFields.Count > 0) // any annotated fields
                 {
                     attrFields.Sort((f1, f2) => string.Compare(f1.key, f2.key)); // type.GetFields() does NOT guarantee order
                     this.fields = paramFields.Concat(attrFields).ToArray();
@@ -660,11 +663,6 @@ namespace ManagedPlacedObjects
                 {
                     object val = fields[i].FromString(array[datastart + i]);
                     SetValue(fields[i].key, val);
-                    //valuesByKey[fields[i].key] = val;
-                    //if (fieldInfosByKey.ContainsKey(fields[i].key))
-                    //{
-                    //    fieldInfosByKey[fields[i].key].SetValue(this, val);
-                    //}
                 }
             }
 
@@ -673,7 +671,7 @@ namespace ManagedPlacedObjects
             /// </summary>
             public override string ToString()
             {
-                return (NeedsControlPanel ? (panelPos.x.ToString() + "~" + panelPos.y.ToString() + "~") : "") + string.Join("~", Array.ConvertAll(fields, f => f.ToString(GetValue<object>(f.key))));//valuesByKey[f.key])));
+                return (NeedsControlPanel ? (panelPos.x.ToString() + "~" + panelPos.y.ToString() + "~") : "") + string.Join("~", Array.ConvertAll(fields, f => f.ToString(GetValue<object>(f.key))));
             }
         }
 
@@ -785,8 +783,8 @@ namespace ManagedPlacedObjects
         /// </summary>
         public interface IInterpolablePanelField // sliders
         {
-            float FactorOf(ManagedData data);
-            void NewFactor(ManagedData data, float factor);
+            float FactorOf(PositionedDevUINode node, ManagedData data);
+            void NewFactor(PositionedDevUINode node, ManagedData data, float factor);
         }
 
         /// <summary>
@@ -794,8 +792,8 @@ namespace ManagedPlacedObjects
         /// </summary>
         public interface IIterablePanelField // buttons, arrows
         {
-            void Next(ManagedData data);
-            void Prev(ManagedData data);
+            void Next(PositionedDevUINode node, ManagedData data);
+            void Prev(PositionedDevUINode node, ManagedData data);
         }
 
         /// <summary>
@@ -826,7 +824,7 @@ namespace ManagedPlacedObjects
 
             public override object FromString(string str)
             {
-                return Mathf.Clamp(float.Parse(str),min, max);
+                return Mathf.Clamp(float.Parse(str), min, max);
             }
 
             protected virtual int NumberOfDecimals()
@@ -847,7 +845,7 @@ namespace ManagedPlacedObjects
 
             public override float SizeOfLargestDisplayValue()
             {
-                return HUD.DialogBox.meanCharWidth*(Mathf.FloorToInt(Mathf.Max(Mathf.Abs(min), Mathf.Abs(max))).ToString().Length + 2 + NumberOfDecimals());
+                return HUD.DialogBox.meanCharWidth * (Mathf.FloorToInt(Mathf.Max(Mathf.Abs(min), Mathf.Abs(max))).ToString().Length + 2 + NumberOfDecimals());
             }
 
             public override string DisplayValueForNode(PositionedDevUINode node, ManagedData data)
@@ -860,21 +858,21 @@ namespace ManagedPlacedObjects
             /// <summary>
             /// Implements <see cref="IInterpolablePanelField"/>. Called from UI sliders.
             /// </summary>
-            public virtual float FactorOf(ManagedData data)
+            public virtual float FactorOf(PositionedDevUINode node, ManagedData data)
             {
                 return ((max - min) == 0) ? 0f : (((float)data.GetValue<float>(key) - min) / (max - min));
             }
             /// <summary>
             /// Implements <see cref="IInterpolablePanelField"/>. Called from UI sliders.
             /// </summary>
-            public virtual void NewFactor(ManagedData data, float factor)
+            public virtual void NewFactor(PositionedDevUINode node, ManagedData data, float factor)
             {
                 data.SetValue<float>(key, min + factor * (max - min));
             }
             /// <summary>
             /// Implements <see cref="IIterablePanelField"/>. Called from UI buttons and arrows.
             /// </summary>
-            public virtual void Next(ManagedData data)
+            public virtual void Next(PositionedDevUINode node, ManagedData data)
             {
                 float val = data.GetValue<float>(key) + increment;
                 if (val > max) val = min;
@@ -883,7 +881,7 @@ namespace ManagedPlacedObjects
             /// <summary>
             /// Implements <see cref="IIterablePanelField"/>. Called from UI buttons and arrows.
             /// </summary>
-            public virtual void Prev(ManagedData data)
+            public virtual void Prev(PositionedDevUINode node, ManagedData data)
             {
                 float val = data.GetValue<float>(key) - increment;
                 if (val < min) val = max;
@@ -926,28 +924,28 @@ namespace ManagedPlacedObjects
             /// <summary>
             /// Implements <see cref="IInterpolablePanelField"/>. Called from UI sliders.
             /// </summary>
-            public virtual float FactorOf(ManagedData data)
+            public virtual float FactorOf(PositionedDevUINode node, ManagedData data)
             {
                 return data.GetValue<bool>(key) ? 1f : 0f;
             }
             /// <summary>
             /// Implements <see cref="IInterpolablePanelField"/>. Called from UI sliders.
             /// </summary>
-            public virtual void NewFactor(ManagedData data, float factor)
+            public virtual void NewFactor(PositionedDevUINode node, ManagedData data, float factor)
             {
                 data.SetValue(key, factor > 0.5f);
             }
             /// <summary>
             /// Implements <see cref="IIterablePanelField"/>. Called from UI buttons and arrows.
             /// </summary>
-            public virtual void Next(ManagedData data)
+            public virtual void Next(PositionedDevUINode node, ManagedData data)
             {
                 data.SetValue(key, !data.GetValue<bool>(key));
             }
             /// <summary>
             /// Implements <see cref="IIterablePanelField"/>. Called from UI buttons and arrows.
             /// </summary>
-            public virtual void Prev(ManagedData data)
+            public virtual void Prev(PositionedDevUINode node, ManagedData data)
             {
                 data.SetValue(key, !data.GetValue<bool>(key));
             }
@@ -961,8 +959,8 @@ namespace ManagedPlacedObjects
             protected readonly Type type;
             protected Enum[] _possibleValues;
             /// <summary>
-            /// Creates a <see cref="ManagedField"/> that stores an <see cref="Enum"/> of the specified type. Cannot be used as Attribute.
-            /// Instead, you should pass this object to <see cref="ManagedData.ManagedData(PlacedObject, ManagedField[])"/> and mark your field with the <see cref="ManagedData.BackedByField"/> attribute.
+            /// Creates a <see cref="ManagedField"/> that stores an <see cref="Enum"/> of the specified type.
+            /// Cannot be used as Attribute, instead you should pass this object to <see cref="ManagedData.ManagedData(PlacedObject, ManagedField[])"/> and mark your field with the <see cref="ManagedData.BackedByField"/> attribute.
             /// </summary>
             /// <param name="key">The key to access that field with</param>
             /// <param name="type">the enum type this field is for</param>
@@ -970,7 +968,7 @@ namespace ManagedPlacedObjects
             /// <param name="possibleValues">the acceptable values for this field, defaults to a deferred call to <see cref="Enum.GetValues"/> for the type</param>
             /// <param name="control">the type of UI for this field</param>
             /// <param name="displayName">a display name for the panel, defaults to <paramref name="key"/></param>
-            public EnumField(string key, Type type, Enum defaultValue, Enum[] possibleValues = null, ControlType control = ControlType.arrows, string displayName = null) : base(key, (possibleValues != null && !possibleValues.Contains(defaultValue))? possibleValues[0] : defaultValue, control, displayName)
+            public EnumField(string key, Type type, Enum defaultValue, Enum[] possibleValues = null, ControlType control = ControlType.arrows, string displayName = null) : base(key, (possibleValues != null && !possibleValues.Contains(defaultValue)) ? possibleValues[0] : defaultValue, control, displayName)
             {
                 this.type = type;
                 this._possibleValues = possibleValues;
@@ -1000,28 +998,28 @@ namespace ManagedPlacedObjects
             /// <summary>
             /// Implements <see cref="IInterpolablePanelField"/>. Called from UI sliders.
             /// </summary>
-            public virtual float FactorOf(ManagedData data)
+            public virtual float FactorOf(PositionedDevUINode node, ManagedData data)
             {
                 return (float)Array.IndexOf(PossibleValues, data.GetValue<Enum>(key)) / (float)(PossibleValues.Length - 1);
             }
             /// <summary>
             /// Implements <see cref="IInterpolablePanelField"/>. Called from UI sliders.
             /// </summary>
-            public virtual void NewFactor(ManagedData data, float factor)
+            public virtual void NewFactor(PositionedDevUINode node, ManagedData data, float factor)
             {
                 data.SetValue<Enum>(key, PossibleValues[Mathf.RoundToInt(factor * (PossibleValues.Length - 1))]);
             }
             /// <summary>
             /// Implements <see cref="IIterablePanelField"/>. Called from UI buttons and arrows.
             /// </summary>
-            public virtual void Next(ManagedData data)
+            public virtual void Next(PositionedDevUINode node, ManagedData data)
             {
                 data.SetValue<Enum>(key, PossibleValues[(Array.IndexOf(PossibleValues, data.GetValue<Enum>(key)) + 1) % PossibleValues.Length]);
             }
             /// <summary>
             /// Implements <see cref="IIterablePanelField"/>. Called from UI buttons and arrows.
             /// </summary>
-            public virtual void Prev(ManagedData data)
+            public virtual void Prev(PositionedDevUINode node, ManagedData data)
             {
                 data.SetValue<Enum>(key, PossibleValues[(Array.IndexOf(PossibleValues, data.GetValue<Enum>(key)) - 1 + PossibleValues.Length) % PossibleValues.Length]);
             }
@@ -1088,21 +1086,21 @@ namespace ManagedPlacedObjects
             /// <summary>
             /// Implements <see cref="IInterpolablePanelField"/>. Called from UI sliders.
             /// </summary>
-            public virtual float FactorOf(ManagedData data)
+            public virtual float FactorOf(PositionedDevUINode node, ManagedData data)
             {
                 return (max - min == 0) ? 0f : (data.GetValue<int>(key) - min) / (float)(max - min);
             }
             /// <summary>
             /// Implements <see cref="IInterpolablePanelField"/>. Called from UI sliders.
             /// </summary>
-            public virtual void NewFactor(ManagedData data, float factor)
+            public virtual void NewFactor(PositionedDevUINode node, ManagedData data, float factor)
             {
                 data.SetValue<int>(key, Mathf.RoundToInt(min + factor * (max - min)));
             }
             /// <summary>
             /// Implements <see cref="IIterablePanelField"/>. Called from UI buttons and arrows.
             /// </summary>
-            public virtual void Next(ManagedData data)
+            public virtual void Next(PositionedDevUINode node, ManagedData data)
             {
                 int val = data.GetValue<int>(key) + 1;
                 if (val > max) val = min;
@@ -1111,7 +1109,7 @@ namespace ManagedPlacedObjects
             /// <summary>
             /// Implements <see cref="IIterablePanelField"/>. Called from UI buttons and arrows.
             /// </summary>
-            public virtual void Prev(ManagedData data)
+            public virtual void Prev(PositionedDevUINode node, ManagedData data)
             {
                 int val = data.GetValue<int>(key) - 1;
                 if (val < min) val = max;
@@ -1142,19 +1140,42 @@ namespace ManagedPlacedObjects
 
             }
 
+            protected readonly static Dictionary<string, string> replacements = new Dictionary<string, string>
+            {
+                { ": ","%1" },
+                { ", ","%2" },
+                { "><","%3" },
+                { "~","%4" },
+                { "%","%0" }, // this goes last, very important
+            };
+
             public override object FromString(string str)
             {
-                return str;
+                //return str[0];
+                return replacements.Aggregate(str, (current, value) =>
+                    current.Replace(value.Value, value.Key));
             }
 
             public override string ToString(object value)
             {
-                return value.ToString(); // should already be a string
+                //return new string[] { value.ToString() };
+                return replacements.Reverse().Aggregate(value.ToString(), (current, val) =>
+                    current.Replace(val.Key, val.Value));
             }
 
             public override float SizeOfLargestDisplayValue()
             {
                 return HUD.DialogBox.meanCharWidth * 25; // No character limit but this is the expected reasonable max anyone would be using ?
+            }
+
+            public override string DisplayValueForNode(PositionedDevUINode node, ManagedData data) // bypass replacements
+            {
+                return data.GetValue<string>(key);
+            }
+
+            public override void ParseFromText(PositionedDevUINode node, ManagedData data, string newValue) // no replacements
+            {
+                data.SetValue(key, newValue);
             }
         }
 
@@ -1165,8 +1186,8 @@ namespace ManagedPlacedObjects
         {
             protected readonly VectorReprType controlType;
             /// <summary>
-            /// Creates a <see cref="ManagedField"/> that stores a <see cref="Vector2"/>. Cannot be used as Attribute.
-            /// Instead, you should pass this object to <see cref="ManagedData.ManagedData(PlacedObject, ManagedField[])"/> and mark your field with the <see cref="ManagedData.BackedByField"/> attribute.
+            /// Creates a <see cref="ManagedField"/> that stores a <see cref="Vector2"/>.
+            /// Cannot be used as Attribute, instead you should pass this object to <see cref="ManagedData.ManagedData(PlacedObject, ManagedField[])"/> and mark your field with the <see cref="ManagedData.BackedByField"/> attribute.
             /// </summary>
             /// <param name="key">The key to access that field with</param>
             /// <param name="defaultValue">the value a new data object is generated with</param>
@@ -1209,8 +1230,8 @@ namespace ManagedPlacedObjects
         {
             protected readonly IntVectorReprType controlType;
             /// <summary>
-            /// Creates a <see cref="ManagedField"/> that stores a <see cref="RWCustom.IntVector2"/>. Cannot be used as Attribute.
-            /// Instead, you should pass this object to <see cref="ManagedData.ManagedData(PlacedObject, ManagedField[])"/> and mark your field with the <see cref="ManagedData.BackedByField"/> attribute.
+            /// Creates a <see cref="ManagedField"/> that stores a <see cref="RWCustom.IntVector2"/>.
+            /// Cannot be used as Attribute, instead you should pass this object to <see cref="ManagedData.ManagedData(PlacedObject, ManagedField[])"/> and mark your field with the <see cref="ManagedData.BackedByField"/> attribute.
             /// </summary>
             /// <param name="key">The key to access that field with</param>
             /// <param name="defaultValue">the value a new data object is generated with</param>
@@ -1248,9 +1269,253 @@ namespace ManagedPlacedObjects
             }
         }
 
+        /// <summary>
+        /// A <see cref="ManagedField"/> for a <see cref="UnityEngine.Color"/> value.
+        /// </summary>
+        public class ColorField : ManagedFieldWithPanel, IInterpolablePanelField
+        {
+            /// <summary>
+            /// Creates a <see cref="ManagedField"/> that stores a <see cref="UnityEngine.Color"/>.
+            /// Cannot be used as Attribute, instead you should pass this object to <see cref="ManagedData.ManagedData(PlacedObject, ManagedField[])"/> and mark your field with the <see cref="ManagedData.BackedByField"/> attribute.
+            /// </summary>
+            /// <param name="key">The key to access that field with</param>
+            /// <param name="defaultColor">the value a new data object is generated with</param>
+            /// <param name="controlType">one of <see cref="ManagedFieldWithPanel.ControlType.text"/> or <see cref="ManagedFieldWithPanel.ControlType.slider"/></param>
+            public ColorField(string key, Color defaultColor, ControlType controlType = ControlType.text, string displayName = null) : base(key, defaultColor, controlType, displayName) { }
+
+            public override object FromString(string str)
+            {
+                return new Color(
+                        Convert.ToInt32(str.Substring(0, 2), 16) / 255f,
+                        Convert.ToInt32(str.Substring(2, 2), 16) / 255f,
+                        Convert.ToInt32(str.Substring(4, 2), 16) / 255f);
+            }
+
+            public override string ToString(object value)
+            {
+                Color color = (Color)value;
+                return string.Join("", new string[] {Mathf.RoundToInt(color.r * 255).ToString("X2"),
+                    Mathf.RoundToInt(color.g * 255).ToString("X2"),
+                    Mathf.RoundToInt(color.b * 255).ToString("X2")});
+            }
+
+            public override void ParseFromText(PositionedDevUINode node, ManagedData data, string newValue)
+            {
+                if (newValue.StartsWith("#")) newValue = newValue.Substring(1);
+                if (newValue.Length != 6) throw new ArgumentException();
+                data.SetValue(key, this.FromString(newValue));
+            }
+
+            public override string DisplayValueForNode(PositionedDevUINode node, ManagedData data)
+            {
+                switch (this.control)
+                {
+                    case ControlType.slider:
+                        Color color = data.GetValue<Color>(key);
+                        ColorSliderControl control = node.parentNode as ColorSliderControl;
+                        if (node == control.rslider) return Mathf.RoundToInt(color.r * 255).ToString();
+                        if (node == control.gslider) return Mathf.RoundToInt(color.g * 255).ToString();
+                        return Mathf.RoundToInt(color.b * 255).ToString();
+                    case ControlType.text:
+                        return "#" + ToString(data.GetValue<object>(key));
+                    default:
+                        return null;
+                }
+            }
+            public override float SizeOfLargestDisplayValue()
+            {
+                switch (this.control)
+                {
+                    case ControlType.slider:
+                        return HUD.DialogBox.meanCharWidth * (4); ;
+                    case ControlType.text:
+                        return HUD.DialogBox.meanCharWidth * (9); ;
+                    default:
+                        return 0;
+                }
+            }
+
+            public override float SizeOfDisplayname()
+            {
+                switch (this.control)
+                {
+                    case ControlType.slider:
+                        return HUD.DialogBox.meanCharWidth * (displayName.Length + 6);
+                    default:
+                        return base.SizeOfDisplayname();
+                }
+            }
+
+            public override Vector2 SizeOfPanelUiMinusName()
+            {
+                switch (control)
+                {
+                    case ControlType.slider:
+                        Vector2 size = base.SizeOfPanelUiMinusName();
+                        size.y = 60;
+                        return size;
+                    default:
+                        return base.SizeOfPanelUiMinusName();
+                }
+
+            }
+
+            public override PositionedDevUINode MakeControlPanelNode(ManagedData managedData, ManagedControlPanel panel, float sizeOfDisplayname)
+            {
+                switch (control)
+                {
+                    case ControlType.slider:
+                        return new ColorSliderControl(this, managedData, panel, sizeOfDisplayname);
+                    case ControlType.text:
+                        return base.MakeControlPanelNode(managedData, panel, sizeOfDisplayname);
+                    case ControlType.arrows:
+                    case ControlType.button:
+                        throw new NotImplementedException();
+                    default:
+                        break;
+                }
+                return null;
+            }
+            public float FactorOf(PositionedDevUINode node, ManagedData data)
+            {
+                Color color = data.GetValue<Color>(key);
+                ColorSliderControl control = node.parentNode as ColorSliderControl;
+                if (node == control.rslider) return color.r;
+                if (node == control.gslider) return color.g;
+                return color.b;
+
+            }
+
+            public void NewFactor(PositionedDevUINode node, ManagedData data, float factor)
+            {
+                Color color = data.GetValue<Color>(key);
+                ColorSliderControl control = node.parentNode as ColorSliderControl;
+                if (node == control.rslider) color.r = factor;
+                else if (node == control.gslider) color.g = factor;
+                else color.b = factor;
+                data.SetValue<Color>(key, color);
+            }
+
+            private class ColorSliderControl : PositionedDevUINode
+            {
+                public ManagedSlider rslider;
+                public ManagedSlider gslider;
+                public ManagedSlider bslider;
+
+                public ColorSliderControl(ColorField field, ManagedData managedData, DevUINode parent, float sizeOfDisplayname) : base(parent.owner, field.key, parent, Vector2.zero)
+                {
+                    this.rslider = new ManagedSlider(field, managedData, this, sizeOfDisplayname);
+                    rslider.pos = new Vector2(0, 40);
+                    (rslider.subNodes[0] as DevUILabel).Text += " - R";
+                    this.subNodes.Add(rslider);
+                    this.gslider = new ManagedSlider(field, managedData, this, sizeOfDisplayname);
+                    (gslider.subNodes[0] as DevUILabel).Text += " - G";
+                    gslider.pos = new Vector2(0, 20);
+                    this.subNodes.Add(gslider);
+                    this.bslider = new ManagedSlider(field, managedData, this, sizeOfDisplayname);
+                    (bslider.subNodes[0] as DevUILabel).Text += " - B";
+                    this.subNodes.Add(bslider);
+                }
+            }
+        }
+
+        public class DrivenVector2Field : Vector2Field
+        {
+            private readonly string keyOfOther;
+            private readonly DrivenControlType drivenControlType;
+
+            public enum DrivenControlType
+            {
+                perpendicularLine,
+                perpendicularOval
+            }
+
+            public DrivenVector2Field(string keyofSelf, string keyOfOther, Vector2 defaultValue, DrivenControlType controlType = DrivenControlType.perpendicularLine) : base(keyofSelf, defaultValue, VectorReprType.none)
+            {
+                this.keyOfOther = keyOfOther;
+                this.drivenControlType = controlType;
+            }
+
+            public override DevUINode MakeAditionalNodes(ManagedData managedData, ManagedRepresentation managedRepresentation)
+            {
+                return new OvalControl(this, managedData, managedRepresentation, drivenControlType);
+            }
+
+            public class OvalControl : PositionedDevUINode
+            {
+                protected readonly DrivenVector2Field control;
+                protected readonly ManagedData data;
+                protected readonly DrivenControlType controlType;
+                protected Handle handleB;
+                protected FSprite circleSprite;
+                protected FSprite lineBSprite;
+
+                public OvalControl(DrivenVector2Field control, ManagedData data, PositionedDevUINode repr, DrivenControlType controlType) : base(repr.owner, control.key, repr, Vector2.zero)
+                {
+                    this.control = control;
+                    this.data = data;
+                    this.controlType = controlType;
+
+                    handleB = new Handle(owner, "V_Handle", this, new Vector2(100f, 0f));
+                    handleB.subNodes.Add(new DevUILabel(owner, "hbl", handleB, new Vector2(-3.5f, -7.5f), 16, "d") { spriteColor = Color.clear });
+                    this.subNodes.Add(handleB);
+
+                    this.handleB.pos = data.GetValue<Vector2>(control.key);
+
+                    switch (controlType)
+                    {
+                        case DrivenControlType.perpendicularLine:
+                            this.fSprites.Add(this.lineBSprite = new FSprite("pixel", true) { anchorY = 0f });
+                            owner.placedObjectsContainer.AddChild(this.lineBSprite);
+                            break;
+                        case DrivenControlType.perpendicularOval:
+                            this.fSprites.Add(this.circleSprite = new FSprite("Futile_White", true)
+                            {
+                                shader = owner.room.game.rainWorld.Shaders["VectorCircle"],
+                                alpha = 0.02f
+                            });
+                            owner.placedObjectsContainer.AddChild(this.circleSprite);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+                public override void Refresh()
+                {
+                    base.Refresh();
+                    Vector2 drivingPos = data.GetValue<Vector2>(control.keyOfOther);
+                    Vector2 perp = RWCustom.Custom.PerpendicularVector(drivingPos);
+                    handleB.pos = perp * handleB.pos.magnitude;// * handleB.pos.magnitude;
+                    switch (controlType)
+                    {
+                        case DrivenControlType.perpendicularLine:
+                            lineBSprite.SetPosition(absPos);
+                            lineBSprite.scaleY = handleB.pos.magnitude;
+                            lineBSprite.rotation = RWCustom.Custom.VecToDeg(handleB.pos);
+                            break;
+                        case DrivenControlType.perpendicularOval:
+                            circleSprite.SetPosition(absPos);
+                            circleSprite.scaleY = drivingPos.magnitude / 8f;
+                            circleSprite.scaleX = handleB.pos.magnitude / 8f;
+                            circleSprite.rotation = RWCustom.Custom.VecToDeg(drivingPos);
+                            break;
+                        default:
+                            break;
+                    }
+                    data.SetValue<Vector2>(control.key, handleB.pos);
+                }
+            }
+        }
+
+
         #endregion FIELDS
 
         #region CONTROLS
+
+        // An undocumented mess. Have a look around, find what suits you, maybe implement your own.
+        // in commit d2dad8768371565bb9b538263ac0b0ac595913b7 there was a slider-button used for text before text input became a thing
+        // an arrows-text combo would also be amazing for enums and ints wink wink
 
         public class ManagedVectorHandle : Handle // All-in-one super handle
         {
@@ -1378,7 +1643,7 @@ namespace ManagedPlacedObjects
             protected readonly int pixel = -1;
             protected readonly int[] rect;
 
-            public ManagedIntHandle(IntVector2Field field, ManagedData managedData, ManagedRepresentation repr, IntVector2Field.IntVectorReprType reprType) : base(repr.owner, field.key, repr, managedData.GetValue<RWCustom.IntVector2>(field.key).ToVector2()*20f)
+            public ManagedIntHandle(IntVector2Field field, ManagedData managedData, ManagedRepresentation repr, IntVector2Field.IntVectorReprType reprType) : base(repr.owner, field.key, repr, managedData.GetValue<RWCustom.IntVector2>(field.key).ToVector2() * 20f)
             {
                 this.field = field;
                 this.data = managedData;
@@ -1451,7 +1716,7 @@ namespace ManagedPlacedObjects
                 RWCustom.IntVector2 parentIntPos = new RWCustom.IntVector2(Mathf.FloorToInt(parentPos.x / 20f), Mathf.FloorToInt(parentPos.y / 20f));
                 // relativize again
                 ownIntPos -= parentIntPos;
-                newPos = ownIntPos.ToVector2()*20f;
+                newPos = ownIntPos.ToVector2() * 20f;
 
                 data.SetValue<RWCustom.IntVector2>(field.key, ownIntPos);
                 base.Move(newPos); // calls refresh
@@ -1460,7 +1725,7 @@ namespace ManagedPlacedObjects
             public override void Refresh()
             {
                 base.Refresh();
-                pos = data.GetValue<RWCustom.IntVector2>(field.key).ToVector2()*20f;
+                pos = data.GetValue<RWCustom.IntVector2>(field.key).ToVector2() * 20f;
 
                 if (pixel >= 0)
                 {
@@ -1468,7 +1733,7 @@ namespace ManagedPlacedObjects
                     {
 
                         case IntVector2Field.IntVectorReprType.tile:
-                            base.MoveSprite(pixel, new Vector2(Mathf.FloorToInt(absPos.x / 20f), Mathf.FloorToInt(absPos.y / 20f))*20f);
+                            base.MoveSprite(pixel, new Vector2(Mathf.FloorToInt(absPos.x / 20f), Mathf.FloorToInt(absPos.y / 20f)) * 20f);
                             break;
                         case IntVector2Field.IntVectorReprType.line:
                         case IntVector2Field.IntVectorReprType.fourdir:
@@ -1482,7 +1747,7 @@ namespace ManagedPlacedObjects
                             break;
                     }
                 }
-                
+
                 if (rect != null)
                 {
                     Vector2 parentPos = (this.parentNode as PositionedDevUINode).absPos;
@@ -1534,7 +1799,7 @@ namespace ManagedPlacedObjects
             protected readonly IInterpolablePanelField interpolable;
             protected readonly ManagedData data;
 
-            public ManagedSlider(ManagedFieldWithPanel field, ManagedData data, ManagedControlPanel panel, float sizeOfDisplayname) : base(panel.owner, field.key, panel, Vector2.zero, field.displayName, false, sizeOfDisplayname)
+            public ManagedSlider(ManagedFieldWithPanel field, ManagedData data, DevUINode parent, float sizeOfDisplayname) : base(parent.owner, field.key, parent, Vector2.zero, sizeOfDisplayname > 0 ? field.displayName : "", false, sizeOfDisplayname)
             {
                 this.field = field;
                 this.interpolable = field as IInterpolablePanelField;
@@ -1552,7 +1817,7 @@ namespace ManagedPlacedObjects
 
             public override void NubDragged(float nubPos)
             {
-                interpolable.NewFactor(data, nubPos);
+                interpolable.NewFactor(this, data, nubPos);
                 // this.managedControlPanel.managedRepresentation.Refresh(); // is this relevant ?
                 this.Refresh();
             }
@@ -1560,7 +1825,7 @@ namespace ManagedPlacedObjects
             public override void Refresh()
             {
                 base.Refresh();
-                float value = interpolable.FactorOf(data);
+                float value = interpolable.FactorOf(this, data);
                 base.NumberText = field.DisplayValueForNode(this, data);
                 base.RefreshNubPos(value);
             }
@@ -1573,7 +1838,7 @@ namespace ManagedPlacedObjects
             protected readonly IIterablePanelField iterable;
             protected readonly ManagedData data;
             public ManagedButton(ManagedFieldWithPanel field, ManagedData data, ManagedControlPanel panel, float sizeOfDisplayname) : base(panel.owner, field.key, panel, Vector2.zero)
-                
+
             {
                 this.field = field;
                 this.iterable = field as IIterablePanelField;
@@ -1585,7 +1850,7 @@ namespace ManagedPlacedObjects
 
             public virtual void Signal(DevUISignalType type, DevUINode sender, string message) // from button
             {
-                iterable.Next(data);
+                iterable.Next(this, data);
                 this.Refresh();
             }
 
@@ -1602,7 +1867,7 @@ namespace ManagedPlacedObjects
             protected readonly IIterablePanelField iterable;
             protected readonly ManagedData data;
 
-            public ManagedArrowSelector(ManagedFieldWithPanel field, ManagedData managedData, ManagedControlPanel panel, float sizeOfDisplayname) : base(panel.owner, "ManagedArrowSelector", panel, Vector2.zero, field.displayName )
+            public ManagedArrowSelector(ManagedFieldWithPanel field, ManagedData managedData, ManagedControlPanel panel, float sizeOfDisplayname) : base(panel.owner, "ManagedArrowSelector", panel, Vector2.zero, field.displayName)
             {
                 this.field = field;
                 this.iterable = field as IIterablePanelField;
@@ -1627,13 +1892,13 @@ namespace ManagedPlacedObjects
 
             public override void Increment(int change)
             {
-                if(change == 1)
+                if (change == 1)
                 {
-                    iterable.Next(data);
+                    iterable.Next(this, data);
                 }
                 else if (change == -1)
                 {
-                    iterable.Prev(data);
+                    iterable.Prev(this, data);
                 }
 
                 this.Refresh();
@@ -1685,7 +1950,7 @@ namespace ManagedPlacedObjects
                     subNodes[1].fLabels[0].text = value;
                 }
             }
-            
+
             public override void Refresh()
             {
                 // No data refresh until the transaction is complete :/
@@ -1746,7 +2011,8 @@ namespace ManagedPlacedObjects
                 }
             }
 
-            protected virtual void TrySetValue(string newValue, bool endTransaction) {
+            protected virtual void TrySetValue(string newValue, bool endTransaction)
+            {
                 try
                 {
                     field.ParseFromText(this, data, newValue);

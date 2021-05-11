@@ -97,7 +97,7 @@ namespace ManagedPlacedObjects
         // it's just that flexible lol
         internal class CuriousObjectType : ManagedObjectType
         {
-            // Ignore the stuff in the baseclass and write your own if you want
+            // Ignore the stuff in the baseclass and write your own if you want to
             public CuriousObjectType() : base("CuriousObject", null, typeof(CuriousData), typeof(CuriousRepresentation)) // this could have been (PlacedObjects.CuriousObject, typeof(CuriousObject), typeof(...)...)
             {
             }
@@ -194,6 +194,7 @@ namespace ManagedPlacedObjects
             // and we create another one called rotation that we manage on our own
             class CuriousData : ManagedData
             {
+                #pragma warning disable 0649 // We're reflecting over these fields, stop worrying about it stupid compiler
                 // A field can be generated like this, and its value can be accessed directly
                 [FloatField("red", 0f, 1f, 0f, displayName:"Red Color")]
                 public float redcolor;
@@ -206,16 +207,23 @@ namespace ManagedPlacedObjects
                 [BackedByField("ev2")]
                 public Vector2 extraPos;
 
-                // Until there is a better implementation, you'll have to do this for Vector2Field, IntVector2Field and EnumField.
+                // Just make sure you pass all the expected fields to the ManagedData contructor
+                [BackedByField("ev3")]
+                public Vector2 extraPos2;
+
+                // Until there is a better implementation, you'll have to do this for Vector2Field, IntVector2Field, EnumField and ColorField.
                 [BackedByField("msid")]
                 public SoundID mySound;
-
+                #pragma warning restore 0649
+                
                 public float rotation;
 
-                public CuriousData(PlacedObject owner) : base(owner, new ManagedField[] { 
+                public CuriousData(PlacedObject owner) : base(owner, new ManagedField[] {
                     new FloatField("scale", 0.1f, 10f, 1f, displayName:"Scale"),
-                    new Vector2Field("ev2", new Vector2(-100, -40)),
-                    new EnumField("msid", typeof(SoundID), SoundID.Bat_Afraid_Flying_Sounds, new System.Enum[]{SoundID.Bat_Afraid_Flying_Sounds, SoundID.Bat_Attatch_To_Chain }),
+                    new Vector2Field("ev2", new Vector2(-100, -40), Vector2Field.VectorReprType.line),
+                    //new Vector2Field("ev3", new Vector2(-100, -40), Vector2Field.VectorReprType.none),
+                    new DrivenVector2Field("ev3", "ev2", new Vector2(-100, -40)), // Combines two vector2s in one single constrained control
+                    new EnumField("msid", typeof(SoundID), SoundID.Bat_Afraid_Flying_Sounds, new System.Enum[]{SoundID.Bat_Afraid_Flying_Sounds, SoundID.Bat_Attatch_To_Chain }, displayName:"What sound a bat makes"),
                 })
                 {
                     this.rotation = UnityEngine.Random.value * 360f;
