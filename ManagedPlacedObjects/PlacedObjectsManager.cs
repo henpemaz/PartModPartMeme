@@ -659,11 +659,12 @@ namespace ManagedPlacedObjects
                 for (int i = 0; i < fields.Length; i++)
                 {
                     object val = fields[i].FromString(array[datastart + i]);
-                    valuesByKey[fields[i].key] = val;
-                    if (fieldInfosByKey.ContainsKey(fields[i].key))
-                    {
-                        fieldInfosByKey[fields[i].key].SetValue(this, val);
-                    }
+                    SetValue(fields[i].key, val);
+                    //valuesByKey[fields[i].key] = val;
+                    //if (fieldInfosByKey.ContainsKey(fields[i].key))
+                    //{
+                    //    fieldInfosByKey[fields[i].key].SetValue(this, val);
+                    //}
                 }
             }
 
@@ -672,7 +673,7 @@ namespace ManagedPlacedObjects
             /// </summary>
             public override string ToString()
             {
-                return (NeedsControlPanel ? (panelPos.x.ToString() + "~" + panelPos.y.ToString() + "~") : "") + string.Join("~", Array.ConvertAll(fields, f => f.ToString(valuesByKey[f.key])));
+                return (NeedsControlPanel ? (panelPos.x.ToString() + "~" + panelPos.y.ToString() + "~") : "") + string.Join("~", Array.ConvertAll(fields, f => f.ToString(GetValue<object>(f.key))));//valuesByKey[f.key])));
             }
         }
 

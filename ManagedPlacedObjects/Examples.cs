@@ -167,7 +167,7 @@ namespace ManagedPlacedObjects
                 {
                     for (int i = 0; i < sLeaser.sprites.Length; i++)
                     {
-                        sLeaser.sprites[i].SetPosition(otherPlaces[i].pos - camPos);
+                        sLeaser.sprites[i].SetPosition(otherPlaces[i].pos + (this.placedObject.data as CuriousData).extraPos - camPos);
                         sLeaser.sprites[i].scale = (this.placedObject.data as CuriousData).GetValue<float>("scale");
                         sLeaser.sprites[i].rotation = (this.placedObject.data as CuriousData).rotation;
                         Color clr = sLeaser.sprites[i].color;
