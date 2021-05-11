@@ -56,7 +56,7 @@ namespace ManagedPlacedObjects
             RegisterManagedObject(curiousObjectLocation);
             // Could also be done with RegisterEmptyObjectType("CuriousObjectLocation", null, null);
 
-            // Registers my self implemented Manager
+            // Registers a self implemented Manager
             // It handles spawning its object, data and representation 
             RegisterManagedObject(new CuriousObjectType());
             // Could also be achieved with RegisterManagedObject(new ManagedObjectType("CuriousObject", typeof(CuriousObjectType.CuriousObject), typeof(CuriousObjectType.CuriousData), typeof(CuriousObjectType.CuriousRepresentation)));
@@ -83,6 +83,7 @@ namespace ManagedPlacedObjects
             }
         }
 
+
         // Some other objects, this time we're registering type, object, data and representation
         public static class EnumExt_ManagedPlacedObjects
         {
@@ -90,44 +91,38 @@ namespace ManagedPlacedObjects
             public static PlacedObject.Type CuriousObjectLocation;
         }
 
-        // An empty placedobject for making places in a room
-        // Oooops we don't even have to extend it for that, just call MangedObjectType with your type
-        //internal class CuriousObjectLocation : ManagedObjectType
-        //{
-        //    public CuriousObjectLocation() : base(EnumExt_ManagedPlacedObjects.CuriousObjectLocation, null, null, null)
-        //    {
-        //    }
-        //}
-
         // A very curious object, part managed part manual
-        // Overriding the base class here was optional, it's just that flexible lol
+        // Overriding the base class here was optional,
+        // you could have instantiated it passing all the types
+        // it's just that flexible lol
         internal class CuriousObjectType : ManagedObjectType
         {
             // Ignore the stuff in the baseclass and write your own if you want
-            public CuriousObjectType() : base("CuriousObject", null, null, null) // this could have been (PlacedObjects.CuriousObject, typeof(CuriousObject), typeof(...)...)
+            public CuriousObjectType() : base("CuriousObject", null, typeof(CuriousData), typeof(CuriousRepresentation)) // this could have been (PlacedObjects.CuriousObject, typeof(CuriousObject), typeof(...)...)
             {
             }
 
             // Override at your own risk ? the default behaviour works just fine, but maybe you know what you're doign
-            public override PlacedObject.Type GetObjectType()
-            {
-                return EnumExt_ManagedPlacedObjects.CuriousObject;
-            }
-
-            public override PlacedObject.Data MakeEmptyData(PlacedObject pObj)
-            {
-                return new CuriousData(pObj);
-            }
+            //public override PlacedObject.Type GetObjectType()
+            //{
+            //    return EnumExt_ManagedPlacedObjects.CuriousObject;
+            //}
 
             public override UpdatableAndDeletable MakeObject(PlacedObject placedObject, Room room)
             {
                 return new CuriousObject(placedObject, room);
             }
 
-            public override PlacedObjectRepresentation MakeRepresentation(PlacedObject pObj, ObjectsPage objPage)
-            {
-                return new CuriousRepresentation(GetObjectType(), objPage, pObj);
-            }
+            // Maybe you need different parameters for these ? You do you...
+            //public override PlacedObject.Data MakeEmptyData(PlacedObject pObj)
+            //{
+            //    return new CuriousData(pObj);
+            //}
+
+            //public override PlacedObjectRepresentation MakeRepresentation(PlacedObject pObj, ObjectsPage objPage)
+            //{
+            //    return new CuriousRepresentation(GetObjectType(), objPage, pObj);
+            //}
 
             // Our curious and useful object
             class CuriousObject : UpdatableAndDeletable, IDrawable
@@ -175,6 +170,9 @@ namespace ManagedPlacedObjects
                         sLeaser.sprites[i].SetPosition(otherPlaces[i].pos - camPos);
                         sLeaser.sprites[i].scale = (this.placedObject.data as CuriousData).GetValue<float>("scale");
                         sLeaser.sprites[i].rotation = (this.placedObject.data as CuriousData).rotation;
+                        Color clr = sLeaser.sprites[i].color;
+                        clr.r = (this.placedObject.data as CuriousData).redcolor;
+                        sLeaser.sprites[i].color = clr;
                     }
                 }
 
@@ -190,12 +188,35 @@ namespace ManagedPlacedObjects
             }
 
             // The data for our curious object
-            // We declare a managed field called "scale", and we create another one called rotation because why not
+            // We declare a managed field called "scale" in the base constructor,
+            // and another one called "red" that is tied to an actual field that can be accessed directly
+            // some more managed fields that arent used for anything
+            // and we create another one called rotation that we manage on our own
             class CuriousData : ManagedData
             {
+                // A field can be generated like this, and its value can be accessed directly
+                [FloatField("red", 0f, 1f, 0f, displayName:"Red Color")]
+                public float redcolor;
+
+                [StringField("mystring", "aaaaaaaa", "My String")]
+                public string mystring;
+
+                // For certain types it's not possible to use the Attribute notation, and you'll have to pass the field to the constructor
+                // but you can still link a field in your object to the managed field and they will stay in sync.
+                [BackedByField("ev2")]
+                public Vector2 extraPos;
+
+                // Until there is a better implementation, you'll have to do this for Vector2Field, IntVector2Field and EnumField.
+                [BackedByField("msid")]
+                public SoundID mySound;
+
                 public float rotation;
 
-                public CuriousData(PlacedObject owner) : base(owner, new ManagedField[] { new FloatField("scale", 0.1f, 10f, 1f, displayName:"Scale") })
+                public CuriousData(PlacedObject owner) : base(owner, new ManagedField[] { 
+                    new FloatField("scale", 0.1f, 10f, 1f, displayName:"Scale"),
+                    new Vector2Field("ev2", new Vector2(-100, -40)),
+                    new EnumField("msid", typeof(SoundID), SoundID.Bat_Afraid_Flying_Sounds, new System.Enum[]{SoundID.Bat_Afraid_Flying_Sounds, SoundID.Bat_Attatch_To_Chain }),
+                })
                 {
                     this.rotation = UnityEngine.Random.value * 360f;
                 }
@@ -212,7 +233,7 @@ namespace ManagedPlacedObjects
                     //Debug.Log("CuriousData deserializing from "+ s);
                     base.FromString(s);
                     string[] arr = Regex.Split(s, "~");
-                    rotation = float.Parse(arr[fields.Length + (needsControlPanel ? 2 : 0) + 0]); // a bit iffy
+                    rotation = float.Parse(arr[base.FieldsWhenSerialized + 0]);
                     //Debug.Log("CuriousData got rotation = " + rotation);
                 }
             }
@@ -235,6 +256,6 @@ namespace ManagedPlacedObjects
             }
         }
 
-        // And that was it, 3 somewhat functional objects in some... 220 lines of code.
+        // And that was it, 3 somewhat functional objects in not an awful lot of code.
     }
 }

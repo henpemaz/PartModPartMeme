@@ -8,6 +8,7 @@ using UnityEngine;
 
 using System.Security;
 using System.Security.Permissions;
+using System.Reflection;
 
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
@@ -207,7 +208,7 @@ namespace ManagedPlacedObjects
         #endregion INTERNALS
 
         /// <summary>
-        /// Register a managed type to handle object, data and repr initialization during room load and devtools hooks
+        /// Register a <see cref="ManagedObjectType"/> to handle object, data and repr initialization during room load and devtools hooks
         /// </summary>
         /// <param name="obj"></param>
         public static void RegisterManagedObject(ManagedObjectType obj)
@@ -219,7 +220,7 @@ namespace ManagedPlacedObjects
         // Some shorthands
 
         /// <summary>
-        /// Shorthand for registering a FullyManagedObjectType.
+        /// Shorthand for registering a <see cref="FullyManagedObjectType"/>.
         /// Wraps an UpdateableAndDeletable into a managed type with managed data and UI.
         /// Can also be used with a null type to spawn a Managed data+representation with no object on room.load
         /// If the object isn't null its Constructor should take (Room, PlacedObject) or (PlacedObject, Room).
@@ -277,7 +278,7 @@ namespace ManagedPlacedObjects
             }
 
             /// <summary>
-            /// The PlacedObject.Type this is the manager for.
+            /// The <see cref="PlacedObject.Type"/> this is the manager for.
             /// </summary>
             public virtual PlacedObject.Type GetObjectType()
             {
@@ -312,7 +313,7 @@ namespace ManagedPlacedObjects
                     catch
                     {
                         try { return (UpdatableAndDeletable)Activator.CreateInstance(objectType, new object[] { room }); } // Objects that scan room for data or no data;
-                        catch { throw new ArgumentException("ManagedObjectType.MakeObject : objectType must have a constructor like (Room room, PlacedObject pObj) or (PlacedObject pObj, Room room) or (Room room)"); }
+                        catch { throw new ArgumentException("ManagedObjectType.MakeObject : objectType " + objectType.Name + " must have a constructor like (Room room, PlacedObject pObj) or (PlacedObject pObj, Room room) or (Room room)"); }
 
                     }
                 }
@@ -329,7 +330,7 @@ namespace ManagedPlacedObjects
                 catch
                 {
                     try { return (PlacedObject.Data)Activator.CreateInstance(dataType, new object[] { pObj, PlacedObject.LightFixtureData.Type.RedLight }); } // Redlights man
-                    catch { throw new ArgumentException("ManagedObjectType.MakeEmptyData : dataType must have a constructor like (PlacedObject pObj)"); }
+                    catch { throw new ArgumentException("ManagedObjectType.MakeEmptyData : dataType " + dataType.Name + " must have a constructor like (PlacedObject pObj)"); }
                 }
             }
 
@@ -344,14 +345,18 @@ namespace ManagedPlacedObjects
                 catch
                 {
                     try { return (PlacedObjectRepresentation)Activator.CreateInstance(reprType, new object[] { objPage.owner, placedType.ToString() + "_Rep", objPage, pObj, placedType.ToString(), false }); } // Resizeables man
-                    catch { throw new ArgumentException("ManagedObjectType.MakeRepresentation : reprType must have a constructor like (DevUI owner, string IDstring, DevUINode parentNode, PlacedObject pObj, string name)"); }
+                    catch
+                    {
+                        try { return (PlacedObjectRepresentation)Activator.CreateInstance(reprType, new object[] { pObj.type, objPage, pObj }); } // Our own silly types
+                        catch { throw new ArgumentException("ManagedObjectType.MakeRepresentation : reprType " + reprType.Name + " must have a constructor like (DevUI owner, string IDstring, DevUINode parentNode, PlacedObject pObj, string name) or (PlacedObject.Type placedType, ObjectsPage objPage, PlacedObject pObj)"); }
+                    }
                 }
             }
         }
 
         /// <summary>
-        /// Class for managing a wraped UpdateableAndDeletable object
-        /// Uses the fully managed data and representation types
+        /// Class for managing a wraped <see cref="UpdatableAndDeletable"/> object
+        /// Uses the fully managed data and representation types <see cref="ManagedData"/> and <see cref="ManagedRepresentation"/>
         /// </summary>
         public class FullyManagedObjectType : ManagedObjectType
         {
@@ -374,38 +379,40 @@ namespace ManagedPlacedObjects
         }
 
         /// <summary>
-        /// A field to handle serialization and generate UI for data
-        /// A field is merely a recipe/interface, the actual data is stored in the ManagedData data object for each pObj
+        /// A field to handle serialization and generate UI for your data, for use with <see cref="ManagedData"/>.
+        /// A field is merely a recipe/interface, the actual data is stored in the <see cref="ManagedData"/> data object for each pObj.
+        /// You can use a field as an <see cref="Attribute"/> anotating data fields in your class that inherits <see cref="ManagedData"/>.
         /// </summary>
-        public abstract class ManagedField
+        [AttributeUsage(AttributeTargets.Field)]
+        public abstract class ManagedField : Attribute
         {
             public readonly string key;
-            private readonly object _defaultValue;
-            public virtual object DefaultValue => _defaultValue; // I SUSPECT one day someone will run into a situation with enums where the default value doesn't exist at initialization. Enumextend moment. Lets be nice to that poor soul.
+            protected object defaultValue; // Removed reaonly, now one can be clever with defaults that apply to the next object being placed and such.
+            public virtual object DefaultValue => defaultValue; // I SUSPECT one day someone will run into a situation with enums where the default value doesn't exist at initialization. Enumextend moment. Lets be nice to that poor soul.
 
-            public ManagedField(string key, object defaultValue)
+            protected ManagedField(string key, object defaultValue)
             {
                 this.key = key;
-                this._defaultValue = defaultValue;
+                this.defaultValue = defaultValue;
             }
 
             /// <summary>
-            /// Serialization method called from ManagedData
+            /// Serialization method called from <see cref="ManagedData.ToString"/>
             /// </summary>
             public virtual string ToString(object value) => value.ToString();
 
             /// <summary>
-            /// Deserialization method called from ManagedData. Don't forget to sanitize your data.
+            /// Deserialization method called from <see cref="ManagedData.FromString"/>. Don't forget to sanitize your data.
             /// </summary>
             public abstract object FromString(string str);
 
             /// <summary>
-            /// Wether this field spawns a control panel node or not. Inherit ManagedFieldWithPanel for actually creating them.
+            /// Wether this field spawns a control panel node or not. Inherit <see cref="ManagedFieldWithPanel"/> for actually creating them.
             /// </summary>
             public virtual bool NeedsControlPanel { get => this is ManagedFieldWithPanel; }
 
             /// <summary>
-            /// Create an aditional DevUINode for manipulating this field. Inherit a PositionedDevUINode if you need to create several nodes.
+            /// Create an aditional DevUINode for manipulating this field. Inherit a PositionedDevUINode if you need to create several sub-nodes.
             /// </summary>
             public virtual DevUINode MakeAditionalNodes(ManagedData managedData, ManagedRepresentation managedRepresentation)
             {
@@ -414,7 +421,7 @@ namespace ManagedPlacedObjects
         }
 
         /// <summary>
-        /// A field that generates a control-panel control
+        /// A <see cref="ManagedField"/> that can generate a control-panel control, for use with <see cref="ManagedRepresentation"/>
         /// </summary>
         public abstract class ManagedFieldWithPanel : ManagedField
         {
@@ -426,6 +433,7 @@ namespace ManagedPlacedObjects
                 this.control = control;
                 this.displayName = displayName ?? key;
             }
+
             public enum ControlType
             {
                 none,
@@ -436,17 +444,20 @@ namespace ManagedPlacedObjects
             }
 
             /// <summary>
-            /// Used internally for control panel display. Consumed by MakeControls to expand the panel and space controls.
+            /// Used internally for control panel display. Consumed by <see cref="ManagedRepresentation.MakeControls"/> to expand the panel and space controls.
             /// </summary>
-            public virtual Vector2 PanelUiSizeMinusName { get => SizeOfPanelNode() + new Vector2(SizeOfLargestDisplayValue(), 0f); }
+            public virtual Vector2 SizeOfPanelUiMinusName()
+            {
+                return SizeOfPanelNode() + new Vector2(SizeOfLargestDisplayValue(), 0f);
+            }
 
             /// <summary>
-            /// Used internally for control panel display. Consumed by PanelUiSizeMinusName and final UI.
+            /// Used internally for control panel display. Consumed by <see cref="SizeOfPanelUiMinusName"/> and final UI nodes.
             /// </summary>
             public abstract float SizeOfLargestDisplayValue();
 
             /// <summary>
-            /// Approx size of the UI minus displayname and valuedisplay width. Consumed by PanelUiSizeMinusName.
+            /// Approx size of the UI minus displayname and valuedisplay width. Consumed by <see cref="SizeOfPanelUiMinusName"/>.
             /// </summary>
             protected virtual Vector2 SizeOfPanelNode()
             {
@@ -469,7 +480,8 @@ namespace ManagedPlacedObjects
             }
 
             /// <summary>
-            /// Used internally for control panel display. Consumed by MakeControls to make controls aligned.
+            /// Used internally for control panel display.
+            /// Called from <see cref="ManagedRepresentation.MakeControls"/>
             /// </summary>
             public virtual float SizeOfDisplayname()
             {
@@ -478,6 +490,7 @@ namespace ManagedPlacedObjects
 
             /// <summary>
             /// Used internally for building the control panel display.
+            /// Called from <see cref="ManagedRepresentation.MakeControls"/>
             /// </summary>
             public virtual PositionedDevUINode MakeControlPanelNode(ManagedData managedData, ManagedControlPanel panel, float sizeOfDisplayname)
             {
@@ -496,7 +509,7 @@ namespace ManagedPlacedObjects
             }
 
             /// <summary>
-            /// Used internally for control panel display.
+            /// Used internally for controls in the panel to display the value of this field as text.
             /// </summary>
             public virtual string DisplayValueForNode(PositionedDevUINode node, ManagedData data)
             {
@@ -505,8 +518,8 @@ namespace ManagedPlacedObjects
             }
 
             /// <summary>
-            /// Used internally for text input parsing.
-            /// Should raise an exception if the value is invalid or can't be parsed (used for visual feedback on textinput)
+            /// Used internally for text input parsing by <see cref="ManagedStringControl"/>.
+            /// Should raise an <see cref="ArgumentException"/> if the value is invalid or can't be parsed (used for visual feedback on text input)
             /// </summary>
             public virtual void ParseFromText(PositionedDevUINode node, ManagedData data, string newValue)
             {
@@ -516,50 +529,128 @@ namespace ManagedPlacedObjects
 
 
         /// <summary>
-        /// Managed data type, handles managed fields
+        /// Managed data type, handles managed fields passed through the constuctor and through Attributes.
         /// </summary>
         public class ManagedData : PlacedObject.Data
         {
-            public ManagedData(PlacedObject owner, ManagedField[] fields) : base(owner)
+            public readonly ManagedField[] fields;
+            protected readonly Dictionary<string, FieldInfo> fieldInfosByKey;
+            protected readonly Dictionary<string, ManagedField> fieldsByKey;
+            protected readonly Dictionary<string, object> valuesByKey;
+
+            /// <summary>
+            /// Attribute for tying a field to a <see cref="ManagedField"/> that cannot be properly initialized as Attribute such as <see cref="Vector2Field"/> and <see cref="EnumField"/>.
+            /// </summary>
+            [AttributeUsage(AttributeTargets.Field)]
+            protected class BackedByField : Attribute
             {
-                this.fields = fields;
-                this.fieldsByKey = new Dictionary<string, ManagedField>();
-                this.valuesByKey = new Dictionary<string, object>();
+                public string key;
 
-                panelPos = new Vector2(100, 50);
-
-                this.needsControlPanel = false;
-                foreach (var field in fields)
+                public BackedByField(string key)
                 {
-                    if (fieldsByKey.ContainsKey(field.key)) throw new FormatException("fields with duplicated names are not a good idea sir");
-                    fieldsByKey[field.key] = field;
-                    valuesByKey[field.key] = field.DefaultValue;
-                    if (field.NeedsControlPanel) this.needsControlPanel = true;
+                    this.key = key;
                 }
             }
 
-            public readonly ManagedField[] fields;
-            protected readonly Dictionary<string, ManagedField> fieldsByKey;
-            protected readonly Dictionary<string, object> valuesByKey;
-            public readonly bool needsControlPanel;
-            public Vector2 panelPos;
+            /// <summary>
+            /// Instantiates the managed data object for use with a placed object in the roomSettings.
+            /// You shouldn't instantiate this on your own, it'll be called by the framework.
+            /// </summary>
+            /// <param name="owner">the <see cref="PlacedObject"/> this data belongs to</param>
+            /// <param name="paramFields">the <see cref="ManagedField"/>s for this data. Upon initialization it'll also scan for any annotated fields.</param>
+            public ManagedData(PlacedObject owner, ManagedField[] paramFields) : base(owner)
+            {
+                paramFields = paramFields ?? new ManagedField[0];
+                this.fields = paramFields;
+                this.fieldsByKey = new Dictionary<string, ManagedField>();
+                this.valuesByKey = new Dictionary<string, object>();
+                this.fieldInfosByKey = new Dictionary<string, FieldInfo>();
 
-            // I was thinking of extracting these to an interface but I'm not sure if it achieves anything if everything is properly inheritable ?
+                panelPos = new Vector2(100, 50);
+
+                // Scan for annotated fields
+                List<ManagedField> attrFields = new List<ManagedField>();
+                foreach (FieldInfo fieldInfo in this.GetType().GetFields())
+                {
+                    object[] customAttributes = fieldInfo.GetCustomAttributes(typeof(ManagedField),true);
+
+                    foreach (var attr in customAttributes) // There should be only one or zero anyways
+                    {
+                        ManagedField fieldAttr = attr as ManagedField;
+                        attrFields.Add(fieldAttr);
+                        fieldInfosByKey[fieldAttr.key] = fieldInfo;
+                        fieldInfo.SetValue(this, fieldAttr.DefaultValue);
+                    }
+                }
+                if(attrFields.Count > 0) // any annotated fields
+                {
+                    attrFields.Sort((f1, f2) => string.Compare(f1.key, f2.key)); // type.GetFields() does NOT guarantee order
+                    this.fields = paramFields.Concat(attrFields).ToArray();
+                }
+
+                // go through all fields, passed as parameter or annotated
+                this.NeedsControlPanel = false;
+                foreach (var field in this.fields)
+                {
+                    if (fieldsByKey.ContainsKey(field.key)) throw new ArgumentException("Fields with duplicated names : " + field.key);
+                    fieldsByKey[field.key] = field;
+                    valuesByKey[field.key] = field.DefaultValue;
+                    if (field.NeedsControlPanel) this.NeedsControlPanel = true;
+                }
+
+                // link backed fields
+                foreach (FieldInfo fieldInfo in this.GetType().GetFields())
+                {
+                    object[] customAttributes = fieldInfo.GetCustomAttributes(typeof(BackedByField), true);
+
+                    foreach (var attr in customAttributes) // There should be only one anyways ??? As long as they have different keys everything will be fiiiiine
+                    {
+                        BackedByField fieldAttr = attr as BackedByField;
+                        if (!fieldsByKey.ContainsKey(fieldAttr.key)) throw new ArgumentException("No such field for BackedByField : " + fieldAttr.key + ". Are you sure you created this field ?");
+                        if (fieldInfosByKey.ContainsKey(fieldAttr.key)) throw new ArgumentException("BackedByField for field already backing another field : " + fieldAttr.key);
+                        fieldInfosByKey[fieldAttr.key] = fieldInfo;
+                        fieldInfo.SetValue(this, valuesByKey[fieldAttr.key]);
+                    }
+                }
+            }
+
+            public Vector2 panelPos;
+            public virtual bool NeedsControlPanel { get; protected set; }
+            /// <summary>
+            /// For classes that inherit this to know where their data begins. Create something similar for your class if you intend it to be inherited further ;)
+            /// </summary>
+            protected int FieldsWhenSerialized => fields.Length + (NeedsControlPanel ? 2 : 0);
+
+            /// <summary>
+            /// Retrieves the value stored for the field represented by this key.
+            /// </summary>
             public virtual T GetValue<T>(string fieldName)
             {
-                return (T)valuesByKey[fieldName];
+                if (fieldInfosByKey.TryGetValue(fieldName, out FieldInfo field))
+                    return (T)field.GetValue(this);
+                else
+                    return (T)valuesByKey[fieldName];
             }
 
+            /// <summary>
+            /// Stores a new value for the field represented by this key. Used mostly by the managed UI. Changes are only saved when the Save button is clicked on the devtools ui
+            /// </summary>
             public virtual void SetValue<T>(string fieldName, T value)
             {
-                valuesByKey[fieldName] = (object) value;
+                if (fieldInfosByKey.TryGetValue(fieldName, out FieldInfo field))
+                    field.SetValue(this, value);
+                else
+                    valuesByKey[fieldName] = (object)value;
             }
 
+            /// <summary>
+            /// Deserialization function called when the placedobject for this data is loaded
+            /// </summary>
             public override void FromString(string s)
             {
                 string[] array = Regex.Split(s, "~");
                 int datastart = 0;
-                if (needsControlPanel)
+                if (NeedsControlPanel)
                 {
                     this.panelPos = new Vector2(float.Parse(array[0]), float.Parse(array[1]));
                     datastart = 2;
@@ -567,16 +658,29 @@ namespace ManagedPlacedObjects
 
                 for (int i = 0; i < fields.Length; i++)
                 {
-                    valuesByKey[fields[i].key] = fields[i].FromString(array[datastart+i]);
+                    object val = fields[i].FromString(array[datastart + i]);
+                    valuesByKey[fields[i].key] = val;
+                    if (fieldInfosByKey.ContainsKey(fields[i].key))
+                    {
+                        fieldInfosByKey[fields[i].key].SetValue(this, val);
+                    }
                 }
             }
 
+            /// <summary>
+            /// Serialization function called when the placedobject for this data is saved with devtools.
+            /// </summary>
             public override string ToString()
             {
-                return (needsControlPanel ? (panelPos.x.ToString() + "~" + panelPos.y.ToString() + "~") : "") + string.Join("~", Array.ConvertAll(fields, f => f.ToString(valuesByKey[f.key])));
+                return (NeedsControlPanel ? (panelPos.x.ToString() + "~" + panelPos.y.ToString() + "~") : "") + string.Join("~", Array.ConvertAll(fields, f => f.ToString(valuesByKey[f.key])));
             }
         }
 
+        /// <summary>
+        /// Class that manages the PlacedObjectRepresentation for a <see cref="ManagedData"/>, 
+        /// creating controls for any <see cref="ManagedField"/> that needs them,
+        /// or panel UI for <see cref="ManagedFieldWithPanel"/>.
+        /// </summary>
         public class ManagedRepresentation : PlacedObjectRepresentation
         {
             protected readonly PlacedObject.Type placedType;
@@ -595,7 +699,7 @@ namespace ManagedPlacedObjects
             protected virtual void MakeControls()
             {
                 ManagedData data = pObj.data as ManagedData;
-                if (data.needsControlPanel)
+                if (data.NeedsControlPanel)
                 {
                     ManagedControlPanel panel = new ManagedControlPanel(this.owner, "ManagedControlPanel", this, data.panelPos, Vector2.zero, pObj.type.ToString());
                     this.panel = panel;
@@ -617,11 +721,12 @@ namespace ManagedPlacedObjects
                         {
                             PositionedDevUINode node = field.MakeControlPanelNode(data, panel, largestDisplayname);
                             panel.managedNodes[field.key] = node;
+                            panel.managedFields[field.key] = field;
                             panel.subNodes.Add(node);
                             node.pos = uiPos;
-                            uiSize.x = Mathf.Max(uiSize.x, field.PanelUiSizeMinusName.x);
-                            uiSize.y += field.PanelUiSizeMinusName.y;
-                            uiPos.y += field.PanelUiSizeMinusName.y;
+                            uiSize.x = Mathf.Max(uiSize.x, field.SizeOfPanelUiMinusName().x);
+                            uiSize.y += field.SizeOfPanelUiMinusName().y;
+                            uiPos.y += field.SizeOfPanelUiMinusName().y;
                         }
                     }
                     panel.size = uiSize + new Vector2(3 + largestDisplayname, 1);
@@ -640,16 +745,22 @@ namespace ManagedPlacedObjects
             }
         }
 
+        /// <summary>
+        /// The panel spawned by <see cref="ManagedRepresentation"/> if any of its <see cref="ManagedField"/>s requires panel UI.
+        /// Doesn't do much on its own besides keeping a white line that connects the panel and the placedobject representation.
+        /// </summary>
         public class ManagedControlPanel : Panel
         {
             protected readonly ManagedRepresentation managedRepresentation;
-            public Dictionary<string, DevUINode> managedNodes; // Added externally. Unused for now, but seems convenient for specialization
+            public Dictionary<string, DevUINode> managedNodes; // Added from ManagedRepresentation. Unused for now, but seems convenient for specialization
+            public Dictionary<string, ManagedFieldWithPanel> managedFields; // Added from ManagedRepresentation. Unused for now, but seems convenient for specialization
             protected readonly int lineSprt;
 
             public ManagedControlPanel(DevUI owner, string IDstring, ManagedRepresentation parentNode, Vector2 pos, Vector2 size, string title) : base(owner, IDstring, parentNode, pos, size, title)
             {
                 managedRepresentation = parentNode;
                 managedNodes = new Dictionary<string, DevUINode>();
+                managedFields = new Dictionary<string, ManagedFieldWithPanel>();
 
                 this.fSprites.Add(new FSprite("pixel", true));
                 owner.placedObjectsContainer.AddChild(this.fSprites[this.lineSprt = this.fSprites.Count - 1]);
@@ -668,29 +779,47 @@ namespace ManagedPlacedObjects
         #endregion MANAGED
 
         #region FIELDS
-        // Interfaces for controls
+        /// <summary>
+        /// An interface for a <see cref="ManagedFieldWithPanel"/> that can be controlled through a <see cref="ManagedSlider"/>.
+        /// </summary>
         public interface IInterpolablePanelField // sliders
         {
             float FactorOf(ManagedData data);
             void NewFactor(ManagedData data, float factor);
         }
 
+        /// <summary>
+        /// An interface for a <see cref="ManagedFieldWithPanel"/> that can be controlled through a <see cref="ManagedButton"/> or <see cref="ManagedArrowSelector"/>.
+        /// </summary>
         public interface IIterablePanelField // buttons, arrows
         {
             void Next(ManagedData data);
             void Prev(ManagedData data);
         }
 
+        /// <summary>
+        /// A <see cref="ManagedField"/> that stores a <see cref="float"/> value.
+        /// </summary>
         public class FloatField : ManagedFieldWithPanel, IInterpolablePanelField, IIterablePanelField
         {
             protected readonly float min;
             protected readonly float max;
             protected readonly float increment;
 
-            public FloatField(string key, float min, float max, float defaultValue, float increment = 0.1f, ControlType control = ControlType.slider, string displayName = null) : base(key, defaultValue, control, displayName)
+            /// <summary>
+            /// Creates a <see cref="ManagedField"/> that stores a <see cref="float"/>. Can be used as an Attribute for a field in your data class derived from <see cref="ManagedData"/>.
+            /// </summary>
+            /// <param name="key">The key to access that field with</param>
+            /// <param name="min">the minimum allowed value</param>
+            /// <param name="max">the maximum allowed value</param>
+            /// <param name="defaultValue">the value a new data object is generated with</param>
+            /// <param name="increment">controls digits when displaying the value, also behavior with buttons and arrows</param>
+            /// <param name="control">the type of UI for this field</param>
+            /// <param name="displayName">a display name for the panel, defaults to <paramref name="key"/></param>
+            public FloatField(string key, float min, float max, float defaultValue, float increment = 0.1f, ControlType control = ControlType.slider, string displayName = null) : base(key, Mathf.Clamp(defaultValue, min, max), control, displayName)
             {
-                this.min = min;
-                this.max = max;
+                this.min = Math.Min(min, max);
+                this.max = Math.Max(min, max);
                 this.increment = increment;
             }
 
@@ -727,23 +856,32 @@ namespace ManagedPlacedObjects
                 return data.GetValue<float>(key).ToString("N" + NumberOfDecimals());
             }
 
+            /// <summary>
+            /// Implements <see cref="IInterpolablePanelField"/>. Called from UI sliders.
+            /// </summary>
             public virtual float FactorOf(ManagedData data)
             {
                 return ((max - min) == 0) ? 0f : (((float)data.GetValue<float>(key) - min) / (max - min));
             }
-
+            /// <summary>
+            /// Implements <see cref="IInterpolablePanelField"/>. Called from UI sliders.
+            /// </summary>
             public virtual void NewFactor(ManagedData data, float factor)
             {
                 data.SetValue<float>(key, min + factor * (max - min));
             }
-
+            /// <summary>
+            /// Implements <see cref="IIterablePanelField"/>. Called from UI buttons and arrows.
+            /// </summary>
             public virtual void Next(ManagedData data)
             {
                 float val = data.GetValue<float>(key) + increment;
                 if (val > max) val = min;
                 data.SetValue<float>(key, val);
             }
-
+            /// <summary>
+            /// Implements <see cref="IIterablePanelField"/>. Called from UI buttons and arrows.
+            /// </summary>
             public virtual void Prev(ManagedData data)
             {
                 float val = data.GetValue<float>(key) - increment;
@@ -759,8 +897,18 @@ namespace ManagedPlacedObjects
             }
         }
 
+        /// <summary>
+        /// A <see cref="ManagedField"/> that stores a <see cref="bool"/> value.
+        /// </summary>
         public class BooleanField : ManagedFieldWithPanel, IIterablePanelField, IInterpolablePanelField
         {
+            /// <summary>
+            /// Creates a <see cref="ManagedField"/> that stores a <see cref="bool"/>. Can be used as an Attribute for a field in your data class derived from <see cref="ManagedData"/>.
+            /// </summary>
+            /// <param name="key">The key to access that field with</param>
+            /// <param name="defaultValue">the value a new data object is generated with</param>
+            /// <param name="control">the type of UI for this field</param>
+            /// <param name="displayName">a display name for the panel, defaults to <paramref name="key"/></param>
             public BooleanField(string key, bool defaultValue, ControlType control = ControlType.button, string displayName = null) : base(key, defaultValue, control, displayName)
             {
             }
@@ -774,34 +922,54 @@ namespace ManagedPlacedObjects
             {
                 return HUD.DialogBox.meanCharWidth * 5;
             }
-
+            /// <summary>
+            /// Implements <see cref="IInterpolablePanelField"/>. Called from UI sliders.
+            /// </summary>
             public virtual float FactorOf(ManagedData data)
             {
                 return data.GetValue<bool>(key) ? 1f : 0f;
             }
-
+            /// <summary>
+            /// Implements <see cref="IInterpolablePanelField"/>. Called from UI sliders.
+            /// </summary>
             public virtual void NewFactor(ManagedData data, float factor)
             {
                 data.SetValue(key, factor > 0.5f);
             }
-
+            /// <summary>
+            /// Implements <see cref="IIterablePanelField"/>. Called from UI buttons and arrows.
+            /// </summary>
             public virtual void Next(ManagedData data)
             {
                 data.SetValue(key, !data.GetValue<bool>(key));
             }
-
+            /// <summary>
+            /// Implements <see cref="IIterablePanelField"/>. Called from UI buttons and arrows.
+            /// </summary>
             public virtual void Prev(ManagedData data)
             {
                 data.SetValue(key, !data.GetValue<bool>(key));
             }
         }
 
+        /// <summary>
+        /// A <see cref="ManagedField"/> that stores an <see cref="Enum"/> value.
+        /// </summary>
         public class EnumField : ManagedFieldWithPanel, IIterablePanelField, IInterpolablePanelField
         {
             protected readonly Type type;
             protected Enum[] _possibleValues;
-
-            public EnumField(string key, Type type, Enum defaultValue, Enum[] possibleValues = null, ControlType control = ControlType.none, string displayName = null) : base(key, (possibleValues != null && !possibleValues.Contains(defaultValue))? possibleValues[0] : defaultValue, control, displayName)
+            /// <summary>
+            /// Creates a <see cref="ManagedField"/> that stores an <see cref="Enum"/> of the specified type. Cannot be used as Attribute.
+            /// Instead, you should pass this object to <see cref="ManagedData.ManagedData(PlacedObject, ManagedField[])"/> and mark your field with the <see cref="ManagedData.BackedByField"/> attribute.
+            /// </summary>
+            /// <param name="key">The key to access that field with</param>
+            /// <param name="type">the enum type this field is for</param>
+            /// <param name="defaultValue">the value a new data object is generated with</param>
+            /// <param name="possibleValues">the acceptable values for this field, defaults to a deferred call to <see cref="Enum.GetValues"/> for the type</param>
+            /// <param name="control">the type of UI for this field</param>
+            /// <param name="displayName">a display name for the panel, defaults to <paramref name="key"/></param>
+            public EnumField(string key, Type type, Enum defaultValue, Enum[] possibleValues = null, ControlType control = ControlType.arrows, string displayName = null) : base(key, (possibleValues != null && !possibleValues.Contains(defaultValue))? possibleValues[0] : defaultValue, control, displayName)
             {
                 this.type = type;
                 this._possibleValues = possibleValues;
@@ -828,22 +996,30 @@ namespace ManagedPlacedObjects
                         next.ToString().Length > longest ? next.ToString().Length : longest);
                 return HUD.DialogBox.meanCharWidth * longestEnum + 2;
             }
-
+            /// <summary>
+            /// Implements <see cref="IInterpolablePanelField"/>. Called from UI sliders.
+            /// </summary>
             public virtual float FactorOf(ManagedData data)
             {
                 return (float)Array.IndexOf(PossibleValues, data.GetValue<Enum>(key)) / (float)(PossibleValues.Length - 1);
             }
-
+            /// <summary>
+            /// Implements <see cref="IInterpolablePanelField"/>. Called from UI sliders.
+            /// </summary>
             public virtual void NewFactor(ManagedData data, float factor)
             {
                 data.SetValue<Enum>(key, PossibleValues[Mathf.RoundToInt(factor * (PossibleValues.Length - 1))]);
             }
-
+            /// <summary>
+            /// Implements <see cref="IIterablePanelField"/>. Called from UI buttons and arrows.
+            /// </summary>
             public virtual void Next(ManagedData data)
             {
                 data.SetValue<Enum>(key, PossibleValues[(Array.IndexOf(PossibleValues, data.GetValue<Enum>(key)) + 1) % PossibleValues.Length]);
             }
-
+            /// <summary>
+            /// Implements <see cref="IIterablePanelField"/>. Called from UI buttons and arrows.
+            /// </summary>
             public virtual void Prev(ManagedData data)
             {
                 data.SetValue<Enum>(key, PossibleValues[(Array.IndexOf(PossibleValues, data.GetValue<Enum>(key)) - 1 + PossibleValues.Length) % PossibleValues.Length]);
@@ -877,15 +1053,26 @@ namespace ManagedPlacedObjects
             }
         }
 
+        /// <summary>
+        /// A <see cref="ManagedField"/> that stores an <see cref="int"/> value.
+        /// </summary>
         public class IntegerField : ManagedFieldWithPanel, IIterablePanelField, IInterpolablePanelField
         {
             protected readonly int min;
             protected readonly int max;
-
-            public IntegerField(string key, int min, int max, int defaultValue, ControlType control = ControlType.arrows, string displayName = null) : base(key, defaultValue, control, displayName)
+            /// <summary>
+            /// Creates a <see cref="ManagedField"/> that stores an <see cref="int"/>. Can be used as an Attribute for a field in your data class derived from <see cref="ManagedData"/>.
+            /// </summary>
+            /// <param name="key">The key to access that field with</param>
+            /// <param name="min">the minimum allowed value (inclusive)</param>
+            /// <param name="max">the maximum allowed value (inclusive)</param>
+            /// <param name="defaultValue">the value a new data object is generated with</param>
+            /// <param name="control">the type of UI for this field</param>
+            /// <param name="displayName">a display name for the panel, defaults to <paramref name="key"/></param>
+            public IntegerField(string key, int min, int max, int defaultValue, ControlType control = ControlType.arrows, string displayName = null) : base(key, Mathf.Clamp(defaultValue, min, max), control, displayName)
             {
-                this.min = min;
-                this.max = max;
+                this.min = Math.Min(min, max); // trust nobody
+                this.max = Math.Max(min, max);
             }
 
             public override object FromString(string str)
@@ -897,24 +1084,32 @@ namespace ManagedPlacedObjects
             {
                 return HUD.DialogBox.meanCharWidth * ((Mathf.Max(Mathf.Abs(min), Mathf.Abs(max))).ToString().Length + 2);
             }
-
+            /// <summary>
+            /// Implements <see cref="IInterpolablePanelField"/>. Called from UI sliders.
+            /// </summary>
             public virtual float FactorOf(ManagedData data)
             {
                 return (max - min == 0) ? 0f : (data.GetValue<int>(key) - min) / (float)(max - min);
             }
-
+            /// <summary>
+            /// Implements <see cref="IInterpolablePanelField"/>. Called from UI sliders.
+            /// </summary>
             public virtual void NewFactor(ManagedData data, float factor)
             {
                 data.SetValue<int>(key, Mathf.RoundToInt(min + factor * (max - min)));
             }
-
+            /// <summary>
+            /// Implements <see cref="IIterablePanelField"/>. Called from UI buttons and arrows.
+            /// </summary>
             public virtual void Next(ManagedData data)
             {
                 int val = data.GetValue<int>(key) + 1;
                 if (val > max) val = min;
                 data.SetValue<int>(key, val);
             }
-
+            /// <summary>
+            /// Implements <see cref="IIterablePanelField"/>. Called from UI buttons and arrows.
+            /// </summary>
             public virtual void Prev(ManagedData data)
             {
                 int val = data.GetValue<int>(key) - 1;
@@ -930,8 +1125,17 @@ namespace ManagedPlacedObjects
             }
         }
 
+        /// <summary>
+        /// A <see cref="ManagedField"/> that stores a <see cref="string"/> value.
+        /// </summary>
         public class StringField : ManagedFieldWithPanel
         {
+            /// <summary>
+            /// Creates a <see cref="ManagedField"/> that stores a <see cref="string"/>. Can be used as an Attribute for a field in your data class derived from <see cref="ManagedData"/>.
+            /// </summary>
+            /// <param name="key">The key to access that field with</param>
+            /// <param name="defaultValue">the value a new data object is generated with</param>
+            /// <param name="displayName">a display name for the panel, defaults to <paramref name="key"/></param>
             public StringField(string key, string defaultValue, string displayName = null) : base(key, defaultValue, ControlType.text, displayName)
             {
 
@@ -953,13 +1157,22 @@ namespace ManagedPlacedObjects
             }
         }
 
+        /// <summary>
+        /// A <see cref="ManagedField"/> for a <see cref="Vector2"/> value.
+        /// </summary>
         public class Vector2Field : ManagedField
         {
-            protected readonly VectorReprType repr;
-
-            public Vector2Field(string key, Vector2 defaultValue, VectorReprType repr = VectorReprType.line) : base(key, defaultValue)
+            protected readonly VectorReprType controlType;
+            /// <summary>
+            /// Creates a <see cref="ManagedField"/> that stores a <see cref="Vector2"/>. Cannot be used as Attribute.
+            /// Instead, you should pass this object to <see cref="ManagedData.ManagedData(PlacedObject, ManagedField[])"/> and mark your field with the <see cref="ManagedData.BackedByField"/> attribute.
+            /// </summary>
+            /// <param name="key">The key to access that field with</param>
+            /// <param name="defaultValue">the value a new data object is generated with</param>
+            /// <param name="controlType">the type of UI for this field, from <see cref="Vector2Field.VectorReprType"/></param>
+            public Vector2Field(string key, Vector2 defaultValue, VectorReprType controlType = VectorReprType.line) : base(key, defaultValue)
             {
-                this.repr = repr;
+                this.controlType = controlType;
             }
 
             public enum VectorReprType
@@ -984,17 +1197,26 @@ namespace ManagedPlacedObjects
 
             public override DevUINode MakeAditionalNodes(ManagedData managedData, ManagedRepresentation managedRepresentation)
             {
-                return new ManagedVectorHandle(this, managedData, managedRepresentation, repr);
+                return new ManagedVectorHandle(this, managedData, managedRepresentation, controlType);
             }
         }
 
+        /// <summary>
+        /// A <see cref="ManagedField"/> for a <see cref="RWCustom.IntVector2"/> value.
+        /// </summary>
         public class IntVector2Field : ManagedField
         {
-            protected readonly IntVectorReprType repr;
-
-            public IntVector2Field(string key, RWCustom.IntVector2 defaultValue, IntVectorReprType repr = IntVectorReprType.line) : base(key, defaultValue)
+            protected readonly IntVectorReprType controlType;
+            /// <summary>
+            /// Creates a <see cref="ManagedField"/> that stores a <see cref="RWCustom.IntVector2"/>. Cannot be used as Attribute.
+            /// Instead, you should pass this object to <see cref="ManagedData.ManagedData(PlacedObject, ManagedField[])"/> and mark your field with the <see cref="ManagedData.BackedByField"/> attribute.
+            /// </summary>
+            /// <param name="key">The key to access that field with</param>
+            /// <param name="defaultValue">the value a new data object is generated with</param>
+            /// <param name="controlType">the type of UI for this field, from <see cref="IntVector2Field.IntVectorReprType"/></param>
+            public IntVector2Field(string key, RWCustom.IntVector2 defaultValue, IntVectorReprType controlType = IntVectorReprType.line) : base(key, defaultValue)
             {
-                this.repr = repr;
+                this.controlType = controlType;
             }
 
             public enum IntVectorReprType
@@ -1021,7 +1243,7 @@ namespace ManagedPlacedObjects
 
             public override DevUINode MakeAditionalNodes(ManagedData managedData, ManagedRepresentation managedRepresentation)
             {
-                return new ManagedIntHandle(this, managedData, managedRepresentation, repr);
+                return new ManagedIntHandle(this, managedData, managedRepresentation, controlType);
             }
         }
 
