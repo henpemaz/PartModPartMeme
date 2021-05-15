@@ -31,8 +31,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\References\Assembly-CSharp.dll</HintPath>
+    <Reference Include="Assembly-CSharp - publicitystuntd">
+      <HintPath>..\..\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
     </Reference>
     <Reference Include="HOOKS-Assembly-CSharp">
       <HintPath>..\..\References\HOOKS-Assembly-CSharp.dll</HintPath>
@@ -60,8 +60,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AttachedField.cs" />
+    <Compile Include="CGGateFix.cs" />
     <Compile Include="ConcealedGarden.cs" />
     <Compile Include="CosmeticLeaves.cs" />
+    <Compile Include="ElectricArcs.cs" />
     <Compile Include="LifeSimProjection.cs" />
     <Compile Include="OrganicShelter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -157,6 +157,7 @@ namespace ConcealedGarden
                 }
                 tiles.Clear(); // done with you
 
+                int oldseed = UnityEngine.Random.seed;
                 //Debug.Log("spawning blobs");
                 List<RootedPaart> blobs = new List<RootedPaart>();
                 // Fill these lines with blobs
@@ -223,6 +224,7 @@ namespace ConcealedGarden
                 //Debug.Log("m");
                 lines.Clear();
                 //Debug.Log("blobs done");
+                UnityEngine.Random.seed = oldseed;
 
                 this.blobs = blobs.ToArray();
 
@@ -270,13 +272,14 @@ namespace ConcealedGarden
                 for (int i = 0; i < locks.Length; i++)
                 {
                     this.locks[i].Update();
+                    float stiffness = stiff + locks[i].stiff;
                     this.locks[i].ConnectToPoint(
                         Vector2.Lerp(this.lockPos[i], this.lockTarget[i], closedFac),
-                        locks[i].size * (0.6f - 0.4f * locks[i].stiff) * Mathf.Pow(1f - 0.8f * closedFac, 2f),
-                        false, 0.02f + 0.08f * locks[i].stiff,
+                        locks[i].size * (1f - 0.5f * stiffness) * Mathf.Pow(1f - 0.8f * closedFac, 2f),
+                        false, 0.02f + 0.08f * stiffness,
                         Vector2.zero, 0f, 0f);
                     if (exciteAll) this.locks[i].excitement = 1f;
-                    if (UnityEngine.Random.value < locks[i].excitement) locks[i].vel += RWCustom.Custom.RNV() * (0.5f + 0.5f * locks[i].excitement) * (1f - 0.5f * locks[i].stiff) * 5f;
+                    if (UnityEngine.Random.value < locks[i].excitement) locks[i].vel += RWCustom.Custom.RNV() * (0.5f + 0.5f * locks[i].excitement) * (1f - 0.5f * stiffness) * 5f;
                 }
                 foreach (var blob in blobs)
                 {

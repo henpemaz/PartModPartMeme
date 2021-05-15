@@ -68,7 +68,7 @@ namespace ShelterBehaviors
 
         private void ContitionalLog(string str)
         {
-            if (_debug && UnityEngine.Input.GetKeyDown("l"))
+            if (_debug && UnityEngine.Input.GetKey("l"))
             {
                 Debug.LogError(str);
             }
@@ -153,7 +153,19 @@ namespace ShelterBehaviors
                 this.tempSpawnPosHackDoor = new ShelterDoor(room);
                 tempSpawnPosHackDoor.closeTiles = new IntVector2[0];
                 tempSpawnPosHackDoor.playerSpawnPos = GetSpawnPosition(0);
-                room.AddObject(tempSpawnPosHackDoor);
+                room.updateList.Add(tempSpawnPosHackDoor); // Added directly to update list, no drawable
+                //room.drawableObjects.Remove(tempSpawnPosHackDoor);
+                //tempSpawnPosHackDoor.workingLoop = null;
+                //for (int i = 0; i < room.game.cameras.Length; i++)
+                //{
+                //    for (int j = 0; j < room.game.cameras[i].spriteLeasers.Count; j++)
+                //    {
+                //        if (room.game.cameras[i].spriteLeasers[j].drawableObject == tempSpawnPosHackDoor)
+                //        {
+                //            room.game.cameras[i].spriteLeasers[j].CleanSpritesAndRemove();
+                //        }
+                //    }
+                //}
             }
 
             for (int i = 0; i < room.updateList.Count; i++)
@@ -175,20 +187,6 @@ namespace ShelterBehaviors
                 {
                     tempSpawnPosHackDoor.Destroy();
                     room.updateList.Remove(tempSpawnPosHackDoor);
-                    room.drawableObjects.Remove(tempSpawnPosHackDoor);
-                    // uuuuuh door has no slatedfordeletion protections and tries to acces room after deletion/removal
-                    for (int i = 0; i < room.game.cameras.Length; i++)
-                    {
-                        for (int j = 0; j < room.game.cameras[i].spriteLeasers.Count; j++)
-                        {
-                            if (room.game.cameras[i].spriteLeasers[j].drawableObject == tempSpawnPosHackDoor)
-                            {
-                                room.game.cameras[i].spriteLeasers[j].CleanSpritesAndRemove();
-                                goto DoneRemovingLeaser;
-                            }
-                        }
-                    }
-                DoneRemovingLeaser:
                     tempSpawnPosHackDoor = null;
                 }
                 deleteHackDoorNextFrame = false;
@@ -326,12 +324,11 @@ namespace ShelterBehaviors
             if(closing && hasNoDoors)
             {
                 // Manage no-door logic
-                noDoorCloseCount++;
-
                 if (noDoorCloseCount == data.GetValue<int>("fts"))
                 {
                     for (int j = 0; j < this.room.game.Players.Count; j++)
                     {
+
                         if (this.room.game.Players[j].realizedCreature != null && (this.room.game.Players[j].realizedCreature as Player).FoodInRoom(this.room, false) >= (this.room.game.Players[j].realizedCreature as Player).slugcatStats.foodToHibernate)
                         {
                             (this.room.game.Players[j].realizedCreature as Player).sleepWhenStill = true;
@@ -367,6 +364,7 @@ namespace ShelterBehaviors
                         this.room.game.GoToDeathScreen();
                     }
                 }
+                noDoorCloseCount++;
             }
         }
 
@@ -383,8 +381,12 @@ namespace ShelterBehaviors
             {
                 sub.OnShelterClose();
             }
+            for (int i = 0; i < room.updateList.Count; i++)
+            {
+                if (room.updateList[i] is HoldToTriggerTutorialObject) (room.updateList[i] as HoldToTriggerTutorialObject).Consume();
+            }
             Consume();
-            ContitionalLog("CLOSE");
+            Debug.LogError("CLOSE");
         }
 
         private bool PlayersInTriggerZone()
@@ -436,13 +438,14 @@ namespace ShelterBehaviors
             this.noVanillaDoors = true;
         }
 
+        static private int incrementalsalt;
         internal IntVector2 GetSpawnPosition(int salt)
         {
             int oldseed = UnityEngine.Random.seed;
             try
             {
                 if(room.game.IsStorySession)
-                    UnityEngine.Random.seed = salt + room.game.clock + room.game.GetStorySession.saveState.seed + room.game.GetStorySession.saveState.cycleNumber + room.game.GetStorySession.saveState.deathPersistentSaveData.deaths + room.game.GetStorySession.saveState.deathPersistentSaveData.survives;
+                    UnityEngine.Random.seed = salt + incrementalsalt++ + room.game.clock + room.game.GetStorySession.saveState.seed + room.game.GetStorySession.saveState.cycleNumber + room.game.GetStorySession.saveState.deathPersistentSaveData.deaths + room.game.GetStorySession.saveState.deathPersistentSaveData.survives + Mathf.FloorToInt(room.game.GetStorySession.difficulty * 100) + Mathf.FloorToInt(room.game.GetStorySession.saveState.deathPersistentSaveData.howWellIsPlayerDoing * 100);
                 if (noVanillaDoors)
                 {
                     if (spawnPositions.Count > 0) return spawnPositions[UnityEngine.Random.Range(0, spawnPositions.Count)];

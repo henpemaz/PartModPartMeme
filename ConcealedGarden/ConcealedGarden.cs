@@ -4,6 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ManagedPlacedObjects;
+using System.Security;
+using System.Security.Permissions;
+
+[module: UnverifiableCode]
+[assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
 namespace ConcealedGarden
 {
@@ -24,6 +29,8 @@ namespace ConcealedGarden
         {
             base.OnEnable();
             // Hooking code goose hre
+
+            ElectricArcs.Register();
 
             PlacedObjectsManager.RegisterFullyManagedObjectType(new PlacedObjectsManager.ManagedField[]
             {
@@ -64,7 +71,14 @@ namespace ConcealedGarden
             //    typeof(LifeSimProjection), typeof(PlacedObject.GridRectObjectData), typeof(DevInterface.GridRectObjectRepresentation), singleInstance: true));
 
             PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("CosmeticLeaves",
-                typeof(CosmeticLeaves), typeof(CosmeticLeaves.CosmeticLeavesObjectData), typeof(CosmeticLeaves.CosmeticLeavesObjectData.CosmeticLeavesObjectRepresentation)));
+                typeof(CosmeticLeaves), typeof(CosmeticLeaves.CosmeticLeavesObjectData), typeof(PlacedObjectsManager.ManagedRepresentation)));
+
+            PlacedObjectsManager.RegisterFullyManagedObjectType(new PlacedObjectsManager.ManagedField[]
+            {
+                new PlacedObjectsManager.BooleanField("noleft", false, displayName:"No Left Door"),
+                new PlacedObjectsManager.BooleanField("noright", false, displayName:"No Left Door"),
+                new PlacedObjectsManager.BooleanField("nowater", false, displayName:"No Water, stoopid"),
+            }, typeof(CGGateFix), "CGGateFix");
         }
     }
 }
