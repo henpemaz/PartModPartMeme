@@ -55,7 +55,7 @@ namespace ShelterBehaviors
         private AttachedField<Player, int> actualForceSleepCounter;
 
 
-        bool _debug = true;
+        bool _debug = false;
         private int noDoorCloseCount;
         private bool hasNoDoors;
         private ShelterDoor tempSpawnPosHackDoor;

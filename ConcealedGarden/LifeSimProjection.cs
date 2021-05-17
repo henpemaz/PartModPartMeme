@@ -134,7 +134,7 @@ namespace ConcealedGarden
             }
             if (currentX == gridWidth)
             {
-                Debug.Log("LifeSimProjection: Generation " + generation + " done");
+                //Debug.Log("LifeSimProjection: Generation " + generation + " done");
                 this.generation++;
                 currentX = 0;
                 currentY = 0;
@@ -194,7 +194,7 @@ namespace ConcealedGarden
                                 if (rect.Contains(new Vector2(tilex * 20, tiley * 20)))
                                 {
                                     grid[currentX, currentY] = new Tile(this, tilecount, currentX, currentY);
-                                    Debug.Log("LifeSimProjection: Tile added in " + currentX + " - " + currentY);
+                                    // Debug.Log("LifeSimProjection: Tile added in " + currentX + " - " + currentY);
                                     tilecount++;
                                     break;
                                 }
@@ -413,7 +413,7 @@ namespace ConcealedGarden
 
             private void Death(LifeSimProjection lifeSimProjection)
             {
-                Debug.Log("LifeSimProjection: Death");
+                //Debug.Log("LifeSimProjection: Death");
                 alive = false;
                 needGraphicalChange = true;
                 noChangeCount = 0;
@@ -422,7 +422,7 @@ namespace ConcealedGarden
 
             private void Birth(LifeSimProjection lifeSimProjection)
             {
-                Debug.Log("LifeSimProjection: Birth!");
+                //Debug.Log("LifeSimProjection: Birth!");
                 alive = true;
                 hovered = 0;
                 needGraphicalChange = true;

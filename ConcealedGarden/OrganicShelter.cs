@@ -326,8 +326,8 @@ namespace ConcealedGarden
             {
                 get
                 {
-                    return false;
-                    //return this.room.world.brokenShelters[this.room.abstractRoom.shelterIndex];
+                    //return false;
+                    return this.room.abstractRoom.shelterIndex > -1 && this.room.world.brokenShelters != null & this.room.world.brokenShelters[this.room.abstractRoom.shelterIndex];
                 }
             }
 

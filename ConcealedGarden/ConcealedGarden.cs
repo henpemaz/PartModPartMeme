@@ -6,6 +6,7 @@ using System.Text;
 using ManagedPlacedObjects;
 using System.Security;
 using System.Security.Permissions;
+using System.Reflection;
 
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
@@ -76,9 +77,18 @@ namespace ConcealedGarden
             PlacedObjectsManager.RegisterFullyManagedObjectType(new PlacedObjectsManager.ManagedField[]
             {
                 new PlacedObjectsManager.BooleanField("noleft", false, displayName:"No Left Door"),
-                new PlacedObjectsManager.BooleanField("noright", false, displayName:"No Left Door"),
+                new PlacedObjectsManager.BooleanField("noright", false, displayName:"No Right Door"),
                 new PlacedObjectsManager.BooleanField("nowater", false, displayName:"No Water, stoopid"),
             }, typeof(CGGateFix), "CGGateFix");
+
+
+            foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                if (asm.GetName().Name == "NudeMod")
+                {
+                    QuestionableLizardBit.Apply();
+                }
+            }
         }
     }
 }
