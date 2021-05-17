@@ -192,7 +192,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             loadingFromRefresh = false;
         }
 
-        private void LoadLizKinData()
+        internal static void LoadLizKinData()
         {
             Debug.Log("LizardSkinOI LoadData");
             // read from disk
@@ -207,7 +207,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             }
         }
 
-        private void LoadEmptyLizKinData()
+        private static void LoadEmptyLizKinData()
         {
             configuration = new LizKinConfiguration();
             LizKinProfileData myProfile = new LizKinProfileData();

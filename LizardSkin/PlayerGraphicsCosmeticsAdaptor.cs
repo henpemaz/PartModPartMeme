@@ -203,27 +203,33 @@ namespace LizardSkin
 
         public PlayerGraphicsCosmeticsAdaptor(PlayerGraphics pGraphics) : base(pGraphics)
         {
-            
+            //Debug.LogError("A");
 
             this.bodyLength = this.pGraphics.player.bodyChunkConnections[0].distance;
             this.tailLength = 0f;
+            //Debug.LogError("B");
+
             for (int l = 0; l < this.pGraphics.tail.Length; l++)
             {
                 this.tailLength += this.pGraphics.tail[l].connectionRad;
             }
+            //Debug.LogError("C");
 
 
             this.showDominance = 0;
             this.depthRotation = 0;
             this.lastDepthRotation = this.depthRotation;
+            //Debug.LogError("D");
 
-            List<LizKinCosmeticData> cosmeticDefs = LizardSkinOI.configuration.GetCosmeticsForSlugcat((int)player.slugcatStats.name, player.playerState.slugcatCharacter, player.playerState.playerNumber);
+            List<LizKinCosmeticData> cosmeticDefs = LizardSkin.GetCosmeticsForSlugcat((int)player.slugcatStats.name, player.playerState.slugcatCharacter, player.playerState.playerNumber);
+            //Debug.LogError("E");
 
 
             foreach (LizKinCosmeticData cosmeticData in cosmeticDefs)
             {
                 this.AddCosmetic(GenericCosmeticTemplate.MakeCosmetic(this, cosmeticData));
             }
+            //Debug.LogError("F");
 
         }
 

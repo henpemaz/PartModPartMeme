@@ -296,6 +296,15 @@ namespace LizardSkin
             }
         }
 
+        internal static List<LizKinCosmeticData> GetCosmeticsForSlugcat(int name, int slugcatCharacter, int playerNumber)
+        {
+            if(LizardSkinOI.configuration == null)
+            {
+                LizardSkinOI.LoadLizKinData();
+            }
+            return LizardSkinOI.configuration.GetCosmeticsForSlugcat(name, slugcatCharacter, playerNumber);
+        }
+
         // TODO - steal AttachedFields.cs
 
     }
