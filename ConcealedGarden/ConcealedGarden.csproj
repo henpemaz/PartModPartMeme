@@ -69,6 +69,7 @@
     <Compile Include="OrganicShelter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QuestionableLizardBit.cs" />
+    <Compile Include="SlipperySlope.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ManagedPlacedObjects\ManagedPlacedObjects.csproj">

@@ -89,6 +89,9 @@ namespace ConcealedGarden
                     QuestionableLizardBit.Apply();
                 }
             }
+
+            PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("SlipperySlope",
+                typeof(SlipperySlope), typeof(SlipperySlope.SlipperySlopeData), typeof(PlacedObjectsManager.ManagedRepresentation)));
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using RWCustom;
+using System.IO;
 using UnityEngine;
 // Don't look
 namespace ConcealedGarden
@@ -6,105 +7,191 @@ namespace ConcealedGarden
 	// I said don't look
 	internal class QuestionableLizardBit : LizardCosmetics.Template
 	{
-		// Stop what are you doing
-		private LizardScale bit;
-		private float inhateLength;
-		private float ivInfluence;
-		private int graphic = 0;
-		private float graphicHeight;
-		private bool colored = true;
-		private float happiness;
+		// Stop, what are you doing
+
+		private static bool allOfThem = false;
+		private static bool everyRegion = false;
+		private static bool arenaToo = false;
+		private static bool veryHappy = false;
+		private static int ohMy = 0;
 
 		public static void Apply()
 		{
-			// You're not gonna like it
-			On.LizardGraphics.ctor += LizardGraphics_ctor;
+            // You're not gonna like it
+#pragma warning disable CS0219 // shush, stop raising warnings
+            string str = "Disclaimer: only applies if NudeMod is ON ;o";
+#pragma warning restore CS0219
+            On.LizardGraphics.ctor += LizardGraphics_ctor;
+            On.RainWorldGame.ctor += RainWorldGame_ctor;
 		}
-		private static void LizardGraphics_ctor(On.LizardGraphics.orig_ctor orig, LizardGraphics self, PhysicalObject ow)
+
+        private static void RainWorldGame_ctor(On.RainWorldGame.orig_ctor orig, RainWorldGame self, ProcessManager manager)
+        {
+			orig(self, manager);
+			allOfThem = File.Exists(Path.Combine(RWCustom.Custom.RootFolderDirectory(), "allOfThem.txt"));
+			everyRegion = File.Exists(Path.Combine(RWCustom.Custom.RootFolderDirectory(), "everyRegion.txt"));
+			arenaToo = File.Exists(Path.Combine(RWCustom.Custom.RootFolderDirectory(), "arenaToo.txt"));
+			veryHappy = File.Exists(Path.Combine(RWCustom.Custom.RootFolderDirectory(), "veryHappy.txt"));
+			ohMy = 0;
+			foreach (FileInfo file in new DirectoryInfo(Custom.RootFolderDirectory()).GetFiles("*.txt", SearchOption.TopDirectoryOnly))
+			{
+				if (file.Name.StartsWith("ve") && file.Name.EndsWith("ryBig.txt"))
+				{
+					int e = 0;
+					while (file.Name[1 + e] == 'e') e++;
+					if (e > ohMy) ohMy = e;
+				}
+			}
+		}
+
+        private static void LizardGraphics_ctor(On.LizardGraphics.orig_ctor orig, LizardGraphics self, PhysicalObject ow)
 		{
 			orig(self, ow);
 			// But we're doing it
-			//Debug.Log("Lizord create");
-			if (!self.lizard.room.game.IsStorySession) return;
-			//Debug.Log("is story");
-			World.CreatureSpawner spawner = self.lizard.room.game.world.GetSpawner(self.lizard.abstractCreature.ID);
-			//Debug.Log("region name is " + (self.lizard.room.game.session as StoryGameSession).saveState.regionStates[spawnRegion].regionName);
-			if (spawner != null && (spawner.region < 0 || spawner.region >= (self.lizard.room.game.session as StoryGameSession).saveState.regionStates.Length
-				|| (self.lizard.room.game.session as StoryGameSession).saveState.regionStates[spawner.region].regionName != "CG"))
-				return;
-			if (spawner == null && self.lizard?.room?.world != null && self.lizard.room.world.name != "CG") return;
+			//Debug.LogError("lizbits ctor start");
+			if (!self.lizard.room.game.IsStorySession && !arenaToo) return;
+			if (self.lizard.room.game.IsStorySession && !everyRegion)
+            {
+				World.CreatureSpawner spawner = self.lizard.room.game.world.GetSpawner(self.lizard.abstractCreature.ID);
+				if (spawner != null && (spawner.region < 0 || spawner.region >= (self.lizard.room.game.session as StoryGameSession).saveState.regionStates.Length
+					|| (self.lizard.room.game.session as StoryGameSession).saveState.regionStates[spawner.region].regionName != "CG"))
+					return;
+				if (spawner == null && self.lizard?.room?.world != null && self.lizard.room.world.name != "CG") return;
+			}
+
 			int seed = UnityEngine.Random.seed;
 			UnityEngine.Random.seed = self.lizard.abstractCreature.ID.RandomSeed;
-			float inhateLength = 15f;
-			float ivInfluence = 1f;
-			bool shouldHaveAQuestionableBit = false;
-			if ((self.lizard.Template.type == CreatureTemplate.Type.RedLizard) && UnityEngine.Random.value < 0.7f)
+			float innateLength = 0f;
+			float ivInfluence = 0f;
+			bool shouldHaveAQuestionableBit = allOfThem;
+			bool alreadyRolled = false;
+			//Debug.LogError("lizbits ctor critical");
+			//if (self.lizard.abstractCreature.spawnData != null) Debug.LogError("Found spawn data : " + self.lizard.abstractCreature.spawnData);
+
+			if (self.lizard.abstractCreature.spawnData != null && self.lizard.abstractCreature.spawnData[0] == '{')
+			{
+				string[] array = self.lizard.abstractCreature.spawnData.Substring(1, self.lizard.abstractCreature.spawnData.Length - 2).Split(new char[]
+				{
+					','
+				});
+				for (int i = 0; i < array.Length; i++)
+				{
+					if (array[i].Length > 0)
+					{
+						string[] array2 = array[i].Split(new char[]
+						{
+							':'
+						});
+						string text = array2[0].Trim().ToLowerInvariant();
+						if (text == "male")
+                        {
+							shouldHaveAQuestionableBit = array2.Length > 1 ? UnityEngine.Random.value < float.Parse(array2[1]) : true;
+							alreadyRolled = true;
+						}
+					}
+				}
+			}
+
+			if ((self.lizard.Template.type == CreatureTemplate.Type.RedLizard) && (UnityEngine.Random.value < 0.7f && !alreadyRolled || shouldHaveAQuestionableBit) )
 			{
 				shouldHaveAQuestionableBit = true;
-				inhateLength = 22f;
+				innateLength = 22f;
 				ivInfluence = 0.5f;
 			}
-			if ((self.lizard.Template.type == CreatureTemplate.Type.GreenLizard) && UnityEngine.Random.value < 0.65f)
+			if ((self.lizard.Template.type == CreatureTemplate.Type.GreenLizard) && (UnityEngine.Random.value < 0.65f && !alreadyRolled || shouldHaveAQuestionableBit))
 			{
 				shouldHaveAQuestionableBit = true;
-				inhateLength = 18f;
+				innateLength = 18f;
 				ivInfluence = 0.6f;
 			}
-			if ((self.lizard.Template.type == CreatureTemplate.Type.CyanLizard || self.lizard.Template.type == CreatureTemplate.Type.YellowLizard || self.lizard.Template.type == CreatureTemplate.Type.BlackLizard || self.lizard.Template.type == CreatureTemplate.Type.WhiteLizard) && UnityEngine.Random.value < 0.55f)
+			if ((self.lizard.Template.type == CreatureTemplate.Type.CyanLizard || self.lizard.Template.type == CreatureTemplate.Type.YellowLizard || self.lizard.Template.type == CreatureTemplate.Type.BlackLizard || self.lizard.Template.type == CreatureTemplate.Type.WhiteLizard) && (UnityEngine.Random.value < 0.55f && !alreadyRolled || shouldHaveAQuestionableBit))
 			{
 				shouldHaveAQuestionableBit = true;
-				inhateLength = 12.5f;
-				if (self.lizard.Template.type == CreatureTemplate.Type.YellowLizard) inhateLength *= 0.8f;
+				innateLength = 12.5f;
+				if (self.lizard.Template.type == CreatureTemplate.Type.YellowLizard) innateLength *= 0.8f;
 				ivInfluence = 1f;
 			}
-			if ((self.lizard.Template.type == CreatureTemplate.Type.BlueLizard) && UnityEngine.Random.value < 0.5f)
+			if ((self.lizard.Template.type == CreatureTemplate.Type.BlueLizard) && (UnityEngine.Random.value < 0.5f && !alreadyRolled || shouldHaveAQuestionableBit))
 			{
 				shouldHaveAQuestionableBit = true;
-				inhateLength = 8f;
+				innateLength = 9f;
 				ivInfluence = 0.8f;
 			}
-			if ((self.lizard.Template.type == CreatureTemplate.Type.PinkLizard) && UnityEngine.Random.value < 0.4f)
+			if ((self.lizard.Template.type == CreatureTemplate.Type.PinkLizard) && (UnityEngine.Random.value < 0.4f && !alreadyRolled || shouldHaveAQuestionableBit))
 			{
 				shouldHaveAQuestionableBit = true;
-				inhateLength = 10f;
-				ivInfluence = 1.5f;
+				innateLength = 10f;
+				ivInfluence = 1.6f;
 			}
-			if (self.lizard.Template.type == CreatureTemplate.Type.Salamander && ((self.blackSalamander && UnityEngine.Random.value < 0.8f) || (!self.blackSalamander && UnityEngine.Random.value < 0.3f)))
+			if (self.lizard.Template.type == CreatureTemplate.Type.Salamander && (((self.blackSalamander && UnityEngine.Random.value < 0.8f) || (!self.blackSalamander && UnityEngine.Random.value < 0.3f)) && !alreadyRolled || shouldHaveAQuestionableBit))
 			{
 				shouldHaveAQuestionableBit = true;
-				inhateLength = 12f;
+				innateLength = 12f;
 				ivInfluence = 1.2f;
 			}
 			//Debug.Log("Lizord has a QuestionableLizardBit? " + shouldHaveAQuestionableBit);
-			if (shouldHaveAQuestionableBit) self.AddCosmetic(self.startOfExtraSprites + self.extraSprites, new QuestionableLizardBit(self, self.startOfExtraSprites + self.extraSprites, inhateLength, ivInfluence));
+			if (shouldHaveAQuestionableBit) self.AddCosmetic(self.startOfExtraSprites + self.extraSprites, new QuestionableLizardBit(self, self.startOfExtraSprites + self.extraSprites, innateLength, ivInfluence));
 			UnityEngine.Random.seed = seed;
 		}
 
-		public QuestionableLizardBit(LizardGraphics self, int v, float inhateLength, float ivInfluence) : base(self, v)
+		protected LizardScale bit;
+		protected float innateLength;
+		protected float ivInfluence;
+        protected float happy;
+        protected int graphic = 0;
+		protected float graphicHeight;
+		protected bool colored = true;
+		protected float happiness;
+
+		public QuestionableLizardBit(LizardGraphics self, int v, float innateLength, float ivInfluence) : base(self, v)
 		{
             this.spritesOverlap = SpritesOverlap.Behind;
             //this.spritesOverlap = SpritesOverlap.InFront;
             this.graphicHeight = Futile.atlasManager.GetElementWithName("LizardScaleA" + this.graphic).sourcePixelSize.y;
 			this.colored = true;
 			this.bit = new LizardScale(this);
-			this.inhateLength =  inhateLength;
-			//this.inhateLength = 50;// inhateLength;
+			this.innateLength =  innateLength;
 			this.ivInfluence = ivInfluence;
+			this.happy = 0f;
 
-			this.minLength = (inhateLength / 5f)
+			if (self.lizard.abstractCreature.spawnData != null && self.lizard.abstractCreature.spawnData[0] == '{')
+			{
+				string[] array = self.lizard.abstractCreature.spawnData.Substring(1, self.lizard.abstractCreature.spawnData.Length - 2).Split(new char[]
+				{
+					','
+				});
+				for (int i = 0; i < array.Length; i++)
+				{
+					if (array[i].Length > 0)
+					{
+						string[] array2 = array[i].Split(new char[]
+						{
+							':'
+						});
+						string text = array2[0].Trim().ToLowerInvariant();
+						if (text == "happy") happy = array2.Length > 1 ? float.Parse(array2[1]) : 1f;
+						if (text == "innate") innateLength = array2.Length > 1 ? float.Parse(array2[1]) : innateLength*1.3f;
+
+					}
+				}
+			}
+			if (veryHappy) happy = 1f;
+			innateLength = innateLength * Mathf.Pow(1.3f, ohMy);
+
+			this.minLength = (innateLength / 5f)
 				* InfluenceOf(lGraphics.lizard.abstractCreature.personality.dominance, 0.5f, 1f)
 				* InfluenceOf(lGraphics.lizard.abstractCreature.personality.sympathy, 0.3f, 1f);
-			this.maxLength = inhateLength
+			this.maxLength = innateLength
 				* InfluenceOf(Mathf.Max((lGraphics.lizard.abstractCreature.personality.energy + lGraphics.lizard.abstractCreature.personality.dominance) / 2f, lGraphics.lizard.abstractCreature.personality.dominance), 1.0f, 6f)
 				* InfluenceOf(lGraphics.lizard.abstractCreature.personality.dominance, 0.3f, 0.9f)
 				* InfluenceOf(lGraphics.lizard.abstractCreature.personality.energy, 0.2f, 1.5f)
 				* InfluenceOf(lGraphics.lizard.abstractCreature.personality.sympathy, 0.1f, 1.5f);
 
-			this.minWidth = (inhateLength / 40f) 
+			this.minWidth = (innateLength / 40f) 
 				* ((lGraphics.iVars.fatness + lGraphics.iVars.tailFatness) / 2f)
 				* InfluenceOf(lGraphics.lizard.abstractCreature.personality.dominance, 0.2f, 1f)
 				* InfluenceOf(lGraphics.lizard.abstractCreature.personality.sympathy, 0.5f, 1f);
-			this.maxWidth = (0.15f + 0.85f * inhateLength / graphicHeight)
+			this.maxWidth = (0.15f + 0.85f * innateLength / graphicHeight)
 				* ((lGraphics.iVars.fatness + lGraphics.iVars.tailFatness) / 2f)
 				* InfluenceOf(lGraphics.lizard.abstractCreature.personality.energy, 0.3f, 1.3f)
 				* InfluenceOf(lGraphics.lizard.abstractCreature.personality.sympathy, 0.2f, 1.1f);
@@ -115,12 +202,12 @@ namespace ConcealedGarden
 			this.numberOfSprites = 2;
 		}
 
-		private int throbCounter;
-        private Vector2 lastTarget;
-		private float minLength;
-		private float maxLength;
-		private float minWidth;
-		private float maxWidth;
+		protected int throbCounter;
+        protected Vector2 lastTarget;
+		protected float minLength;
+		protected float maxLength;
+		protected float minWidth;
+		protected float maxWidth;
 
 		private bool logSize = false;
 		private static bool logInfluenceMaths = false;
@@ -177,7 +264,7 @@ namespace ConcealedGarden
 				happiness = 1f;
 				UpdateSize();
 				Debug.Log("Liz type is " + lGraphics.lizard.Template.type);
-				Debug.Log("Liz inhate length is " + inhateLength);
+				Debug.Log("Liz innate length is " + innateLength);
 
 				Debug.Log("Liz dominance is " + lGraphics.lizard.abstractCreature.personality.dominance);
 				Debug.Log("Liz energy is " + lGraphics.lizard.abstractCreature.personality.energy);
@@ -191,13 +278,13 @@ namespace ConcealedGarden
 			}
 		}
 
-		private void UpdateSize()
+		protected virtual void UpdateSize()
 		{
 			bit.length = Mathf.Lerp(minLength, maxLength, Custom.SCurve(happiness, 0.8f)); 
 			bit.width = Mathf.Lerp(minWidth, maxWidth, Mathf.Pow(happiness, 0.5f));
 		}
 
-		private LizardGraphics.LizardSpineData GetAttachedPos(float timeStacker)
+		protected virtual LizardGraphics.LizardSpineData GetAttachedPos(float timeStacker)
 		{
 			float body = this.lGraphics.lizard.bodyChunkConnections[0].distance + this.lGraphics.lizard.bodyChunkConnections[1].distance;
 			float s1 = (body - 2.5f) / (body + lGraphics.tailLength);
@@ -209,7 +296,7 @@ namespace ConcealedGarden
 			return frontPos;
 		}
 
-		private float InfluenceOf(float value, float scale, float exp)
+		protected float InfluenceOf(float value, float scale, float exp)
 		{
 			if (value == 0.5f) return 1;
 			if (exp == 1f) return 1 - (ivInfluence * scale) + (ivInfluence * scale * 2f * value);
@@ -218,7 +305,8 @@ namespace ConcealedGarden
 
 		public override void Update()
 		{
-			if (happiness < this.lGraphics.showDominance * 0.8f)
+			if (happiness < happy) happiness = happy;
+			else if (happiness < this.lGraphics.showDominance * 0.8f)
 			{
 				if (UnityEngine.Input.GetKey("l")) Debug.Log("liz happy coz showing off");
 				happiness = RWCustom.Custom.LerpAndTick(happiness, this.lGraphics.showDominance * 0.8f, 0.008f, 0.002f);

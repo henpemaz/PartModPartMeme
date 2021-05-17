@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{423B0193-15D1-442E-83CF-DFC6F00175FE}</ProjectGuid>
+    <ProjectGuid>{25A321E7-ABD9-48DF-BB3C-FAA6A476915C}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DevelopmentBuild</RootNamespace>
-    <AssemblyName>DevelopmentBuild</AssemblyName>
+    <RootNamespace>PopupsMod</RootNamespace>
+    <AssemblyName>PopupsMod</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -31,8 +31,11 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\References\Assembly-CSharp.dll</HintPath>
+    <Reference Include="Assembly-CSharp - publicitystuntd">
+      <HintPath>..\..\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
+    </Reference>
+    <Reference Include="EnumExtender">
+      <HintPath>..\..\References\EnumExtender.dll</HintPath>
     </Reference>
     <Reference Include="HOOKS-Assembly-CSharp">
       <HintPath>..\..\References\HOOKS-Assembly-CSharp.dll</HintPath>
@@ -60,7 +63,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DevelopmentBuildMod.cs" />
+    <Compile Include="PlacedObjectsManager.cs" />
+    <Compile Include="PopupsMod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
