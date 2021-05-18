@@ -1,4 +1,5 @@
 ﻿using RWCustom;
+using System;
 using System.IO;
 using UnityEngine;
 // Don't look
@@ -8,12 +9,13 @@ namespace ConcealedGarden
 	internal class QuestionableLizardBit : LizardCosmetics.Template
 	{
 		// Stop, what are you doing
-
 		private static bool allOfThem = false;
 		private static bool everyRegion = false;
 		private static bool arenaToo = false;
 		private static bool veryHappy = false;
 		private static int ohMy = 0;
+		private static bool coloredBits = false;
+		private static Color bitColor;
 
 		public static void Apply()
 		{
@@ -27,7 +29,7 @@ namespace ConcealedGarden
 
         private static void RainWorldGame_ctor(On.RainWorldGame.orig_ctor orig, RainWorldGame self, ProcessManager manager)
         {
-			orig(self, manager);
+			// First some cheatcodes
 			allOfThem = File.Exists(Path.Combine(RWCustom.Custom.RootFolderDirectory(), "allOfThem.txt"));
 			everyRegion = File.Exists(Path.Combine(RWCustom.Custom.RootFolderDirectory(), "everyRegion.txt"));
 			arenaToo = File.Exists(Path.Combine(RWCustom.Custom.RootFolderDirectory(), "arenaToo.txt"));
@@ -39,16 +41,31 @@ namespace ConcealedGarden
 				{
 					int e = 0;
 					while (file.Name[1 + e] == 'e') e++;
-					if (e > ohMy) ohMy = e;
+					if (e == file.Name.Length - 10 && e > ohMy) ohMy = e;
 				}
 			}
+			if(File.Exists(Path.Combine(RWCustom.Custom.RootFolderDirectory(), "bitsColor.txt")))
+            {
+                try
+                {
+					string colorcode = File.ReadAllText(Path.Combine(RWCustom.Custom.RootFolderDirectory(), "bitsColor.txt"));
+					if (colorcode.StartsWith("#")) colorcode = colorcode.Substring(1);
+					if (colorcode.Length != 6) throw new Exception();
+					bitColor = new Color(
+						Convert.ToInt32(colorcode.Substring(0, 2), 16) / 255f,
+						Convert.ToInt32(colorcode.Substring(2, 2), 16) / 255f,
+						Convert.ToInt32(colorcode.Substring(4, 2), 16) / 255f);
+					coloredBits = true;
+				}
+                catch{}
+            }
+			orig(self, manager);
 		}
 
         private static void LizardGraphics_ctor(On.LizardGraphics.orig_ctor orig, LizardGraphics self, PhysicalObject ow)
 		{
 			orig(self, ow);
-			// But we're doing it
-			//Debug.LogError("lizbits ctor start");
+			// We're doing it
 			if (!self.lizard.room.game.IsStorySession && !arenaToo) return;
 			if (self.lizard.room.game.IsStorySession && !everyRegion)
             {
@@ -64,9 +81,7 @@ namespace ConcealedGarden
 			float innateLength = 0f;
 			float ivInfluence = 0f;
 			bool shouldHaveAQuestionableBit = allOfThem;
-			bool alreadyRolled = false;
-			//Debug.LogError("lizbits ctor critical");
-			//if (self.lizard.abstractCreature.spawnData != null) Debug.LogError("Found spawn data : " + self.lizard.abstractCreature.spawnData);
+			bool alreadyRolled = allOfThem;
 
 			if (self.lizard.abstractCreature.spawnData != null && self.lizard.abstractCreature.spawnData[0] == '{')
 			{
@@ -83,9 +98,9 @@ namespace ConcealedGarden
 							':'
 						});
 						string text = array2[0].Trim().ToLowerInvariant();
-						if (text == "male")
+						if (text == "male" && !alreadyRolled)
                         {
-							shouldHaveAQuestionableBit = array2.Length > 1 ? UnityEngine.Random.value < float.Parse(array2[1]) : true;
+							shouldHaveAQuestionableBit = array2.Length <= 1 || UnityEngine.Random.value < float.Parse(array2[1]);
 							alreadyRolled = true;
 						}
 					}
@@ -176,7 +191,7 @@ namespace ConcealedGarden
 				}
 			}
 			if (veryHappy) happy = 1f;
-			innateLength = innateLength * Mathf.Pow(1.3f, ohMy);
+			innateLength *= Mathf.Pow(1.3f, ohMy);
 
 			this.minLength = (innateLength / 5f)
 				* InfluenceOf(lGraphics.lizard.abstractCreature.personality.dominance, 0.5f, 1f)
@@ -370,17 +385,21 @@ namespace ConcealedGarden
 		{
 			for (int i = this.startSprite; i >= this.startSprite; i--)
 			{
-				sLeaser.sprites[i] = new FSprite("LizardScaleA" + this.graphic, true);
-				sLeaser.sprites[i].scaleY = this.bit.length / this.graphicHeight;
-				sLeaser.sprites[i].anchorY = 0.1f;
-				sLeaser.sprites[i].anchorX = 0.3f;
-				if (this.colored)
+                sLeaser.sprites[i] = new FSprite("LizardScaleA" + this.graphic, true)
+                {
+                    scaleY = this.bit.length / this.graphicHeight,
+                    anchorY = 0.1f,
+                    anchorX = 0.3f
+                };
+                if (this.colored)
 				{
-					sLeaser.sprites[i + 1] = new FSprite("LizardScaleB" + this.graphic, true);
-					sLeaser.sprites[i + 1].scaleY = this.bit.length / this.graphicHeight;
-					sLeaser.sprites[i + 1].anchorY = 0.1f;
-					sLeaser.sprites[i + 1].anchorX = 0.3f;
-				}
+                    sLeaser.sprites[i + 1] = new FSprite("LizardScaleB" + this.graphic, true)
+                    {
+                        scaleY = this.bit.length / this.graphicHeight,
+                        anchorY = 0.1f,
+                        anchorX = 0.3f
+                    };
+                }
 			}
 		}
 
@@ -417,7 +436,10 @@ namespace ConcealedGarden
 				sLeaser.sprites[i].color = this.lGraphics.BodyColor(0.5f);
 				if (this.colored)
                 {
-					sLeaser.sprites[i + 1].color = this.lGraphics.lizard.Template.type == CreatureTemplate.Type.WhiteLizard ? this.lGraphics.HeadColor(1f) : Color.Lerp(this.lGraphics.HeadColor(1f), this.lGraphics.effectColor, 0.3f);
+					if (coloredBits)
+						sLeaser.sprites[i + 1].color = bitColor;
+					else
+						sLeaser.sprites[i + 1].color = this.lGraphics.lizard.Template.type == CreatureTemplate.Type.WhiteLizard ? this.lGraphics.HeadColor(1f) : Color.Lerp(this.lGraphics.HeadColor(1f), this.lGraphics.effectColor, 0.3f);
                 }
 			}
 			base.ApplyPalette(sLeaser, rCam, palette);

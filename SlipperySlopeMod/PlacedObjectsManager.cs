@@ -56,6 +56,8 @@ namespace ManagedPlacedObjects
         private static void Room_Loaded_Patch(On.Room.orig_Loaded orig, Room self)
         {
             orig(self);
+            if (self.game is null) return;
+
             ManagedObjectType manager;
             for (int i = 0; i < self.roomSettings.placedObjects.Count; i++)
             {

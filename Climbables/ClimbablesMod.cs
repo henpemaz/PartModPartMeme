@@ -34,7 +34,7 @@ namespace Climbables
         public ClimbablesMod()
         {
             this.ModID = "ClimbablesMod";
-            this.Version = "1.0";
+            this.Version = "1.1";
             this.author = "Henpemaz";
 
             instance = this;
@@ -196,6 +196,7 @@ namespace Climbables
         public static void Room_Loaded_Patch(On.Room.orig_Loaded orig, Room instance)
         {
             orig(instance);
+            if (instance.game == null) return;
 
             for (int l = 0; l < instance.roomSettings.placedObjects.Count; l++)
             {

@@ -18,7 +18,7 @@ namespace PopupsMod
         public PopupsMod()
         {
             this.ModID = "PopupsMod";
-            this.Version = "1.0";
+            this.Version = "1.1";
             this.author = "Henpemaz";
 
             instance = this;
