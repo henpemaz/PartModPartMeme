@@ -92,6 +92,66 @@ namespace ConcealedGarden
 
             PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("SlipperySlope",
                 typeof(SlipperySlope), typeof(SlipperySlope.SlipperySlopeData), typeof(PlacedObjectsManager.ManagedRepresentation)));
+
+
+            // ID spawndata support
+            On.RainWorldGame.GetNewID_1 += RainWorldGame_GetNewID_1;
+            On.WorldLoader.ctor += WorldLoader_ctor;
+        }
+
+        private WeakReference currentWorldLoader;
+        private void WorldLoader_ctor(On.WorldLoader.orig_ctor orig, WorldLoader self, RainWorldGame game, int playerCharacter, bool singleRoomWorld, string worldName, Region region, RainWorldGame.SetupValues setupValues)
+        {
+            currentWorldLoader = new WeakReference(self);
+            orig(self, game, playerCharacter, singleRoomWorld, worldName, region, setupValues);
+        }
+
+        private EntityID RainWorldGame_GetNewID_1(On.RainWorldGame.orig_GetNewID_1 orig, RainWorldGame self, int spawner)
+        {
+            EntityID id = orig(self, spawner);
+
+            if(spawner > 0 && self.IsStorySession) // called juuuust from WorldLoader.GeneratePopulation most likely, lets play safe though
+            {
+                int region = UnityEngine.Mathf.FloorToInt(spawner / 1000f);
+                int inregionspawn = spawner - region * 1000;
+
+                try
+                {
+                    // game.overWorld isn't set until the constructor is done
+                    // Overworld.LoadWorld doesn't set a reference to worldloader anywhere while its doing its thing :/
+                    WorldLoader worldLoader = currentWorldLoader.Target as WorldLoader;
+                    if (worldLoader != null && !worldLoader.Finished && worldLoader.world.region != null && worldLoader.world.region.regionNumber == region)
+                    {
+                        string spawnData = "";
+                        if (worldLoader.world.spawners[inregionspawn] is World.SimpleSpawner simpleSpawner)
+                        {
+                            spawnData = simpleSpawner.spawnDataString;
+                        }
+                        else if (worldLoader.world.spawners[inregionspawn] is World.Lineage lineage)
+                        {
+                            spawnData = lineage.CurrentSpawnData((self.session as StoryGameSession).saveState);
+                        }
+                        if (!string.IsNullOrEmpty(spawnData) && spawnData[0] == '{')
+                        {
+                            string[] array = spawnData.Substring(1, spawnData.Length - 2).Split(new char[] { ',' });
+                            for (int i = 0; i < array.Length; i++)
+                            {
+                                if (array[i].Length > 0)
+                                {
+                                    string[] array2 = array[i].Split(new char[] { ':' });
+                                    string text = array2[0].Trim().ToLowerInvariant();
+                                    if (text == "id")
+                                    {
+                                        id.number = int.Parse(array2[1].Trim());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                catch { UnityEngine.Debug.LogError("ConcealedGarden: Something terrible happened while trying to parse for a spawn ID for spawner " + spawner); }
+            }
+            return id;
         }
     }
 }

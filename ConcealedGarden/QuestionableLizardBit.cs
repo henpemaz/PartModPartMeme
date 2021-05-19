@@ -22,8 +22,9 @@ namespace ConcealedGarden
             // You're not gonna like it
 #pragma warning disable CS0219 // shush, stop raising warnings
             string str = "Disclaimer: only applies if NudeMod is ON ;o";
+            string str2 = "Anyone who finds this knows exactly what they're in for";
 #pragma warning restore CS0219
-            On.LizardGraphics.ctor += LizardGraphics_ctor;
+			On.LizardGraphics.ctor += LizardGraphics_ctor;
             On.RainWorldGame.ctor += RainWorldGame_ctor;
 		}
 
@@ -44,7 +45,8 @@ namespace ConcealedGarden
 					if (e == file.Name.Length - 10 && e > ohMy) ohMy = e;
 				}
 			}
-			if(File.Exists(Path.Combine(RWCustom.Custom.RootFolderDirectory(), "bitsColor.txt")))
+			coloredBits = false;
+			if (File.Exists(Path.Combine(RWCustom.Custom.RootFolderDirectory(), "bitsColor.txt")))
             {
                 try
                 {
@@ -83,7 +85,7 @@ namespace ConcealedGarden
 			bool shouldHaveAQuestionableBit = allOfThem;
 			bool alreadyRolled = allOfThem;
 
-			if (self.lizard.abstractCreature.spawnData != null && self.lizard.abstractCreature.spawnData[0] == '{')
+			if (!string.IsNullOrEmpty(self.lizard.abstractCreature.spawnData) && self.lizard.abstractCreature.spawnData[0] == '{')
 			{
 				string[] array = self.lizard.abstractCreature.spawnData.Substring(1, self.lizard.abstractCreature.spawnData.Length - 2).Split(new char[]
 				{
@@ -169,7 +171,7 @@ namespace ConcealedGarden
 			this.ivInfluence = ivInfluence;
 			this.happy = 0f;
 
-			if (self.lizard.abstractCreature.spawnData != null && self.lizard.abstractCreature.spawnData[0] == '{')
+			if ( !string.IsNullOrEmpty(self.lizard.abstractCreature.spawnData) && self.lizard.abstractCreature.spawnData[0] == '{')
 			{
 				string[] array = self.lizard.abstractCreature.spawnData.Substring(1, self.lizard.abstractCreature.spawnData.Length - 2).Split(new char[]
 				{
