@@ -266,7 +266,14 @@ namespace ManagedPlacedObjects
             protected readonly Type dataType;
             protected readonly Type reprType;
             protected readonly bool singleInstance;
-
+            /// <summary>
+            /// Creates a ManagedObjectType responsible for creating your placedobject instance, data and repr
+            /// </summary>
+            /// <param name="name">The enum-name this manager responds for. Do NOT use EnumExt_MyEnum.MyObject.ToString() because on mod-loading enumextender might not have run yet and your enums aren't extended.</param>
+            /// <param name="objectType">The Type of your UpdateableAndDeletable object. Must have a constructor like (Room room, PlacedObject pObj) or (PlacedObject pObj, Room room) or (Room room).</param>
+            /// <param name="dataType">The Type of your PlacedObject.Data. Must have a constructor like (PlacedObject pObj).</param>
+            /// <param name="reprType">The Type of your PlacedObjectRepresentation. Must have a constructor like (DevUI owner, string IDstring, DevUINode parentNode, PlacedObject pObj, string name) or (PlacedObject.Type placedType, ObjectsPage objPage, PlacedObject pObj).</param>
+            /// <param name="singleInstance">Wether only one of this object should be created per room. Corruption-object that scans for other placedobjects style.</param>
             public ManagedObjectType(string name, Type objectType, Type dataType, Type reprType, bool singleInstance = false)
             {
                 this.placedType = default; // type parsing deferred until actualy used

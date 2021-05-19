@@ -215,16 +215,18 @@ namespace ManagedPlacedObjects
                 [BackedByField("msid")]
                 public SoundID mySound;
                 #pragma warning restore 0649
-                
-                public float rotation;
 
-                public CuriousData(PlacedObject owner) : base(owner, new ManagedField[] {
+                private static ManagedField[] customFields = new ManagedField[] {
                     new FloatField("scale", 0.1f, 10f, 1f, displayName:"Scale"),
                     new Vector2Field("ev2", new Vector2(-100, -40), Vector2Field.VectorReprType.line),
                     //new Vector2Field("ev3", new Vector2(-100, -40), Vector2Field.VectorReprType.none),
                     new DrivenVector2Field("ev3", "ev2", new Vector2(-100, -40)), // Combines two vector2s in one single constrained control
-                    new EnumField("msid", typeof(SoundID), SoundID.Bat_Afraid_Flying_Sounds, new System.Enum[]{SoundID.Bat_Afraid_Flying_Sounds, SoundID.Bat_Attatch_To_Chain }, displayName:"What sound a bat makes"),
-                })
+                    new EnumField("msid", typeof(SoundID), SoundID.Bat_Afraid_Flying_Sounds, new System.Enum[]{SoundID.Bat_Afraid_Flying_Sounds, SoundID.Bat_Attatch_To_Chain}, displayName:"What sound a bat makes"),
+                };
+
+                public float rotation;
+
+                public CuriousData(PlacedObject owner) : base(owner, customFields)
                 {
                     this.rotation = UnityEngine.Random.value * 360f;
                 }
