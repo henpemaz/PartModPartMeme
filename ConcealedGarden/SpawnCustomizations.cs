@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 namespace ConcealedGarden
 {
@@ -18,11 +19,171 @@ namespace ConcealedGarden
             On.AbstractCreature.ctor += AbstractCreature_ctor; ;
             On.CreatureState.LoadFromString += CreatureState_LoadFromString;
 
-            // Innate Like support
+            // Innate RelationhShip support
             On.CreatureState.ctor += CreatureState_ctor;
             // On.CreatureState.LoadFromString += CreatureState_LoadFromString;
+
+            // Friendable, follower
+            On.AbstractCreature.InitiateAI += AbstractCreature_InitiateAI;
+            On.CicadaAI.Update += CicadaAI_Update;
+            On.CicadaAbstractAI.AbstractBehavior += CicadaAbstractAI_AbstractBehavior;
+            On.ScavengerAI.Update += ScavengerAI_Update;
+            On.ScavengerAbstractAI.AbstractBehavior += ScavengerAbstractAI_AbstractBehavior;
+            On.ScavengerAI.LikeOfPlayer += ScavengerAI_LikeOfPlayer;
         }
 
+        private static float ScavengerAI_LikeOfPlayer(On.ScavengerAI.orig_LikeOfPlayer orig, ScavengerAI self, RelationshipTracker.DynamicRelationship dRelation)
+        {
+            float val = orig(self, dRelation);
+            if (self.friendTracker != null && self.friendTracker.friend.abstractCreature.ID == dRelation.trackerRep.representedCreature.ID)
+            {
+                val += self.friendTracker.Urgency;
+            }
+            return Mathf.Clamp(val, 0f, 1f);
+        }
+        private static void ScavengerAbstractAI_AbstractBehavior(On.ScavengerAbstractAI.orig_AbstractBehavior orig, ScavengerAbstractAI self, int time)
+        {
+            orig(self, time);
+            //var AbstractCreatureA_AbstractBehaviorI = typeof(AbstractCreatureAI).GetMethod("AbstractBehavior").MethodHandle.GetFunctionPointer();
+            //var baseBehavior = (Action<int>)Activator.CreateInstance(typeof(Action<int>), self, AbstractCreatureA_AbstractBehaviorI);
+            self.MigrationBehavior(0); // time = zero => zero rolls of random migration, just followcreature logic
+        }
+        public static class EnumExt_SpawnCustomizations
+        {
+            public static ScavengerAI.Behavior FollowFriend;
+        }
+        private static void ScavengerAI_Update(On.ScavengerAI.orig_Update orig, ScavengerAI self)
+        {
+            orig(self);
+            if (self.friendTracker == null || !self.friendTracker.followClosestFriend) return;
+            AIModule aimodule = self.utilityComparer.HighestUtilityModule();
+            self.currentUtility = self.utilityComparer.HighestUtility();
+            if (aimodule != null)
+            {
+                if (aimodule is FriendTracker && self.currentUtility >= 0.1f)
+                {
+                    self.behavior = EnumExt_SpawnCustomizations.FollowFriend;
+                }
+            }
+            if (self.behavior == EnumExt_SpawnCustomizations.FollowFriend)
+            {
+                if (self.friendTracker.friend == null)
+                {
+                    self.behavior = ScavengerAI.Behavior.Idle;
+                }
+                else
+                {
+                    self.creature.abstractAI.SetDestination(self.friendTracker.friendDest);
+                    self.focusCreature = self.tracker.RepresentationForCreature(self.friendTracker.friend.abstractCreature, false);
+                }
+            }
+            if (self.friendTracker.friend == null)
+            {
+                // Abstract follow-creature logic might do something about it
+                if (UnityEngine.Random.value < 0.02)
+                {
+                    self.creature.abstractAI.AbstractBehavior(1);
+                }
+                if (self.creature.abstractAI.followCreature != null)
+                {
+                    self.friendTracker.friend = self.creature.abstractAI.followCreature.realizedCreature;
+                    self.friendTracker.friendRel = self.creature.state.socialMemory.GetRelationship(self.creature.abstractAI.followCreature.ID);
+                }
+            }
+        }
+        private static void CicadaAI_Update(On.CicadaAI.orig_Update orig, CicadaAI self)
+        {
+            // reordered to prevent IDLE from taking precedence
+            if (self.friendTracker != null && self.friendTracker.followClosestFriend)
+            {
+                AIModule aimodule = self.utilityComparer.HighestUtilityModule();
+                self.currentUtility = self.utilityComparer.HighestUtility();
+                if (aimodule != null)
+                {
+                    if (aimodule is FriendTracker && self.currentUtility >= 0.1f)
+                    {
+                        self.behavior = CicadaAI.Behavior.FollowFriend;
+                    }
+                }
+                if (self.behavior == CicadaAI.Behavior.FollowFriend)
+                {
+                    if (self.friendTracker.friend == null)
+                    {
+                        self.behavior = CicadaAI.Behavior.Idle;
+                    }
+                    else
+                    {
+                        self.creature.abstractAI.SetDestination(self.friendTracker.friendDest);
+                        self.focusCreature = self.tracker.RepresentationForCreature(self.friendTracker.friend.abstractCreature, false);
+                    }
+                }
+                if (self.friendTracker.friend == null)
+                {
+                    // Abstract follow-creature logic might do something about it
+                    if (UnityEngine.Random.value < 0.02)
+                    {
+                        self.creature.abstractAI.AbstractBehavior(1);
+                    }
+                    if (self.creature.abstractAI.followCreature != null)
+                    {
+                        self.friendTracker.friend = self.creature.abstractAI.followCreature.realizedCreature;
+                        self.friendTracker.friendRel = self.creature.state.socialMemory.GetRelationship(self.creature.abstractAI.followCreature.ID);
+                    }
+                }
+            }
+            orig(self);
+        }
+        private static void CicadaAbstractAI_AbstractBehavior(On.CicadaAbstractAI.orig_AbstractBehavior orig, CicadaAbstractAI self, int time)
+        {
+            //if (self.followCreature == null)
+            orig(self, time);
+            //// I don't think I can call this early and store it because of JIT ?
+            //var AbstractCreatureA_AbstractBehaviorI = typeof(AbstractCreatureAI).GetMethod("AbstractBehavior").MethodHandle.GetFunctionPointer();
+            //var baseBehavior = (Action<int>)Activator.CreateInstance(typeof(Action<int>), self, AbstractCreatureA_AbstractBehaviorI);
+            self.MigrationBehavior(0); // time = zero => zero rolls of random migration, just followcreature logic
+        }
+        private static void AbstractCreature_InitiateAI(On.AbstractCreature.orig_InitiateAI orig, AbstractCreature self)
+        {
+            orig(self);
+            if (self.abstractAI == null || self.abstractAI.RealAI == null) return;
+            string spawnData = self.spawnData;
+            if (!string.IsNullOrEmpty(spawnData) && spawnData[0] == '{')
+            {
+                string[] array = spawnData.Substring(1, spawnData.Length - 2).Split(new char[]
+                {
+                    ','
+                });
+                for (int i = 0; i < array.Length; i++)
+                {
+                    if (array[i].Length > 0)
+                    {
+                        string[] array2 = array[i].Split(new char[] { ':' });
+                        string text = array2[0].Trim().ToLowerInvariant();
+
+                        if (text == "friend")
+                        {
+                            if (self.abstractAI.RealAI.friendTracker == null) self.abstractAI.RealAI.AddModule(new FriendTracker(self.abstractAI.RealAI));
+                            Debug.LogError("Friend module added in " + self);
+                        }
+
+                        if (text == "follow")
+                        {
+                            if (self.abstractAI.RealAI.friendTracker != null && self.abstractAI.RealAI.utilityComparer != null)
+                            {
+                                self.abstractAI.RealAI.friendTracker.followClosestFriend = true;
+                                bool tracked = false;
+                                foreach (var tracker in self.abstractAI.RealAI.utilityComparer.uTrackers)
+                                {
+                                    if (tracker.module == self.abstractAI.RealAI.friendTracker) tracked = true;
+                                }
+                                if (!tracked) self.abstractAI.RealAI.utilityComparer.AddComparedModule(self.abstractAI.RealAI.friendTracker, null, array2.Length > 1 ? float.Parse(array2[1]) : 0.8f, 1.2f);
+                                Debug.LogError("Follow configured in " + self);
+                            }
+                        }
+                    }
+                }
+            }
+        }
         private static WeakReference currentWorldLoader;
         private static void WorldLoader_ctor(On.WorldLoader.orig_ctor orig, WorldLoader self, RainWorldGame game, int playerCharacter, bool singleRoomWorld, string worldName, Region region, RainWorldGame.SetupValues setupValues)
         {
@@ -272,8 +433,7 @@ namespace ConcealedGarden
                                                 rel.tempLike = amount;
                                             }
                                         }
-
-                                        if (text == "fear")
+                                        else if (text == "fear")
                                         {
                                             float amount = array2.Length > 1 ? float.Parse(array2[1]) : 1f;
                                             foreach (var player in creature.world.game.Players)
@@ -283,12 +443,21 @@ namespace ConcealedGarden
                                                 rel.tempFear = amount;
                                             }
                                         }
+                                        else if (text == "know")
+                                        {
+                                            float amount = array2.Length > 1 ? float.Parse(array2[1]) : 1f;
+                                            foreach (var player in creature.world.game.Players)
+                                            {
+                                                var rel = self.socialMemory.GetOrInitiateRelationship(player.ID);
+                                                rel.know = amount;
+                                            }
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                    catch { UnityEngine.Debug.LogError("ConcealedGarden: Something terrible happened while trying to parse Like/Fear for spawner " + creature.ID.spawner + " " + spawnData); }
+                    catch { UnityEngine.Debug.LogError("ConcealedGarden: Something terrible happened while trying to parse relationship for spawner " + creature.ID.spawner + " " + spawnData); }
                 }
             }
         }
