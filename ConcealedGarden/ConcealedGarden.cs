@@ -33,74 +33,78 @@ namespace ConcealedGarden
 
             ElectricArcs.Register();
 
-            PlacedObjectsManager.RegisterFullyManagedObjectType(new PlacedObjectsManager.ManagedField[]
-            {
-                new PlacedObjectsManager.FloatField("rmin", 0, 1, 0.1f, 0.001f),
-                new PlacedObjectsManager.FloatField("rmax", 0, 1, 0.3f, 0.001f),
-                new PlacedObjectsManager.FloatField("gmin", 0, 1, 0.05f, 0.001f),
-                new PlacedObjectsManager.FloatField("gmax", 0, 1, 0.2f, 0.001f),
-                new PlacedObjectsManager.FloatField("bmin", 0, 1, 0.5f, 0.001f),
-                new PlacedObjectsManager.FloatField("bmax", 0, 1, 0.25f, 0.001f),
-                new PlacedObjectsManager.FloatField("stiff", 0, 1, 0.5f, 0.01f),
-                new PlacedObjectsManager.IntegerField("ftc", 0, 400, 120, PlacedObjectsManager.ManagedFieldWithPanel.ControlType.slider),
-            }, typeof(OrganicShelter.OrganicShelterCoordinator), "OrganicShelterCoordinator");
+            OrganicShelter.Register();
 
-            PlacedObjectsManager.RegisterFullyManagedObjectType(new PlacedObjectsManager.ManagedField[]
-            {
-                new PlacedObjectsManager.Vector2Field("size", new UnityEngine.Vector2(40,40), PlacedObjectsManager.Vector2Field.VectorReprType.circle),
-                new PlacedObjectsManager.Vector2Field("dest", new UnityEngine.Vector2(0,50), PlacedObjectsManager.Vector2Field.VectorReprType.line),
-                new PlacedObjectsManager.FloatField("stiff", 0, 1, 0.5f, 0.01f),
-            }, null, "OrganicLockPart");
+            LifeSimProjection.Register();
 
-            PlacedObjectsManager.RegisterFullyManagedObjectType(new PlacedObjectsManager.ManagedField[]
-            {
-                new PlacedObjectsManager.Vector2Field("size", new UnityEngine.Vector2(-100,100), PlacedObjectsManager.Vector2Field.VectorReprType.circle),
-                new PlacedObjectsManager.FloatField("sizemin", 1, 200, 12f, 1f),
-                new PlacedObjectsManager.FloatField("sizemax", 1, 200, 20f, 1f),
-                new PlacedObjectsManager.FloatField("depth", -100, 100, 4f, 1f),
-                new PlacedObjectsManager.FloatField("density", 0, 5, 0.5f, 0.01f),
-                new PlacedObjectsManager.FloatField("stiff", 0, 1, 0.5f, 0.01f),
-                new PlacedObjectsManager.FloatField("spread", 0, 20f, 2f, 0.1f),
-                new PlacedObjectsManager.IntegerField("seed", 0, 9999, 0),
-            }, null, "OrganicLining");
+            CosmeticLeaves.Register();
 
-            PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("LifeSimProjectionSegment",
-                typeof(LifeSimProjection), typeof(PlacedObject.GridRectObjectData), typeof(DevInterface.GridRectObjectRepresentation), singleInstance: true));
-            //PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("LifeSimProjectionPulser",
-            //    typeof(LifeSimProjection), typeof(PlacedObject.GridRectObjectData), typeof(DevInterface.GridRectObjectRepresentation), singleInstance: true));
-            //PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("LifeSimProjectionKiller",
-            //    typeof(LifeSimProjection), typeof(PlacedObject.GridRectObjectData), typeof(DevInterface.GridRectObjectRepresentation), singleInstance: true));
+            CGGateFix.Register();
+            
+            SlipperySlope.Register();
 
-            PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("CosmeticLeaves",
-                typeof(CosmeticLeaves), typeof(CosmeticLeaves.CosmeticLeavesObjectData), typeof(PlacedObjectsManager.ManagedRepresentation)));
-
-            PlacedObjectsManager.RegisterFullyManagedObjectType(new PlacedObjectsManager.ManagedField[]
-            {
-                new PlacedObjectsManager.BooleanField("noleft", false, displayName:"No Left Door"),
-                new PlacedObjectsManager.BooleanField("noright", false, displayName:"No Right Door"),
-                new PlacedObjectsManager.BooleanField("nowater", false, displayName:"No Water, stoopid"),
-            }, typeof(CGGateFix), "CGGateFix");
-
-
-            bool found = false;
-            // UnityEngine.Debug.Log("NudeMod searching...");
-            foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                if (asm.GetName().Name == "NudeMod")
-                {
-                    found = true;
-                    UnityEngine.Debug.Log("NudeMod FOUND");
-                    QuestionableLizardBit.Apply();
-                    break;
-                }
-            }
-            if(!found) UnityEngine.Debug.Log("NudeMod NOT FOUND");
-
-            PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("SlipperySlope",
-                typeof(SlipperySlope), typeof(SlipperySlope.SlipperySlopeData), typeof(PlacedObjectsManager.ManagedRepresentation)));
+            BunkerShelterParts.Register();
+            
+            QuestionableLizardBit.Apply();
 
             SpawnCustomizations.Apply();
+
+            ShaderTester.Register();
         }
 
+        public class ShaderTester : CosmeticSprite
+        {
+            public enum Shader { Basic, LevelColor, Background, WaterSurface, DeepWater, Shortcuts, DeathRain, LizardLaser, WaterLight, WaterFall, ShockWave, Smoke, Spores, Steam, ColoredSprite, ColoredSprite2, LightSource, LightBloom, SkyBloom, Adrenaline, CicadaWing, BulletRain, CustomDepth, UnderWaterLight, FlatLight, FlatLightBehindTerrain, VectorCircle, VectorCircleFadable, FlareBomb, Fog, WaterSplash, EelFin, EelBody, JaggedCircle, JaggedSquare, TubeWorm, LizardAntenna, TentaclePlant, LevelMelt, LevelMelt2, CoralCircuit, DeadCoralCircuit, CoralNeuron, Bloom, GravityDisruptor, GlyphProjection, BlackGoo, Map, MapAerial, MapShortcut, LightAndSkyBloom, SceneBlur, EdgeFade, HeatDistortion, Projection, SingleGlyph, DeepProcessing, Cloud, CloudDistant, DistantBkgObject, BkgFloor, House, DistantBkgObjectRepeatHorizontal, Dust, RoomTransition, VoidCeiling, FlatLightNoisy, VoidWormBody, VoidWormFin, VoidWormPincher, FlatWaterLight, WormLayerFade, OverseerZip, GhostSkin, GhostDistortion, GateHologram, OutPostAntler, WaterNut, Hologram, FireSmoke, HoldButtonCircle, GoldenGlow, ElectricDeath, VoidSpawnBody, SceneLighten, SceneBlurLightEdges, SceneRain, SceneOverlay, SceneSoftLight, HologramImage, HologramBehindTerrain, Decal, SpecificDepth, LocalBloom, MenuText, DeathFall, KingTusk, HoloGrid, SootMark, NewVultureSmoke, SmokeTrail, RedsIllness, HazerHaze, Rainbow, LightBeam }
+            public enum Container { Shadows, BackgroundShortcuts, Background, Midground, Items, Foreground, ForegroundLights, Shortcuts, Water, GrabShaders, Bloom, HUD, HUD2 }
+
+            private readonly PlacedObject pObj;
+            PlacedObjectsManager.ManagedData data => pObj.data as PlacedObjectsManager.ManagedData;
+
+            public ShaderTester(Room room, PlacedObject pObj)
+            {
+                this.room = room;
+                this.pObj = pObj;
+            }
+
+            public override void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
+            {
+                base.InitiateSprites(sLeaser, rCam);
+                sLeaser.sprites = new FSprite[1] { new FSprite("Futile_White", true) };
+            }
+
+            public override void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, UnityEngine.Vector2 camPos)
+            {
+                base.DrawSprites(sLeaser, rCam, timeStacker, camPos);
+                rCam.ReturnFContainer(data.GetValue<Container>("container").ToString())
+                    .AddChildAtIndex(sLeaser.sprites[0],
+                        UnityEngine.Mathf.FloorToInt(data.GetValue<float>("depth") * rCam.ReturnFContainer(data.GetValue<Container>("container").ToString()).GetChildCount()));
+                try
+                {
+                    sLeaser.sprites[0].SetElementByName(data.GetValue<string>("sprite"));
+                }
+                catch { }
+                sLeaser.sprites[0].shader = rCam.game.rainWorld.Shaders[data.GetValue<Shader>("shader").ToString()];
+                sLeaser.sprites[0].color = data.GetValue<UnityEngine.Color>("color");
+                sLeaser.sprites[0].alpha = data.GetValue<float>("alpha");
+                sLeaser.sprites[0].scale = data.GetValue<float>("scale");
+
+                sLeaser.sprites[0].SetPosition(pObj.pos - camPos);
+            }
+
+            public static void Register()
+            {
+                PlacedObjectsManager.RegisterFullyManagedObjectType(new PlacedObjectsManager.ManagedField[]
+                {
+                    new PlacedObjectsManager.StringField("sprite", "Futile_White"),
+                    new PlacedObjectsManager.FloatField("scale", 0.1f, 20f, 1f, 0.1f),
+                    new PlacedObjectsManager.EnumField("shader", typeof(Shader), Shader.Basic),
+                    new PlacedObjectsManager.EnumField("container", typeof(Container), Container.Shadows),
+                    new PlacedObjectsManager.FloatField("depth", 0f, 1f, 0f, 0.01f),
+                    new PlacedObjectsManager.ColorField("color", UnityEngine.Color.white, controlType: PlacedObjectsManager.ManagedFieldWithPanel.ControlType.slider),
+                    new PlacedObjectsManager.FloatField("alpha", 0f, 1f, 0f, 0.01f),
+
+                }, typeof(ShaderTester), "ShaderTester");
+            }
+        }
     }
 }

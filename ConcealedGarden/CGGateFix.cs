@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using ManagedPlacedObjects;
+using System;
+using UnityEngine;
 
 namespace ConcealedGarden
 {
@@ -41,6 +43,16 @@ namespace ConcealedGarden
                 room.regionGate.doors[2].closeSpeed = 0f;
                 this.rightDoor = room.regionGate.graphics.doorGraphs[2];
             }
+        }
+
+        internal static void Register()
+        {
+            PlacedObjectsManager.RegisterFullyManagedObjectType(new PlacedObjectsManager.ManagedField[]
+            {
+                new PlacedObjectsManager.BooleanField("noleft", false, displayName:"No Left Door"),
+                new PlacedObjectsManager.BooleanField("noright", false, displayName:"No Right Door"),
+                new PlacedObjectsManager.BooleanField("nowater", false, displayName:"No Water, stoopid"),
+            }, typeof(CGGateFix), "CGGateFix");
         }
 
         public override void Update(bool eu)

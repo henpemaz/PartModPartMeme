@@ -54,6 +54,13 @@ namespace ConcealedGarden
             this.leaves = leavesList.ToArray();
         }
 
+        internal static void Register()
+        {
+            PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("CosmeticLeaves",
+                typeof(CosmeticLeaves), typeof(CosmeticLeaves.CosmeticLeavesObjectData), typeof(PlacedObjectsManager.ManagedRepresentation)));
+
+        }
+
         private Vector2 Varmag(float iu, float iv)
         {
             return new Vector2(varh, varv) * Mathf.Abs(Mathf.Cos(iu * Mathf.PI / 2f)) * Mathf.Abs(Mathf.Cos(iv * Mathf.PI / 2f));

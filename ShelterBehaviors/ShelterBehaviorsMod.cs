@@ -45,6 +45,10 @@ namespace ShelterBehaviors
                 new PlacedObjectsManager.IntegerField("fts", 0, 400, 40, PlacedObjectsManager.ManagedFieldWithPanel.ControlType.slider, displayName:"Frames to Sleep"),
                 new PlacedObjectsManager.IntegerField("ftsv", 0, 400, 60, PlacedObjectsManager.ManagedFieldWithPanel.ControlType.slider, displayName:"Frames to Starvation"),
                 new PlacedObjectsManager.IntegerField("ftw", 0, 400, 120, PlacedObjectsManager.ManagedFieldWithPanel.ControlType.slider, displayName:"Frames to Win"),
+                new PlacedObjectsManager.IntegerField("ini", 0, 400, 120, PlacedObjectsManager.ManagedFieldWithPanel.ControlType.slider, displayName:"Initial wait"),
+                new PlacedObjectsManager.IntegerField("ouf", 0, 400, 120, PlacedObjectsManager.ManagedFieldWithPanel.ControlType.slider, displayName:"Open up anim"),
+                new PlacedObjectsManager.BooleanField("ani", false, displayName:"Animate Water"),
+
                 }, typeof(ShelterBehaviorManager), "ShelterBhvrManager");
 
             

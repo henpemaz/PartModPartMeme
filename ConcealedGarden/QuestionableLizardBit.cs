@@ -1,6 +1,7 @@
 ﻿using RWCustom;
 using System;
 using System.IO;
+using System.Reflection;
 using UnityEngine;
 // Don't look
 namespace ConcealedGarden
@@ -24,8 +25,38 @@ namespace ConcealedGarden
             string str = "Disclaimer: only applies if NudeMod is ON ;o";
             string str2 = "Anyone who finds this knows exactly what they're in for";
 #pragma warning restore CS0219
+            On.RainWorld.Start += RainWorld_Start;
+			
+		}
+
+		private static void InternalApply()
+        {
 			On.LizardGraphics.ctor += LizardGraphics_ctor;
-            On.RainWorldGame.ctor += RainWorldGame_ctor;
+			On.RainWorldGame.ctor += RainWorldGame_ctor;
+		}
+
+        private static void RainWorld_Start(On.RainWorld.orig_Start orig, RainWorld self)
+        {
+            try
+            {
+                bool found = false;
+                // UnityEngine.Debug.Log("NudeMod searching...");
+                foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    if (asm.GetName().Name == "NudeMod")
+                    {
+                        found = true;
+                        UnityEngine.Debug.Log("NudeMod FOUND");
+                        InternalApply();
+                        break;
+                    }
+                }
+                if (!found) UnityEngine.Debug.Log("NudeMod NOT FOUND");
+            }
+            finally
+            {
+				orig(self);
+            }
 		}
 
         private static void RainWorldGame_ctor(On.RainWorldGame.orig_ctor orig, RainWorldGame self, ProcessManager manager)

@@ -33,9 +33,9 @@ namespace ShelterBehaviors
     }
 
 
-    public interface IReactToShelterClosing
+    public interface IReactToShelterEvents
     {
-        void OnShelterClose();
+        void ShelterEvent(float newFactor, float closeSpeed);
     }
 
     internal class ShelterBehaviorManager : UpdatableAndDeletable, INotifyWhenRoomIsReady
@@ -62,7 +62,7 @@ namespace ShelterBehaviors
         private bool deleteHackDoorNextFrame;
         private bool isConsumed;
         private int placedObjectIndex;
-        private List<IReactToShelterClosing> subscribers;
+        private List<IReactToShelterEvents> subscribers;
         private readonly PlacedObject pObj;
         private readonly ManagedPlacedObjects.PlacedObjectsManager.ManagedData data;
 
@@ -84,7 +84,7 @@ namespace ShelterBehaviors
             customDoors = new List<ShelterDoor>();
             triggers = new List<IntRect>();
             noTriggers = new List<IntRect>();
-            subscribers = new List<IReactToShelterClosing>();
+            subscribers = new List<IReactToShelterEvents>();
 
             noVanillaDoors = false;
             this.broken = room.shelterDoor.Broken;
@@ -105,6 +105,7 @@ namespace ShelterBehaviors
                 this.room.world.brokenShelters[this.room.abstractRoom.shelterIndex] = true;
             }
 
+            this.brokenWaterLevel = null;
             for (int i = 0; i < instance.roomSettings.placedObjects.Count; i++)
             {
                 if (instance.roomSettings.placedObjects[i].active)
@@ -124,6 +125,9 @@ namespace ShelterBehaviors
                     else if (instance.roomSettings.placedObjects[i].type == ShelterBehaviorsMod.EnumExt_ShelterBehaviorsMod.ShelterBhvrSpawnPosition)
                     {
                         this.AddSpawnPosition(instance.roomSettings.placedObjects[i]);
+                    }else if (instance.roomSettings.placedObjects[i].type == PlacedObject.Type.BrokenShelterWaterLevel)
+                    {
+                        this.brokenWaterLevel = instance.roomSettings.placedObjects[i];
                     }
                 }
             }
@@ -168,9 +172,26 @@ namespace ShelterBehaviors
                 //}
             }
 
+            float closedFac;
+            float closeSpeed;
+            if (this.room.game.world.rainCycle == null)
+            {
+                closedFac = 1f;
+                closeSpeed = 1f;
+            }
+            else
+            {
+                closedFac = ((!room.game.setupValues.cycleStartUp) ? 1f : Mathf.InverseLerp(data.GetValue<int>("ini") + data.GetValue<int>("ouf"), data.GetValue<int>("ini"), (float)this.room.game.world.rainCycle.timer));
+                closeSpeed = this.room.game.world.rainCycle.timer <= data.GetValue<int>("ini") ? 0f : -1f / data.GetValue<int>("ouf");
+            }
+
             for (int i = 0; i < room.updateList.Count; i++)
             {
-                if (room.updateList[i] is IReactToShelterClosing) this.subscribers.Add(room.updateList[i] as IReactToShelterClosing);
+                if (room.updateList[i] is IReactToShelterEvents)
+                {
+                    this.subscribers.Add(room.updateList[i] as IReactToShelterEvents);
+                    (room.updateList[i] as IReactToShelterEvents).ShelterEvent(closedFac, closeSpeed);
+                }
             }
         }
 
@@ -190,6 +211,15 @@ namespace ShelterBehaviors
                     tempSpawnPosHackDoor = null;
                 }
                 deleteHackDoorNextFrame = false;
+            }
+
+            if (this.room.game.world.rainCycle.timer == data.GetValue<int>("ini") && this.room.game.setupValues.cycleStartUp)
+            {
+                float closeSpeed = -1f / data.GetValue<int>("ouf");
+                foreach (var sub in subscribers)
+                {
+                    sub.ShelterEvent(1f, closeSpeed);
+                }
             }
 
             base.Update(eu);
@@ -323,6 +353,10 @@ namespace ShelterBehaviors
             
             if(closing && hasNoDoors)
             {
+                if(room.waterObject != null && data.GetValue<bool>("ani") && brokenWaterLevel != null)
+                {
+                    room.waterObject.fWaterLevel = Mathf.Lerp(this.room.waterObject.originalWaterLevel, this.brokenWaterLevel.pos.y + 50f, Mathf.Pow((float)noDoorCloseCount / ((float)data.GetValue<int>("ftw") + 20f), 1.6f));
+                }
                 // Manage no-door logic
                 if (noDoorCloseCount == data.GetValue<int>("fts"))
                 {
@@ -377,15 +411,21 @@ namespace ShelterBehaviors
             {
                 door.Close();
             }
+            float closeSpeed = 1f / (float)data.GetValue<int>("ftw");
             foreach (var sub in subscribers)
             {
-                sub.OnShelterClose();
+                sub.ShelterEvent(0f, closeSpeed);
             }
             for (int i = 0; i < room.updateList.Count; i++)
             {
                 if (room.updateList[i] is HoldToTriggerTutorialObject) (room.updateList[i] as HoldToTriggerTutorialObject).Consume();
             }
             Consume();
+            if (data.GetValue<bool>("ani") && brokenWaterLevel != null)
+            {
+                room.AddWater(); // animate water level
+                Debug.LogError("added watre");
+            }
             Debug.LogError("CLOSE");
         }
 
@@ -439,6 +479,8 @@ namespace ShelterBehaviors
         }
 
         static private int incrementalsalt;
+        private PlacedObject brokenWaterLevel;
+
         internal IntVector2 GetSpawnPosition(int salt)
         {
             int oldseed = UnityEngine.Random.seed;

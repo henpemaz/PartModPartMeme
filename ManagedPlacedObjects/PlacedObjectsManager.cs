@@ -1763,13 +1763,17 @@ namespace ManagedPlacedObjects
                     if (Mathf.Abs(newPos.y) > 0.5f) newPos.y = Mathf.Sign(newPos.y);
                     newPos *= 20f;
                 }
-                Vector2 parentPos = (this.parentNode as PositionedDevUINode).absPos;
+                Vector2 parentPos = (this.parentNode as PositionedDevUINode).pos + this.owner.game.cameras[0].pos;
                 Vector2 roompos = newPos + parentPos;
                 RWCustom.IntVector2 ownIntPos = new RWCustom.IntVector2(Mathf.FloorToInt(roompos.x / 20f), Mathf.FloorToInt(roompos.y / 20f));
                 RWCustom.IntVector2 parentIntPos = new RWCustom.IntVector2(Mathf.FloorToInt(parentPos.x / 20f), Mathf.FloorToInt(parentPos.y / 20f));
                 // relativize again
                 ownIntPos -= parentIntPos;
                 newPos = ownIntPos.ToVector2() * 20f;
+
+                //Vector2 roompos = newPos;
+                //RWCustom.IntVector2 ownIntPos = new RWCustom.IntVector2(Mathf.FloorToInt(roompos.x / 20f), Mathf.FloorToInt(roompos.y / 20f));
+                //newPos = ownIntPos.ToVector2() * 20f;
 
                 data.SetValue<RWCustom.IntVector2>(field.key, ownIntPos);
                 base.Move(newPos); // calls refresh
@@ -1803,13 +1807,14 @@ namespace ManagedPlacedObjects
 
                 if (rect != null)
                 {
-                    Vector2 parentPos = (this.parentNode as PositionedDevUINode).absPos;
-                    Vector2 roompos = absPos;
+                    Vector2 parentPos = (this.parentNode as PositionedDevUINode).pos + this.owner.game.cameras[0].pos;
+                    Vector2 roompos = pos + parentPos;
+                    Vector2 offset = - this.owner.game.cameras[0].pos;
                     RWCustom.IntVector2 ownIntPos = new RWCustom.IntVector2(Mathf.FloorToInt(roompos.x / 20f), Mathf.FloorToInt(roompos.y / 20f));
                     RWCustom.IntVector2 parentIntPos = new RWCustom.IntVector2(Mathf.FloorToInt(parentPos.x / 20f), Mathf.FloorToInt(parentPos.y / 20f));
 
-                    Vector2 leftbottom = new Vector2(Mathf.Min(ownIntPos.x, parentIntPos.x) * 20f, Mathf.Min(ownIntPos.y, parentIntPos.y) * 20f);
-                    Vector2 topright = new Vector2(Mathf.Max(ownIntPos.x, parentIntPos.x) * 20f + 20f, Mathf.Max(ownIntPos.y, parentIntPos.y) * 20f + 20f);
+                    Vector2 leftbottom = offset + new Vector2(Mathf.Min(ownIntPos.x, parentIntPos.x) * 20f, Mathf.Min(ownIntPos.y, parentIntPos.y) * 20f);
+                    Vector2 topright = offset + new Vector2(Mathf.Max(ownIntPos.x, parentIntPos.x) * 20f + 20f, Mathf.Max(ownIntPos.y, parentIntPos.y) * 20f + 20f);
                     // rectgrid revived
 
                     Vector2 size = (topright - leftbottom);
@@ -1992,14 +1997,16 @@ namespace ManagedPlacedObjects
                 textLabel.fSprites[0].scaleX = textLabel.size.x;
             }
 
+            private string _text;
             protected virtual string Text
             {
                 get
                 {
-                    return subNodes[1].fLabels[0].text;
+                    return _text;// subNodes[1].fLabels[0].text;
                 }
                 set
                 {
+                    _text = value;
                     subNodes[1].fLabels[0].text = value;
                 }
             }

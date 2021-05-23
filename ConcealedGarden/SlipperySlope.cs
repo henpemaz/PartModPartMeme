@@ -1,4 +1,5 @@
 ﻿using ManagedPlacedObjects;
+using System;
 using UnityEngine;
 
 namespace ConcealedGarden
@@ -33,6 +34,13 @@ namespace ConcealedGarden
                     }
                 }
             }
+        }
+
+        internal static void Register()
+        {
+            PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("SlipperySlope",
+                typeof(SlipperySlope), typeof(SlipperySlope.SlipperySlopeData), typeof(PlacedObjectsManager.ManagedRepresentation)));
+
         }
 
         internal class SlipperySlopeData : PlacedObjectsManager.ManagedData

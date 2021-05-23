@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ConcealedGarden
 {
-    internal class SpawnCustomizations
+    internal static class SpawnCustomizations
     {
         internal static void Apply()
         {
@@ -39,23 +39,23 @@ namespace ConcealedGarden
         {
             public static ScavengerAI.Behavior FollowFriend;
         }
-        private static void ScavengerGraphics_ctor(On.ScavengerGraphics.orig_ctor orig, ScavengerGraphics self, PhysicalObject ow)
-        {
-            self.DEBUGLABELS = new DebugLabel[6];
-            self.DEBUGLABELS[0] = new DebugLabel(ow, new Vector2(0f, 50f));
-            self.DEBUGLABELS[1] = new DebugLabel(ow, new Vector2(0f, 40f));
-            self.DEBUGLABELS[2] = new DebugLabel(ow, new Vector2(0f, 30f));
-            self.DEBUGLABELS[3] = new DebugLabel(ow, new Vector2(0f, 20f));
-            self.DEBUGLABELS[4] = new DebugLabel(ow, new Vector2(0f, 10f));
-            self.DEBUGLABELS[5] = new DebugLabel(ow, new Vector2(0f, 0f));
-            orig(self, ow);
-            //throw new NotImplementedException();
-        }
-        private static float ScavengerAI_LikeOfPlayer(On.ScavengerAI.orig_LikeOfPlayer orig, ScavengerAI self, RelationshipTracker.DynamicRelationship dRelation)
-        {
-            float val = orig(self, dRelation);
-            return Mathf.Clamp(val, 0f, 1f);
-        }
+        //private static void ScavengerGraphics_ctor(On.ScavengerGraphics.orig_ctor orig, ScavengerGraphics self, PhysicalObject ow)
+        //{
+        //    self.DEBUGLABELS = new DebugLabel[6];
+        //    self.DEBUGLABELS[0] = new DebugLabel(ow, new Vector2(0f, 50f));
+        //    self.DEBUGLABELS[1] = new DebugLabel(ow, new Vector2(0f, 40f));
+        //    self.DEBUGLABELS[2] = new DebugLabel(ow, new Vector2(0f, 30f));
+        //    self.DEBUGLABELS[3] = new DebugLabel(ow, new Vector2(0f, 20f));
+        //    self.DEBUGLABELS[4] = new DebugLabel(ow, new Vector2(0f, 10f));
+        //    self.DEBUGLABELS[5] = new DebugLabel(ow, new Vector2(0f, 0f));
+        //    orig(self, ow);
+        //    //throw new NotImplementedException();
+        //}
+        //private static float ScavengerAI_LikeOfPlayer(On.ScavengerAI.orig_LikeOfPlayer orig, ScavengerAI self, RelationshipTracker.DynamicRelationship dRelation)
+        //{
+        //    float val = orig(self, dRelation);
+        //    return Mathf.Clamp(val, 0f, 1f);
+        //}
         private static void ScavengerAbstractAI_AbstractBehavior(On.ScavengerAbstractAI.orig_AbstractBehavior orig, ScavengerAbstractAI self, int time)
         {
             orig(self, time);

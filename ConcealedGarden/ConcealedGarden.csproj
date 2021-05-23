@@ -61,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AttachedField.cs" />
+    <Compile Include="BunkerShelterParts.cs" />
     <Compile Include="CGGateFix.cs" />
     <Compile Include="ConcealedGarden.cs" />
     <Compile Include="CosmeticLeaves.cs" />
@@ -73,6 +74,10 @@
     <Compile Include="SpawnCustomizations.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CustomSpritesLoader\CustomSpritesLoader.csproj">
+      <Project>{7aef23fe-5ab2-422c-89ee-ccb050b86a76}</Project>
+      <Name>CustomSpritesLoader</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ManagedPlacedObjects\ManagedPlacedObjects.csproj">
       <Project>{a5e1e800-ee17-4347-9488-ef8f3e929b78}</Project>
       <Name>ManagedPlacedObjects</Name>

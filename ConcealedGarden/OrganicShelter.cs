@@ -4,12 +4,48 @@ using System.Collections.Generic;
 using System;
 using RWCustom;
 using System.Linq;
+using ManagedPlacedObjects;
 
 namespace ConcealedGarden
 {
     public static class OrganicShelter
     {
-        public class OrganicShelterCoordinator : UpdatableAndDeletable, IDrawable, ShelterBehaviors.IReactToShelterClosing
+
+        internal static void Register()
+        {
+            PlacedObjectsManager.RegisterFullyManagedObjectType(new PlacedObjectsManager.ManagedField[]
+            {
+                new PlacedObjectsManager.FloatField("rmin", 0, 1, 0.1f, 0.001f),
+                new PlacedObjectsManager.FloatField("rmax", 0, 1, 0.3f, 0.001f),
+                new PlacedObjectsManager.FloatField("gmin", 0, 1, 0.05f, 0.001f),
+                new PlacedObjectsManager.FloatField("gmax", 0, 1, 0.2f, 0.001f),
+                new PlacedObjectsManager.FloatField("bmin", 0, 1, 0.5f, 0.001f),
+                new PlacedObjectsManager.FloatField("bmax", 0, 1, 0.25f, 0.001f),
+                new PlacedObjectsManager.FloatField("stiff", 0, 1, 0.5f, 0.01f),
+                //new PlacedObjectsManager.IntegerField("ftc", 0, 400, 120, PlacedObjectsManager.ManagedFieldWithPanel.ControlType.slider),
+            }, typeof(OrganicShelter.OrganicShelterCoordinator), "OrganicShelterCoordinator");
+
+            PlacedObjectsManager.RegisterFullyManagedObjectType(new PlacedObjectsManager.ManagedField[]
+            {
+                new PlacedObjectsManager.Vector2Field("size", new UnityEngine.Vector2(40,40), PlacedObjectsManager.Vector2Field.VectorReprType.circle),
+                new PlacedObjectsManager.Vector2Field("dest", new UnityEngine.Vector2(0,50), PlacedObjectsManager.Vector2Field.VectorReprType.line),
+                new PlacedObjectsManager.FloatField("stiff", 0, 1, 0.5f, 0.01f),
+            }, null, "OrganicLockPart");
+
+            PlacedObjectsManager.RegisterFullyManagedObjectType(new PlacedObjectsManager.ManagedField[]
+            {
+                new PlacedObjectsManager.Vector2Field("size", new UnityEngine.Vector2(-100,100), PlacedObjectsManager.Vector2Field.VectorReprType.circle),
+                new PlacedObjectsManager.FloatField("sizemin", 1, 200, 12f, 1f),
+                new PlacedObjectsManager.FloatField("sizemax", 1, 200, 20f, 1f),
+                new PlacedObjectsManager.FloatField("depth", -100, 100, 4f, 1f),
+                new PlacedObjectsManager.FloatField("density", 0, 5, 0.5f, 0.01f),
+                new PlacedObjectsManager.FloatField("stiff", 0, 1, 0.5f, 0.01f),
+                new PlacedObjectsManager.FloatField("spread", 0, 20f, 2f, 0.1f),
+                new PlacedObjectsManager.IntegerField("seed", 0, 9999, 0),
+            }, null, "OrganicLining");
+        }
+
+        public class OrganicShelterCoordinator : UpdatableAndDeletable, IDrawable, ShelterBehaviors.IReactToShelterEvents
         {
             private readonly PlacedObject pObj;
             private readonly RainCycle rainCycle;
@@ -27,7 +63,7 @@ namespace ConcealedGarden
             private RootedPaart[] blobs;
 
             private float stiff;
-            private int framesToClose;
+            //private int framesToClose;
             private float rmin;
             private float rmax;
             private float gmin;
@@ -50,7 +86,7 @@ namespace ConcealedGarden
                 this.bmin = data.GetValue<float>("bmin");
                 this.bmax = data.GetValue<float>("bmax");
                 this.stiff = data.GetValue<float>("stiff");
-                this.framesToClose = data.GetValue<int>("ftc");
+                //this.framesToClose = data.GetValue<int>("ftc");
 
                 PlacedObject.Type lockType = (PlacedObject.Type)Enum.Parse(typeof(PlacedObject.Type), "OrganicLockPart");
                 PlacedObject.Type liningType = (PlacedObject.Type)Enum.Parse(typeof(PlacedObject.Type), "OrganicLining");
@@ -331,14 +367,17 @@ namespace ConcealedGarden
                 }
             }
 
-            public void Close()
-            {
-                this.closeSpeed = 1f/(1 + Mathf.Max(0, data.GetValue<int>("ftc")));// 0.003125f;
-            }
+            //public void Close()
+            //{
+            //    this.closeSpeed = 1f/(1 + Mathf.Max(0, data.GetValue<int>("ftc")));// 0.003125f;
+            //}
 
-            public void OnShelterClose()
+
+            public void ShelterEvent(float newFactor, float closeSpeed)
             {
-                Close();
+                this.closedFac = newFactor;
+                this.closeSpeed = closeSpeed;
+                if (closeSpeed < 0f) closedFac = 0f; // open instantly because the locks can push the player out of terrain
             }
 
             public void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
@@ -372,7 +411,6 @@ namespace ConcealedGarden
                                             UnityEngine.Random.Range(gmin, gmax),
                                             UnityEngine.Random.Range(bmin, bmax));
                 }
-                
             }
 
             public void AddToContainer(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
@@ -411,7 +449,6 @@ namespace ConcealedGarden
                 }
             }
         }
-
 
         class TileInterface
         {
