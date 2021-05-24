@@ -50,6 +50,8 @@ namespace ConcealedGarden
             SpawnCustomizations.Apply();
 
             ShaderTester.Register();
+
+            NoLurkArea.Register();
         }
 
         public class ShaderTester : CosmeticSprite

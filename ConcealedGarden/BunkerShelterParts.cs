@@ -7,13 +7,28 @@ namespace ConcealedGarden
 {
     internal static class BunkerShelterParts
     {
+        class BunkerShelterFlapData : PlacedObjectsManager.ManagedData
+        {
+            private static PlacedObjectsManager.ManagedField[] fields = new PlacedObjectsManager.ManagedField[]
+                {
+                    new PlacedObjectsManager.IntVector2Field("handle", new RWCustom.IntVector2(2,4), PlacedObjectsManager.IntVector2Field.IntVectorReprType.rect),
+                };
+
+            [PlacedObjectsManager.FloatField("dpt", 1, 30, 8, 1, displayName: "Depth")]
+            public float depth;
+            [PlacedObjectsManager.FloatField("ofx", -10, 10, 0, 1, displayName:"Offset X")]
+            public float offsetX;
+            [PlacedObjectsManager.FloatField("ofy", -10, 10, 0, 1, displayName: "Offset Y")]
+            public float offsetY;
+            [BackedByField("handle")]
+            public IntVector2 handle;
+
+            public BunkerShelterFlapData(PlacedObject owner) : base(owner, fields) { }
+        }
         internal static void Register()
         {
-            PlacedObjectsManager.RegisterFullyManagedObjectType( new PlacedObjectsManager.ManagedField[] {
-                new PlacedObjectsManager.IntVector2Field("handle", new RWCustom.IntVector2(2,4), PlacedObjectsManager.IntVector2Field.IntVectorReprType.rect),
-                new PlacedObjectsManager.FloatField("dpt", 1, 30, 8, 1, displayName:"Depth"),
-                },typeof(BunkerShelterFlap), "BunkerShelterFlap");
-
+            PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("BunkerShelterFlap", typeof(BunkerShelterFlap),
+                dataType: typeof(BunkerShelterFlapData), typeof(PlacedObjectsManager.ManagedRepresentation)));
         }
 
         private class BunkerShelterFlap : CosmeticSprite, ShelterBehaviors.IReactToShelterEvents
@@ -29,7 +44,7 @@ namespace ConcealedGarden
             private float heightFloat;
             private float widthFloat;
 
-            PlacedObjectsManager.ManagedData data => pObj.data as PlacedObjectsManager.ManagedData;
+            BunkerShelterFlapData data => pObj.data as BunkerShelterFlapData;
 
             public BunkerShelterFlap(Room room, PlacedObject pObj)
             {
@@ -38,7 +53,7 @@ namespace ConcealedGarden
 
                 var origin = new IntVector2(Mathf.FloorToInt(pObj.pos.x / 20f), Mathf.FloorToInt(pObj.pos.y / 20f));
                 rect = IntRect.MakeFromIntVector2(origin);
-                rect.ExpandToInclude(origin + data.GetValue<IntVector2>("handle"));
+                rect.ExpandToInclude(origin + data.handle);
                 rect.right++;
                 rect.top++; // match visuals
                 this.height = rect.Height;
@@ -47,7 +62,7 @@ namespace ConcealedGarden
                 this.heightFloat = 20f * height;
                 this.widthFloat = 20f * width;
 
-                Debug.LogError("Flaps created");
+                //Debug.LogError("Flaps created");
                 // measure onc
             }
 
@@ -65,27 +80,18 @@ namespace ConcealedGarden
                 closedFactor = Mathf.Clamp01(closedFactor + closeSpeed);
             }
 
-            private int Engine(int i) => i == 0 ? 0 : 1;
-            private int Cog(int i) => i == 0 ? 2 : 3;
-            private int LidBL(int i) => 4 + i;
-            private int LidBR(int i) => 4 + height + i;
-            private int LidB(int i, int j) => 4 + 2 * height + i * width + j;
-            private int LidAL(int i) => 4 + 2 * height + area + i;
-            private int LidAR(int i) => 4 + 3 * height + area + i;
-            private int LidA(int i, int j) => 4 + 4 * height + area + i * width + j;
-            private int BeamT(int i) => 4 + 4 * height + 2 * area + i;
-            private int BeamB(int i) => 6 + 4 * height + 2 * area + i;
-            private int Beam(int i, int j) => 8 + 4 * height + 2 * area + i * height + j;
-
+            private int Cog(int i) => i == 0 ? 0 : 1;
+            private int LidBL(int i) => 2 + i;
+            private int LidBR(int i) => 2 + height + i;
+            private int LidB(int i, int j) => 2 + 2 * height + i * width + j;
 
             public override void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
             {
                 base.InitiateSprites(sLeaser, rCam);
-                sLeaser.sprites = new FSprite[rect.Height * 6 + rect.Area * 2 + 8];
+                sLeaser.sprites = new FSprite[rect.Height * 2 + rect.Area + 2];
                 FShader shader = this.room.game.rainWorld.Shaders["ColoredSprite2"];
                 for (int i = 0; i < 2; i++)
                 {
-                    sLeaser.sprites[Engine(i)] = new FSprite("bkr_sidebeam", true) { shader = shader };
                     sLeaser.sprites[Cog(i)] = new FSprite("bkr_cog", true) { shader = shader };
                 }
                 for (int i = 0; i < height; i++)
@@ -97,33 +103,16 @@ namespace ConcealedGarden
                         sLeaser.sprites[LidB(i, j)] = new FSprite("bkr_lidB_mid", true) { shader = shader };
                     }
                 }
-                for (int i = 0; i < height; i++)
-                {
-                    sLeaser.sprites[LidAL(i)] = new FSprite("bkr_lidA_left", true) { shader = shader };
-                    sLeaser.sprites[LidAR(i)] = new FSprite("bkr_lidA_right", true) { shader = shader };
-                    for (int j = 0; j < width; j++)
-                    {
-                        sLeaser.sprites[LidA(i, j)] = new FSprite("bkr_lidA_mid", true) { shader = shader };
-                    }
-                }
-                for (int i = 0; i < 2; i++)
-                {
-                    sLeaser.sprites[BeamT(i)] = new FSprite("bkr_beam_top", true) { shader = shader };
-                    sLeaser.sprites[BeamB(i)] = new FSprite("bkr_beam_bot", true) { shader = shader };
-                    for (int j = 0; j < height; j++)
-                    {
-                        sLeaser.sprites[Beam(i, j)] = new FSprite("bkr_beam_mid", true) { shader = shader };
-                    }
-                }
 
                 this.AddToContainer(sLeaser, rCam, rCam.ReturnFContainer("Foreground"));
-                Debug.LogError("Flaps initiated, with " + sLeaser.sprites.Length + " sprites");
+                //Debug.LogError("Flaps initiated, with " + sLeaser.sprites.Length + " sprites");
             }
 
             public override void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
             {
                 base.DrawSprites(sLeaser, rCam, timeStacker, camPos);
-                Vector2 start = new Vector2(rect.left * 20 - camPos.x, rect.bottom * 20 - camPos.y);
+                Vector2 start = new Vector2(rect.left * 20 - camPos.x + data.offsetX, rect.bottom * 20 - camPos.y + data.offsetY);
+
                 //Debug.Log("rendering flaps at " + start);
                 float factor = Mathf.Lerp(lastClosedFactor, closedFactor, timeStacker);
                 float easedFactor = 
@@ -133,12 +122,10 @@ namespace ConcealedGarden
                 float depth = data.GetValue<float>("dpt") / 30f;
                 //Debug.Log("rendering flaps at " + depth);
                 float depthStep = 1f / 30f;
+                float heightStep = 20f - 1f / height;
 
                 for (int i = 0; i < 2; i++)
                 {
-                    sLeaser.sprites[Engine(i)].x = start.x + (i == 0 ? -4f : widthFloat + 4f);
-                    sLeaser.sprites[Engine(i)].y = start.y + 8;
-                    sLeaser.sprites[Engine(i)].alpha = depth;
                     sLeaser.sprites[Cog(i)].x = start.x + (i == 0 ? -4f : widthFloat + 4f);
                     sLeaser.sprites[Cog(i)].y = start.y + 8;
                     sLeaser.sprites[Cog(i)].alpha = depth + depthStep;
@@ -149,48 +136,16 @@ namespace ConcealedGarden
                 for (int i = 0; i < height; i++)
                 {
                     sLeaser.sprites[LidBL(i)].x = start.x -5f ;
-                    sLeaser.sprites[LidBL(i)].y = start.y + 5f + i * 20f + animatedLidY;
+                    sLeaser.sprites[LidBL(i)].y = start.y + 5f + i * heightStep + animatedLidY;
                     sLeaser.sprites[LidBL(i)].alpha = depth + animatedLidZ;
                     sLeaser.sprites[LidBR(i)].x = start.x + widthFloat + 5f;
-                    sLeaser.sprites[LidBR(i)].y = start.y + 5f + i * 20f + animatedLidY;
+                    sLeaser.sprites[LidBR(i)].y = start.y + 5f + i * heightStep + animatedLidY;
                     sLeaser.sprites[LidBR(i)].alpha = depth + animatedLidZ;
                     for (int j = 0; j < width; j++)
                     {
                         sLeaser.sprites[LidB(i, j)].x = start.x + 10f + j * 20f;
-                        sLeaser.sprites[LidB(i, j)].y = start.y + 5f + i * 20f + animatedLidY;
+                        sLeaser.sprites[LidB(i, j)].y = start.y + 5f + i * heightStep + animatedLidY;
                         sLeaser.sprites[LidB(i, j)].alpha = depth + animatedLidZ;
-                    }
-                }
-                depth += 2f * depthStep;
-                for (int i = 0; i < height; i++)
-                {
-                    sLeaser.sprites[LidAL(i)].x = start.x - 5f;
-                    sLeaser.sprites[LidAL(i)].y = start.y + 5f + i * 20f;
-                    sLeaser.sprites[LidAL(i)].alpha = depth;
-                    sLeaser.sprites[LidAR(i)].x = start.x + widthFloat + 5f;
-                    sLeaser.sprites[LidAR(i)].y = start.y + 5f + i * 20f;
-                    sLeaser.sprites[LidAR(i)].alpha = depth;
-                    for (int j = 0; j < width; j++)
-                    {
-                        sLeaser.sprites[LidA(i, j)].x = start.x + 10f + j * 20f;
-                        sLeaser.sprites[LidA(i, j)].y = start.y + 5f + i * 20f;
-                        sLeaser.sprites[LidA(i, j)].alpha = depth;
-                    }
-                }
-                depth += depthStep;
-                for (int i = 0; i < 2; i++)
-                {
-                    sLeaser.sprites[BeamT(i)].x = start.x + (i == 0 ? -2f : widthFloat + 2f);
-                    sLeaser.sprites[BeamT(i)].y = start.y + heightFloat + 5f;
-                    sLeaser.sprites[BeamT(i)].alpha = depth;
-                    sLeaser.sprites[BeamB(i)].x = start.x + (i == 0 ? -2f : widthFloat + 2f);
-                    sLeaser.sprites[BeamB(i)].y = start.y - 5f;
-                    sLeaser.sprites[BeamB(i)].alpha = depth;
-                    for (int j = 0; j < height; j++)
-                    {
-                        sLeaser.sprites[Beam(i, j)].x = start.x + (i == 0 ? -2f : widthFloat + 2f);
-                        sLeaser.sprites[Beam(i, j)].y = start.y + 10f + j * 20f;
-                        sLeaser.sprites[Beam(i, j)].alpha = depth;
                     }
                 }
             }

@@ -67,6 +67,7 @@
     <Compile Include="CosmeticLeaves.cs" />
     <Compile Include="ElectricArcs.cs" />
     <Compile Include="LifeSimProjection.cs" />
+    <Compile Include="NoLurkArea.cs" />
     <Compile Include="OrganicShelter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QuestionableLizardBit.cs" />
