@@ -88,8 +88,8 @@ namespace ConcealedGarden
                     this.jump = jump;
                     this.tightness = tightness;
                     this.ellasticPull = ellasticPull;
-                    this.minspace = (start - stop).magnitude / nNodes;//minspace;
-                    this.maxspace = this.minspace * 2f; // maxspace;
+                    this.minspace = (start - stop).magnitude / nNodes * (2f - tightness);//minspace;
+                    this.maxspace = this.minspace * (2f - tightness); // maxspace;
                     this.room = room;
                     this.nodes = new SparkNode[nNodes];
 

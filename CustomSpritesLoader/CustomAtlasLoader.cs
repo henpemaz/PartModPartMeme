@@ -7,6 +7,7 @@ using UnityEngine;
 using System.Collections;
 using System.IO;
 using System.Text;
+using System.Linq;
 
 [assembly: IgnoresAccessChecksTo("Assembly-CSharp")]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
@@ -21,6 +22,29 @@ public static class CustomAtlasLoader
         if (pieces.Length == 0) return new KeyValuePair<string, string>("", "");
         if (pieces.Length == 1) return new KeyValuePair<string, string>(pieces[0].Trim(), "");
         return new KeyValuePair<string, string>(pieces[0].Trim(), pieces[1].Trim());
+    }
+
+    public static FAtlas ReadAndLoadCustomAtlas(string basename, string folder, string atlasName=null)
+    {
+        Debug.Log("CustomAtlasLoader: Loading atlas " + basename + " from " + folder);
+        Texture2D imageData = new Texture2D(0, 0, TextureFormat.ARGB32, false);
+        imageData.LoadImage(File.ReadAllBytes(Path.Combine(folder, basename + ".png")));
+
+        Dictionary<string, object> slicerData = null;
+        if (File.Exists(Path.Combine(folder, basename + ".txt")))
+        {
+            Debug.Log("CustomAtlasLoader: found slicer data");
+            slicerData = File.ReadAllText(Path.Combine(folder, basename + ".txt")).dictionaryFromJson();
+        }
+        Dictionary<string, string> metaData = null;
+        if (File.Exists(Path.Combine(folder, basename + ".png.meta")))
+        {
+            Debug.Log("CustomAtlasLoader: found metadata");
+            metaData = File.ReadAllLines(Path.Combine(folder, basename + ".png.meta")).ToList().ConvertAll(MetaEntryToKeyVal).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        }
+
+        atlasName = atlasName?? basename;
+        return CustomAtlasLoader.LoadCustomAtlas(atlasName, imageData, slicerData, metaData);
     }
 
     public static FAtlas LoadCustomAtlas(string atlasName, System.IO.Stream textureStream, System.IO.Stream slicerStream = null, System.IO.Stream metaStream = null)

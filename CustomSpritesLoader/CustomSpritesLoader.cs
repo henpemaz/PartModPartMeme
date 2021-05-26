@@ -44,7 +44,7 @@ namespace CustomSpritesLoader
             instance = this;
         }
 
-        public const string description =
+        public static string description =
 @"CustomSpritesLoader mod by Henpemaz
 Allows you to load, replace, or partially overwrite game sprites in a much much much easier way than before.
 
@@ -144,7 +144,8 @@ Happy modding
             try
             {
                 Debug.Log("CustomSpritesLoader: Loading replacement for " + atlasname);
-                return ReadAndLoadCustomAtlas(atlasname, new FileInfo(knownAtlasReplacements[atlasname]).DirectoryName);
+                string actualatlasname = ShouldAtlasBeLoadedWithPrefix(atlasname) ? "Atlases/" + atlasname : atlasname;
+                return CustomAtlasLoader.ReadAndLoadCustomAtlas(atlasname, new FileInfo(knownAtlasReplacements[atlasname]).DirectoryName, actualatlasname);
             }
             catch (Exception e)
             {
@@ -302,7 +303,8 @@ Happy modding
                 try
                 {
                     string basename = atlasFile.Name.Substring(0, atlasFile.Name.Length - 4); // remove .png
-                    ReadAndLoadCustomAtlas(basename, atlasFile.Directory.FullName);
+                    string atlasname = ShouldAtlasBeLoadedWithPrefix(basename) ? "Atlases/" + basename : basename;
+                    CustomAtlasLoader.ReadAndLoadCustomAtlas(basename, atlasFile.Directory.FullName, atlasname);
                 }
                 catch (Exception e)
                 {
@@ -311,29 +313,6 @@ Happy modding
                 }
             }
             //initialLoadLock = false;
-        }
-
-        private FAtlas ReadAndLoadCustomAtlas(string basename, string folder)
-        {
-            Debug.Log("CustomSpritesLoader: Loading atlas " + basename);
-            Texture2D imageData = new Texture2D(0, 0, TextureFormat.ARGB32, false);
-            imageData.LoadImage(File.ReadAllBytes(Path.Combine(folder, basename + ".png")));
-
-            Dictionary<string, object> slicerData = null;
-            if (File.Exists(Path.Combine(folder, basename + ".txt")))
-            {
-                Debug.Log("CustomSpritesLoader: found slicer data");
-                slicerData = File.ReadAllText(Path.Combine(folder, basename + ".txt")).dictionaryFromJson();
-            }
-            Dictionary<string, string> metaData = null;
-            if (File.Exists(Path.Combine(folder, basename + ".png.meta")))
-            {
-                Debug.Log("CustomSpritesLoader: found metadata");
-                metaData = File.ReadAllLines(Path.Combine(folder, basename + ".png.meta")).ToList().ConvertAll(MetaEntryToKeyVal).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-            }
-
-            string atlasname = ShouldAtlasBeLoadedWithPrefix(basename) ? "Atlases/" + basename : basename;
-            return CustomAtlasLoader.LoadCustomAtlas(atlasname, imageData, slicerData, metaData);
         }
     }
 }

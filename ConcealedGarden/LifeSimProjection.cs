@@ -44,7 +44,7 @@ namespace ConcealedGarden
             }
 
             loadingState = LoadingState.Start;
-            this.ticksPerUpdate = 20;
+            this.ticksPerUpdate = 50;
 
             activeTiles = new List<Tile>();
         }
@@ -65,7 +65,7 @@ namespace ConcealedGarden
             if (loadingState != LoadingState.Done)
             {
                 Debug.Log("LifeSimProjection not yet loaded by AIMapReady, increasing loading rate");
-                ticksPerUpdate = 60;
+                ticksPerUpdate = 100;
             }
         }
 
@@ -250,7 +250,7 @@ namespace ConcealedGarden
                         loadingState++;
                         currentX = 0;
                         currentY = 0;
-                        ticksPerUpdate = Mathf.Max(1, tilecount / 50); // slightly over a second
+                        ticksPerUpdate = Mathf.Max(1, Mathf.CeilToInt((gridHeight * gridWidth) / 60f));
                     }
                     break;
                 case LoadingState.Done:

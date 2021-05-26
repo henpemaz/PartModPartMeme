@@ -1,6 +1,7 @@
 ﻿using ManagedPlacedObjects;
 using RWCustom;
 using System;
+using System.IO;
 using UnityEngine;
 
 namespace ConcealedGarden
@@ -29,6 +30,15 @@ namespace ConcealedGarden
         {
             PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("BunkerShelterFlap", typeof(BunkerShelterFlap),
                 dataType: typeof(BunkerShelterFlapData), typeof(PlacedObjectsManager.ManagedRepresentation)));
+
+            On.RainWorld.Start += RainWorld_Start;
+        }
+
+        private static void RainWorld_Start(On.RainWorld.orig_Start orig, RainWorld self)
+        {
+            orig(self);
+            if (CustomRegions.Mod.CustomWorldMod.activatedPacks.ContainsKey("Concealed Garden"))
+                    CustomAtlasLoader.ReadAndLoadCustomAtlas("bkr_parts", CustomRegions.Mod.CustomWorldMod.resourcePath + CustomRegions.Mod.CustomWorldMod.activatedPacks["Concealed Garden"] + Path.DirectorySeparatorChar + "Assets" + Path.DirectorySeparatorChar + "Futile" + Path.DirectorySeparatorChar + "Resources" + Path.DirectorySeparatorChar + "Atlases");
         }
 
         private class BunkerShelterFlap : CosmeticSprite, ShelterBehaviors.IReactToShelterEvents

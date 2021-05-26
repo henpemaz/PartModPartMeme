@@ -34,6 +34,9 @@
     <Reference Include="Assembly-CSharp - publicitystuntd">
       <HintPath>..\..\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
     </Reference>
+    <Reference Include="CustomRegions">
+      <HintPath>..\..\References\CustomRegions.dll</HintPath>
+    </Reference>
     <Reference Include="HOOKS-Assembly-CSharp">
       <HintPath>..\..\References\HOOKS-Assembly-CSharp.dll</HintPath>
     </Reference>
@@ -67,6 +70,7 @@
     <Compile Include="CosmeticLeaves.cs" />
     <Compile Include="ElectricArcs.cs" />
     <Compile Include="LifeSimProjection.cs" />
+    <Compile Include="LRUSoundTrigger.cs" />
     <Compile Include="NoLurkArea.cs" />
     <Compile Include="OrganicShelter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
