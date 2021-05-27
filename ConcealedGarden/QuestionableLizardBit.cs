@@ -24,6 +24,7 @@ namespace ConcealedGarden
 #pragma warning disable CS0219 // shush, stop raising warnings
             string str = "Disclaimer: only applies if NudeMod is ON ;o";
             string str2 = "Anyone who finds this knows exactly what they're in for";
+			string str3 = str + "\n" + str2;
 #pragma warning restore CS0219
             On.RainWorld.Start += RainWorld_Start;
 			

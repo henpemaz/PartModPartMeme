@@ -41,7 +41,7 @@
       <HintPath>..\References\HOOKS-Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="MonoMod">
-      <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\MonoMod.exe</HintPath>
+      <HintPath>..\References\MonoMod.exe</HintPath>
     </Reference>
     <Reference Include="Partiality">
       <HintPath>..\References\Partiality.dll</HintPath>

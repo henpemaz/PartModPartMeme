@@ -32,22 +32,22 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp - publicitystuntd">
-      <HintPath>..\..\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
+      <HintPath>..\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
     </Reference>
     <Reference Include="HOOKS-Assembly-CSharp">
-      <HintPath>..\..\References\HOOKS-Assembly-CSharp.dll</HintPath>
+      <HintPath>..\References\HOOKS-Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="MonoMod.Common">
-      <HintPath>..\..\References\MonoMod.Common.dll</HintPath>
+      <HintPath>..\References\MonoMod.Common.dll</HintPath>
     </Reference>
     <Reference Include="MonoMod.RuntimeDetour">
-      <HintPath>..\..\References\MonoMod.RuntimeDetour.dll</HintPath>
+      <HintPath>..\References\MonoMod.RuntimeDetour.dll</HintPath>
     </Reference>
     <Reference Include="MonoMod.Utils">
-      <HintPath>..\..\References\MonoMod.Utils.dll</HintPath>
+      <HintPath>..\References\MonoMod.Utils.dll</HintPath>
     </Reference>
     <Reference Include="Partiality">
-      <HintPath>..\..\References\Partiality.dll</HintPath>
+      <HintPath>..\References\Partiality.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -56,7 +56,7 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine">
-      <HintPath>..\..\References\UnityEngine.dll</HintPath>
+      <HintPath>..\References\UnityEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

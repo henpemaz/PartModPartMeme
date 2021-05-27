@@ -30,14 +30,6 @@ namespace System.Runtime.CompilerServices
     }
 }
 
-/*
- * This example interacts with SlugBase as little as possible.
- * 
- * The player select menu and sleep screen will display Survivor.
- * This makes the select screen ambiguous once a game is started, since the name is hidden.
- * Consider copying one of the slugcat select scenes and editing it.
- */
-
 
 namespace ProgrammerCat
 {
@@ -46,7 +38,7 @@ namespace ProgrammerCat
         public ProgrammerCat()
         {
             ModID = "ProgrammerCat";
-            Version = "1.0";
+            Version = "1.1";
             author = "Henpemaz";
         }
 
@@ -58,13 +50,19 @@ namespace ProgrammerCat
 
     public class ProgrammerCatSlugcat : SlugBaseCharacter
     {
-        public ProgrammerCatSlugcat() : base("ProgrammerCat", FormatVersion.V1, 0){}
+        public ProgrammerCatSlugcat() : base("ProgrammerCat", FormatVersion.V1, 0) { }
 
         public override string DisplayName => "The Programmer";
         public override string Description =>
 @"On its adorable programmer socks, this nimble and unprepared slugcat
 has gotten pretty far from home and now has to face the real world!
 Temperamental and on a weird diet, your journey will be a mess.";
+
+        public bool IsPlayerProgrammer(Player player)
+        {
+            return player.playerState.slugcatCharacter == SlugcatIndex;
+        }
+        public static bool programmerUpdateLock = false;
 
         public override Color? SlugcatColor()
         {
@@ -78,8 +76,10 @@ Temperamental and on a weird diet, your journey will be a mess.";
 
         protected override void GetStats(SlugcatStats stats)
         {
+            // Slugbase already "checks" if its the character, but... ?
             stats.bodyWeightFac *= 0.85f;
-            stats.runspeedFac *= 0.9f;
+            //stats.runspeedFac *= 0.9f;
+            stats.runspeedFac *= 4.0f;
             stats.poleClimbSpeedFac *= 1.1f;
             stats.corridorClimbSpeedFac *= 1.4f;
             stats.loudnessFac *= 0.85f;
@@ -106,6 +106,8 @@ Temperamental and on a weird diet, your journey will be a mess.";
 
         public override bool CanEatMeat(Player player, Creature crit)
         {
+            if (!IsPlayerProgrammer(player)) return base.CanEatMeat(player, crit);
+
             if(!isBurnoutCycle)
             {
                 return crit.dead && (crit.Template.type == CreatureTemplate.Type.Centipede
@@ -170,6 +172,10 @@ Temperamental and on a weird diet, your journey will be a mess.";
 
         protected override void Prepare()
         {
+            Debug.Log("PC - Prepare");
+            Debug.Log("PC - Jolly playerCharacters: " + String.Join(", ", new List<int>(JollyCoop.JollyMod.config.playerCharacters)
+             .ConvertAll(i => i.ToString())
+             .ToArray()));
             On.RainWorldGame.ctor += RainWorldGame_ctor_hk;
             On.PlayerProgression.GetOrInitiateSaveState += PlayerProgression_GetOrInitiateSaveState_hk;
         }
@@ -177,26 +183,22 @@ Temperamental and on a weird diet, your journey will be a mess.";
         List<Hook> myHooks = new List<Hook>();
         protected override void Enable() {
             Debug.Log("PC - Enable");
-            foreach (var name in spritesOverwrite)
-            {
-                FAtlasElement fae;
-                Futile.atlasManager._allElementsByName.TryGetValue(name, out fae);
-                backupSprites.Add(name, fae);
-                Futile.atlasManager._allElementsByName.Remove(name);
-            }
+
             LoadAtlasStreamIntoManager(Futile.atlasManager, "programmerLegs.png", Assembly.GetExecutingAssembly().GetManifestResourceStream("ProgrammerCat.Resources.programmerLegs.png"), Assembly.GetExecutingAssembly().GetManifestResourceStream("ProgrammerCat.Resources.programmerLegs.txt"));
             LoadAtlasStreamIntoManager(Futile.atlasManager, "programmerBlush.png", Assembly.GetExecutingAssembly().GetManifestResourceStream("ProgrammerCat.Resources.programmerBlush.png"), Assembly.GetExecutingAssembly().GetManifestResourceStream("ProgrammerCat.Resources.programmerBlush.txt"));
 
             On.RainWorldGame.Win += RainWorldGame_Win_hk;
 
+            On.Player.Update += Player_Update_hk;
             On.Player.LungUpdate += Player_LungUpdate_hk;
             On.Player.AerobicIncrease += Player_AerobicIncrease_hk;
             On.Player.ObjectEaten += Player_ObjectEaten_hk;
             On.Player.FoodInRoom += Player_FoodInRoom_fx;
             On.Player.FoodInRoom_1 += Player_FoodInRoom_1_fx;
 
-            On.Hazer.BitByPlayer += Hazer_BitByPlayer_hk;
-            On.JellyFish.BitByPlayer += JellyFish_BitByPlayer;
+            MethodInfo allergicFilterMehtod = typeof(ProgrammerCatSlugcat).GetMethod("AllergiesFilter");
+            myHooks.Add(new Hook(typeof(Hazer).GetMethod("BitByPlayer"), allergicFilterMehtod));
+            myHooks.Add(new Hook(typeof(JellyFish).GetMethod("BitByPlayer"), allergicFilterMehtod));
 
             MethodInfo bugEatingFilterMehtod = typeof(ProgrammerCatSlugcat).GetMethod("BugEatingFilter");
             myHooks.Add(new Hook(typeof(Centipede).GetMethod("get_Edible"), bugEatingFilterMehtod));
@@ -204,7 +206,7 @@ Temperamental and on a weird diet, your journey will be a mess.";
             myHooks.Add(new Hook(typeof(Fly).GetMethod("get_Edible"), bugEatingFilterMehtod));
             myHooks.Add(new Hook(typeof(VultureGrub).GetMethod("get_Edible"), bugEatingFilterMehtod));
 
-            On.CreatureState.ctor += CreatureState_ctor_hk;
+            On.PlayerSessionRecord.AddEat += PlayerSessionRecord_AddEat_hk;
 
             On.PlayerGraphics.InitiateSprites += PlayerGraphics_InitiateSprites_hk;
             On.PlayerGraphics.AddToContainer += PlayerGraphics_AddToContainer_hk;
@@ -216,13 +218,6 @@ Temperamental and on a weird diet, your journey will be a mess.";
         {
             Debug.Log("PC - Disable");
             Futile.atlasManager.UnloadAtlas("programmerLegs.png");
-            foreach (var name in spritesOverwrite)
-            {
-                FAtlasElement fae;
-                backupSprites.TryGetValue(name, out fae);
-                Futile.atlasManager._allElementsByName.Add(name, fae);
-            }
-            backupSprites.Clear();
             Futile.atlasManager.UnloadAtlas("programmerBlush.png");
 
             On.RainWorldGame.ctor -= RainWorldGame_ctor_hk;
@@ -230,14 +225,12 @@ Temperamental and on a weird diet, your journey will be a mess.";
 
             On.RainWorldGame.Win -= RainWorldGame_Win_hk;
 
+            On.Player.Update -= Player_Update_hk;
             On.Player.LungUpdate -= Player_LungUpdate_hk;
             On.Player.AerobicIncrease -= Player_AerobicIncrease_hk;
             On.Player.ObjectEaten -= Player_ObjectEaten_hk;
             On.Player.FoodInRoom -= Player_FoodInRoom_fx;
             On.Player.FoodInRoom_1 -= Player_FoodInRoom_1_fx;
-
-            On.Hazer.BitByPlayer -= Hazer_BitByPlayer_hk;
-            On.JellyFish.BitByPlayer -= JellyFish_BitByPlayer;
 
             foreach (Hook hook in myHooks)
             {
@@ -246,14 +239,13 @@ Temperamental and on a weird diet, your journey will be a mess.";
             }
             myHooks.Clear();
 
-            On.CreatureState.ctor -= CreatureState_ctor_hk;
+            On.PlayerSessionRecord.AddEat -= PlayerSessionRecord_AddEat_hk;
 
             On.PlayerGraphics.InitiateSprites -= PlayerGraphics_InitiateSprites_hk;
             On.PlayerGraphics.AddToContainer -= PlayerGraphics_AddToContainer_hk;
             On.PlayerGraphics.ApplyPalette -= PlayerGraphics_ApplyPalette;
             On.PlayerGraphics.DrawSprites -= PlayerGraphics_DrawSprites;
         }
-
 
 
         // On game initialization, if starting room hard-set position to a valid spot
@@ -268,7 +260,7 @@ Temperamental and on a weird diet, your journey will be a mess.";
                 if (self.world.GetAbstractRoom(self.Players[i].pos) != null)
                 {
                     Room theRoom = self.Players[i].Room.realizedRoom;
-                    if (self.world.GetAbstractRoom(self.Players[i].pos).name == "SI_B12")
+                    if (self.world.GetAbstractRoom(self.Players[i].pos).name == StartRoom)
                     {
                         self.Players[i].pos.Tile = new RWCustom.IntVector2(24, 85);
                         theRoom.AddObject(new ProgrammerStart(theRoom));
@@ -278,9 +270,13 @@ Temperamental and on a weird diet, your journey will be a mess.";
                     {
                         theRoom.AddObject(new ProgrammerBurnoutTutorial(theRoom));
                     }
-
                 }
             }
+
+            Debug.Log("PC - Game ctor done");
+            Debug.Log("PC - Jolly playerCharacters: " + String.Join(", ", new List<int>(JollyCoop.JollyMod.config.playerCharacters)
+                         .ConvertAll(i => i.ToString())
+             .ToArray()));
         }
 
 
@@ -330,8 +326,6 @@ Temperamental and on a weird diet, your journey will be a mess.";
 
                 base.Update(eu);
             }
-
-
         }
 
         internal class ProgrammerBurnoutTutorial : UpdatableAndDeletable
@@ -374,65 +368,89 @@ Temperamental and on a weird diet, your journey will be a mess.";
             public int message;
         }
 
+        private void Player_Update_hk(On.Player.orig_Update orig, Player self, bool eu)
+        {
+            programmerUpdateLock = IsPlayerProgrammer(self);
+            orig(self, eu);
+            programmerUpdateLock = false;
+        }
+
+
         private int Player_FoodInRoom_1_fx(On.Player.orig_FoodInRoom_1 orig, Player self, Room checkRoom, bool eatAndDestroy)
         {
-            return self.FoodInStomach;
+            if(IsPlayerProgrammer(self)) return self.FoodInStomach;
+            return orig(self, checkRoom, eatAndDestroy);
         }
 
         private int Player_FoodInRoom_fx(On.Player.orig_FoodInRoom orig, Player self, bool eatAndDestroy)
         {
-            return self.FoodInStomach;
+            if (IsPlayerProgrammer(self)) return self.FoodInStomach;
+            return orig(self, eatAndDestroy);
         }
 
         public delegate bool IPlayerEdible_Edible(IPlayerEdible self);
         public static bool BugEatingFilter(IPlayerEdible_Edible orig, IPlayerEdible self)
         {
-            if (isBurnoutCycle) return false;
-            //return false;
+            if (programmerUpdateLock)
+                if (isBurnoutCycle) return false;
+
             return orig(self);
         }
 
-        private void JellyFish_BitByPlayer(On.JellyFish.orig_BitByPlayer orig, JellyFish self, Creature.Grasp grasp, bool eu)
+        public delegate void IPlayerEdible_BitByPlayer(IPlayerEdible self, Creature.Grasp grasp, bool eu);
+        public static void AllergiesFilter(IPlayerEdible_BitByPlayer orig, IPlayerEdible self, Creature.Grasp grasp, bool eu)
         {
-            Player player = grasp.grabber as Player;
-            ProcAllergies(player);
-
-            orig(self, grasp, eu);
-        }
-
-        private void Hazer_BitByPlayer_hk(On.Hazer.orig_BitByPlayer orig, Hazer self, Creature.Grasp grasp, bool eu)
-        {
-            Player player = grasp.grabber as Player;
-            ProcAllergies(player);
-
-            orig(self, grasp, eu);
-        }
-
-        private void ProcAllergies(Player player)
-        {
-            player.AerobicIncrease(2f + 7f * Mathf.Lerp(0.9f, 0.3f, player.aerobicLevel));
-            if (!isBurnoutCycle)
+            if (programmerUpdateLock)
             {
-                Debug.Log("PC - allergic to seafood");
-                player.exhausted = true;
-                bool shouldStun = (player.aerobicLevel > UnityEngine.Random.value);
-                if (shouldStun)
+                Player player = grasp.grabber as Player;
+                player.AerobicIncrease(2f + 7f * Mathf.Lerp(0.9f, 0.3f, player.aerobicLevel));
+                if (!isBurnoutCycle)
                 {
-                    int stunamount = UnityEngine.Random.Range(10, 69);
-                    player.Stun(stunamount);
-                    player.standing = false;
-                    player.room.AddObject(new CreatureSpasmer(player, true, Mathf.FloorToInt(0.69f * player.stun)));
-                    if (UnityEngine.Random.value < 0.6f) player.LoseAllGrasps();
+                    Debug.Log("PC - allergic to seafood");
+                    player.exhausted = true;
+                    bool shouldStun = (player.aerobicLevel > UnityEngine.Random.value);
+                    if (shouldStun)
+                    {
+                        int stunamount = UnityEngine.Random.Range(10, 69);
+                        player.Stun(stunamount);
+                        player.standing = false;
+                        player.room.AddObject(new CreatureSpasmer(player, true, Mathf.FloorToInt(0.69f * player.stun)));
+                        if (UnityEngine.Random.value < 0.6f) player.LoseAllGrasps();
+                    }
                 }
             }
+
+            orig(self, grasp, eu);
         }
 
 
-        // Nerf meat value of some easy creatures
-        private void CreatureState_ctor_hk(On.CreatureState.orig_ctor orig, CreatureState self, AbstractCreature creature)
+        // Nerf food value of some things the programmer can eat when they eat it
+        // Bugs out if someone else takes a bite first, or  if the same food is eaten across several cycles
+        // Can't help but change the full meatLeft, since its all intergers...
+        private void PlayerSessionRecord_AddEat_hk(On.PlayerSessionRecord.orig_AddEat orig, PlayerSessionRecord self, PhysicalObject eatenObject)
         {
-            orig(self, creature);
-            if (self.meatLeft == creature.creatureTemplate.meatPoints && (
+            bool isNew = true;
+            if (programmerUpdateLock)
+            {
+                for (int i = self.eats.Count - 1; i >= 0; i--)
+                {
+                    if (self.eats[i].ID == eatenObject.abstractPhysicalObject.ID)
+                    {
+                        isNew = false;
+                    }
+                }
+            }
+
+            orig(self, eatenObject);
+
+            if (programmerUpdateLock)
+            {
+                if (isNew & eatenObject is Creature)
+                {
+                    CreatureState state = (eatenObject as Creature).State;
+                    AbstractCreature creature = (eatenObject as Creature).abstractCreature;
+
+                    if (state.meatLeft == creature.creatureTemplate.meatPoints && (
                        creature.creatureTemplate.type == CreatureTemplate.Type.CicadaA
                     || creature.creatureTemplate.type == CreatureTemplate.Type.CicadaB
                     || creature.creatureTemplate.type == CreatureTemplate.Type.BigSpider
@@ -440,90 +458,113 @@ Temperamental and on a weird diet, your journey will be a mess.";
                     || creature.creatureTemplate.type == CreatureTemplate.Type.BigNeedleWorm
                     || creature.creatureTemplate.type == CreatureTemplate.Type.DropBug
                     ))
-            {
-                self.meatLeft = Mathf.FloorToInt(self.meatLeft * 0.67f);
-            }
-            else if (self.meatLeft == creature.creatureTemplate.meatPoints && (
-                      creature.creatureTemplate.IsVulture
-                   || creature.creatureTemplate.IsLizard
-                   || creature.creatureTemplate.type == CreatureTemplate.Type.JetFish
-                   || creature.creatureTemplate.type == CreatureTemplate.Type.Scavenger
-                   ))
-            {
-                self.meatLeft = Mathf.FloorToInt(self.meatLeft * 0.75f);
+                    {
+                        state.meatLeft = Mathf.FloorToInt(state.meatLeft * 0.67f);
+                    }
+                    else if (state.meatLeft == creature.creatureTemplate.meatPoints && (
+                              creature.creatureTemplate.IsVulture
+                           || creature.creatureTemplate.IsLizard
+                           || creature.creatureTemplate.type == CreatureTemplate.Type.JetFish
+                           || creature.creatureTemplate.type == CreatureTemplate.Type.Scavenger
+                           ))
+                    {
+                        state.meatLeft = Mathf.FloorToInt(state.meatLeft * 0.75f);
+                    }
+                }
             }
         }
 
-
         private void Player_ObjectEaten_hk(On.Player.orig_ObjectEaten orig, Player self, IPlayerEdible edible)
         {
-
-            // completelly replaces original            
-            if (self.graphicsModule != null)
+            if (IsPlayerProgrammer(self))
             {
-                (self.graphicsModule as PlayerGraphics).LookAtNothing();
-            }
-
-            if (!isBurnoutCycle)
-            {
-                // But slugcat is allergic
-                if (edible is Hazer || edible is JellyFish)
+                // completelly replaces original            
+                if (self.graphicsModule != null)
                 {
-                    Debug.Log("PC - death by allergy");
-                    self.Die();
+                    (self.graphicsModule as PlayerGraphics).LookAtNothing();
                 }
-                else if(edible is DangleFruit
-                 || edible is EggBugEgg
-                 || edible is JellyFish
-                 || edible is SlimeMold
-                 || edible is SwollenWaterNut)
+
+                if (!isBurnoutCycle)
                 {
-                    for (int i = 0; i < edible.FoodPoints; i++)
+                    // But slugcat is allergic
+                    if (edible is Hazer || edible is JellyFish)
                     {
-                        self.AddQuarterFood();
+                        Debug.Log("PC - death by allergy");
+                        self.Die();
+                    }
+                    else if (edible is DangleFruit
+                     || edible is EggBugEgg
+                     || edible is JellyFish
+                     || edible is SlimeMold
+                     || edible is SwollenWaterNut)
+                    {
+                        for (int i = 0; i < edible.FoodPoints; i++)
+                        {
+                            self.AddQuarterFood();
+                        }
+                    }
+                    else
+                    {
+                        self.AddFood(edible.FoodPoints);
                     }
                 }
-                else
+                else // Burnout mode
                 {
-                    self.AddFood(edible.FoodPoints);
-                }
-            }
-            else // Burnout mode
-            {
-                // Hazer ok I suppose
-                if (edible is DangleFruit
-                  //|| edible is EggBugEgg // naaah egg op stays nerfed
-                  || edible is JellyFish
-                  || edible is SlimeMold
-                  || edible is SwollenWaterNut)
-                {
-                    self.AddFood(edible.FoodPoints);
-                }
-                else
-                {
-                    for (int i = 0; i < edible.FoodPoints; i++)
+                    // allergies ok I suppose
+                    if (edible is DangleFruit
+                      //|| edible is EggBugEgg // naaah egg op stays nerfed
+                      || edible is JellyFish
+                      || edible is SlimeMold
+                      || edible is SwollenWaterNut)
                     {
-                        self.AddQuarterFood();
+                        self.AddFood(edible.FoodPoints);
                     }
-                    
+                    else
+                    {
+                        for (int i = 0; i < edible.FoodPoints; i++)
+                        {
+                            self.AddQuarterFood();
+                        }
+
+                    }
+                }
+                if (self.spearOnBack != null)
+                {
+                    self.spearOnBack.interactionLocked = true;
                 }
             }
-            if (self.spearOnBack != null)
+            else
             {
-                self.spearOnBack.interactionLocked = true;
+                orig(self, edible);
             }
+        }
+
+        private int LegSprite(PlayerGraphics pg)
+        {
+            return 4;
+        }
+        private int EyeSprite(PlayerGraphics pg)
+        {
+            return 9;
         }
 
         private void PlayerGraphics_DrawSprites(On.PlayerGraphics.orig_DrawSprites orig, PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
         {
             orig(self, sLeaser, rCam, timeStacker, camPos);
+            if (!IsPlayerProgrammer(self.player)) return;
+
+            int ls = LegSprite(self);
+            sLeaser.sprites[ls].element = Futile.atlasManager.GetElementWithName("programmer" + sLeaser.sprites[ls].element.name);
+
             int firstExtra = PlayerFirstExtraSprite.Get(self);
+            int es = EyeSprite(self);
+
             sLeaser.sprites[firstExtra].alpha = RWCustom.Custom.LerpMap(self.player.aerobicLevel, 0.3f, 0.9f, 0f, 1f, 2);
-            sLeaser.sprites[firstExtra].SetPosition(sLeaser.sprites[9].GetPosition());
-            sLeaser.sprites[firstExtra].rotation = sLeaser.sprites[9].rotation;
-            sLeaser.sprites[firstExtra].scaleX = sLeaser.sprites[9].scaleX;
-            sLeaser.sprites[firstExtra].scaleY = sLeaser.sprites[9].scaleY;
-            string elname = sLeaser.sprites[9].element.name;
+            sLeaser.sprites[firstExtra].SetPosition(sLeaser.sprites[es].GetPosition());
+            sLeaser.sprites[firstExtra].rotation = sLeaser.sprites[es].rotation;
+            sLeaser.sprites[firstExtra].scaleX = sLeaser.sprites[es].scaleX;
+            sLeaser.sprites[firstExtra].scaleY = sLeaser.sprites[es].scaleY;
+            string elname = sLeaser.sprites[es].element.name;
             if (elname.EndsWith("d"))
             {
                 sLeaser.sprites[firstExtra].element = Futile.atlasManager.GetElementWithName("programmerBlush0");
@@ -537,6 +578,7 @@ Temperamental and on a weird diet, your journey will be a mess.";
         private void PlayerGraphics_ApplyPalette(On.PlayerGraphics.orig_ApplyPalette orig, PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
         {
             orig(self, sLeaser, rCam, palette);
+            if (!IsPlayerProgrammer(self.player)) return;
             int firstExtra = PlayerFirstExtraSprite.Get(self);
             sLeaser.sprites[firstExtra].color = new Color(0.96f, 0.69f * 0.69f, 0.69f * 0.69f);
         }
@@ -544,11 +586,10 @@ Temperamental and on a weird diet, your journey will be a mess.";
         private void PlayerGraphics_AddToContainer_hk(On.PlayerGraphics.orig_AddToContainer orig, PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
         {
             orig(self, sLeaser, rCam, newContatiner);
+            if (!IsPlayerProgrammer(self.player)) return;
             if (initiateSpritesToContainerLock) return;
 
             PlayerGraphics_AddToContainer_impl(self, sLeaser, rCam, newContatiner);
-
-            
         }
         private void PlayerGraphics_AddToContainer_impl(PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
         {
@@ -561,7 +602,7 @@ Temperamental and on a weird diet, your journey will be a mess.";
             {
                 newContatiner.AddChild(sLeaser.sprites[i]);
             }
-            sLeaser.sprites[firstExtra].MoveBehindOtherNode(sLeaser.sprites[9]); // blush goes behind eyes
+            sLeaser.sprites[firstExtra].MoveBehindOtherNode(sLeaser.sprites[EyeSprite(self)]); // blush goes behind eyes
         }
 
         AttachedField<PlayerGraphics, int> PlayerFirstExtraSprite = new AttachedField<PlayerGraphics, int>();
@@ -572,6 +613,7 @@ Temperamental and on a weird diet, your journey will be a mess.";
             orig(self, sLeaser, rCam);
             initiateSpritesToContainerLock = false;
 
+            if (!IsPlayerProgrammer(self.player)) return;
             int firstExtra = sLeaser.sprites.Length;
             this.PlayerFirstExtraSprite.Set(self, firstExtra);
             System.Array.Resize(ref sLeaser.sprites, sLeaser.sprites.Length + 1);
@@ -584,7 +626,7 @@ Temperamental and on a weird diet, your journey will be a mess.";
 
         private void Player_AerobicIncrease_hk(On.Player.orig_AerobicIncrease orig, Player self, float f)
         {
-            if (!self.slugcatStats.malnourished)
+            if (IsPlayerProgrammer(self) && !self.slugcatStats.malnourished)
             {
                 f *= RWCustom.Custom.LerpMap(self.aerobicLevel, 0.2f, 0.8f, 1.234f, 0.69f);
             }
@@ -601,7 +643,7 @@ Temperamental and on a weird diet, your journey will be a mess.";
             // an alternative would be to manipulate "malnourished" on player.update but it would require some significant fixes
             //if (UnityEngine.Random.value < 0.05) Debug.Log("PC - pre update aero is " + self.aerobicLevel);
 
-            if (!self.slugcatStats.malnourished) // Behavior on normal cycles similar to starvation, but more tame
+            if (IsPlayerProgrammer(self) && !self.slugcatStats.malnourished) // Behavior on normal cycles similar to starvation, but more tame
             {
                 if (self.aerobicLevel > 0.99f) // == 1f) but there was a decay cycle in main code
                 {
@@ -717,8 +759,8 @@ Temperamental and on a weird diet, your journey will be a mess.";
         }
 
 
-        string[] spritesOverwrite = new string[] { "LegsA0", "LegsA1", "LegsA2", "LegsA3", "LegsA4", "LegsA5", "LegsA6", "LegsAAir0", "LegsAAir1", "LegsAClimbing0", "LegsAClimbing1", "LegsAClimbing2", "LegsAClimbing3", "LegsAClimbing4", "LegsAClimbing5", "LegsAClimbing6", "LegsACrawling0", "LegsACrawling1", "LegsACrawling2", "LegsACrawling3", "LegsACrawling4", "LegsACrawling5", "LegsAOnPole0", "LegsAOnPole1", "LegsAOnPole2", "LegsAOnPole3", "LegsAOnPole4", "LegsAOnPole5", "LegsAOnPole6", "LegsAPole", "LegsAVerticalPole", "LegsAWall" };
-        private Dictionary<string, FAtlasElement> backupSprites = new Dictionary<string, FAtlasElement>();
+        // string[] spritesOverwrite = new string[] { "LegsA0", "LegsA1", "LegsA2", "LegsA3", "LegsA4", "LegsA5", "LegsA6", "LegsAAir0", "LegsAAir1", "LegsAClimbing0", "LegsAClimbing1", "LegsAClimbing2", "LegsAClimbing3", "LegsAClimbing4", "LegsAClimbing5", "LegsAClimbing6", "LegsACrawling0", "LegsACrawling1", "LegsACrawling2", "LegsACrawling3", "LegsACrawling4", "LegsACrawling5", "LegsAOnPole0", "LegsAOnPole1", "LegsAOnPole2", "LegsAOnPole3", "LegsAOnPole4", "LegsAOnPole5", "LegsAOnPole6", "LegsAPole", "LegsAVerticalPole", "LegsAWall" };
+        // private Dictionary<string, FAtlasElement> backupSprites = new Dictionary<string, FAtlasElement>();
 
         void LoadAtlasStreamIntoManager(FAtlasManager atlasManager, string atlasName, System.IO.Stream textureStream, System.IO.Stream jsonStream)
         {

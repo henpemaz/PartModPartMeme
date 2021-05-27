@@ -35,13 +35,32 @@
       <HintPath>..\References\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp - publicitystuntd">
-      <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
+      <HintPath>..\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
+    </Reference>
+    <Reference Include="BepInEx">
+      <HintPath>..\References\BepInEx.dll</HintPath>
+    </Reference>
+    <Reference Include="BepInEx.Preloader">
+      <HintPath>..\References\BepInEx.Preloader.dll</HintPath>
+    </Reference>
+    <Reference Include="ConfigMachine">
+      <HintPath>..\References\ConfigMachine.dll</HintPath>
+    </Reference>
+    <Reference Include="CustomRegions">
+      <HintPath>..\References\CustomRegions.dll</HintPath>
     </Reference>
     <Reference Include="HOOKS-Assembly-CSharp">
       <HintPath>..\References\HOOKS-Assembly-CSharp.dll</HintPath>
     </Reference>
+    <Reference Include="LogFix">
+      <HintPath>..\References\LogFix.dll</HintPath>
+    </Reference>
     <Reference Include="MonoMod">
-      <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\MonoMod.exe</HintPath>
+      <HintPath>..\References\MonoMod.exe</HintPath>
+    </Reference>
+    <Reference Include="MonoMod.RuntimeDetour, Version=18.6.0.33006, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\References\MonoMod.RuntimeDetour.dll</HintPath>
     </Reference>
     <Reference Include="Partiality">
       <HintPath>..\References\Partiality.dll</HintPath>
@@ -57,10 +76,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CustomAtlasLoader.cs" />
     <Compile Include="UwUMod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="wesuwwces\owoface.png" />
+    <EmbeddedResource Include="wesuwwces\owoface.txt" />
+  </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="wesuwwces\CompetitiveShadow.png" />
     <EmbeddedResource Include="wesuwwces\CompetitiveTitle.png" />
@@ -103,4 +126,7 @@
     <EmbeddedResource Include="wesuwwces\Title_UW_Shadow.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy /Y $(TargetPath) "C:\Program Files (x86)\Steam\steamapps\common\Rain World - Dev\Mods"</PostBuildEvent>
+  </PropertyGroup>
 </Project>

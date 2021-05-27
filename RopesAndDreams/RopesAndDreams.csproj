@@ -38,13 +38,13 @@
       <HintPath>..\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
     </Reference>
     <Reference Include="EnumExtender">
-      <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\EnumExtender.dll</HintPath>
+      <HintPath>..\References\EnumExtender.dll</HintPath>
     </Reference>
     <Reference Include="HOOKS-Assembly-CSharp">
       <HintPath>..\References\HOOKS-Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="MonoMod">
-      <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\MonoMod.exe</HintPath>
+      <HintPath>..\References\MonoMod.exe</HintPath>
     </Reference>
     <Reference Include="Partiality">
       <HintPath>..\References\Partiality.dll</HintPath>

@@ -35,21 +35,21 @@
       <HintPath>..\References\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp - publicitystuntd">
-      <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
+      <HintPath>..\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
     </Reference>
     <Reference Include="Colorfoot">
-      <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\Colorfoot.dll</HintPath>
+      <HintPath>..\References\Colorfoot.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="ConfigMachine">
-      <HintPath>..\..\References\ConfigMachine.dll</HintPath>
+      <HintPath>..\References\ConfigMachine.dll</HintPath>
     </Reference>
     <Reference Include="CustomTail">
-      <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\CustomTail.dll</HintPath>
+      <HintPath>..\References\CustomTail.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="FancySlugcats">
-      <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\FancySlugcats.dll</HintPath>
+      <HintPath>..\References\FancySlugcats.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="HOOKS-Assembly-CSharp">
@@ -57,11 +57,11 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="JollyCoop">
-      <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\JollyCoop.dll</HintPath>
+      <HintPath>..\References\JollyCoop.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="MonoMod">
-      <HintPath>E:\Henpemaz\Projects\RainWorld Modding\References\MonoMod.exe</HintPath>
+      <HintPath>..\References\MonoMod.exe</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="MonoMod.RuntimeDetour">
