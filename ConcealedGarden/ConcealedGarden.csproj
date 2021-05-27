@@ -31,8 +31,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Assembly-CSharp - publicitystuntd">
-      <HintPath>..\..\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\References\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="CustomRegions">
       <HintPath>..\..\References\CustomRegions.dll</HintPath>
