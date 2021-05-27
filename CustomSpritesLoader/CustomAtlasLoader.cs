@@ -9,9 +9,8 @@ using System.IO;
 using System.Text;
 using System.Linq;
 
-[assembly: IgnoresAccessChecksTo("Assembly-CSharp")]
-[assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 [module: UnverifiableCode]
+[assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
 public static class CustomAtlasLoader
 {

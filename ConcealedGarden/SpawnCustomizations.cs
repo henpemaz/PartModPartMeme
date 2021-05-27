@@ -37,7 +37,9 @@ namespace ConcealedGarden
         // Scavenger Fried / FollowPlayer support
         public static class EnumExt_SpawnCustomizations
         {
+#pragma warning disable 0649
             public static ScavengerAI.Behavior FollowFriend;
+#pragma warning restore 0649
         }
         //private static void ScavengerGraphics_ctor(On.ScavengerGraphics.orig_ctor orig, ScavengerGraphics self, PhysicalObject ow)
         //{

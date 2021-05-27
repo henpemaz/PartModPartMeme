@@ -36,6 +36,7 @@
     </Reference>
     <Reference Include="Assembly-CSharp - publicitystuntd">
       <HintPath>..\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Colorfoot">
       <HintPath>..\References\Colorfoot.dll</HintPath>
@@ -43,6 +44,7 @@
     </Reference>
     <Reference Include="ConfigMachine">
       <HintPath>..\References\ConfigMachine.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="CustomTail">
       <HintPath>..\References\CustomTail.dll</HintPath>

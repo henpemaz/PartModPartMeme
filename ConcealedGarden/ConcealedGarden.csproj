@@ -36,24 +36,31 @@
     </Reference>
     <Reference Include="Assembly-CSharp - publicitystuntd">
       <HintPath>..\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="CustomRegions">
       <HintPath>..\References\CustomRegions.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="HOOKS-Assembly-CSharp">
       <HintPath>..\References\HOOKS-Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="MonoMod.Common">
       <HintPath>..\References\MonoMod.Common.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="MonoMod.RuntimeDetour">
       <HintPath>..\References\MonoMod.RuntimeDetour.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="MonoMod.Utils">
       <HintPath>..\References\MonoMod.Utils.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Partiality">
       <HintPath>..\References\Partiality.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -63,6 +70,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine">
       <HintPath>..\References\UnityEngine.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -85,14 +93,17 @@
     <ProjectReference Include="..\CustomSpritesLoader\CustomSpritesLoader.csproj">
       <Project>{7aef23fe-5ab2-422c-89ee-ccb050b86a76}</Project>
       <Name>CustomSpritesLoader</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\ManagedPlacedObjects\ManagedPlacedObjects.csproj">
       <Project>{a5e1e800-ee17-4347-9488-ef8f3e929b78}</Project>
       <Name>ManagedPlacedObjects</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\ShelterBehaviors\ShelterBehaviors.csproj">
       <Project>{5a1afae3-8c39-43ed-a204-0cdefbd06264}</Project>
       <Name>ShelterBehaviors</Name>
+      <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

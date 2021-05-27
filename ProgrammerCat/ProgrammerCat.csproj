@@ -33,6 +33,7 @@
   <ItemGroup>
     <Reference Include="Assembly-CSharp - publicitystuntd">
       <HintPath>..\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="HOOKS-Assembly-CSharp">
       <HintPath>..\references\HOOKS-Assembly-CSharp.dll</HintPath>
@@ -40,15 +41,19 @@
     </Reference>
     <Reference Include="JollyCoop">
       <HintPath>..\References\JollyCoop.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="MonoMod.Common">
       <HintPath>..\References\MonoMod.Common.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="MonoMod.RuntimeDetour">
       <HintPath>..\References\MonoMod.RuntimeDetour.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="MonoMod.Utils">
       <HintPath>..\References\MonoMod.Utils.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Partiality">
       <HintPath>..\references\Partiality.dll</HintPath>
@@ -56,6 +61,7 @@
     </Reference>
     <Reference Include="SlugBase">
       <HintPath>..\References\SlugBase.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

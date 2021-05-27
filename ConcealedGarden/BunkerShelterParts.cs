@@ -10,11 +10,11 @@ namespace ConcealedGarden
     {
         class BunkerShelterFlapData : PlacedObjectsManager.ManagedData
         {
-            private static PlacedObjectsManager.ManagedField[] fields = new PlacedObjectsManager.ManagedField[]
+            private static PlacedObjectsManager.ManagedField[] customfields = new PlacedObjectsManager.ManagedField[]
                 {
                     new PlacedObjectsManager.IntVector2Field("handle", new RWCustom.IntVector2(2,4), PlacedObjectsManager.IntVector2Field.IntVectorReprType.rect),
                 };
-
+#pragma warning disable 0649
             [PlacedObjectsManager.FloatField("dpt", 1, 30, 8, 1, displayName: "Depth")]
             public float depth;
             [PlacedObjectsManager.FloatField("ofx", -10, 10, 0, 1, displayName:"Offset X")]
@@ -23,8 +23,9 @@ namespace ConcealedGarden
             public float offsetY;
             [BackedByField("handle")]
             public IntVector2 handle;
+#pragma warning restore 0649
 
-            public BunkerShelterFlapData(PlacedObject owner) : base(owner, fields) { }
+            public BunkerShelterFlapData(PlacedObject owner) : base(owner, customfields) { }
         }
         internal static void Register()
         {

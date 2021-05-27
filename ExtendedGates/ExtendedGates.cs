@@ -12,26 +12,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
-
-[assembly: IgnoresAccessChecksTo("Assembly-CSharp")]
-[assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 [module: UnverifiableCode]
-
-namespace System.Runtime.CompilerServices
-{
-    [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
-    public class IgnoresAccessChecksToAttribute : Attribute
-    {
-        public IgnoresAccessChecksToAttribute(string assemblyName)
-        {
-            AssemblyName = assemblyName;
-        }
-
-        public string AssemblyName { get; }
-    }
-}
-
-
+[assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
 namespace ExtendedGates
 {

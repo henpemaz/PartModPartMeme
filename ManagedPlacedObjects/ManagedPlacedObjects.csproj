@@ -33,21 +33,27 @@
   <ItemGroup>
     <Reference Include="Assembly-CSharp - publicitystuntd">
       <HintPath>..\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="EnumExtender">
       <HintPath>..\References\EnumExtender.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="HOOKS-Assembly-CSharp">
       <HintPath>..\References\HOOKS-Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="MonoMod.Common">
       <HintPath>..\References\MonoMod.Common.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="MonoMod.RuntimeDetour">
       <HintPath>..\References\MonoMod.RuntimeDetour.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Partiality">
       <HintPath>..\References\Partiality.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -57,6 +63,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine">
       <HintPath>..\References\UnityEngine.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
