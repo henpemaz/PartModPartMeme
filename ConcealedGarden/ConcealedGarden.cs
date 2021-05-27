@@ -37,7 +37,7 @@ namespace ConcealedGarden
 
             LifeSimProjection.Register();
 
-            LRUSoundTrigger.Register();
+            SongSFX.Register();
 
             CosmeticLeaves.Register();
 
