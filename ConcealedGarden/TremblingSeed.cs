@@ -32,7 +32,7 @@ namespace ConcealedGarden
             switch (newMode)
             {
                 case Mode.Thrown:
-                    windup = 16;
+                    windup = 7;
                     popCharge = 0;
                     break;
                 case Mode.StuckInWall:
@@ -98,11 +98,12 @@ namespace ConcealedGarden
             {
                 if (ManhattanDistance(this.abstractPhysicalObject.pos, crit.pos) <= 10) popCharge += 3;
             }
-            this.popCharge += 10;
+            this.popCharge += 20;
             if (UnityEngine.Random.value < (float)popCharge / 100) this.Pop();
         }
         internal void Pop()
         {
+            Debug.Log("seed POP!");
             this.room.PlaySound(SoundID.Broken_Anti_Gravity_Switch_On, this.firstChunk);
             this.ChangeMode(Mode.StuckInWall);
             this.RemainingUses = Max(RemainingUses - 1, 0);
@@ -134,14 +135,14 @@ namespace ConcealedGarden
         internal int lastPopCharge;
 
         public class SeedDistortion : UpdatableAndDeletable
-        { 
+        {
             //magical light it is
             //should be not too cursed now
-            public SeedDistortion(Vector2 mypos, int duration = 0, float rad = 0f, int? ownerid = null) 
-            { this.pos = mypos; lifetime = duration; radius = rad; affectedObjects = new List<int>(); ownerID = ownerid; }
+            public SeedDistortion(Vector2 mypos, int duration = 0, float rad = 0f, int? ownerid = null)
+            { this.pos = mypos; distortionLifetime = duration; radius = rad; affectedObjects = new List<int>(); ownerID = ownerid; Debug.Log($"Seed distortion created: {ownerID}, d:{duration}, rad:{rad}"); }
             internal Vector2 pos;
             internal int? ownerID;
-            internal int lifetime;
+            internal int distortionLifetime;
             internal float radius;
             //could do with attachedfields but eh
             internal List<int> affectedObjects;
@@ -153,20 +154,27 @@ namespace ConcealedGarden
                 {
                     foreach (var po in layer)
                     {
-                        if ((pos - po.firstChunk.pos).magnitude < radius) AttemptReachOut(po);
+                        AttemptReachOut(po);
                     }
                 }
-                lifetime--;
-                if (lifetime <= 0) this.Destroy();
+                distortionLifetime--;
+                if (distortionLifetime <= 0) this.Destroy();
             }
             internal void AttemptReachOut(PhysicalObject po)
             {
+                //Debug.Log($"Seed distortion trying to touch {po}...");
                 if (po.room != this.room || po is TremblingSeed) return;
                 var hash = po.GetHashCode();
                 if (affectedObjects.Contains(hash)) return;
-                this.room.AddObject(new MysteriousLight(po.firstChunk.pos, false, po, (int)Mathf.Lerp(300, 450, UnityEngine.Random.value), Mathf.Lerp(0.3f, 0.9f, UnityEngine.Random.value)));
+                this.room.AddObject(new MysteriousLight(po.firstChunk.pos, false, po, initialLifetime: (int)Mathf.Lerp(300f, 450f, UnityEngine.Random.value), gravityMultiplier: Mathf.Lerp(0.3f, 0.9f, UnityEngine.Random.value)));
                 affectedObjects.Add(hash);
                 Debug.Log($"Seed [{this.ownerID}] reaching out to {po.GetType()}, {po.abstractPhysicalObject.ID}");
+            }
+            public override void Destroy()
+            {
+                base.Destroy();
+                this.room.PlaySound(SoundID.Broken_Anti_Gravity_Switch_Off, this.pos);
+                Debug.Log("Seed distortion lifetime over. Bye!");
             }
         }
         public class MysteriousLight : LightSource
@@ -174,10 +182,13 @@ namespace ConcealedGarden
 #warning unfinished, would likely cause issues
             //not modifying g anymore
             //tho math might be sketchy
-            public MysteriousLight (Vector2 initpos, bool envir, UpdatableAndDeletable bindTo, int lifetime = 0, float gravityMultiplier = 1f) : base (initpos, envir, new Color(0.7f, 0.2f, 0.2f), bindTo)
+            public MysteriousLight (Vector2 initpos, bool envir, UpdatableAndDeletable bindTo, int initialLifetime = 80, float gravityMultiplier = 1f) : base (initpos, envir, new Color(0.7f, 0.2f, 0.2f), bindTo)
             {
-                this.maxLifetime = lifetime;
-                this.initiakGReduction = gravityMultiplier;
+                this.maxLifetime = initialLifetime;
+                this.lifetime = initialLifetime;
+                this.initialGReduction = gravityMultiplier;
+                Debug.Log($"Seed light created {bindTo.GetType()}, {owner?.abstractPhysicalObject.ID}");
+                HardSetAlpha(1f);
             }
             public override void Update(bool eu)
             {
@@ -188,15 +199,18 @@ namespace ConcealedGarden
                     {
                         chunk.vel.y += owner.gravity * effectiveGReduction;
                     }
+                    HardSetPos(owner.firstChunk.pos);
+
                 }
-                this.rad = Mathf.Lerp(15f, 35f, timeRemaining);
+                
+                HardSetRad( Mathf.Lerp(15f, 35f, timeRemaining));
                 lifetime--;
-                if (lifetime <= 0) { this.Destroy(); this.room.PlaySound(SoundID.Broken_Anti_Gravity_Switch_Off, this.pos); }
+                if (lifetime <= 0) { this.Destroy(); Debug.Log("Seedlight is dead. Bye!"); }
             }
 
             PhysicalObject owner => tiedToObject as PhysicalObject;
-            internal float initiakGReduction;
-            internal float effectiveGReduction => Mathf.Lerp(initiakGReduction, 0f, timeRemaining);
+            internal float initialGReduction;
+            internal float effectiveGReduction => Mathf.Lerp(initialGReduction, 0f, timeRemaining);
             internal float timeRemaining => Mathf.Clamp(lifetime / maxLifetime, 0f, 1f);
             internal int maxLifetime;
             internal int lifetime;
@@ -212,6 +226,12 @@ namespace ConcealedGarden
                 base.Update(time);
                 Cooldown = Max(0, Cooldown - time);
             }
+            public override void Realize()
+            {
+
+                this.realizedObject = new TremblingSeed(this, world);
+                base.Realize();
+            }
             public int RemainingUses;
             public int Cooldown;
         }
@@ -219,9 +239,16 @@ namespace ConcealedGarden
         public static class SeedHooks
         {
 #warning add hooks to spawn in, deser, etc
+            public static void TempSpawnIn(On.Player.orig_ctor orig, Player instance, AbstractCreature absc, World world)
+            {
+                orig(instance, absc, world);
+                var seed = new AbstractTremblingSeed(world, null, instance.abstractCreature.pos, instance.room.game.GetNewID(), 4);
+                instance.room.abstractRoom.AddEntity(seed);
+                seed.Realize();
+            }
             public static void Apply()
             {
-
+                On.Player.ctor += TempSpawnIn;
             }
         }
     }
