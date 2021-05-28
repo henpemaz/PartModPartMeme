@@ -54,6 +54,8 @@ namespace ConcealedGarden
             ShaderTester.Register();
 
             NoLurkArea.Register();
+
+            GravityGradient.Register();
         }
 
         public class ShaderTester : CosmeticSprite

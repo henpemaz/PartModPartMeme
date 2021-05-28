@@ -80,6 +80,7 @@
     <Compile Include="ConcealedGarden.cs" />
     <Compile Include="CosmeticLeaves.cs" />
     <Compile Include="ElectricArcs.cs" />
+    <Compile Include="GravityGradient.cs" />
     <Compile Include="LifeSimProjection.cs" />
     <Compile Include="SongSFX.cs" />
     <Compile Include="NoLurkArea.cs" />
