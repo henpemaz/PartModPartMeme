@@ -88,6 +88,7 @@
     <Compile Include="QuestionableLizardBit.cs" />
     <Compile Include="SlipperySlope.cs" />
     <Compile Include="SpawnCustomizations.cs" />
+    <Compile Include="TremblingSeed.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CustomSpritesLoader\CustomSpritesLoader.csproj">
