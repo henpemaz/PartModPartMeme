@@ -56,6 +56,9 @@ namespace ConcealedGarden
             NoLurkArea.Register();
 
             GravityGradient.Register();
+
+            //quack
+            TremblingSeed.SeedHooks.Apply();
         }
 
         public class ShaderTester : CosmeticSprite
