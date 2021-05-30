@@ -7,6 +7,7 @@ using ManagedPlacedObjects;
 using System.Security;
 using System.Security.Permissions;
 using System.Reflection;
+using OptionalUI;
 
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
@@ -25,6 +26,60 @@ namespace ConcealedGarden
         }
 
         public static ConcealedGarden instance;
+        public static ConcealedGardenOI instanceOI;
+        public static ConcealedGardenProgression progression;
+        public static OptionalUI.OptionInterface LoadOI()
+        {
+            return new ConcealedGardenOI();
+        }
+
+        public class ConcealedGardenOI : OptionalUI.OptionInterface
+        {
+            public ConcealedGardenOI() : base(mod:instance)
+            {
+                instanceOI = this;
+                progressData = true;
+            }
+
+            public override void Initialize()
+            {
+                base.Initialize();
+                this.Tabs = new OpTab[1] { new OpTab() };
+                instanceOI.LoadData();
+            }
+
+            public override void DataOnChange()
+            {
+                base.DataOnChange();
+                ConcealedGardenProgression.LoadProgression();
+            }
+        }
+
+        public class ConcealedGardenProgression
+        {
+            private Dictionary<string, object> storage;
+            public ConcealedGardenProgression(Dictionary<string, object> dictionary=null) { storage = dictionary ?? new Dictionary<string, object>(); }
+
+            public bool transfurred
+            {
+                get { if (storage.TryGetValue("transfurred", out object obj)) return (bool)obj; return false; }
+                internal set { storage["transfurred"] = value; SaveProgression(); }
+            }
+
+            internal static void LoadProgression()
+            {
+                if (!string.IsNullOrEmpty(instanceOI.data) && Json.Deserialize(instanceOI.data) != null)
+                    progression = new ConcealedGardenProgression((Dictionary<string, object>)Json.Deserialize(instanceOI.data));
+                else
+                    progression = new ConcealedGardenProgression();
+            }
+            internal static void SaveProgression()
+            {
+                if (progression != null)
+                    instanceOI.data = Json.Serialize(progression.storage);
+                instanceOI.SaveData();
+            }
+        }
 
         public override void OnEnable()
         {
@@ -59,6 +114,10 @@ namespace ConcealedGarden
 
             //quack
             TremblingSeed.SeedHooks.Apply();
+
+            ProgressionFilter.Register();
+
+            LRUPickup.Register();
         }
 
         public class ShaderTester : CosmeticSprite

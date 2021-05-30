@@ -38,6 +38,9 @@
       <HintPath>..\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="ConfigMachine">
+      <HintPath>..\References\ConfigMachine.dll</HintPath>
+    </Reference>
     <Reference Include="CustomRegions">
       <HintPath>..\References\CustomRegions.dll</HintPath>
       <Private>False</Private>
@@ -82,6 +85,8 @@
     <Compile Include="ElectricArcs.cs" />
     <Compile Include="GravityGradient.cs" />
     <Compile Include="LifeSimProjection.cs" />
+    <Compile Include="LRUPickup.cs" />
+    <Compile Include="ProgressionFilter.cs" />
     <Compile Include="SongSFX.cs" />
     <Compile Include="NoLurkArea.cs" />
     <Compile Include="OrganicShelter.cs" />
@@ -110,6 +115,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy /Y $(TargetPath) "C:\Program Files (x86)\Steam\steamapps\common\Rain World - Dev\Mods"</PostBuildEvent>
+    <PostBuildEvent>if defined RWMods (copy /Y "$(TargetPath)" "%25RWMods%25")</PostBuildEvent>
   </PropertyGroup>
 </Project>

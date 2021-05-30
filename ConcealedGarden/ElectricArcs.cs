@@ -233,7 +233,7 @@ namespace ConcealedGarden
                     //rCam.ReturnFContainer("HUD").AddChild(debuglabel);
 
                     ApplyPalette(sLeaser, rCam, rCam.currentPalette);
-                    AddToContainer(sLeaser, rCam, rCam.ReturnFContainer("Water"));
+                    AddToContainer(sLeaser, rCam, rCam.ReturnFContainer("Foreground"));
 
                     //shaderList = rCam.room.game.rainWorld.Shaders.ToList();
                 }

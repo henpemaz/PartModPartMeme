@@ -49,6 +49,7 @@ namespace ConcealedGarden
 
 		private class GravityGradientData : PlacedObjectsManager.ManagedData
 		{
+#pragma warning disable 0649
 			[PlacedObjectsManager.FloatField("1g", 0f, 1f, 0.1f, 0.01f, displayName: "Gravity A")]
 			public float gravityA;
 			[PlacedObjectsManager.FloatField("2g", 0f, 1f, 0.1f, 0.01f, displayName: "Gravity B")]
@@ -61,6 +62,7 @@ namespace ConcealedGarden
 			   };
 			[BackedByField("4h")]
 			public Vector2 handle;
+#pragma warning restore 0649
 			public GravityGradientData(PlacedObject owner) : base(owner, customFields) { }
 		}
 
