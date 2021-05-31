@@ -139,7 +139,12 @@ namespace ConcealedGarden
             //magical light it is
             //should be not too cursed now
             public SeedDistortion(Vector2 mypos, int duration = 0, float rad = 0f, int? ownerid = null)
-            { this.pos = mypos; distortionLifetime = duration; radius = rad; affectedObjects = new List<int>(); ownerID = ownerid; Debug.Log($"Seed distortion created: {ownerID}, d:{duration}, rad:{rad}"); }
+            { this.pos = mypos;
+                distortionLifetime = duration;
+                radius = rad;
+                affectedObjects = new List<int>();
+                ownerID = ownerid;
+                Debug.Log($"Seed distortion created: {ownerID}, d:{duration}, rad:{rad}"); }
             internal Vector2 pos;
             internal int? ownerID;
             internal int distortionLifetime;
@@ -163,10 +168,16 @@ namespace ConcealedGarden
             internal void AttemptReachOut(PhysicalObject po)
             {
                 //Debug.Log($"Seed distortion trying to touch {po}...");
-                if (po.room != this.room || po is TremblingSeed) return;
+                if (po.room != this.room || po is TremblingSeed || (po.firstChunk.pos - pos).magnitude < 100f) return;
                 var hash = po.GetHashCode();
                 if (affectedObjects.Contains(hash)) return;
-                this.room.AddObject(new MysteriousLight(po.firstChunk.pos, false, po, initialLifetime: (int)Mathf.Lerp(300f, 450f, UnityEngine.Random.value), gravityMultiplier: Mathf.Lerp(0.3f, 0.9f, UnityEngine.Random.value)));
+                this.room.AddObject(new MysteriousLight(
+                    po.firstChunk.pos, 
+                    false, 
+                    po, 
+                    initialLifetime: UnityEngine.Random.Range(this.distortionLifetime / 2, distortionLifetime * 2), 
+                    gravityMultiplier: Mathf.Lerp(0.3f, 0.9f, UnityEngine.Random.value)
+                    ));
                 affectedObjects.Add(hash);
                 Debug.Log($"Seed [{this.ownerID}] reaching out to {po.GetType()}, {po.abstractPhysicalObject.ID}");
             }
@@ -182,36 +193,38 @@ namespace ConcealedGarden
 #warning unfinished, would likely cause issues
             //not modifying g anymore
             //tho math might be sketchy
-            public MysteriousLight (Vector2 initpos, bool envir, UpdatableAndDeletable bindTo, int initialLifetime = 80, float gravityMultiplier = 1f) : base (initpos, envir, new Color(0.7f, 0.2f, 0.2f), bindTo)
+            public MysteriousLight (Vector2 initpos, bool envir, UpdatableAndDeletable bindTo, int initialLifetime = 80, float gravityMultiplier = 1f) : base (initpos, envir, new Color(1f, 0.2f, 0.2f), bindTo)
             {
+                this.requireUpKeep = false;
                 this.maxLifetime = initialLifetime;
                 this.lifetime = initialLifetime;
                 this.initialGReduction = gravityMultiplier;
                 Debug.Log($"Seed light created {bindTo.GetType()}, {owner?.abstractPhysicalObject.ID}");
-                HardSetAlpha(1f);
+                
             }
             public override void Update(bool eu)
             {
                 base.Update(eu);
                 if (owner != null)
                 {
+                    this.stayAlive = true;
+                    this.setPos = owner.firstChunk.pos;
+                    
+                    this.setRad = Mathf.Lerp(30f, 320f, timeRemaining);
+                    this.setAlpha = Mathf.Lerp(0f, 1f, timeRemaining);
                     foreach (var chunk in owner.bodyChunks)
                     {
                         chunk.vel.y += owner.gravity * effectiveGReduction;
                     }
-                    HardSetPos(owner.firstChunk.pos);
-
                 }
-                
-                HardSetRad( Mathf.Lerp(15f, 35f, timeRemaining));
                 lifetime--;
-                if (lifetime <= 0) { this.Destroy(); Debug.Log("Seedlight is dead. Bye!"); }
+                if (lifetime <= 0 || this.tiedToObject?.room != this.room) { this.Destroy(); Debug.Log("Seedlight is dead. Bye!"); }
             }
 
             PhysicalObject owner => tiedToObject as PhysicalObject;
             internal float initialGReduction;
             internal float effectiveGReduction => Mathf.Lerp(initialGReduction, 0f, timeRemaining);
-            internal float timeRemaining => Mathf.Clamp(lifetime / maxLifetime, 0f, 1f);
+            internal float timeRemaining => Mathf.Clamp((float)lifetime / (float)maxLifetime, 0f, 1f);
             internal int maxLifetime;
             internal int lifetime;
         }
@@ -243,7 +256,7 @@ namespace ConcealedGarden
             {
                 orig(instance, absc, world);
                 var seed = new AbstractTremblingSeed(world, null, instance.abstractCreature.pos, instance.room.game.GetNewID(), 4);
-                instance.room.abstractRoom.AddEntity(seed);
+                instance.room.abstractRoom.entities.Add(seed);
                 seed.Realize();
             }
             public static void Apply()
