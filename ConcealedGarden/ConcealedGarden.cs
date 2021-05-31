@@ -118,6 +118,8 @@ namespace ConcealedGarden
             ProgressionFilter.Register();
 
             LRUPickup.Register();
+
+            CameraZoomEffect.Apply();
         }
 
         public class ShaderTester : CosmeticSprite

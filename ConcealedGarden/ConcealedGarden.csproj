@@ -79,6 +79,7 @@
   <ItemGroup>
     <Compile Include="AttachedField.cs" />
     <Compile Include="BunkerShelterParts.cs" />
+    <Compile Include="CameraZoomEffect.cs" />
     <Compile Include="CGGateFix.cs" />
     <Compile Include="ConcealedGarden.cs" />
     <Compile Include="CosmeticLeaves.cs" />
