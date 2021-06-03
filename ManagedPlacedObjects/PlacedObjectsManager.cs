@@ -582,7 +582,7 @@ namespace ManagedPlacedObjects
 
                 // Scan for annotated fields
                 List<ManagedField> attrFields = new List<ManagedField>();
-                foreach (FieldInfo fieldInfo in this.GetType().GetFields())
+                foreach (FieldInfo fieldInfo in this.GetType().GetFields(BindingFlags.Instance|BindingFlags.NonPublic|BindingFlags.Public))
                 {
                     object[] customAttributes = fieldInfo.GetCustomAttributes(typeof(ManagedField), true);
 

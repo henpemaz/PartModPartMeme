@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
+using RWCustom;
 
 namespace ConcealedGarden
 {
@@ -19,27 +20,40 @@ namespace ConcealedGarden
             public class ElectricArcData : PlacedObjectsManager.ManagedData
             {
                 public static PlacedObjectsManager.ManagedField[] otherFields = new PlacedObjectsManager.ManagedField[]{
-                    new PlacedObjectsManager.Vector2Field("end", new Vector2(-100, 30)),
-                    new PlacedObjectsManager.ColorField("color", new Color(0.4f, 0.6f, 0.8f), PlacedObjectsManager.ManagedFieldWithPanel.ControlType.slider, "Color"),
+                    new PlacedObjectsManager.Vector2Field("01", new Vector2(-100, 30)),
+                    new PlacedObjectsManager.ColorField("05", new Color(0.4f, 0.6f, 0.8f), PlacedObjectsManager.ManagedFieldWithPanel.ControlType.slider, "Color"),
                     };
                 public Vector2 pos => owner.pos;
-                #pragma warning disable 0649 // We're reflecting over these fields, stop worrying about it stupid compiler
+#pragma warning disable 0649 // We're reflecting over these fields, stop worrying about it stupid compiler
 
-                [BackedByField("end")]
+                [BackedByField("01")]
                 public Vector2 end;
-                [PlacedObjectsManager.IntegerField("num", 1, 10, 3, displayName:"Sparks")]
+                [PlacedObjectsManager.IntegerField("02", 1, 100, 8, displayName: "Sparks", control: PlacedObjectsManager.ManagedFieldWithPanel.ControlType.slider)]
                 public int numberOfSparks;
-                [PlacedObjectsManager.FloatField("jmp", 0f, 1f, 0.5f, 0.01f, displayName: "Jumpyness")]
+                [PlacedObjectsManager.FloatField("03", 0f, 20f, 4f, 0.1f, displayName: "Jumpyness")]
                 public float jumpyness;
-                [PlacedObjectsManager.FloatField("tht", 0f, 1f, 0.5f, 0.01f, displayName: "Tightness")]
+                [PlacedObjectsManager.FloatField("04", 0f, 1f, 0.005f, 0.001f, displayName: "Tightness")]
                 public float tightness;
-                [BackedByField("color")]
+                [BackedByField("05")]
                 public Color color;
-                #pragma warning restore 0649
-                public ElectricArcData(PlacedObject owner) : base(owner, otherFields)
-                {
-
-                }
+                [PlacedObjectsManager.FloatField("06", -5f, 5f, 0.5f, 0.01f, displayName: "Pull")]
+                public float gravitypull;
+                [PlacedObjectsManager.FloatField("07", -0.5f, 0.5f, 0.005f, 0.001f, displayName: "Centerness")]
+                public float centerness;
+                [PlacedObjectsManager.FloatField("08", 0f, 1f, 0.05f, 0.001f, displayName: "ellasticity")]
+                public float ellasticity;
+                [PlacedObjectsManager.FloatField("09", 0f, 1f, 0.05f, 0.001f, displayName: "spread")]
+                public float spread;
+                [PlacedObjectsManager.FloatField("10", 0f, 10f, 0.5f, 0.01f, displayName: "minspace")]
+                public float minspace;
+                [PlacedObjectsManager.FloatField("11", 0f, 10f, 2f, 0.01f, displayName: "maxspace")]
+                public float maxspace;
+                [PlacedObjectsManager.IntegerField("12", 0, 120, 12, displayName: "natcooldown")]
+                public int natcooldown;
+                [PlacedObjectsManager.IntegerField("13", 0, 120, 30, displayName: "shockcooldown")]
+                public int shockcooldown;
+#pragma warning restore 0649
+                public ElectricArcData(PlacedObject owner) : base(owner, otherFields) { }
             }
 
             private readonly PlacedObject pObj;
@@ -55,115 +69,154 @@ namespace ConcealedGarden
             }
 
             Spark spark;
+            private int cooldown;
+
             public override void Update(bool eu)
             {
                 base.Update(eu);
                 if (spark == null || spark.slatedForDeletetion || spark.broken)
                 {
-                    room.AddObject(spark = new Spark(pObj.pos, pObj.pos + data.end, data.numberOfSparks, Mathf.Lerp(0.5f, 20f, data.jumpyness), Mathf.Lerp(0.001f, 0.1f, Mathf.Pow(data.tightness, 2)), Mathf.Lerp(0.001f, 0.1f, Mathf.Pow(data.tightness, 2)), 6f, 16f, room));
+                    spark = null;
+                    cooldown--;
+                    if (cooldown <= 0)
+                    {
+                        room.AddObject(spark = new Spark(room, pObj.pos, pObj.pos + data.end, this, data.numberOfSparks, data));
+                        cooldown = -1;
+                    }
                 }
             }
 
             public class Spark : CosmeticSprite
             {
-                private readonly Vector2 start;
-                private readonly Vector2 stop;
+                public Vector2 start;
+                public Vector2 stop;
+                private readonly ElectricArc owner;
                 private readonly int nNodes;
-                private float jump;
-                private float tightness;
-                private readonly float ellasticPull;
-                private readonly float minspace;
-                private readonly float maxspace;
+                private readonly ElectricArcData data;
+                private readonly float spacing;
                 private SparkNode[] nodes;
                 public bool broken = false;
                 private float intensity;
+                private StaticSoundLoop soundLoop;
+                private StaticSoundLoop disruptedLoop;
 
-
-                public Spark(Vector2 start, Vector2 stop, int nNodes, float jump, float tightness, float ellasticPull, float minspace, float maxspace, Room room)
+                public Spark(Room room, Vector2 start, Vector2 stop, ElectricArc owner, int nNodes, ElectricArcData data)
                 {
-                    
+
                     this.start = start;
                     this.stop = stop;
+                    this.owner = owner;
                     this.nNodes = nNodes;
-                    this.jump = jump;
-                    this.tightness = tightness;
-                    this.ellasticPull = ellasticPull;
-                    this.minspace = (start - stop).magnitude / nNodes * (2f - tightness);//minspace;
-                    this.maxspace = this.minspace * (2f - tightness); // maxspace;
-                    this.room = room;
+                    this.data = data;
+                    this.spacing = (start - stop).magnitude / (float)nNodes;
                     this.nodes = new SparkNode[nNodes];
 
-                    intensity = 1;
+                    intensity = 1f;
 
                     for (int i = 0; i < nNodes; i++)
                     {
                         nodes[i] = new SparkNode(Vector2.Lerp(start, stop, Mathf.InverseLerp(-1, nNodes, i)));
                     }
-                    Debug.LogError("Created SPARK");
+
+                    this.soundLoop = new StaticSoundLoop(SoundID.Zapper_LOOP, Vector2.Lerp(start, stop, 0.5f), room, 0f, 1f);
+                    this.disruptedLoop = new StaticSoundLoop(SoundID.Zapper_Disrupted_LOOP, Vector2.Lerp(start, stop, 0.5f), room, 0f, 1f);
+
+                    Debug.Log("Created SPARK");
                 }
 
                 public override void Update(bool eu)
                 {
                     base.Update(eu);
 
-                    if (!broken)
+                    this.soundLoop.Update();
+                    this.disruptedLoop.Update();
+                    soundLoop.volume = Mathf.Clamp01(intensity * (broken ? 0.5f : 1f));
+                    disruptedLoop.volume = Mathf.Clamp01(intensity * (broken ? 0.8f : 0f));
+
+                    Vector2 direction = (stop - start).normalized;
+                    for (int i = 0; i < nodes.Length; i++)
                     {
-                        for (int i = 0; i < nodes.Length; i++)
+                        Vector2 jump = UnityEngine.Random.insideUnitCircle * data.jumpyness;
+                        nodes[i].vel += jump *(broken ? 2f : 1f);// * dir * (1 / Mathf.Pow(dir.magnitude + 0.1f, 0.5f)) 
+                        nodes[i].vel += new Vector2(0f, room.gravity) * data.gravitypull;
+                        Vector2 correctPosition = Vector2.Lerp(start, stop, Mathf.InverseLerp(-1, nNodes, i));
+                        Vector2 pull = correctPosition - nodes[i].pos;
+                        nodes[i].vel += pull * data.tightness;
+                        pull -= Vector2.Dot(pull, direction) * direction;
+                        nodes[i].vel += pull * data.centerness;
+
+                        for (int j = -1; j < 2; j+=2)
                         {
-                            Vector2 dir = UnityEngine.Random.insideUnitCircle;
-                            nodes[i].vel += jump * dir * (1 / Mathf.Pow(dir.magnitude + 0.1f, 0.5f)) + new Vector2(0f, room.gravity);
-
-                            if (i > 0)
-                            {
-                                Vector2 pull = nodes[i - 1].pos - nodes[i].pos;
-                                nodes[i].vel += pull * ellasticPull / 2f;
-                                float mag = pull.magnitude;
-                                if (mag > minspace)
-                                    nodes[i].vel += tightness / 2f * pull.normalized * (mag - minspace);
-                                if (mag > maxspace) broken = true;
-                            }
-                            if (i == 0)
-                            {
-                                Vector2 pull = start - nodes[i].pos;
-                                nodes[i].vel += pull * ellasticPull;
-                                float mag = pull.magnitude;
-                                if (mag > minspace)
-                                    nodes[i].vel += tightness * pull.normalized * (mag - minspace);
-                                if (mag > maxspace) broken = true;
-                            }
-                            if (i < nodes.Length - 1)
-                            {
-                                Vector2 pull = nodes[i + 1].pos - nodes[i].pos;
-                                nodes[i].vel += pull * ellasticPull / 2f;
-                                float mag = pull.magnitude;
-                                if (mag > minspace)
-                                    nodes[i].vel += tightness / 2f * pull.normalized * (mag - minspace);
-                                if (mag > maxspace) broken = true;
-                            }
-                            if (i == nodes.Length - 1)
-                            {
-                                Vector2 pull = stop - nodes[i].pos;
-                                nodes[i].vel += pull * ellasticPull;
-                                float mag = pull.magnitude;
-                                if (mag > minspace)
-                                    nodes[i].vel += tightness * pull.normalized * (mag - minspace);
-                                if (mag > maxspace) broken = true;
-                            }
-
+                            if (i == 0 && j == -1) pull = start - nodes[i].pos;
+                            else if(i == nodes.Length - 1 && j == 1) pull = stop - nodes[i].pos;
+                            else pull = nodes[i + j].pos - nodes[i].pos;
+                            nodes[i].vel += pull * data.ellasticity / 2f;
+                            float mag = pull.magnitude;
+                            nodes[i].vel += data.spread / 2f * pull.normalized * (mag - spacing*data.minspace);
+                            if (mag > data.maxspace * spacing) this.Break();
                         }
-                        for (int i = 0; i < nodes.Length; i++)
+
+                    }
+                    Vector2 previous = start;
+                    for (int i = 0; i < nodes.Length; i++)
+                    {
+                        nodes[i].Update();
+                        foreach (var physgroup in room.physicalObjects)
                         {
-                            nodes[i].Update();
+                            foreach (var phys in physgroup)
+                            {
+                                if((phys.firstChunk.pos - nodes[i].pos).magnitude < data.maxspace + phys.collisionRange) // in range for testing
+                                {
+                                    for (int k = 0; k < phys.bodyChunks.Length; k++)
+                                    {
+                                        BodyChunk chunk = phys.bodyChunks[k];
+                                        Vector2 closest = Custom.ClosestPointOnLineSegment(previous, nodes[i].pos, chunk.pos);
+                                        if((closest - chunk.pos).magnitude < chunk.rad + 2 || Custom.IsPointBetweenPoints(chunk.pos, chunk.lastPos, closest)) // NOT PERFECT would need some more serious checks considering lastpos but its goodenuff
+                                        {
+                                            this.Shock(phys, k, closest);
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
-                    if(broken)
+                    if (broken)
                     {
-                        this.jump *= 1.15f;
-                        this.tightness *= 0.9f;
-                        this.intensity *= 0.8f;
+                        this.intensity *= 0.85f;
                         if (intensity < 0.05f) this.Destroy();
                     }
-                    
+                }
+
+                private void Shock(PhysicalObject phys, int chunkindex, Vector2 contact)
+                {
+                    Creature crit = phys as Creature;
+                    if (broken && crit != null)  // shocked during decay
+                    {
+                        crit.room.AddObject(new CreatureSpasmer(crit, true, Mathf.FloorToInt(20 * intensity)));
+                        crit.Stun(Mathf.FloorToInt(20 * intensity));
+                    }
+                    else
+                    {
+                        this.intensity = Mathf.Lerp(2.0f, phys.TotalMass, 0.5f);
+                        this.broken = true;
+                        owner.cooldown = data.shockcooldown;
+                        if (crit != null)
+                        {
+                            crit.Die();
+                            crit.room.AddObject(new CreatureSpasmer(crit, true, Mathf.FloorToInt(40 * intensity)));
+                        }
+                        this.room.AddObject(new ZapCoil.ZapFlash(contact, Mathf.InverseLerp(-0.05f, 15f, phys.bodyChunks[chunkindex].rad)));
+                        phys.bodyChunks[chunkindex].vel += ((phys.bodyChunks[chunkindex].pos - contact).normalized * 6f + Custom.RNV() * UnityEngine.Random.value) / phys.bodyChunks[chunkindex].mass;
+                        this.room.PlaySound(SoundID.Zapper_Zap, phys.bodyChunks[chunkindex].pos, 1f, 1f);
+                    }
+                }
+
+                private void Break()
+                {
+                    if (broken) return;
+                    this.broken = true;
+                    this.intensity = 1.5f;
+                    owner.cooldown = data.natcooldown;
                 }
 
                 public class SparkNode
@@ -191,8 +244,8 @@ namespace ConcealedGarden
                 public override void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
                 {
                     Debug.LogError("SPARK sprt init");
-                    TriangleMesh outermesh = TriangleMesh.MakeLongMesh(nNodes+1, false, false, "Futile_White");
-                    TriangleMesh innermesh = TriangleMesh.MakeLongMesh(nNodes+1, false, false, "Futile_White");
+                    TriangleMesh outermesh = TriangleMesh.MakeLongMesh(nNodes + 1, false, false, "Futile_White");
+                    TriangleMesh innermesh = TriangleMesh.MakeLongMesh(nNodes + 1, false, false, "Futile_White");
                     sLeaser.sprites = new FSprite[2] { outermesh, innermesh }; //nNodes + 
                     //outermesh.UVvertices[0] = new Vector2(0f, 0f);
                     //outermesh.UVvertices[1] = new Vector2(1f, 0f);
@@ -210,8 +263,8 @@ namespace ConcealedGarden
                     outermesh.UVvertices[1] = new Vector2(1f, 0f);
                     for (int i = 0; i < nodes.Length; i++)
                     {
-                        float factor = Mathf.Lerp(edge, 1 - edge, Mathf.InverseLerp(0, nodes.Length, i-0.3f));
-                        float factor2 = Mathf.Lerp(edge, 1 - edge, Mathf.InverseLerp(0, nodes.Length, i+0.3f));
+                        float factor = Mathf.Lerp(edge, 1 - edge, Mathf.InverseLerp(0, nodes.Length, i - 0.3f));
+                        float factor2 = Mathf.Lerp(edge, 1 - edge, Mathf.InverseLerp(0, nodes.Length, i + 0.3f));
                         outermesh.UVvertices[i * 4 + 2] = new Vector2(0f, factor);
                         outermesh.UVvertices[i * 4 + 3] = new Vector2(1f, factor);
                         outermesh.UVvertices[i * 4 + 4] = new Vector2(0f, factor2);
@@ -247,29 +300,30 @@ namespace ConcealedGarden
                     Vector2 prev = start;
                     Vector2 lastPerp = nNodes > 0 ? RWCustom.Custom.PerpendicularVector(Vector2.Lerp(nodes[0].pos, nodes[0].lastPos, timeStacker) - prev).normalized : RWCustom.Custom.PerpendicularVector(stop - prev).normalized;
                     lastPerp = Vector2.Lerp(lastPerp, RWCustom.Custom.PerpendicularVector(stop - start).normalized, 0.6f);
-                    float width = 1f;
+                    float width = 0.5f;
 
                     for (int i = 0; i <= nodes.Length; i++)
                     {
                         Vector2 next = i == nodes.Length ? stop : Vector2.Lerp(nodes[i].pos, nodes[i].lastPos, timeStacker);
                         Vector2 perp = RWCustom.Custom.PerpendicularVector(next - prev).normalized;
-                        Vector2 nextPerp = i < nodes.Length-1 ? RWCustom.Custom.PerpendicularVector(Vector2.Lerp(nodes[i+1].pos, nodes[i+1].lastPos, timeStacker)-next).normalized
+                        Vector2 nextPerp = i < nodes.Length - 1 ? RWCustom.Custom.PerpendicularVector(Vector2.Lerp(nodes[i + 1].pos, nodes[i + 1].lastPos, timeStacker) - next).normalized
                             : i == nodes.Length - 1 ? RWCustom.Custom.PerpendicularVector(stop - next).normalized : perp;
                         perp = Vector2.Lerp(lastPerp, perp, 0.3f).normalized;
                         nextPerp = Vector2.Lerp(perp, nextPerp, 0.5f).normalized;
-                        float nextWidth = i == nodes.Length ? 1f : 1f + Mathf.Abs(Vector2.Dot(perp, nodes[i].vel));
-                        nextWidth = Mathf.Lerp(nextWidth, width, 0.5f);
+                        float nextWidth;
+                        if (i != nodes.Length) nextWidth = Mathf.Lerp(1f + Mathf.Abs(Vector2.Dot(perp, nodes[i].vel)), width, 0.5f);
+                        else nextWidth  = 0.5f;
 
-                        Vector2 avr1 = Vector2.Lerp(prev, next, 0.2f);
-                        Vector2 avr2 = Vector2.Lerp(prev, next, 0.8f);
+                        Vector2 avr1 = i == 0 ? prev : Vector2.Lerp(prev, next, 0.2f);
+                        Vector2 avr2 = i == nodes.Length ? next : Vector2.Lerp(prev, next, 0.8f);
 
                         innermesh.MoveVertice(4 * i + 0, avr1 + perp * width - camPos);
                         innermesh.MoveVertice(4 * i + 1, avr1 - perp * width - camPos);
                         innermesh.MoveVertice(4 * i + 2, avr2 + nextPerp * nextWidth - camPos);
                         innermesh.MoveVertice(4 * i + 3, avr2 - nextPerp * nextWidth - camPos);
 
-                        avr1 = Vector2.Lerp(prev, next, 0.3f);
-                        avr2 = Vector2.Lerp(prev, next, 0.7f);
+                        avr1 = i == 0 ? prev : Vector2.Lerp(prev, next, 0.3f);
+                        avr2 = i == nodes.Length ? next : Vector2.Lerp(prev, next, 0.7f);
 
                         if (i == 0) avr1 = prev + (prev - next).normalized * 40f * intensity;
                         if (i == nodes.Length) avr2 = next + (next - prev).normalized * 40f * intensity;
@@ -283,15 +337,15 @@ namespace ConcealedGarden
                         width = nextWidth;
                     }
 
-                    innermesh.alpha = intensity*0.6f;
-                    outermesh.alpha = intensity*0.4f;
+                    innermesh.alpha = intensity * 0.7f;
+                    outermesh.alpha = intensity * 0.45f;
 
                     base.DrawSprites(sLeaser, rCam, timeStacker, camPos);
                 }
 
                 public override void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
                 {
-                    
+
                 }
             }
         }

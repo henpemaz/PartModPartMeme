@@ -120,7 +120,24 @@ namespace ConcealedGarden
             LRUPickup.Register();
 
             CameraZoomEffect.Apply();
+
+            //On.Rock.ApplyPalette += Rock_ApplyPalette;
+            //On.RainWorld.Start += RainWorld_Start;
         }
+
+        //private void RainWorld_Start(On.RainWorld.orig_Start orig, RainWorld self)
+        //{
+        //    orig(self);
+        //    UnityEngine.Camera.allCameras[0].enabled = false;
+        //}
+
+        //private void Rock_ApplyPalette(On.Rock.orig_ApplyPalette orig, Rock self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
+        //{
+        //    orig(self, sLeaser, rCam, palette);
+        //    self.color = UnityEngine.Color.white;
+        //    sLeaser.sprites[0].color = UnityEngine.Color.white;
+        //    sLeaser.sprites[0].element = Futile.atlasManager.GetElementWithName(UnityEngine.Random.value > 0.5f ? "pebble69" : "borget");
+        //}
 
         public class ShaderTester : CosmeticSprite
         {
