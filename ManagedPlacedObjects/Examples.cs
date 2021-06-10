@@ -10,6 +10,7 @@ namespace ManagedPlacedObjects
     {
         internal static void PlacedObjectsExample()
         {
+            // This is one possible approach to register an object, almost zero boilerplate code, but accessing these fields requires passing a key as seen in SillyObject class
             // Registers a type with a loooooot of fields
             List<ManagedField> fields = new List<ManagedField>
             {
@@ -45,22 +46,24 @@ namespace ManagedPlacedObjects
                 new IntVector2Field("ivf4", new RWCustom.IntVector2(1, 1), IntVector2Field.IntVectorReprType.eightdir),
                 new IntVector2Field("ivf5", new RWCustom.IntVector2(1, 1), IntVector2Field.IntVectorReprType.rect)
             };
-
             // Data serialization and UI are taken care of by the manageddata and managedrepresentation types
             // And that's about it, now sillyobject will receive a placedobject with manageddata and that data will have all these fields
+            // The enum is registered for you based on the name of the type you're passing in, but you can pass your own name as an optional parameter.
             RegisterFullyManagedObjectType(fields.ToArray(), typeof(SillyObject));
             // Trust me I just spared you from writing some 300 lines of code with this.
 
-            // A type with no object, no data, no repr, just for marking places
-            ManagedObjectType curiousObjectLocation = new ManagedObjectType("CuriousObjectLocation", null, null, null);
-            RegisterManagedObject(curiousObjectLocation);
-            // Could also be done with RegisterEmptyObjectType("CuriousObjectLocation", null, null);
 
-            // Registers a self implemented Manager
+            // A different approach for registering objects, more classes involved but acessing your data is much nicer.
+            // Registers a self implemented Managed Object Type
             // It handles spawning its object, data and representation 
             RegisterManagedObject(new CuriousObjectType());
             // Could also be achieved with RegisterManagedObject(new ManagedObjectType("CuriousObject", typeof(CuriousObjectType.CuriousObject), typeof(CuriousObjectType.CuriousData), typeof(CuriousObjectType.CuriousRepresentation)));
             // but at the expense of some extra reflection calls
+
+            // A type with no object, no data, no repr, just for marking places. PlacedObject.type "CuriousObjectLocation" is registered for you.
+            ManagedObjectType curiousObjectLocation = new ManagedObjectType("CuriousObjectLocation", null, null, null);
+            RegisterManagedObject(curiousObjectLocation);
+            // Could also be done with RegisterEmptyObjectType("CuriousObjectLocation", null, null);
         }
 
         // Juuuuust an object, yet, we can place it. Data and UI are generated automatically
@@ -79,12 +82,12 @@ namespace ManagedPlacedObjects
             {
                 base.Update(eu);
                 if (room.game.clock % 100 == 0)
-                    Debug.Log("SillyObject vf1.x is " + (placedObject.data as ManagedData).GetValue<Vector2>("vf1").x);
+                    Debug.Log("SillyObject vf1.x is " + (placedObject.data as ManagedData).GetValue<Vector2>("vf1").x); // This is how you access those fields you created when using ManagedData directly.
             }
         }
 
 
-        // Some other objects, this time we're registering type, object, data and representation
+        // Some other objects, this time we're registering type, object, data and representation on our own
         public static class EnumExt_ManagedPlacedObjects
         {
             public static PlacedObject.Type CuriousObject;
@@ -92,9 +95,7 @@ namespace ManagedPlacedObjects
         }
 
         // A very curious object, part managed part manual
-        // Overriding the base class here was optional,
-        // you could have instantiated it passing all the types
-        // it's just that flexible lol
+        // Overriding the base class here was optional, you could have instantiated it passing all the types, but doing it like this saves some reflection calls.
         internal class CuriousObjectType : ManagedObjectType
         {
             // Ignore the stuff in the baseclass and write your own if you want to
@@ -102,7 +103,7 @@ namespace ManagedPlacedObjects
             {
             }
 
-            // Override at your own risk ? the default behaviour works just fine, but maybe you know what you're doign
+            // Override at your own risk ? the default behaviour works just fine if you passed in a name to the constructor, but maybe you know what you're doign
             //public override PlacedObject.Type GetObjectType()
             //{
             //    return EnumExt_ManagedPlacedObjects.CuriousObject;
@@ -224,6 +225,7 @@ namespace ManagedPlacedObjects
                     new EnumField("msid", typeof(SoundID), SoundID.Bat_Afraid_Flying_Sounds, new System.Enum[]{SoundID.Bat_Afraid_Flying_Sounds, SoundID.Bat_Attatch_To_Chain}, displayName:"What sound a bat makes"),
                 };
 
+                // that one field we didn't want to use the framework for, for whatever reason
                 public float rotation;
 
                 public CuriousData(PlacedObject owner) : base(owner, customFields)
@@ -243,7 +245,11 @@ namespace ManagedPlacedObjects
                     //Debug.Log("CuriousData deserializing from "+ s);
                     base.FromString(s);
                     string[] arr = Regex.Split(s, "~");
-                    rotation = float.Parse(arr[base.FieldsWhenSerialized + 0]);
+                    try
+                    {
+                        rotation = float.Parse(arr[base.FieldsWhenSerialized + 0]);
+                    }
+                    catch { } // bad data, hopefully the default is fine :)
                     //Debug.Log("CuriousData got rotation = " + rotation);
                 }
             }
@@ -252,10 +258,7 @@ namespace ManagedPlacedObjects
             // but we have one unmanaged field to control
             class CuriousRepresentation : ManagedRepresentation
             {
-                public CuriousRepresentation(PlacedObject.Type placedType, ObjectsPage objPage, PlacedObject pObj) : base(placedType, objPage, pObj)
-                {
-
-                }
+                public CuriousRepresentation(PlacedObject.Type placedType, ObjectsPage objPage, PlacedObject pObj) : base(placedType, objPage, pObj) { }
 
                 public override void Update()
                 {
@@ -265,7 +268,6 @@ namespace ManagedPlacedObjects
                 }
             }
         }
-
         // And that was it, 3 somewhat functional objects in not an awful lot of code.
     }
 }

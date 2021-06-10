@@ -12,17 +12,21 @@ using System.Security.Permissions;
 
 namespace ManagedPlacedObjects
 {
+    /// <summary>
+    /// YOU DO NOT NEED TO BUILD OR SHIP THIS MOD
+    /// It's available so that you can try the examples
+    /// Copy PlacedObjectManager to your project in order to use it
+    /// Alternatively, you can comment out the "Examples.PlacedObjectsExample();" line and build and use this mod as a dependency, but that's unadvised.
+    /// </summary>
     public class ManagedPlacedObjectsMod : PartialityMod
     {
         public ManagedPlacedObjectsMod()
-
         {
             this.ModID = "ManagedPlacedObjectsMod";
             this.Version = "1.0";
             this.author = "Henpemaz";
 
             instance = this;
-
         }
 
         public static ManagedPlacedObjectsMod instance;
@@ -32,7 +36,7 @@ namespace ManagedPlacedObjects
             base.OnEnable();
             // Hooking code goose hre
 
-            //PlacedObjectsManager.Apply();
+            //PlacedObjectsManager.Apply(); // no longer necessary, auto applied when anything uses it
             Examples.PlacedObjectsExample();
         }
     }

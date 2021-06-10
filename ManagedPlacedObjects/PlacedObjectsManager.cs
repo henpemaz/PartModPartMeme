@@ -270,13 +270,13 @@ namespace ManagedPlacedObjects
             /// Creates a ManagedObjectType responsible for creating your placedobject instance, data and repr
             /// </summary>
             /// <param name="name">The enum-name this manager responds for. Do NOT use EnumExt_MyEnum.MyObject.ToString() because on mod-loading enumextender might not have run yet and your enums aren't extended.</param>
-            /// <param name="objectType">The Type of your UpdateableAndDeletable object. Must have a constructor like (Room room, PlacedObject pObj) or (PlacedObject pObj, Room room) or (Room room).</param>
+            /// <param name="objectType">The Type of your UpdateableAndDeletable object. Must have a constructor like (Room room, PlacedObject pObj) or (PlacedObject pObj, Room room), (PlacedObject pObj) or (Room room).</param>
             /// <param name="dataType">The Type of your PlacedObject.Data. Must have a constructor like (PlacedObject pObj).</param>
             /// <param name="reprType">The Type of your PlacedObjectRepresentation. Must have a constructor like (DevUI owner, string IDstring, DevUINode parentNode, PlacedObject pObj, string name) or (PlacedObject.Type placedType, ObjectsPage objPage, PlacedObject pObj).</param>
             /// <param name="singleInstance">Wether only one of this object should be created per room. Corruption-object that scans for other placedobjects style.</param>
             public ManagedObjectType(string name, Type objectType, Type dataType, Type reprType, bool singleInstance = false)
             {
-                this.placedType = default; // type parsing deferred until actualy used
+                this.placedType = default; // type parsing deferred until actualy used, due to enumextend deferred initialization
                 this.name = name;
                 this.objectType = objectType;
                 this.dataType = dataType;
@@ -286,6 +286,8 @@ namespace ManagedPlacedObjects
 
             /// <summary>
             /// The <see cref="PlacedObject.Type"/> this is the manager for.
+            /// Only call this after rainworld.start call otherwise EnumExtender might not be available.
+            /// Store a reference to your <see cref="ManagedObjectType"/> instead of the enum type.
             /// </summary>
             public virtual PlacedObject.Type GetObjectType()
             {
@@ -319,9 +321,12 @@ namespace ManagedPlacedObjects
                     try { return (UpdatableAndDeletable)Activator.CreateInstance(objectType, new object[] { placedObject, room }); }
                     catch (MissingMethodException)
                     {
-                        try { return (UpdatableAndDeletable)Activator.CreateInstance(objectType, new object[] { room }); } // Objects that scan room for data or no data;
-                        catch (MissingMethodException) { throw new ArgumentException("ManagedObjectType.MakeObject : objectType " + objectType.Name + " must have a constructor like (Room room, PlacedObject pObj) or (PlacedObject pObj, Room room) or (Room room)"); }
-
+                        try { return (UpdatableAndDeletable)Activator.CreateInstance(objectType, new object[] { placedObject }); }
+                        catch (MissingMethodException)
+                        {
+                            try { return (UpdatableAndDeletable)Activator.CreateInstance(objectType, new object[] { room }); } // Objects that scan room for data or no data;
+                            catch (MissingMethodException) { throw new ArgumentException("ManagedObjectType.MakeObject : objectType " + objectType.Name + " must have a constructor like (Room room, PlacedObject pObj) or (PlacedObject pObj, Room room) or (Room room)"); }
+                        }
                     }
                 }
             }
@@ -670,8 +675,20 @@ namespace ManagedPlacedObjects
 
                 for (int i = 0; i < fields.Length; i++)
                 {
-                    object val = fields[i].FromString(array[datastart + i]);
-                    SetValue(fields[i].key, val);
+                    if(array.Length == datastart + i)
+                    {
+                        Debug.LogError("Error: Not enough fields for managed data type for " + owner.type.ToString() + "\nMaybe there's a version missmatch between the settings and the running version of the mod.");
+                        break;
+                    }
+                    try
+                    {
+                        object val = fields[i].FromString(array[datastart + i]);
+                        SetValue(fields[i].key, val);
+                    }
+                    catch (Exception)
+                    {
+                        Debug.LogError("Error parsing field " + fields[i].key + " from managed data type for " + owner.type.ToString() + "\nMaybe there's a version missmatch between the settings and the running version of the mod.");
+                    }
                 }
             }
 
@@ -692,7 +709,7 @@ namespace ManagedPlacedObjects
         public class ManagedRepresentation : PlacedObjectRepresentation
         {
             protected readonly PlacedObject.Type placedType;
-            protected readonly Dictionary<string, DevUINode> managedNodes; // Unused for now, but seems convenient for specialization
+            public readonly Dictionary<string, DevUINode> managedNodes; // Unused for now, but seems convenient for specialization
             protected ManagedControlPanel panel; // Unused for now, but seems convenient for specialization
 
             public ManagedRepresentation(PlacedObject.Type placedType, ObjectsPage objPage, PlacedObject pObj) : base(objPage.owner, placedType.ToString() + "_Rep", objPage, pObj, placedType.ToString())
@@ -1194,6 +1211,8 @@ namespace ManagedPlacedObjects
         public class Vector2Field : ManagedField
         {
             protected readonly VectorReprType controlType;
+            protected readonly string label;
+
             /// <summary>
             /// Creates a <see cref="ManagedField"/> that stores a <see cref="Vector2"/>.
             /// Cannot be used as Attribute, instead you should pass this object to <see cref="ManagedData.ManagedData(PlacedObject, ManagedField[])"/> and mark your field with the <see cref="ManagedData.BackedByField"/> attribute.
@@ -1201,9 +1220,10 @@ namespace ManagedPlacedObjects
             /// <param name="key">The key to access that field with</param>
             /// <param name="defaultValue">the value a new data object is generated with</param>
             /// <param name="controlType">the type of UI for this field, from <see cref="Vector2Field.VectorReprType"/></param>
-            public Vector2Field(string key, Vector2 defaultValue, VectorReprType controlType = VectorReprType.line) : base(key, defaultValue)
+            public Vector2Field(string key, Vector2 defaultValue, VectorReprType controlType = VectorReprType.line, string label=null) : base(key, defaultValue)
             {
                 this.controlType = controlType;
+                this.label = label ?? "";
             }
 
             public enum VectorReprType
@@ -1435,12 +1455,13 @@ namespace ManagedPlacedObjects
 
             public enum DrivenControlType
             {
+                relativeLine,
                 perpendicularLine,
                 perpendicularOval,
                 rectangle,
             }
 
-            public DrivenVector2Field(string keyofSelf, string keyOfOther, Vector2 defaultValue, DrivenControlType controlType = DrivenControlType.perpendicularLine) : base(keyofSelf, defaultValue, VectorReprType.none)
+            public DrivenVector2Field(string keyofSelf, string keyOfOther, Vector2 defaultValue, DrivenControlType controlType = DrivenControlType.perpendicularLine, string label = null) : base(keyofSelf, defaultValue, VectorReprType.none, label)
             {
                 this.keyOfOther = keyOfOther;
                 this.drivenControlType = controlType;
@@ -1448,7 +1469,17 @@ namespace ManagedPlacedObjects
 
             public override DevUINode MakeAditionalNodes(ManagedData managedData, ManagedRepresentation managedRepresentation)
             {
-                return new DrivenVectorControl(this, managedData, managedRepresentation, drivenControlType);
+                switch (drivenControlType)
+                {
+                    case DrivenControlType.relativeLine:
+                        return new DrivenVectorControl(this, managedData, managedRepresentation.managedNodes[keyOfOther] as PositionedDevUINode, drivenControlType, label);
+                    case DrivenControlType.perpendicularLine:
+                    case DrivenControlType.perpendicularOval:
+                    case DrivenControlType.rectangle:
+                        return new DrivenVectorControl(this, managedData, managedRepresentation, drivenControlType, label);
+                    default:
+                        return null;
+                }
             }
 
             public class DrivenVectorControl : PositionedDevUINode
@@ -1461,14 +1492,14 @@ namespace ManagedPlacedObjects
                 protected FSprite lineBSprite;
                 private int[] rect;
 
-                public DrivenVectorControl(DrivenVector2Field control, ManagedData data, PositionedDevUINode repr, DrivenControlType controlType) : base(repr.owner, control.key, repr, Vector2.zero)
+                public DrivenVectorControl(DrivenVector2Field control, ManagedData data, PositionedDevUINode repr, DrivenControlType controlType, string label) : base(repr.owner, control.key, repr, Vector2.zero)
                 {
                     this.control = control;
                     this.data = data;
                     this.controlType = controlType;
 
                     handleB = new Handle(owner, "V_Handle", this, new Vector2(100f, 0f));
-                    handleB.subNodes.Add(new DevUILabel(owner, "hbl", handleB, new Vector2(-3.5f, -7.5f), 16, "d") { spriteColor = Color.clear });
+                    handleB.subNodes.Add(new DevUILabel(owner, "hbl", handleB, new Vector2(-3.5f, -7.5f), 16, label) { spriteColor = Color.clear });
                     this.subNodes.Add(handleB);
 
                     this.handleB.pos = data.GetValue<Vector2>(control.key);
@@ -1476,6 +1507,7 @@ namespace ManagedPlacedObjects
                     switch (controlType)
                     {
                         case DrivenControlType.perpendicularLine:
+                        case DrivenControlType.relativeLine:
                             this.fSprites.Add(this.lineBSprite = new FSprite("pixel", true) { anchorY = 0f });
                             owner.placedObjectsContainer.AddChild(this.lineBSprite);
                             break;
@@ -1509,11 +1541,22 @@ namespace ManagedPlacedObjects
                 {
                     base.Refresh();
                     Vector2 drivingPos = data.GetValue<Vector2>(control.keyOfOther);
-                    Vector2 perp = RWCustom.Custom.PerpendicularVector(drivingPos);
-                    handleB.pos = perp * handleB.pos.magnitude;// * handleB.pos.magnitude;
+                    switch (controlType)
+                    {
+                        case DrivenControlType.relativeLine:
+                            // ??? nothing to do here
+                            break;
+                        case DrivenControlType.perpendicularLine:
+                        case DrivenControlType.perpendicularOval:
+                        case DrivenControlType.rectangle:
+                            Vector2 perp = RWCustom.Custom.PerpendicularVector(drivingPos);
+                            handleB.pos = perp * handleB.pos.magnitude;// * handleB.pos.magnitude;
+                            break;
+                    }
                     switch (controlType)
                     {
                         case DrivenControlType.perpendicularLine:
+                        case DrivenControlType.relativeLine:
                             lineBSprite.SetPosition(absPos);
                             lineBSprite.scaleY = handleB.pos.magnitude;
                             lineBSprite.rotation = RWCustom.Custom.VecToDeg(handleB.pos);
@@ -1534,7 +1577,7 @@ namespace ManagedPlacedObjects
                             bottomright = leftbottom + drivingPos;
                             topleft = handleB.absPos;
                             topright = leftbottom + drivingPos + handleB.pos;//absPos;
-                            //Vector2 size = (topright - leftbottom);
+                                                                             //Vector2 size = (topright - leftbottom);
 
                             base.MoveSprite(rect[0], leftbottom);
                             this.fSprites[rect[0]].scaleY = drivingPos.magnitude;
