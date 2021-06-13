@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{C239E36C-33C7-4CBD-830E-E644F9FFF8B0}</ProjectGuid>
+    <ProjectGuid>{86D2DB98-E5A7-4754-A8EC-7FA8218D4507}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ConcealedGarden</RootNamespace>
-    <AssemblyName>ConcealedGarden</AssemblyName>
+    <RootNamespace>ElectricArcsMod</RootNamespace>
+    <AssemblyName>ElectricArcsMod</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -31,18 +31,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>..\References\Assembly-CSharp.dll</HintPath>
-    </Reference>
     <Reference Include="Assembly-CSharp - publicitystuntd">
       <HintPath>..\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="ConfigMachine">
-      <HintPath>..\References\ConfigMachine.dll</HintPath>
-    </Reference>
-    <Reference Include="CustomRegions">
-      <HintPath>..\References\CustomRegions.dll</HintPath>
+    <Reference Include="EnumExtender">
+      <HintPath>..\References\EnumExtender.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="HOOKS-Assembly-CSharp">
@@ -55,10 +49,6 @@
     </Reference>
     <Reference Include="MonoMod.RuntimeDetour">
       <HintPath>..\References\MonoMod.RuntimeDetour.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="MonoMod.Utils">
-      <HintPath>..\References\MonoMod.Utils.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Partiality">
@@ -77,46 +67,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AttachedField.cs" />
-    <Compile Include="BunkerShelterParts.cs" />
-    <Compile Include="CameraZoomEffect.cs" />
-    <Compile Include="CGGateFix.cs" />
-    <Compile Include="ConcealedGarden.cs" />
-    <Compile Include="CosmeticLeaves.cs" />
+    <Compile Include="ElectricArcsMod.cs" />
     <Compile Include="ElectricArcs.cs" />
-    <Compile Include="GravityGradient.cs" />
-    <Compile Include="LifeSimProjection.cs" />
-    <Compile Include="LRUPickup.cs" />
-    <Compile Include="ProgressionFilter.cs" />
-    <Compile Include="SongSFX.cs" />
-    <Compile Include="NoLurkArea.cs" />
-    <Compile Include="OrganicShelter.cs" />
+    <Compile Include="PlacedObjectsManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="QuestionableLizardBit.cs" />
-    <Compile Include="SlipperySlope.cs" />
-    <Compile Include="SpawnCustomizations.cs" />
-    <Compile Include="TremblingSeed.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\CustomSpritesLoader\CustomSpritesLoader.csproj">
-      <Project>{7aef23fe-5ab2-422c-89ee-ccb050b86a76}</Project>
-      <Name>CustomSpritesLoader</Name>
-      <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\LizardSkin\LizardSkin.csproj">
-      <Project>{61cc62be-031e-475e-b30c-0e0ac08ae4f2}</Project>
-      <Name>LizardSkin</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ManagedPlacedObjects\ManagedPlacedObjects.csproj">
-      <Project>{a5e1e800-ee17-4347-9488-ef8f3e929b78}</Project>
-      <Name>ManagedPlacedObjects</Name>
-      <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\ShelterBehaviors\ShelterBehaviors.csproj">
-      <Project>{5a1afae3-8c39-43ed-a204-0cdefbd06264}</Project>
-      <Name>ShelterBehaviors</Name>
-      <Private>False</Private>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

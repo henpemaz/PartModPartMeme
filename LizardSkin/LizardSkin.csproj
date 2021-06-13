@@ -114,7 +114,12 @@
     <Compile Include="Cosmetics\GenericBodyScales.cs" />
     <Compile Include="Cosmetics\GenericTailTuft.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\CustomSpritesLoader\CustomSpritesLoader.csproj">
+      <Project>{7aef23fe-5ab2-422c-89ee-ccb050b86a76}</Project>
+      <Name>CustomSpritesLoader</Name>
+    </ProjectReference>
+  </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\LizKinIcons.png" />
     <EmbeddedResource Include="Resources\LizKinIcons.txt" />

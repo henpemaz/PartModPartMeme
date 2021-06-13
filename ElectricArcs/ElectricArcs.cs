@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using RWCustom;
 
-namespace ConcealedGarden
+namespace ElectricArcsMod
 {
     internal class ElectricArcs
     {

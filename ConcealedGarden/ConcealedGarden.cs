@@ -52,6 +52,7 @@ namespace ConcealedGarden
             {
                 base.DataOnChange();
                 ConcealedGardenProgression.LoadProgression();
+                LizardSkin.LizardSkin.SetCGProgression(progression);
             }
         }
 
@@ -189,7 +190,6 @@ namespace ConcealedGarden
                     new PlacedObjectsManager.FloatField("depth", 0f, 1f, 0f, 0.01f),
                     new PlacedObjectsManager.ColorField("color", UnityEngine.Color.white, controlType: PlacedObjectsManager.ManagedFieldWithPanel.ControlType.slider),
                     new PlacedObjectsManager.FloatField("alpha", 0f, 1f, 0f, 0.01f),
-
                 }, typeof(ShaderTester), "ShaderTester");
             }
         }
