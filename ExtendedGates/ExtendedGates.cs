@@ -19,10 +19,12 @@ namespace ExtendedGates
 {
     public class ExtendedGates : PartialityMod
     {
+        // 1.0 initial release
+        // 1.1 13/06/2021 bugfix 6 karma at 5 cap; fix showing open side over karma for inregion minimap
         public ExtendedGates()
         {
             this.ModID = "ExtendedGates";
-            this.Version = "1.0";
+            this.Version = "1.1";
             this.author = "Henpemaz";
 
             instance = this;
@@ -174,7 +176,7 @@ namespace ExtendedGates
                         self.symbolSprite.element = Futile.atlasManager.GetElementWithName("smallKarmaUwu"); // Custom
                         break;
 
-                    default:
+                    default: // Alt art gates
                         if (karma >= 1000)
                         {
                             karma -= 1000;
@@ -183,7 +185,7 @@ namespace ExtendedGates
                         if (karma > 4)
                         {
                             int? cap = map.hud.rainWorld.progression?.currentSaveState?.deathPersistentSaveData?.karmaCap;
-                            if (!cap.HasValue || cap.Value < 6) cap = karma;
+                            if (!cap.HasValue || cap.Value < karma) cap = Mathf.Max(6, karma); ;
                             self.symbolSprite.element = Futile.atlasManager.GetElementWithName("smallKarma" + karma.ToString() + "-" + cap.Value.ToString()); // Vanilla, zero-indexed
                         }
                         else
@@ -253,6 +255,8 @@ namespace ExtendedGates
                             if (namearray.Length != 3 || (namearray[1] == namearray[2]) || (namearray[1] != initWorld.region.name && namearray[2] != initWorld.region.name)) // In-region gate support
                             {
                                 // Not worht the trouble of telling which "side" the player is looking from the minimap, pick max
+                                if (result == 1000) result = 0; // open is less important than any karma values
+                                if (result2 == 1000) result2 = 0;
                                 return Mathf.Max(result, result2);
                             }
 
@@ -482,13 +486,12 @@ namespace ExtendedGates
                             if (trueReq > 4)
                             {
                                 int cap = (self.room.game.session as StoryGameSession).saveState.deathPersistentSaveData.karmaCap;
-                                if (cap <= 5 || cap < trueReq) cap = trueReq;
+                                if (cap < trueReq) cap = Mathf.Max(6, trueReq);
                                 sLeaser.sprites[1].element = Futile.atlasManager.GetElementWithName("gateSymbol" + (trueReq + 1).ToString() + "-" + (cap + 1).ToString() + (altArt ? "alt" : "")); // Custom, 1-indexed
                             }
                             else
                             {
                                 sLeaser.sprites[1].element = Futile.atlasManager.GetElementWithName("gateSymbol" + (trueReq + 1).ToString() + (altArt ? "alt" : "")); // Alt art for vanilla gates
-                                
                             }
                             break;
                     }
