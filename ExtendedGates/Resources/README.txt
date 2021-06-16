@@ -1,4 +1,4 @@
-ExtendedGates v1.0
+ExtendedGates v1.1
 
 Programming by Henpemaz
 Sprites for karma 6~10 gates by LB Gamer & Nautillo
@@ -35,3 +35,7 @@ GATE_HI_CC : 2alt : forbidden
 
 // a commented out gate for testing
 // GATE_HI_CG : 4 : uwu
+
+CHANGELOG:
+1.0 initial release
+1.1 13/06/2021 bugfix 6 karma at 5 cap; fix showing open side over karma for inregion minimap
