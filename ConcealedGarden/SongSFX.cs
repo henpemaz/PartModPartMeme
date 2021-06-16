@@ -23,7 +23,7 @@ namespace ConcealedGarden
 			this.stopAtDeath = true;
 			this.fadeInTime = 120f;
 			base.Loop = true;
-			Debug.Log("Created SongSFX");
+			Debug.Log("Created SongSFX for " + title);
 		}
 
 		public override void Update()

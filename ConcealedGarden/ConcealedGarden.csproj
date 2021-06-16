@@ -87,6 +87,7 @@
     <Compile Include="GravityGradient.cs" />
     <Compile Include="LifeSimProjection.cs" />
     <Compile Include="LRUPickup.cs" />
+    <Compile Include="CGCutscenes.cs" />
     <Compile Include="ProgressionFilter.cs" />
     <Compile Include="SongSFX.cs" />
     <Compile Include="NoLurkArea.cs" />

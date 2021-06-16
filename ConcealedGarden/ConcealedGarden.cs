@@ -52,7 +52,7 @@ namespace ConcealedGarden
             {
                 base.DataOnChange();
                 ConcealedGardenProgression.LoadProgression();
-                LizardSkin.LizardSkin.SetCGProgression(progression);
+                LizardSkin.LizardSkin.SetCGProgression(progression.transfurred ? 1 : 0);
             }
         }
 
@@ -67,9 +67,15 @@ namespace ConcealedGarden
                 internal set { storage["transfurred"] = value; SaveProgression(); }
             }
 
+            public bool fishDream {
+                get { if (storage.TryGetValue("fishDream", out object obj)) return (bool)obj; return false; }
+                internal set { storage["fishDream"] = value; SaveProgression(); }
+            }
+
             internal static void LoadProgression()
             {
-                if (!string.IsNullOrEmpty(instanceOI.data) && Json.Deserialize(instanceOI.data) != null)
+                object stored;
+                if (!string.IsNullOrEmpty(instanceOI.data) && (stored = Json.Deserialize(instanceOI.data)) != null && typeof(Dictionary<string, object>).IsAssignableFrom(stored.GetType()))
                     progression = new ConcealedGardenProgression((Dictionary<string, object>)Json.Deserialize(instanceOI.data));
                 else
                     progression = new ConcealedGardenProgression();
@@ -121,6 +127,8 @@ namespace ConcealedGarden
             LRUPickup.Register();
 
             CameraZoomEffect.Apply();
+
+            CGCutscenes.Apply();
 
             //On.Rock.ApplyPalette += Rock_ApplyPalette;
             //On.RainWorld.Start += RainWorld_Start;

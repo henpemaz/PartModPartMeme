@@ -92,7 +92,6 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             Debug.Log("making addprofile");
             Tabs[Tabs.Length-1] = new OptionalUI.OpTab("+");
             Tabs[Tabs.Length - 1].AddItems(new NewProfileHandler(this), new NotAManagerTab(this));
-
         }
 
         public override void Update(float dt)
@@ -121,7 +120,6 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             }
             panelsToRemove.Clear();
 
-            
 
 
         }
@@ -233,6 +231,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             //configuration.profiles.Add(myProfile2);
         }
 
+        // Element that handles the new profile tab, triggers a callback on show
         private class NewProfileHandler : UIelement
         {
             private LizardSkinOI lizardSkinOI;
@@ -249,6 +248,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             }
         }
 
+        // Element for a tab that cannot manage panels, switching makes the previous manager save its data
         private class NotAManagerTab : UIelement
         {
             private LizardSkinOI lizardSkinOI;
@@ -263,6 +263,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             }
         }
 
+        // Element that triggers a callback once CM is done reloading/refreshing
         private class ReloadHandler : UIelement
         {
             private LizardSkinOI lizardSkinOI;
@@ -277,8 +278,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             }
         }
 
-        
-
+        // Callback on cosmetic managers switing
         private void SwitchActiveManager(ProfileManager profileTabManager)
         {
             Debug.Log("LizardSkinOI SwitchActiveManager");
@@ -286,9 +286,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             {
                 activeManager.SignalSwitchOut();
             }
-                
             activeManager = profileTabManager;
-
         }
 
         private void RequestNewProfile()
@@ -310,7 +308,6 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             this.refreshOnNextFrame = true;
         }
 
-
         private void RequestNewPanel(LizKinCosmeticData.CosmeticPanel panel)
         {
             Debug.Log("LizardSkinOI RequestNewPanel");
@@ -322,6 +319,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             this.panelsToRemove.Add(panel);
         }
 
+        // full-tab element that manages a cosmetics profile for an associated profileData
         internal class ProfileManager : UIelement
         {
             private LizardSkinOI lizardSkinOI;
@@ -400,7 +398,6 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 baseColorPicker.OnChanged += ColorPicker_OnChanged;
                 baseColorPicker.OnFrozenUpdate += ColorPicker_OnFrozenUpdate;
 
-
                 // Preview pannel 
                 EventfulImageButton refreshBtn;
                 opTab.AddItems(
@@ -419,24 +416,24 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 // Cosmetics Panenl
                 Debug.Log("Cosmetic panel start");
                 cosmPanels = new List<GroupPanel>();
-                Debug.Log("Cosmetic box make");
+                //Debug.Log("Cosmetic box make");
                 cosmeticsBox = new OpScrollBox(cosmeticsPanelPos, new Vector2(370, 540), 0, hasSlideBar: false);
-                Debug.Log("Cosmetic box add");
+                //Debug.Log("Cosmetic box add");
                 opTab.AddItems(cosmeticsBox);
 
-                Debug.Log("cosmeticsBox.contentSize is " + cosmeticsBox.GetContentSize());
+                //Debug.Log("cosmeticsBox.contentSize is " + cosmeticsBox.GetContentSize());
 
-                Debug.Log("add pannel make");
+                //Debug.Log("add pannel make");
 
                 addPanelPanel = new AddCosmeticPanelPanel(new Vector2(5, 0), 360f);
-                Debug.Log("add pannel add");
+                //Debug.Log("add pannel add");
 
                 addPanelPanel.AddSelfAndChildrenToScroll(cosmeticsBox);
 
                 addPanelPanel.OnAdd += AddPanelPanel_OnAdd;
                 addPanelPanel.OnPaste += AddPanelPanel_OnPaste;
 
-                Debug.Log("make pannels");
+                //Debug.Log("make pannels");
 
                 MakeCosmEditPannels();
 

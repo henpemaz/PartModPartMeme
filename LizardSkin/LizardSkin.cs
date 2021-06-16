@@ -74,17 +74,15 @@ namespace LizardSkin
             TestSerialization();
         }
 
-        static bool CGProgressionMode = false;
-        static int CGProgressionStep;
+        static int CGProgressionStep = -1; // -1 unset 0 init 1 progressed;
         public static void SetCGProgression(int step)
         {
-            CGProgressionMode = true;
             CGProgressionStep = step;
         }
 
         private void RainWorld_Start_hk(On.RainWorld.orig_Start orig, RainWorld self)
         {
-            
+            // Find conflicting mods
             foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
             {
                 if (asm.GetName().Name == "FancySlugcats")
@@ -152,7 +150,7 @@ namespace LizardSkin
             {
                 Debug.Log("LizardSkin: FOUND CustomTail, no hooks to apply");
                 // No hookies needed, good mod :)
-                // ... or is it
+                // ... or is it... trimesh bugfixing will tell 
             }
             else
             {

@@ -24,25 +24,23 @@ namespace ConcealedGarden
         public override void Update(bool eu)
         {
             base.Update(eu);
+            if (slatedForDeletetion) return;
             for (int i = 0; i < this.room.physicalObjects.Length; i++)
             {
                 for (int j = 0; j < this.room.physicalObjects[i].Count; j++)
                 {
-                    if (this.room.physicalObjects[i][j] is Player player)
+                    if (this.room.physicalObjects[i][j] is Player player && !player.inShortcut)
                     {
-                        if(RWCustom.Custom.DistLess(player.mainBodyChunk.pos, pos, 40f))
+                        (player.graphicsModule as PlayerGraphics).LookAtPoint(pos, 1000f);
+                        if (player.controller == null)
+                            player.controller = new ArenaGameSession.PlayerStopController();
+                        Vector2 dir = (pos - player.mainBodyChunk.pos).normalized;
+                        Vector2 vrel = player.mainBodyChunk.vel * (Vector2.Dot(player.mainBodyChunk.vel, dir) / player.mainBodyChunk.vel.magnitude);
+                        if (vrel.magnitude < 1f) player.mainBodyChunk.vel += 0.2f * (dir - vrel);
+
+                        if (RWCustom.Custom.DistLess(player.mainBodyChunk.pos, pos, 300f))
                         {
                             Activate();
-                            break;
-                        }
-                        else
-                        {
-                            (player.graphicsModule as PlayerGraphics).LookAtPoint(pos, 1000f);
-                            if(player.controller == null)
-                                player.controller = new ArenaGameSession.PlayerStopController();
-                            Vector2 dir = (pos - player.mainBodyChunk.pos).normalized;
-                            Vector2 vrel = player.mainBodyChunk.vel * (Vector2.Dot(player.mainBodyChunk.vel, dir) / player.mainBodyChunk.vel.magnitude);
-                            if (vrel.magnitude < 1f) player.mainBodyChunk.vel += 0.2f * (dir - vrel);
                         }
                     }
                 }
@@ -55,9 +53,7 @@ namespace ConcealedGarden
         {
             if (activated) return;
             activated = true;
-            ConcealedGarden.progression.transfurred = true;
-            this.room.game.GetStorySession.saveState.deathPersistentSaveData.karma = 0;
-            this.room.game.manager.RequestMainProcessSwitch(ProcessManager.ProcessID.KarmaToMaxScreen, 2f);
+            CGCutscenes.ExitToCGSpiralSlideshow(room.game);
         }
 
         public override void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
