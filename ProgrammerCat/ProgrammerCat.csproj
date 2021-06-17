@@ -39,10 +39,6 @@
       <HintPath>..\references\HOOKS-Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="JollyCoop">
-      <HintPath>..\References\JollyCoop.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="MonoMod.Common">
       <HintPath>..\References\MonoMod.Common.dll</HintPath>
       <Private>False</Private>
@@ -163,6 +159,12 @@
     <EmbeddedResource Include="Resources\Scenes\SleepScreen\1fg.png" />
     <EmbeddedResource Include="Resources\Scenes\SleepScreen\2gamer.png" />
     <EmbeddedResource Include="Resources\Scenes\SleepScreen\3bg.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CustomSpritesLoader\CustomSpritesLoader.csproj">
+      <Project>{7aef23fe-5ab2-422c-89ee-ccb050b86a76}</Project>
+      <Name>CustomSpritesLoader</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

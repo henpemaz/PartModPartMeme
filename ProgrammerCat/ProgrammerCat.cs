@@ -62,8 +62,8 @@ Temperamental and on a weird diet, your journey will be a mess.";
         {
             // Slugbase already "checks" if its the character, but... ?
             stats.bodyWeightFac *= 0.85f;
-            //stats.runspeedFac *= 0.9f;
-            stats.runspeedFac *= 4.0f;
+            stats.runspeedFac *= 0.9f;
+            //stats.runspeedFac *= 4.0f;
             stats.poleClimbSpeedFac *= 1.1f;
             stats.corridorClimbSpeedFac *= 1.4f;
             stats.loudnessFac *= 0.85f;
@@ -157,19 +157,23 @@ Temperamental and on a weird diet, your journey will be a mess.";
         protected override void Prepare()
         {
             Debug.Log("PC - Prepare");
-            Debug.Log("PC - Jolly playerCharacters: " + String.Join(", ", new List<int>(JollyCoop.JollyMod.config.playerCharacters)
-             .ConvertAll(i => i.ToString())
-             .ToArray()));
+            //Debug.Log("PC - Jolly playerCharacters: " + String.Join(", ", new List<int>(JollyCoop.JollyMod.config.playerCharacters)
+            // .ConvertAll(i => i.ToString())
+            // .ToArray()));
             On.RainWorldGame.ctor += RainWorldGame_ctor_hk;
             On.PlayerProgression.GetOrInitiateSaveState += PlayerProgression_GetOrInitiateSaveState_hk;
         }
 
+        bool atlasesLoaded = false;
         List<Hook> myHooks = new List<Hook>();
         protected override void Enable() {
             Debug.Log("PC - Enable");
-
-            LoadAtlasStreamIntoManager(Futile.atlasManager, "programmerLegs.png", Assembly.GetExecutingAssembly().GetManifestResourceStream("ProgrammerCat.Resources.programmerLegs.png"), Assembly.GetExecutingAssembly().GetManifestResourceStream("ProgrammerCat.Resources.programmerLegs.txt"));
-            LoadAtlasStreamIntoManager(Futile.atlasManager, "programmerBlush.png", Assembly.GetExecutingAssembly().GetManifestResourceStream("ProgrammerCat.Resources.programmerBlush.png"), Assembly.GetExecutingAssembly().GetManifestResourceStream("ProgrammerCat.Resources.programmerBlush.txt"));
+            if (!atlasesLoaded)
+            {
+                CustomAtlasLoader.LoadCustomAtlas("programmerLegs.png", Assembly.GetExecutingAssembly().GetManifestResourceStream("ProgrammerCat.Resources.programmerLegs.png"), Assembly.GetExecutingAssembly().GetManifestResourceStream("ProgrammerCat.Resources.programmerLegs.txt"));
+                CustomAtlasLoader.LoadCustomAtlas("programmerBlush.png", Assembly.GetExecutingAssembly().GetManifestResourceStream("ProgrammerCat.Resources.programmerBlush.png"), Assembly.GetExecutingAssembly().GetManifestResourceStream("ProgrammerCat.Resources.programmerBlush.txt"));
+                atlasesLoaded = true;
+            }
 
             On.RainWorldGame.Win += RainWorldGame_Win_hk;
 
@@ -201,8 +205,8 @@ Temperamental and on a weird diet, your journey will be a mess.";
         protected override void Disable()
         {
             Debug.Log("PC - Disable");
-            Futile.atlasManager.UnloadAtlas("programmerLegs.png");
-            Futile.atlasManager.UnloadAtlas("programmerBlush.png");
+            //Futile.atlasManager.UnloadAtlas("programmerLegs.png");
+            //Futile.atlasManager.UnloadAtlas("programmerBlush.png");
 
             On.RainWorldGame.ctor -= RainWorldGame_ctor_hk;
             On.PlayerProgression.GetOrInitiateSaveState -= PlayerProgression_GetOrInitiateSaveState_hk;
@@ -258,9 +262,9 @@ Temperamental and on a weird diet, your journey will be a mess.";
             }
 
             Debug.Log("PC - Game ctor done");
-            Debug.Log("PC - Jolly playerCharacters: " + String.Join(", ", new List<int>(JollyCoop.JollyMod.config.playerCharacters)
-                         .ConvertAll(i => i.ToString())
-             .ToArray()));
+            //Debug.Log("PC - Jolly playerCharacters: " + String.Join(", ", new List<int>(JollyCoop.JollyMod.config.playerCharacters)
+            //             .ConvertAll(i => i.ToString())
+            // .ToArray()));
         }
 
 
@@ -403,10 +407,8 @@ Temperamental and on a weird diet, your journey will be a mess.";
                     }
                 }
             }
-
             orig(self, grasp, eu);
         }
-
 
         // Nerf food value of some things the programmer can eat when they eat it
         // Bugs out if someone else takes a bite first, or  if the same food is eaten across several cycles
@@ -462,7 +464,7 @@ Temperamental and on a weird diet, your journey will be a mess.";
         {
             if (IsPlayerProgrammer(self))
             {
-                // completelly replaces original            
+                // completelly replaces original
                 if (self.graphicsModule != null)
                 {
                     (self.graphicsModule as PlayerGraphics).LookAtNothing();
@@ -523,6 +525,7 @@ Temperamental and on a weird diet, your journey will be a mess.";
             }
         }
 
+        // TODO make compatible with Fancy
         private int LegSprite(PlayerGraphics pg)
         {
             return 4;
@@ -575,6 +578,7 @@ Temperamental and on a weird diet, your journey will be a mess.";
 
             PlayerGraphics_AddToContainer_impl(self, sLeaser, rCam, newContatiner);
         }
+
         private void PlayerGraphics_AddToContainer_impl(PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
         {
             if (newContatiner == null)
@@ -619,8 +623,6 @@ Temperamental and on a weird diet, your journey will be a mess.";
         }
 
         AttachedField<Player, bool> playerFocedExhausted = new AttachedField<Player, bool>();
-
-
         private void Player_LungUpdate_hk(On.Player.orig_LungUpdate orig, Player self)
         {
             // This is the earliest hook point after the vanilla exhaust calculation
@@ -737,102 +739,7 @@ Temperamental and on a weird diet, your journey will be a mess.";
             string patchedpathstr = String.Join(".", patchedPath);
             Stream tryGet = Assembly.GetExecutingAssembly().GetManifestResourceStream("ProgrammerCat.Resources." + patchedpathstr);
             if (tryGet != null) return tryGet;
-            //Debug.Log("PC - Failed to get embedded file for ProgrammerCat.Resources." + patchedpathstr);
-
             return base.GetResource(path);
         }
-
-
-        // string[] spritesOverwrite = new string[] { "LegsA0", "LegsA1", "LegsA2", "LegsA3", "LegsA4", "LegsA5", "LegsA6", "LegsAAir0", "LegsAAir1", "LegsAClimbing0", "LegsAClimbing1", "LegsAClimbing2", "LegsAClimbing3", "LegsAClimbing4", "LegsAClimbing5", "LegsAClimbing6", "LegsACrawling0", "LegsACrawling1", "LegsACrawling2", "LegsACrawling3", "LegsACrawling4", "LegsACrawling5", "LegsAOnPole0", "LegsAOnPole1", "LegsAOnPole2", "LegsAOnPole3", "LegsAOnPole4", "LegsAOnPole5", "LegsAOnPole6", "LegsAPole", "LegsAVerticalPole", "LegsAWall" };
-        // private Dictionary<string, FAtlasElement> backupSprites = new Dictionary<string, FAtlasElement>();
-
-        void LoadAtlasStreamIntoManager(FAtlasManager atlasManager, string atlasName, System.IO.Stream textureStream, System.IO.Stream jsonStream)
-        {
-            try
-            {
-                // load texture
-                Texture2D texture2D = new Texture2D(0, 0, TextureFormat.ARGB32, false);
-                byte[] bytes = new byte[textureStream.Length];
-                textureStream.Read(bytes, 0, (int)textureStream.Length);
-                texture2D.LoadImage(bytes);
-                // from rainWorld.png.meta unity magic
-                texture2D.anisoLevel = 1;
-                texture2D.filterMode = 0;
-
-                // make fake singleimage atlas
-                FAtlas fatlas = new FAtlas(atlasName, texture2D, FAtlasManager._nextAtlasIndex++);
-                fatlas._elements.Clear();
-                fatlas._elementsByName.Clear();
-                fatlas._isSingleImage = false;
-
-                // actually load the atlas
-                StreamReader sr = new StreamReader(jsonStream, Encoding.UTF8);
-                Dictionary<string, object> dictionary = sr.ReadToEnd().dictionaryFromJson();
-
-                //ctrl c
-                //ctrl v
-
-                Dictionary<string, object> dictionary2 = (Dictionary<string, object>)dictionary["frames"];
-                float resourceScaleInverse = Futile.resourceScaleInverse;
-                int num = 0;
-                foreach (KeyValuePair<string, object> keyValuePair in dictionary2)
-                {
-                    FAtlasElement fatlasElement = new FAtlasElement();
-                    fatlasElement.indexInAtlas = num++;
-                    string text = keyValuePair.Key;
-                    if (Futile.shouldRemoveAtlasElementFileExtensions)
-                    {
-                        int num2 = text.LastIndexOf(".");
-                        if (num2 >= 0)
-                        {
-                            text = text.Substring(0, num2);
-                        }
-                    }
-                    fatlasElement.name = text;
-                    IDictionary dictionary3 = (IDictionary)keyValuePair.Value;
-                    fatlasElement.isTrimmed = (bool)dictionary3["trimmed"];
-                    if ((bool)dictionary3["rotated"])
-                    {
-                        throw new NotSupportedException("Futile no longer supports TexturePacker's \"rotated\" flag. Please disable it when creating the " + fatlas._dataPath + " atlas.");
-                    }
-                    IDictionary dictionary4 = (IDictionary)dictionary3["frame"];
-                    float num3 = float.Parse(dictionary4["x"].ToString());
-                    float num4 = float.Parse(dictionary4["y"].ToString());
-                    float num5 = float.Parse(dictionary4["w"].ToString());
-                    float num6 = float.Parse(dictionary4["h"].ToString());
-                    Rect uvRect = new Rect(num3 / fatlas._textureSize.x, (fatlas._textureSize.y - num4 - num6) / fatlas._textureSize.y, num5 / fatlas._textureSize.x, num6 / fatlas._textureSize.y);
-                    fatlasElement.uvRect = uvRect;
-                    fatlasElement.uvTopLeft.Set(uvRect.xMin, uvRect.yMax);
-                    fatlasElement.uvTopRight.Set(uvRect.xMax, uvRect.yMax);
-                    fatlasElement.uvBottomRight.Set(uvRect.xMax, uvRect.yMin);
-                    fatlasElement.uvBottomLeft.Set(uvRect.xMin, uvRect.yMin);
-                    IDictionary dictionary5 = (IDictionary)dictionary3["sourceSize"];
-                    fatlasElement.sourcePixelSize.x = float.Parse(dictionary5["w"].ToString());
-                    fatlasElement.sourcePixelSize.y = float.Parse(dictionary5["h"].ToString());
-                    fatlasElement.sourceSize.x = fatlasElement.sourcePixelSize.x * resourceScaleInverse;
-                    fatlasElement.sourceSize.y = fatlasElement.sourcePixelSize.y * resourceScaleInverse;
-                    IDictionary dictionary6 = (IDictionary)dictionary3["spriteSourceSize"];
-                    float left = float.Parse(dictionary6["x"].ToString()) * resourceScaleInverse;
-                    float top = float.Parse(dictionary6["y"].ToString()) * resourceScaleInverse;
-                    float width = float.Parse(dictionary6["w"].ToString()) * resourceScaleInverse;
-                    float height = float.Parse(dictionary6["h"].ToString()) * resourceScaleInverse;
-                    fatlasElement.sourceRect = new Rect(left, top, width, height);
-                    fatlas._elements.Add(fatlasElement);
-                    fatlas._elementsByName.Add(fatlasElement.name, fatlasElement);
-                }
-                //pray
-                atlasManager.AddAtlas(fatlas);
-
-            }
-            finally
-            {
-                textureStream.Close();
-                jsonStream.Close();
-            }
-
-            
-        }
-
-
     }
 }
