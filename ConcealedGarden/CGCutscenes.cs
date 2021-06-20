@@ -45,6 +45,7 @@ namespace ConcealedGarden
             orig(self);
             if (self.sceneID == EnumExt_CGCutscenes.CGSpiralScene1)
             {
+                // "7-bkge"
                 // "6-bkg"
                 // "5-reflection"
                 // "4-circle2"
@@ -52,22 +53,22 @@ namespace ConcealedGarden
                 // "2-slug"
                 // "1-fuss"
                 // center is new Vector2(-215f, -203f)
-                self.depthIllustrations[4].pos.x = Mathf.Lerp(-350f, -215f, self.displayTime);
-                self.depthIllustrations[4].pos.y = Mathf.Lerp(-180f, -203f, self.displayTime);
+                self.depthIllustrations[5].pos.x = Mathf.Lerp(-350f, -215f, self.displayTime);
+                self.depthIllustrations[5].pos.y = Mathf.Lerp(-180f, -203f, self.displayTime);
+                self.depthIllustrations[4].sprite.SetPosition(-215f, -203f);
+                self.depthIllustrations[4].sprite.rotation = 0f;
+                self.depthIllustrations[4].sprite.RotateAroundPointAbsolute(self.depthIllustrations[4].sprite.GlobalToLocal(new Vector2(916f,364f)), 100 - 200f * RWCustom.Custom.SCurve(Mathf.InverseLerp(-1f, 1f, self.displayTime), 0.6f));
+                self.depthIllustrations[4].pos = self.depthIllustrations[4].sprite.GetPosition();
+                self.depthIllustrations[4].lastPos = self.depthIllustrations[4].sprite.GetPosition();
                 self.depthIllustrations[3].sprite.SetPosition(-215f, -203f);
                 self.depthIllustrations[3].sprite.rotation = 0f;
-                self.depthIllustrations[3].sprite.RotateAroundPointAbsolute(self.depthIllustrations[3].sprite.GlobalToLocal(new Vector2(916f,364f)), 100 - 200f * RWCustom.Custom.SCurve(Mathf.InverseLerp(-1f, 1f, self.displayTime), 0.6f));
+                self.depthIllustrations[3].sprite.RotateAroundPointAbsolute(self.depthIllustrations[3].sprite.GlobalToLocal(new Vector2(916f, 364f)), 135 - 180f * RWCustom.Custom.SCurve(Mathf.InverseLerp(-1f, 1f, self.displayTime), 0.6f));
                 self.depthIllustrations[3].pos = self.depthIllustrations[3].sprite.GetPosition();
                 self.depthIllustrations[3].lastPos = self.depthIllustrations[3].sprite.GetPosition();
-                self.depthIllustrations[2].sprite.SetPosition(-215f, -203f);
-                self.depthIllustrations[2].sprite.rotation = 0f;
-                self.depthIllustrations[2].sprite.RotateAroundPointAbsolute(self.depthIllustrations[2].sprite.GlobalToLocal(new Vector2(916f, 364f)), 135 - 180f * RWCustom.Custom.SCurve(Mathf.InverseLerp(-1f, 1f, self.displayTime), 0.6f));
-                self.depthIllustrations[2].pos = self.depthIllustrations[2].sprite.GetPosition();
-                self.depthIllustrations[2].lastPos = self.depthIllustrations[2].sprite.GetPosition();
-                self.depthIllustrations[1].pos.x = Mathf.Lerp(-100f, -215f, Mathf.InverseLerp(0.3f, 1f, self.displayTime));
-                self.depthIllustrations[1].pos.y = Mathf.Lerp(-225f, -203f, RWCustom.Custom.SCurve(Mathf.InverseLerp(0.3f, 1f, self.displayTime), 0.6f));
-                self.depthIllustrations[1].setAlpha = new float?(RWCustom.Custom.SCurve(Mathf.InverseLerp(0.3f, 0.8f, self.displayTime), 0.6f));
-                self.depthIllustrations[2].setAlpha = new float?(RWCustom.Custom.SCurve(Mathf.InverseLerp(-0.3f, 0.5f, self.displayTime), 0.8f));
+                self.depthIllustrations[2].pos.x = Mathf.Lerp(-100f, -215f, Mathf.InverseLerp(0.3f, 1f, self.displayTime));
+                self.depthIllustrations[2].pos.y = Mathf.Lerp(-225f, -203f, RWCustom.Custom.SCurve(Mathf.InverseLerp(0.3f, 1f, self.displayTime), 0.6f));
+                self.depthIllustrations[2].setAlpha = new float?(RWCustom.Custom.SCurve(Mathf.InverseLerp(0.3f, 0.8f, self.displayTime), 0.6f));
+                self.depthIllustrations[3].setAlpha = new float?(RWCustom.Custom.SCurve(Mathf.InverseLerp(-0.3f, 0.5f, self.displayTime), 0.8f));
             }
             else if (self.sceneID == EnumExt_CGCutscenes.CGSpiralScene2)
             {
@@ -156,6 +157,7 @@ namespace ConcealedGarden
                                 || game.GetStorySession.playerSessionRecords[i].pearlsFound[l].ToString() == "Concealed_Garden_programmer_alt")
                             {
                                 ConcealedGarden.progression.fishDream = true;
+                                Debug.Log("CG Queued up fish dream");
                                 self.dreamsState.InitiateEventDream(EnumExt_CGCutscenes.CGDrowningDream);
                                 self.dreamsState.upcomingDream = self.dreamsState.eventDream;
                             }
@@ -253,6 +255,7 @@ namespace ConcealedGarden
             else if (self.sceneID == EnumExt_CGCutscenes.CGSpiralScene1)
             {
                 self.sceneFolder = "Scenes" + System.IO.Path.DirectorySeparatorChar + "CGSpiral1";
+                self.AddIllustration(new Menu.MenuDepthIllustration(self.menu, self, self.sceneFolder, "7-bkge", new Vector2(-215f, -203f), 6f, Menu.MenuDepthIllustration.MenuShader.Normal));
                 self.AddIllustration(new Menu.MenuDepthIllustration(self.menu, self, self.sceneFolder, "6-bkg", new Vector2(-215f, -203f), 4f, Menu.MenuDepthIllustration.MenuShader.Normal));
                 self.AddIllustration(new Menu.MenuDepthIllustration(self.menu, self, self.sceneFolder, "5-reflection", new Vector2(-215f, -203f), 3.5f, Menu.MenuDepthIllustration.MenuShader.Normal));
                 self.AddIllustration(new Menu.MenuDepthIllustration(self.menu, self, self.sceneFolder, "4-circle2", new Vector2(-215f, -203f), 3f, Menu.MenuDepthIllustration.MenuShader.Normal));

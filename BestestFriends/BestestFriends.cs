@@ -174,6 +174,10 @@ namespace BestestFriends
                 {
                     return "hunterxcyan";
                 }
+                if (item.Value == CreatureTemplate.Type.GreenLizard && (item.Key == 2 || fallback))
+                {
+                    return "hunterxgreen";
+                }
             }
             return null;
         }

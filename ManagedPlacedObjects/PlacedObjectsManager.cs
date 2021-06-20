@@ -31,7 +31,6 @@ namespace ManagedPlacedObjects
             On.PlacedObject.GenerateEmptyData += PlacedObject_GenerateEmptyData_Patch;
             On.Room.Loaded += Room_Loaded_Patch;
             On.DevInterface.ObjectsPage.CreateObjRep += ObjectsPage_CreateObjRep_Patch;
-            On.RainWorldGame.RawUpdate += RainWorldGame_RawUpdate;
 
             //PlacedObjectsExample();
         }
@@ -83,15 +82,6 @@ namespace ManagedPlacedObjects
             }
         }
 
-        private static void RainWorldGame_RawUpdate(On.RainWorldGame.orig_RawUpdate orig, RainWorldGame self, float dt)
-        {
-            orig(self, dt);
-            if (self.devUI == null)
-            {
-                ManagedStringControl.activeStringControl = null;     // remove string control focus when dev tools are closed
-            }
-        }
-
         #endregion HOOKS
 
         #region NATIVEDETOURS
@@ -119,7 +109,19 @@ namespace ManagedPlacedObjects
             captureInputMethod = typeof(PlacedObjectsManager)
                     .GetMethod("CaptureInput", bindingFlags, null, new Type[] { typeof(KeyCode) }, null);
             inputDetour_code = new NativeDetour(getKeyMethod, captureInputMethod);
+
+            On.RainWorldGame.RawUpdate += RainWorldGame_RawUpdate;
         }
+
+        private static void RainWorldGame_RawUpdate(On.RainWorldGame.orig_RawUpdate orig, RainWorldGame self, float dt)
+        {
+            orig(self, dt);
+            if (self.devUI == null)
+            {
+                ManagedStringControl.activeStringControl = null;     // remove string control focus when dev tools are closed
+            }
+        }
+
 
 #pragma warning disable IDE0051 // Reflection, dearling
         private static NativeDetour inputDetour_string;
