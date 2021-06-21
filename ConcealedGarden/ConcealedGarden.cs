@@ -8,6 +8,7 @@ using System.Security;
 using System.Security.Permissions;
 using System.Reflection;
 using OptionalUI;
+using UnityEngine;
 
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
@@ -45,6 +46,7 @@ namespace ConcealedGarden
             {
                 base.Initialize();
                 this.Tabs = new OpTab[1] { new OpTab() };
+                CompletelyOptional.GeneratedOI.AddBasicProfile(Tabs[0], rwMod);
                 instanceOI.LoadData();
             }
 
@@ -52,38 +54,70 @@ namespace ConcealedGarden
             {
                 base.DataOnChange();
                 ConcealedGardenProgression.LoadProgression();
-                LizardSkin.LizardSkin.SetCGProgression(progression.transfurred ? 1 : 0);
+                //if (progression == null) return;
+
+                LizardSkin.LizardSkin.SetCGEverBeaten(progression.everBeaten);
+                LizardSkin.LizardSkin.SetCGStoryProgression(progression.transfurred ? 1 : 0);
+                //Debug.Log("CG: Sent everBeaten = " + progression.everBeaten);
+                //Debug.Log("CG: Sent progression = " + (progression.transfurred ? 1 : 0));
+
             }
         }
 
         public class ConcealedGardenProgression
         {
-            private Dictionary<string, object> storage;
-            public ConcealedGardenProgression(Dictionary<string, object> dictionary=null) { storage = dictionary ?? new Dictionary<string, object>(); }
-
-            public bool transfurred
+            private Dictionary<string, object> playerProgression;
+            private Dictionary<string, object> miscProgression;
+            public ConcealedGardenProgression(Dictionary<string, object> ppDict, Dictionary<string, object> miscDict) 
             {
-                get { if (storage.TryGetValue("transfurred", out object obj)) return (bool)obj; return false; }
-                internal set { storage["transfurred"] = value; SaveProgression(); }
+                playerProgression = ppDict ?? new Dictionary<string, object>();
+                miscProgression = miscDict ?? new Dictionary<string, object>();
+            }
+
+            public bool transfurred // transformed
+            {
+                get { if (playerProgression.TryGetValue("transfurred", out object obj)) return (bool)obj; return false; }
+                internal set { playerProgression["transfurred"] = value; miscProgression["everBeaten"] = true; SaveProgression(); }
             }
 
             public bool fishDream {
-                get { if (storage.TryGetValue("fishDream", out object obj)) return (bool)obj; return false; }
-                internal set { storage["fishDream"] = value; SaveProgression(); }
+                get { if (playerProgression.TryGetValue("fishDream", out object obj)) return (bool)obj; return false; }
+                internal set { playerProgression["fishDream"] = value; SaveProgression(); }
+            }
+
+            public bool everBeaten
+            {
+                get { if (miscProgression.TryGetValue("everBeaten", out object obj)) return (bool)obj; return false; }
+                internal set { miscProgression["everBeaten"] = value; SaveProgression(); }
             }
 
             internal static void LoadProgression()
             {
-                object stored;
-                if (!string.IsNullOrEmpty(instanceOI.data) && (stored = Json.Deserialize(instanceOI.data)) != null && typeof(Dictionary<string, object>).IsAssignableFrom(stored.GetType()))
-                    progression = new ConcealedGardenProgression((Dictionary<string, object>)Json.Deserialize(instanceOI.data));
-                else
-                    progression = new ConcealedGardenProgression();
+                object storedPp;
+                object storedMisc;
+                progression = new ConcealedGardenProgression(
+                    (!string.IsNullOrEmpty(instanceOI.data) && (storedPp = Json.Deserialize(instanceOI.data)) != null && typeof(Dictionary<string, object>).IsAssignableFrom(storedPp.GetType())) ? (Dictionary<string, object>)storedPp
+                    : null,
+                    (!string.IsNullOrEmpty(instanceOI.miscdata) && (storedMisc = Json.Deserialize(instanceOI.miscdata)) != null && typeof(Dictionary<string, object>).IsAssignableFrom(storedMisc.GetType())) ? (Dictionary<string, object>)storedMisc
+                    : null);
+                
             }
             internal static void SaveProgression()
             {
                 if (progression != null)
-                    instanceOI.data = Json.Serialize(progression.storage);
+                {
+                    var pp = progression.playerProgression;
+                    var misc = progression.miscProgression;
+                    // Causes CM to call OnDataChange which we use to read progression :/
+                    // funny bug that wasted me an hour and some pizza
+                    instanceOI.data = Json.Serialize(pp);
+                    instanceOI.miscdata = Json.Serialize(misc);
+                }
+                else
+                {
+                    instanceOI.data = instanceOI.defaultData;
+                    instanceOI.miscdata = instanceOI.defaultMiscData;
+                }
                 instanceOI.SaveData();
             }
         }
@@ -91,6 +125,9 @@ namespace ConcealedGarden
         public override void OnEnable()
         {
             base.OnEnable();
+
+            LizardSkin.LizardSkin.SetCGStoryProgression(0); // CG Progression Mode
+
             // Hooking code goose hre
 
             ElectricArcs.Register();
@@ -137,7 +174,8 @@ namespace ConcealedGarden
         //private void RainWorld_Start(On.RainWorld.orig_Start orig, RainWorld self)
         //{
         //    orig(self);
-        //    UnityEngine.Camera.allCameras[0].enabled = false;
+
+        //    self.processManager.RequestMainProcessSwitch(ProcessManager.ProcessID.ConsoleOptionsMenu);
         //}
 
         //private void Rock_ApplyPalette(On.Rock.orig_ApplyPalette orig, Rock self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)

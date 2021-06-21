@@ -74,10 +74,20 @@ namespace LizardSkin
             TestSerialization();
         }
 
-        static int CGProgressionStep = -1; // -1 unset 0 init 1 progressed;
-        public static void SetCGProgression(int step)
+        internal static bool CGIntegration = false;
+        internal static bool CGEverBeaten = false;
+        internal static int CGStoryProgressionStep = -1; // -1 unset 0 init 1 progressed;
+        internal static bool CGSkipProgression = false;
+        public static void SetCGEverBeaten(bool beaten)
         {
-            CGProgressionStep = step;
+            CGIntegration = true;
+            CGEverBeaten = beaten;
+        }
+
+        public static void SetCGStoryProgression(int step)
+        {
+            CGIntegration = true;
+            CGStoryProgressionStep = step;
         }
 
         private void RainWorld_Start_hk(On.RainWorld.orig_Start orig, RainWorld self)
@@ -210,9 +220,14 @@ namespace LizardSkin
             else orig(self, value);
         }
 
-        internal static List<LizKinCosmeticData> GetCosmeticsForSlugcat(int name, int slugcatCharacter, int playerNumber)
+        internal static List<LizKinCosmeticData> GetCosmeticsForSlugcat(bool isStorySession, int name, int slugcatCharacter, int playerNumber)
         {
-            if(LizardSkinOI.configuration == null)
+            if (CGIntegration)
+            {
+                if ((isStorySession && (CGStoryProgressionStep < 1) && !CGSkipProgression)
+                || (!isStorySession && !CGEverBeaten && !CGSkipProgression)) return new List<LizKinCosmeticData>(); // empty
+            }
+            if(LizardSkinOI.configuration == null) // CM hasn't run yet and we're in the game, huh :/
             {
                 LizardSkinOI.LoadLizKinData();
             }

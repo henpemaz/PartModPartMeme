@@ -39,7 +39,7 @@ namespace LizardSkin
             panelsToRemove = new List<LizKinCosmeticData.CosmeticPanel>();
         }
 
-        const string modDescription =
+        string modDescription =
 @"LizardSkinOI lets you create profiles of cosmetics to be applied on your slugcat. Use the tabs on the left to edit or create profiles.
 
 When on a profile tab, you can select which characters that profile should apply to. If more than one profile applies to a slugcat, all cosmetics found will be applied. Advanced mode lets you specify difficulty, player-number or character-number so that you can get it working with custom slugcats too.
@@ -47,7 +47,9 @@ When on a profile tab, you can select which characters that profile should apply
 Inside a profile you can add Cosmetics by clicking on the box with a +. Cosmetics can be reordered, copied, pasted, duplicated and deleted. You can also control the base color and effect color for your slugcat to match any custom sprites or skins. For the color override to take effect you must tick the checkbox next to the color picker.
 
 You can pick Cosmetics of several types, edit their settings and configure randomization. When you're done customizing, hit refresh on the preview panel to see what your sluggo looks like :3";
-
+        private OpLabel cglabel1;
+        private OpCheckBox cgbox1;
+        private OpLabelLong cglabel2;
 
         public override void Initialize()
         {
@@ -59,7 +61,11 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             if (!OptionInterface.isOptionMenu)
             {
                 // OI Crashes with no tabs :/
+                // our settings are too complex and we serialize them on a dedicated file.
                 this.Tabs = new OpTab[1] { new OptionalUI.OpTab("Dummy") };
+
+                this.Tabs[0].AddItems(new OpCheckBox(Vector2.zero, "LizardSkinOICGProgressionLocked", true));
+
                 return;
             }
 
@@ -69,16 +75,26 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             Debug.Log("making instructions");
             this.Tabs[0] = new OptionalUI.OpTab("Instructions");
             CompletelyOptional.GeneratedOI.AddBasicProfile(Tabs[0], rwMod);
-            Tabs[0].AddItems(new OpLabelLong(new Vector2(50f, 470f), new Vector2(500f, 0f), modDescription, alignment: FLabelAlignment.Center, autoWrap: true), 
+            Tabs[0].AddItems(new OpLabelLong(new Vector2(50f, 470f), new Vector2(500f, 0f), modDescription, alignment: FLabelAlignment.Center, autoWrap: true),
                 new NotAManagerTab(this),
                 new ReloadHandler(this));
 
-            // detect Concealed Garden
+            Tabs[0].AddItems(cglabel1 = new OpLabel(175f, 100f, "Concealed Garden progression mode:", false),
+                cgbox1 = new OpCheckBox(new Vector2(395f, 100f), "LizardSkinOICGProgressionLocked", true)
+                {
+                    description = "Activate this mod by progressing through Concealed Garden.",
+                    greyedOut = !LizardSkin.CGEverBeaten || !LizardSkin.CGIntegration,
+                },
+                cglabel2 = new OpLabelLong(new Vector2(50f, 70f), new Vector2(500f, 0f),
+                 "Activate this mod by progressing through Concealed Garden.\n" +
+                 "You can control this option after having done so at least once."
+                 , alignment: FLabelAlignment.Center, autoWrap: true));
 
-            // ????
-
-            ////
-
+            if (LizardSkin.CGIntegration && !LizardSkin.CGEverBeaten)
+            {
+                this.Tabs = new OptionalUI.OpTab[] { Tabs[0] };
+                return; // No configs if unbeaten
+            }
             // Make profile tabs
             Debug.Log("making tabs");
             for (int i = 0; i < configuration.profiles.Count; i++)
@@ -94,9 +110,29 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             Tabs[Tabs.Length - 1].AddItems(new NewProfileHandler(this), new NotAManagerTab(this));
         }
 
+        public override void ConfigOnChange()
+        {
+            base.ConfigOnChange();
+            LizardSkin.CGSkipProgression = !bool.Parse(config["LizardSkinOICGProgressionLocked"]);
+        }
+
         public override void Update(float dt)
         {
             base.Update(dt);
+
+            // I'd love to hide these from the ctor but CM won't let me :/
+            // I still need to create the checkbox so the confic is stored and not discarted even if the setting isn't relevant atm.
+            if (!LizardSkin.CGIntegration)
+            {
+                cglabel1.Hide();
+                cgbox1.Hide();
+                cglabel2.Hide();
+            }
+            else if (LizardSkin.CGEverBeaten)
+            {
+                cglabel2.Hide();
+            }
+
             if (refreshOnNextFrame)
             {
                 Debug.Log("LizardSkinOI Refreshing");
@@ -119,9 +155,6 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 activeManager.RemovePanel(panel);
             }
             panelsToRemove.Clear();
-
-
-
         }
 
         public override void Signal(UItrigger trigger, string signal)
