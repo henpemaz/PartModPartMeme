@@ -7,7 +7,7 @@ using RWCustom;
 
 namespace ElectricArcsMod
 {
-    internal class ElectricArcs
+    internal static class ElectricArcs
     {
         internal static void Register()
         {
@@ -16,66 +16,89 @@ namespace ElectricArcsMod
             PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("ElectricArcGenerator", typeof(ElectricArcGenerator), typeof(ElectricArcGeneratorData), typeof(PlacedObjectsManager.ManagedRepresentation)));
         }
 
-        public class ElectricArcData : PlacedObjectsManager.ManagedData
+        public abstract class ElectricSparkData : PlacedObjectsManager.ManagedData
         {
             private static PlacedObjectsManager.ManagedField[] customFields = new PlacedObjectsManager.ManagedField[]{
-                    new PlacedObjectsManager.Vector2Field("01", new Vector2(-100, 30)),
-                    new PlacedObjectsManager.ColorField("05", new Color(0.56f, 0.66f, 0.98f), PlacedObjectsManager.ManagedFieldWithPanel.ControlType.slider, "Inner Color"),
-                    new PlacedObjectsManager.ColorField("15", new Color(0.01f, 0.04f, 1f), PlacedObjectsManager.ManagedFieldWithPanel.ControlType.slider, "Outer Color"),
+                    new PlacedObjectsManager.ColorField("01", new Color(0.56f, 0.66f, 0.98f), displayName: "Inner Color"),
+                    new PlacedObjectsManager.ColorField("02", new Color(0.01f, 0.04f, 1f), displayName: "Outer Color"),
                     };
             public Vector2 pos => owner.pos;
 #pragma warning disable 0649 // We're reflecting over these fields, stop worrying about it stupid compiler
             [BackedByField("01")]
-            public Vector2 end;
-            [PlacedObjectsManager.IntegerField("02", 1, 100, 8, displayName: "Nodes", control: PlacedObjectsManager.ManagedFieldWithPanel.ControlType.slider)]
-            public int numberOfSparks;
-            [PlacedObjectsManager.FloatField("03", 0f, 20f, 4f, 0.1f, displayName: "Jumpyness")]
-            public float jumpyness;
-            [PlacedObjectsManager.FloatField("04", 0f, 1f, 0.05f, 0.001f, displayName: "Tightness")]
-            public float tightness;
-            [BackedByField("05")]
             public Color innercolor;
-            [BackedByField("15")]
+            [BackedByField("02")]
             public Color outtercolor;
-            [PlacedObjectsManager.FloatField("06", -5f, 5f, 0.5f, 0.01f, displayName: "Pull")]
-            public float gravitypull;
-            [PlacedObjectsManager.FloatField("07", -0.5f, 0.5f, 0.005f, 0.001f, displayName: "Centerness")]
-            public float centerness;
-            [PlacedObjectsManager.FloatField("08", 0f, 1f, 0.05f, 0.001f, displayName: "ellasticity")]
-            public float ellasticity;
-            [PlacedObjectsManager.FloatField("09", 0f, 1f, 0.05f, 0.001f, displayName: "spread")]
-            public float spread;
-            [PlacedObjectsManager.FloatField("10", 0f, 10f, 0.5f, 0.01f, displayName: "minspace")]
+            [PlacedObjectsManager.BooleanField("03", false, displayName: "Cosmetic")]
+            public bool cosmetic;
+            [PlacedObjectsManager.IntegerField("04", 1, 100, 8, displayName: "Nodes", control: PlacedObjectsManager.ManagedFieldWithPanel.ControlType.slider)]
+            public int numberOfSparks;
+            [PlacedObjectsManager.FloatField("05", 0f, 10f, 0.5f, 0.01f, displayName: "Minspace")]
             public float minspace;
-            [PlacedObjectsManager.FloatField("11", 0f, 10f, 2f, 0.01f, displayName: "maxspace")]
+            [PlacedObjectsManager.FloatField("06", 0f, 10f, 2f, 0.01f, displayName: "Maxspace")]
             public float maxspace;
-            [PlacedObjectsManager.IntegerField("12", 0, 400, 15, displayName: "natcooldown")]
-            public int natcooldown;
-            [PlacedObjectsManager.IntegerField("13", 0, 400, 40, displayName: "shockcooldown")]
-            public int shockcooldown;
-            [PlacedObjectsManager.FloatField("14", 0f, 2000f, 400f, 1f, displayName: "lightrad")]
+            [PlacedObjectsManager.FloatField("07", 0f, 20f, 4f, 0.1f, displayName: "Jumpyness")]
+            public float jumpyness;
+            [PlacedObjectsManager.FloatField("08", 0f, 1f, 0.05f, 0.001f, displayName: "Tightness")]
+            public float tightness;
+            [PlacedObjectsManager.FloatField("09", -0.5f, 0.5f, 0.005f, 0.001f, displayName: "Centerness")]
+            public float centerness;
+            [PlacedObjectsManager.FloatField("10", 0f, 1f, 0.05f, 0.001f, displayName: "Ellasticity")]
+            public float ellasticity;
+            [PlacedObjectsManager.FloatField("11", 0f, 1f, 0.05f, 0.001f, displayName: "Spread")]
+            public float spread;
+
+            [PlacedObjectsManager.FloatField("12", -5f, 5f, 0.5f, 0.01f, displayName: "Grav Pull")]
+            public float gravitypull;
+            [PlacedObjectsManager.FloatField("13", -5f, 5f, 0f, 0.01f, displayName: "X Pull")]
+            public float xpull;
+            [PlacedObjectsManager.FloatField("14", -5f, 5f, 0f, 0.01f, displayName: "Y Pull")]
+            public float ypull;
+
+            [PlacedObjectsManager.FloatField("15", 0f, 2000f, 400f, 1f, displayName: "Lightrad")]
             public float lightrad;
 
+#pragma warning restore 0649
+            public ElectricSparkData(PlacedObject owner) : base(owner, customFields) { }
+            public ElectricSparkData(PlacedObject owner, PlacedObjectsManager.ManagedField[] fields = null) : base(owner, fields == null ? customFields : customFields.ToList().Concat(fields.ToList()).ToArray()) { }
+        }
+
+        public class ElectricArcData : ElectricSparkData
+        {
+            private static PlacedObjectsManager.ManagedField[] customFields = new PlacedObjectsManager.ManagedField[]{
+                new PlacedObjectsManager.Vector2Field("20", new Vector2(-100, 30)),
+            };
+#pragma warning disable 0649
+            [BackedByField("20")]
+            public Vector2 end;
+            [PlacedObjectsManager.IntegerField("21", 0, 400, 15, displayName: "Natcooldown")]
+            public int natcooldown;
+            [PlacedObjectsManager.IntegerField("22", 0, 400, 40, displayName: "Shockcooldown")]
+            public int shockcooldown;
 #pragma warning restore 0649
             public ElectricArcData(PlacedObject owner) : base(owner, customFields) { }
             public ElectricArcData(PlacedObject owner, PlacedObjectsManager.ManagedField[] fields = null) : base(owner, fields == null ? customFields : customFields.ToList().Concat(fields.ToList()).ToArray()) { }
         }
 
-        public class ElectricArcGeneratorData : ElectricArcData
+        public class ElectricArcGeneratorData : ElectricSparkData
         {
             private static PlacedObjectsManager.ManagedField[] customFields = new PlacedObjectsManager.ManagedField[]{
-                    new PlacedObjectsManager.DrivenVector2Field("21", "01", new Vector2(-10, 100), PlacedObjectsManager.DrivenVector2Field.DrivenControlType.relativeLine, "end-to"),
+                    new PlacedObjectsManager.Vector2Field("20", new Vector2(-100, 30)),
+                    new PlacedObjectsManager.DrivenVector2Field("21", "20", new Vector2(-10, 100), PlacedObjectsManager.DrivenVector2Field.DrivenControlType.relativeLine, "end-to"),
                     new PlacedObjectsManager.Vector2Field("22", new Vector2(10, 100), label:"start-to"),
             };
 #pragma warning disable 0649 // We're reflecting over these fields, stop worrying about it stupid compiler
+            [BackedByField("20")]
+            public Vector2 end;
             [BackedByField("21")]
             public Vector2 endto;
             [BackedByField("22")]
             public Vector2 startto;
-            [PlacedObjectsManager.FloatField("23", 0.01f, 1f, 0.1f, 0.01f, displayName: "speed")]
+            [PlacedObjectsManager.FloatField("23", 0.01f, 1f, 0.1f, 0.01f, displayName: "Speed")]
             public float speed;
-            [PlacedObjectsManager.IntegerField("24", 0, 400, 40, displayName: "interval", control:PlacedObjectsManager.ManagedFieldWithPanel.ControlType.slider)]
+            [PlacedObjectsManager.IntegerField("24", 0, 400, 40, displayName: "Interval", control: PlacedObjectsManager.ManagedFieldWithPanel.ControlType.slider)]
             public int interval;
+            [PlacedObjectsManager.FloatField("25", -2f, 2f, 0.5f, 0.01f, displayName: "Forwardness")]
+            public float forwardness;
 #pragma warning restore 0649
             public ElectricArcGeneratorData(PlacedObject owner) : base(owner, customFields) { }
             public ElectricArcGeneratorData(PlacedObject owner, PlacedObjectsManager.ManagedField[] fields = null) : base(owner, fields == null ? customFields : customFields.ToList().Concat(fields.ToList()).ToArray()) { }
@@ -101,9 +124,9 @@ namespace ElectricArcsMod
                 if (powered)
                 {
                     float framesToTravel = 10f / data.speed;
-                    for (int i = 0; i < framesToTravel/data.interval; i++)
+                    for (int i = 0; i < framesToTravel / data.interval; i++)
                     {
-                        sparks.Add(new ElectricArc.Spark(room, pObj.pos + i* data.interval*data.startto * data.speed / 10f, pObj.pos + data.end + i * data.interval * data.endto * data.speed / 10f, this, data.numberOfSparks, data));
+                        sparks.Add(new ElectricArc.Spark(room, pObj.pos + i * data.interval * data.startto * data.speed / 10f, pObj.pos + data.end + i * data.interval * data.endto * data.speed / 10f, this, data.numberOfSparks, data));
                         room.AddObject(sparks.Last());
                     }
                 }
@@ -111,7 +134,7 @@ namespace ElectricArcsMod
 
             void PowerCycle(bool force)
             {
-                if (this.room.roomSettings.GetEffectAmount(RoomSettings.RoomEffect.Type.BrokenZeroG) > 0f && this.room.world.rainCycle != null && this.room.world.rainCycle.brokenAntiGrav != null)
+                if (this.room.world.rainCycle != null && this.room.world.rainCycle.brokenAntiGrav != null)
                 {
                     bool flag = this.room.world.rainCycle.brokenAntiGrav.to == 1f && this.room.world.rainCycle.brokenAntiGrav.progress == 1f;
                     if (!flag)
@@ -145,11 +168,25 @@ namespace ElectricArcsMod
                     sparkie.start += data.startto * data.speed / 10f;
                     sparkie.stop += data.endto * data.speed / 10f;
                     if ((sparkie.start - pObj.pos).sqrMagnitude > data.startto.sqrMagnitude) sparkie.Break();
+                    for (int i = 0; i < sparkie.nodes.Length; i++)
+                    {
+                        ElectricArc.Spark.SparkNode node = sparkie.nodes[i];
+                        node.pos += (sparkie.nodes.Length > 1 ? Vector2.Lerp(data.startto, data.endto, (float)i / (float)(sparkie.nodes.Length - 1)) : data.startto) * data.forwardness * data.speed / 10f;
+                        //node.pos += (Vector2.Lerp(data.startto, data.endto, (float)i / (float)(sparkie.nodes.Length - 1))) * data.forwardness * data.speed / 10f;
+                    }
                 }
                 for (int i = sparks.Count - 1; i >= 0; i--)
                 {
                     if (sparks[i].slatedForDeletetion) sparks.RemoveAt(i);
                 }
+            }
+
+            // https://answers.unity.com/questions/1271974/inverselerp-for-vector3.html
+            public static float InverseLerp(Vector2 a, Vector2 b, Vector2 value)
+            {
+                Vector2 AB = b - a;
+                Vector2 AV = value - a;
+                return Mathf.Clamp01(Vector2.Dot(AV, AB) / AB.sqrMagnitude);
             }
         }
 
@@ -160,7 +197,7 @@ namespace ElectricArcsMod
             private ElectricArcData data => pObj.data as ElectricArcData;
             public ElectricArc(PlacedObject pObj)
             {
-                 this.pObj = pObj;
+                this.pObj = pObj;
             }
 
             Spark spark;
@@ -187,9 +224,9 @@ namespace ElectricArcsMod
                 public Vector2 stop;
                 private readonly UpdatableAndDeletable owner;
                 private readonly int nNodes;
-                private readonly ElectricArcData data;
+                private readonly ElectricSparkData data;
                 private readonly float spacing;
-                private SparkNode[] nodes;
+                internal SparkNode[] nodes;
                 public bool broken = false;
                 private float intensity;
                 private StaticSoundLoop soundLoop;
@@ -197,7 +234,7 @@ namespace ElectricArcsMod
                 private float weightedDisruption;
                 private LightSource light;
 
-                public Spark(Room room, Vector2 start, Vector2 stop, UpdatableAndDeletable owner, int nNodes, ElectricArcData data)
+                public Spark(Room room, Vector2 start, Vector2 stop, UpdatableAndDeletable owner, int nNodes, ElectricSparkData data)
                 {
 
                     this.start = start;
@@ -208,7 +245,7 @@ namespace ElectricArcsMod
                     this.spacing = (start - stop).magnitude / (float)nNodes;
                     this.nodes = new SparkNode[nNodes];
 
-                    if(data.lightrad > 1f)
+                    if (data.lightrad > 1f)
                     {
                         this.light = new LightSource(data.pos, false, data.outtercolor, this);
                         room.AddObject(light);
@@ -243,22 +280,21 @@ namespace ElectricArcsMod
                     {
                         weightedCenter += nodes[i].pos;
                         Vector2 jump = UnityEngine.Random.insideUnitCircle * data.jumpyness;
-                        nodes[i].vel += jump *(broken ? 2f : 1f);// * dir * (1 / Mathf.Pow(dir.magnitude + 0.1f, 0.5f)) 
-                        nodes[i].vel += new Vector2(0f, room.gravity) * data.gravitypull;
+                        nodes[i].vel += jump * (broken ? 2f : 1f) + new Vector2(0f, room.gravity) * data.gravitypull + new Vector2(data.xpull, data.ypull);
                         Vector2 correctPosition = Vector2.Lerp(start, stop, Mathf.InverseLerp(-1, nNodes, i));
                         Vector2 pull = correctPosition - nodes[i].pos;
                         nodes[i].vel += pull * data.tightness;
                         pull -= Vector2.Dot(pull, direction) * direction;
                         nodes[i].vel += pull * data.centerness;
 
-                        for (int j = -1; j < 2; j+=2)
+                        for (int j = -1; j < 2; j += 2)
                         {
                             if (i == 0 && j == -1) pull = start - nodes[i].pos;
-                            else if(i == nodes.Length - 1 && j == 1) pull = stop - nodes[i].pos;
+                            else if (i == nodes.Length - 1 && j == 1) pull = stop - nodes[i].pos;
                             else pull = nodes[i + j].pos - nodes[i].pos;
                             nodes[i].vel += pull * data.ellasticity / 2f;
                             float mag = pull.magnitude;
-                            nodes[i].vel += data.spread / 2f * pull.normalized * (mag - spacing*data.minspace);
+                            nodes[i].vel += data.spread / 2f * pull.normalized * (mag - spacing * data.minspace);
                             if (mag > data.maxspace * spacing) this.Break();
                         }
                         frameDisruption += nodes[i].vel;
@@ -269,17 +305,19 @@ namespace ElectricArcsMod
                     for (int i = 0; i < nodes.Length; i++)
                     {
                         nodes[i].Update();
+
+                        if (data.cosmetic) continue;
                         foreach (var physgroup in room.physicalObjects)
                         {
                             foreach (var phys in physgroup)
                             {
-                                if((phys.firstChunk.pos - nodes[i].pos).magnitude < data.maxspace + phys.collisionRange) // in range for testing
+                                if ((phys.firstChunk.pos - nodes[i].pos).magnitude < data.maxspace + phys.collisionRange) // in range for testing
                                 {
                                     for (int k = 0; k < phys.bodyChunks.Length; k++)
                                     {
                                         BodyChunk chunk = phys.bodyChunks[k];
                                         Vector2 closest = Custom.ClosestPointOnLineSegment(previous, nodes[i].pos, chunk.pos);
-                                        if((closest - chunk.pos).magnitude < chunk.rad + 2 || Custom.IsPointBetweenPoints(chunk.pos, chunk.lastPos, closest)) // NOT PERFECT would need some more serious checks considering lastpos but its goodenuff
+                                        if ((closest - chunk.pos).magnitude < chunk.rad + 2 || Custom.IsPointBetweenPoints(chunk.pos, chunk.lastPos, closest)) // NOT PERFECT would need some more serious checks considering lastpos but its goodenuff
                                         {
                                             this.Shock(phys, k, closest);
                                         }
@@ -326,13 +364,13 @@ namespace ElectricArcsMod
                         crit.Stun(Mathf.FloorToInt(20 * intensity));
                         phys.bodyChunks[chunkindex].vel += (phys.bodyChunks[chunkindex].pos - contact).normalized * 3f * intensity;
                     }
-                    else if(!broken)
+                    else if (!broken)
                     {
                         this.intensity = Mathf.Lerp(2.0f, phys.TotalMass, 0.5f);
                         this.broken = true;
-                        if(owner is ElectricArc arc)
-                            arc.cooldown = data.shockcooldown;
-                        if(phys.grabbedBy != null && phys.grabbedBy.Count!= 0)
+                        if (owner is ElectricArc arc)
+                            arc.Break(true);
+                        if (phys.grabbedBy != null && phys.grabbedBy.Count != 0)
                         {
                             for (int i = phys.grabbedBy.Count - 1; i >= 0; i--)
                             {
@@ -357,7 +395,7 @@ namespace ElectricArcsMod
                     this.broken = true;
                     this.intensity = 1.5f;
                     if (owner is ElectricArc arc)
-                        arc.cooldown = data.natcooldown;
+                        arc.Break(false);
                 }
 
                 public class SparkNode
@@ -437,7 +475,7 @@ namespace ElectricArcsMod
                         nextPerp = Vector2.Lerp(perp, nextPerp, 0.5f).normalized;
                         float nextWidth;
                         if (i != nodes.Length) nextWidth = Mathf.Lerp(1f + Mathf.Abs(Vector2.Dot(perp, nodes[i].vel)), width, 0.5f);
-                        else nextWidth  = 0.5f;
+                        else nextWidth = 0.5f;
 
                         Vector2 avr1 = i == 0 ? prev : Vector2.Lerp(prev, next, 0.2f);
                         Vector2 avr2 = i == nodes.Length ? next : Vector2.Lerp(prev, next, 0.8f);
@@ -472,6 +510,11 @@ namespace ElectricArcsMod
                 {
 
                 }
+            }
+
+            private void Break(bool shock)
+            {
+                this.cooldown = shock ? data.shockcooldown : data.natcooldown;
             }
         }
     }
