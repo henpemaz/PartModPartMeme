@@ -63,6 +63,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeathHook", "DeathHook\Deat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DecalsHook", "DecalsHook\DecalsHook.csproj", "{F41831BB-91FF-435B-9BB2-178EC5147B2F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShaderTester", "ShaderTester\ShaderTester.csproj", "{2D796E3F-318E-4388-B5D6-798579F7E8FE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -189,6 +191,10 @@ Global
 		{F41831BB-91FF-435B-9BB2-178EC5147B2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F41831BB-91FF-435B-9BB2-178EC5147B2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F41831BB-91FF-435B-9BB2-178EC5147B2F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2D796E3F-318E-4388-B5D6-798579F7E8FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D796E3F-318E-4388-B5D6-798579F7E8FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D796E3F-318E-4388-B5D6-798579F7E8FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D796E3F-318E-4388-B5D6-798579F7E8FE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
