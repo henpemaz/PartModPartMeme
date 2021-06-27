@@ -54,6 +54,7 @@ namespace ConcealedGarden
             private int area;
             private float heightFloat;
             private float widthFloat;
+            private StaticSoundLoop backgroundWorkingLoop;
 
             BunkerShelterFlapData data => pObj.data as BunkerShelterFlapData;
 
@@ -73,8 +74,8 @@ namespace ConcealedGarden
                 this.heightFloat = 20f * height;
                 this.widthFloat = 20f * width;
 
-                //Debug.LogError("Flaps created");
-                // measure onc
+                this.backgroundWorkingLoop = new StaticSoundLoop(SoundID.Gate_Electric_Screw_Turning_LOOP,
+                    new Vector2(pObj.pos.x + widthFloat / 2f, pObj.pos.y), room, 0f, Mathf.Clamp(Mathf.Pow(0.8f - (widthFloat * height / (room.PixelWidth * room.PixelHeight)), 3f), 0.5f, 1f));
             }
 
             public void ShelterEvent(float newFactor, float closeSpeed)
@@ -87,6 +88,8 @@ namespace ConcealedGarden
             public override void Update(bool eu)
             {
                 base.Update(eu);
+                this.backgroundWorkingLoop.volume = Mathf.Lerp(this.backgroundWorkingLoop.volume, (closedFactor != 1f && closedFactor != 0 && closeSpeed != 0f) ? 1f : 0f, 0.085f);
+                backgroundWorkingLoop.Update();
                 lastClosedFactor = closedFactor;
                 closedFactor = Mathf.Clamp01(closedFactor + closeSpeed);
             }
