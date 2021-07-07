@@ -87,6 +87,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Cosmetics\GenericEartlers.cs" />
     <Compile Include="FancyPlayerGraphicsCosmeticsAdaptor.cs" />
     <Compile Include="Cosmetics\GenericAntennae.cs" />
     <Compile Include="Cosmetics\GenericAxolotlGills.cs" />

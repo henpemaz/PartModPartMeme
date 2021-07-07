@@ -210,7 +210,7 @@ namespace ConcealedGarden
                     this.stayAlive = true;
                     this.setPos = owner.firstChunk.pos;
                     
-                    this.setRad = Mathf.Lerp(30f, 320f, timeRemaining);
+                    this.setRad = Mathf.Lerp(30f, 220f, timeRemaining);
                     this.setAlpha = Mathf.Lerp(0f, 1f, timeRemaining);
                     foreach (var chunk in owner.bodyChunks)
                     {
