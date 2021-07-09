@@ -27,10 +27,19 @@ namespace ShelterBehaviors
 
         public static ShelterBehaviorsMod instance;
 
+        public static void CreatureShuffleHook (On.AbstractCreature.orig_RealizeInRoom orig, AbstractCreature instance)
+        {
+            var mngr = instance.Room.realizedRoom?.updateList?.FirstOrDefault(x => x is ShelterBehaviorManager) as ShelterBehaviorManager;
+            mngr?.CycleSpawnPosition();
+            orig(instance);
+
+        }
+
         public override void OnEnable()
         {
             base.OnEnable();
             // Hooking code goose hre
+            On.AbstractCreature.RealizeInRoom += CreatureShuffleHook;
 
             //PlacedObjectsManager.ApplyHooks();
 
@@ -50,9 +59,6 @@ namespace ShelterBehaviors
                 new PlacedObjectsManager.BooleanField("ani", false, displayName:"Animate Water"),
 
                 }, typeof(ShelterBehaviorManager), "ShelterBhvrManager");
-
-            
-
             PlacedObjectsManager.RegisterFullyManagedObjectType(new PlacedObjectsManager.ManagedField[]{
                 //new PlacedObjectsManager.BooleanField("httt", false, displayName: "HTT Tutorial"),
                 new PlacedObjectsManager.IntegerField("htttcd", -1, 12, 6, displayName: "HTT Tut. Cooldown"), }

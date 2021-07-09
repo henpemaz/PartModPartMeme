@@ -154,10 +154,7 @@ namespace ShelterBehaviors
 
             if (hasNoDoors)
             {
-                this.tempSpawnPosHackDoor = new ShelterDoor(room);
-                tempSpawnPosHackDoor.closeTiles = new IntVector2[0];
-                tempSpawnPosHackDoor.playerSpawnPos = GetSpawnPosition(0);
-                room.updateList.Add(tempSpawnPosHackDoor); // Added directly to update list, no drawable
+                ApplySpawnHack(GetSpawnPosition(0)); //moved into a separate method
                 //room.drawableObjects.Remove(tempSpawnPosHackDoor);
                 //tempSpawnPosHackDoor.workingLoop = null;
                 //for (int i = 0; i < room.game.cameras.Length; i++)
@@ -429,6 +426,23 @@ namespace ShelterBehaviors
             Debug.LogError("CLOSE");
         }
 
+        internal void ApplySpawnHack(IntVector2 coords)
+        {
+            if (tempSpawnPosHackDoor != null && room.updateList.Contains(tempSpawnPosHackDoor)) room.updateList.Remove(tempSpawnPosHackDoor);
+            tempSpawnPosHackDoor = new ShelterDoor(room);
+            tempSpawnPosHackDoor.closeTiles = new IntVector2[0];
+            tempSpawnPosHackDoor.playerSpawnPos = coords;
+            room.updateList.Insert(0, tempSpawnPosHackDoor);
+            
+        }
+        internal int spawnCycleCtr;
+        internal void CycleSpawnPosition()
+        {
+            spawnCycleCtr++;
+            if (spawnCycleCtr >= spawnPositions.Count) spawnCycleCtr = 0;
+            ApplySpawnHack((spawnPositions.Count > 0) ? spawnPositions[spawnCycleCtr] : vanillaSpawnPosition); 
+        }
+
         private bool PlayersInTriggerZone()
         {
             for (int i = 0; i < room.game.Players.Count; i++) // Any alive players missing ? Still in starting shelter ?
@@ -464,7 +478,6 @@ namespace ShelterBehaviors
             }
             return true;
         }
-
         private void PreventVanillaClose()
         {
             if (!noVanillaDoors) room.shelterDoor.closeSpeed = Mathf.Min(0f, room.shelterDoor.closeSpeed);

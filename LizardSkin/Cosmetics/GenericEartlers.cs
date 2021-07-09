@@ -9,10 +9,10 @@ namespace LizardSkin
 	{
 		public GenericEartlers(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cData) : base (iGraphics, cData)
 		{
-			this.startSprite = this.startSprite;
+			
 			this.spritesOverlap = SpritesOverlap.BehindHead;
 			this.GenerateSegments();
-			this.numberOfSprites = this.points.Count;
+			this.numberOfSprites = this.TotalSprites;
 		}
 
 		public int TotalSprites
@@ -25,8 +25,9 @@ namespace LizardSkin
 
 		private void GenerateSegments()
 		{
-#warning native seeding; maybe change to something controllable later
+			//#warning native seeding; maybe change to something controllable later
 			//or maybe leave it as is to allow people to get eartlers of their favourite scooc
+			//decided to yes
 			int oldseed = UnityEngine.Random.seed;
 			UnityEngine.Random.seed = this.eartlersData.seed;
 			this.points = new List<ScavengerGraphics.Eartlers.Vertex[]>();
@@ -111,7 +112,7 @@ namespace LizardSkin
 		{
 			base.Update();
 			lastBodyAxis = bodyAxis;
-			bodyAxis = new Vector2(0f, 1f);
+			bodyAxis = (iGraphics.headPos - iGraphics.baseOfTailPos).normalized;
 		}
 
 		public override void InitiateSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam)
@@ -127,27 +128,40 @@ namespace LizardSkin
         public override void ApplyPalette(LeaserAdaptor sLeaser, CameraAdaptor rCam, PaletteAdaptor palette)
         {
             base.ApplyPalette(sLeaser, rCam, palette);
-			
+            try
+            {
+                for (int i = 0; i < this.points.Count; i++)
+                {
+                    sLeaser.sprites[this.startSprite + i].color = eartlersData.GetBaseColor(iGraphics, 0f);
+                }
+                if (this.eartlersData.overrideEffectColor)
+                {
+                    Debug.LogWarning("eartlers palette, mark 1");
 
-			for (int i = 0; i < this.points.Count; i++)
-			{
-				sLeaser.sprites[this.startSprite + i].color = eartlersData.GetBaseColor(iGraphics, 0f);
-			}
-			if (this.eartlersData.overrideEffectColor)
-			{
-				for (int j = 0; j < this.points.Count; j++)
-				{
-					for (int k = 0; k < 2; k++)
-					{
-						(sLeaser.sprites[this.startSprite + j] as TriangleMesh).verticeColors[(this.points[j].Length - 1) * 4 + 3 - k] = eartlersData.effectColor;
-					}
-				}
-			}
-		}
+                    for (int j = 0; j < this.points.Count; j++)
+                    {
+                        for (int k = 0; k < 2; k++)
+                        {
+                            if (sLeaser.sprites[this.startSprite + j] is TriangleMesh mesh)
+                                mesh.verticeColors[(this.points[j].Length - 1) * 4 + 3 - k] = eartlersData.effectColor;
+                            else
+                            {
+                                Debug.LogWarning("eartlers palette: something went wrong!");
+                            }
+                        }
+                        Debug.LogWarning($"eartlers palette branch {j} out of {points.Count} looped through");
+                    }
+                    Debug.LogWarning("eartlers palette, mark 2");
+                }
+            }
+            catch (Exception e) { Debug.LogWarning("eartlers palette: something went wrong"); Debug.LogWarning(e); }
+
+        }
         public override void DrawSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam, float timeStacker, Vector2 camPos)
 		{
-			Vector2 headPos = iGraphics.headPos;
-			Vector2 headDir = new Vector2();
+			Vector2 headPos = iGraphics.SpinePosition(0f, false, timeStacker).pos;
+			Vector2 headDir = new Vector2((Mathf.Abs(iGraphics.depthRotation) > 0.23) ? iGraphics.depthRotation : 0f, -0.5f);
+			headDir = Vector3.Slerp(new Vector2(0f, -1f), headDir, 0.3f);
 			float lookUpFac = 0f;
 			float rotat = Custom.VecToDeg(-headDir);
 			float num = 1f - Mathf.Pow(Mathf.Abs(Custom.RotateAroundOrigo(headDir, this.GetBodyAxis(timeStacker)).x), 1.5f) * Mathf.Lerp(1f, 0.5f, lookUpFac);
@@ -167,7 +181,8 @@ namespace LizardSkin
 					Vector2 vector3 = Custom.PerpendicularVector(normalized);
 					float d = Vector2.Distance(vector2, vector) / 10f;
 					float num5 = Mathf.Lerp(1f, 2f, this.eartlersData.eartlerWidth) * this.points[i][j].rad * Mathf.Lerp(0.5f, 1f, num);
-#warning weird cast shenanigans went on here, might need to recheck
+					//#warning weird cast shenanigans went on here, might need to recheck
+					//seems to be working fine
 					(sLeaser.sprites[num2] as TriangleMesh).MoveVertice(j * 4, vector - (Vector2)(Vector3.Slerp(v, vector3, 0.5f) * (num5 + num3) * 0.5f) - normalized * d - camPos);
 					(sLeaser.sprites[num2] as TriangleMesh).MoveVertice(j * 4 + 1, vector + (Vector2)(Vector3.Slerp(v, vector3, 0.5f) * (num5 + num3) * 0.5f) - normalized * d - camPos);
 					if (num4 == 1f)
@@ -211,8 +226,8 @@ namespace LizardSkin
 				
             }
             public override CosmeticInstanceType instanceType => CosmeticInstanceType.ScavEartlers;
-			public float dominance;
-			public float eartlerWidth;
+			public float dominance = 0.5f;
+			public float eartlerWidth = 0.3f;
             internal override CosmeticPanel MakeEditPanel(LizardSkinOI.ProfileManager manager)
             {
 				return new EartlersConfigPanel(this, manager);
