@@ -160,9 +160,9 @@ namespace LizardSkin
         public override void DrawSprites(LeaserAdaptor sLeaser, CameraAdaptor rCam, float timeStacker, Vector2 camPos)
 		{
 			Vector2 headPos = iGraphics.SpinePosition(0f, false, timeStacker).pos;
-			Vector2 headDir = new Vector2((Mathf.Abs(iGraphics.depthRotation) > 0.23) ? iGraphics.depthRotation : 0f, -0.5f);
-			headDir = Vector3.Slerp(new Vector2(0f, -1f), headDir, 0.3f);
-			float lookUpFac = 0f;
+			Vector2 hd = Custom.RotateAroundOrigo(new Vector2(0f, -1f), -GetBodyAxis(timeStacker));
+			Vector2 headDir = hd + Custom.PerpendicularVector(hd).normalized * iGraphics.depthRotation * 0.85f;
+			float lookUpFac = Mathf.Lerp(-1f, 1f, Mathf.InverseLerp(-1f, 1f, hd.y));
 			float rotat = Custom.VecToDeg(-headDir);
 			float num = 1f - Mathf.Pow(Mathf.Abs(Custom.RotateAroundOrigo(headDir, this.GetBodyAxis(timeStacker)).x), 1.5f) * Mathf.Lerp(1f, 0.5f, lookUpFac);
 			float ySqueeze = Mathf.Lerp(1f, -0.25f, lookUpFac);
@@ -271,9 +271,10 @@ namespace LizardSkin
         }
 		internal class EartlersConfigPanel : LizKinCosmeticData.CosmeticPanel
         {
+#warning config panel is a stub
 			internal EartlersConfigPanel(GenericEartlersCosmeticData cd, LizardSkinOI.ProfileManager mngr) : base (cd, mngr)
             {
-
+				
             }
 			
         } 
