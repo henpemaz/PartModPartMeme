@@ -256,9 +256,6 @@ namespace LizardSkin
             increase tail rotation towards +- 1 depending on its perpendicularity to updir, correctly handle 180 turns on long tails
              */
 
-
-
-
             //if (this.pGraphics.player.input[0].jmp)
             //{
             //    this.showDominance += 0.05f;

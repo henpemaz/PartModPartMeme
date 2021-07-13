@@ -1,6 +1,4 @@
-﻿
-
-using System.Security;
+﻿using System.Security;
 using System.Runtime.CompilerServices;
 using System.Security.Permissions;
 using UnityEngine;
@@ -9,10 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using RWCustom;
 using System;
-
-[assembly: IgnoresAccessChecksTo("Assembly-CSharp")]
-[assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
-[module: UnverifiableCode]
 
 
 namespace LizardSkin
@@ -181,7 +175,7 @@ namespace LizardSkin
             appliesToMode = ProfileAppliesToMode.Basic;
             appliesToSelector = ProfileAppliesToSelector.Character;
             appliesToList = new List<int>() { -1 };
-            effectColor = Custom.HSL2RGB(UnityEngine.Random.value, UnityEngine.Random.value * 0.2f + 0.8f, UnityEngine.Random.value * 0.2f + 0.8f);
+            effectColor = Color.magenta;
             overrideBaseColor = false;
             baseColorOverride = Color.white;
             cosmetics = new List<LizKinCosmeticData>();
@@ -472,7 +466,7 @@ namespace LizardSkin
                 // Group panel Y coordinates are top-to-bottom
                 // add type selector
                 this.typeBox = new LizardSkinOI.EventfulComboBox(PlaceInRow(140,24), 140, "", Enum.GetNames(typeof(LizKinCosmeticData.CosmeticInstanceType)), data.instanceType.ToString());
-                typeBox.OnChangeEvent += TypeBox_OnChangeEvent;
+                typeBox.OnValueChangedEvent += TypeBox_OnChangeEvent;
                 children.Add(typeBox);
                 // add basic buttons
                 LizardSkinOI.EventfulImageButton btnClip = new LizardSkinOI.EventfulImageButton(PlaceInRow(24, 24), new Vector2(24, 24), "", "LizKinClipboard");
@@ -487,7 +481,7 @@ namespace LizardSkin
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(70, 24), new Vector2(70, 24), "Seed:", FLabelAlignment.Right));
                 children.Add(seedBox = new LizardSkinOI.EventfulTextBox(PlaceInRow(45, 24), 45, "", data.seed.ToString()));
-                seedBox.OnChangeEvent += DataChangedRefreshNeeded;
+                seedBox.OnValueChangedEvent += DataChangedRefreshNeeded;
                 seedBox.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 // Second row
@@ -495,16 +489,16 @@ namespace LizardSkin
                 // color overrides
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(100, 24, 10), new Vector2(100, 24), "Effect Override:", FLabelAlignment.Right));
                 children.Add(effectCkb = new LizardSkinOI.EventfulCheckBox(PlaceInRow(24, 24), "", data.overrideEffectColor));
-                effectCkb.OnChangeEvent += DataChanged;
+                effectCkb.OnValueChangedEvent += DataChanged;
                 children.Add(effectColorPicker = new LizardSkinOI.OpTinyColorPicker(PlaceInRow(24, 24), "", OptionalUI.OpColorPicker.ColorToHex(data.effectColorOverride)));
-                effectColorPicker.OnChanged += DataChanged;
+                effectColorPicker.OnValueChangedEvent += DataChanged;
                 effectColorPicker.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(100, 24, 12), new Vector2(100, 24), "Base Override:", FLabelAlignment.Right));
                 children.Add(baseCkb = new LizardSkinOI.EventfulCheckBox(PlaceInRow(24, 24), "", data.overrideBaseColor));
-                baseCkb.OnChangeEvent += DataChanged;
+                baseCkb.OnValueChangedEvent += DataChanged;
                 children.Add(baseColorPicker = new LizardSkinOI.OpTinyColorPicker(PlaceInRow(24, 24), "", OptionalUI.OpColorPicker.ColorToHex(data.baseColorOverride)));
-                baseColorPicker.OnChanged += DataChanged;
+                baseColorPicker.OnValueChangedEvent += DataChanged;
                 baseColorPicker.OnFrozenUpdate += TriggerUpdateWhileFrozen;
             }
 
@@ -516,10 +510,11 @@ namespace LizardSkin
             protected virtual void DataChanged()
             {
                 this.data.ReadEditPanel(this);
+                manager.DataChanged();
             }
             protected virtual void DataChangedRefreshNeeded()
             {
-                this.data.ReadEditPanel(this);
+                DataChanged();
                 manager.RefreshPreview();
             }
 
@@ -642,18 +637,18 @@ namespace LizardSkin
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Length:", FLabelAlignment.Right));
                 children.Add(this.lengthControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.length, 0));
                 lengthControl.SetRange(1f, 400f);
-                lengthControl.OnChangeEvent += DataChanged;
+                lengthControl.OnValueChangedEvent += DataChanged;
                 lengthControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Alpha:", FLabelAlignment.Right));
                 children.Add(this.alphaControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.alpha, 2));
                 alphaControl.SetRange(0f, 1f);
-                alphaControl.OnChangeEvent += DataChanged;
+                alphaControl.OnValueChangedEvent += DataChanged;
                 alphaControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Tint:", FLabelAlignment.Right));
                 children.Add(tintPicker = new LizardSkinOI.OpTinyColorPicker(PlaceInRow(24, 24), "", OptionalUI.OpColorPicker.ColorToHex(data.tintColor)));
-                tintPicker.OnChanged += DataChanged;
+                tintPicker.OnValueChangedEvent += DataChanged;
                 tintPicker.OnFrozenUpdate += TriggerUpdateWhileFrozen;
                 //tintPicker.OnSignal += DataChangedRefreshNeeded;
 
@@ -662,19 +657,19 @@ namespace LizardSkin
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Segments:", FLabelAlignment.Right));
                 children.Add(this.segmentsControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.segments));
                 segmentsControl.SetRange(2, 20);
-                segmentsControl.OnChangeEvent += DataChangedRefreshNeeded;
+                segmentsControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 segmentsControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Spinepos:", FLabelAlignment.Right));
                 children.Add(this.spineposControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.spinepos, 2));
                 spineposControl.SetRange(0f, 1f);
-                spineposControl.OnChangeEvent += DataChanged;
+                spineposControl.OnValueChangedEvent += DataChanged;
                 spineposControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Angle:", FLabelAlignment.Right));
                 children.Add(this.angleControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.angle, 2));
                 angleControl.SetRange(-1f, 1f);
-                angleControl.OnChangeEvent += DataChanged;
+                angleControl.OnValueChangedEvent += DataChanged;
                 angleControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 // 3rd row
@@ -682,19 +677,19 @@ namespace LizardSkin
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Distance:", FLabelAlignment.Right));
                 children.Add(this.distanceControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.distance, 1));
                 distanceControl.SetRange(-10f, 20f);
-                distanceControl.OnChangeEvent += DataChanged;
+                distanceControl.OnValueChangedEvent += DataChanged;
                 distanceControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Width:", FLabelAlignment.Right));
                 children.Add(this.widthControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.width, 1));
                 widthControl.SetRange(0f, 20f);
-                widthControl.OnChangeEvent += DataChanged;
+                widthControl.OnValueChangedEvent += DataChanged;
                 widthControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Offset:", FLabelAlignment.Right));
                 children.Add(this.offsetControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.offset, 1));
                 offsetControl.SetRange(-10f, 20f);
-                offsetControl.OnChangeEvent += DataChanged;
+                offsetControl.OnValueChangedEvent += DataChanged;
                 offsetControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
             }
         }
@@ -788,32 +783,32 @@ namespace LizardSkin
                 NewRow(30);
                 PlaceInRow(34, 24); // padding
                 this.modeControl = new LizardSkinOI.EventfulComboBox(PlaceInRow(80, 24), 80, "", Enum.GetNames(typeof(BodyScalesData.GenerationMode)), data.mode.ToString());
-                modeControl.OnChangeEvent += DataChangedRefreshNeeded;
+                modeControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 children.Add(modeControl);
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Start:", FLabelAlignment.Right));
                 children.Add(this.startControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.start, 2));
                 startControl.SetRange(0.0f, 0.9f);
-                startControl.OnChangeEvent += DataChangedRefreshNeeded;
+                startControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 startControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Length:", FLabelAlignment.Right));
                 children.Add(this.lengthControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.length, 2));
                 lengthControl.SetRange(0.1f, 1f);
-                lengthControl.OnChangeEvent += DataChangedRefreshNeeded;
+                lengthControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 lengthControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 NewRow(30);
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Count:", FLabelAlignment.Right));
                 children.Add(this.countControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.count));
                 countControl.SetRange(1, 200);
-                countControl.OnChangeEvent += DataChangedRefreshNeeded;
+                countControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 countControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Roundness:", FLabelAlignment.Right));
                 children.Add(this.roundnessControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.roundness, 2));
                 roundnessControl.SetRange(0.0f, 1.0f);
-                roundnessControl.OnChangeEvent += DataChangedRefreshNeeded;
+                roundnessControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 roundnessControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
                 hasModeControls = true;
             }
@@ -897,30 +892,30 @@ namespace LizardSkin
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Rigor:", FLabelAlignment.Right));
                 children.Add(this.rigorControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.rigor, 2));
                 rigorControl.SetRange(0f, 1f);
-                rigorControl.OnChangeEvent += DataChanged;
+                rigorControl.OnValueChangedEvent += DataChanged;
                 rigorControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Graphic:", FLabelAlignment.Right));
                 children.Add(this.graphicControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.graphic));
                 graphicControl.SetRange(0, 6);
-                graphicControl.OnChangeEvent += DataChangedRefreshNeeded;
+                graphicControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 graphicControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Colored:", FLabelAlignment.Right));
                 children.Add(coloredControl = new LizardSkinOI.EventfulCheckBox(PlaceInRow(24, 24), "", data.colored));
-                coloredControl.OnChangeEvent += DataChangedRefreshNeeded;
+                coloredControl.OnValueChangedEvent += DataChangedRefreshNeeded;
 
                 NewRow(30);
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Scale:", FLabelAlignment.Right));
                 children.Add(this.scaleControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.scale, 2));
                 scaleControl.SetRange(0.01f, 10f);
-                scaleControl.OnChangeEvent += DataChangedRefreshNeeded;
+                scaleControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 scaleControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Thickness:", FLabelAlignment.Right));
                 children.Add(this.thicknessControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.thickness, 2));
                 thicknessControl.SetRange(0.01f, 10f);
-                thicknessControl.OnChangeEvent += DataChangedRefreshNeeded;
+                thicknessControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 thicknessControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
             }
         }
@@ -991,13 +986,13 @@ namespace LizardSkin
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Count:", FLabelAlignment.Right));
                 children.Add(this.countControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.count));
                 countControl.SetRange(1, 10);
-                countControl.OnChangeEvent += DataChangedRefreshNeeded;
+                countControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 countControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Spread:", FLabelAlignment.Right));
                 children.Add(this.spreadControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.spread, 2));
                 spreadControl.SetRange(-1f, 1f);
-                spreadControl.OnChangeEvent += DataChangedRefreshNeeded;
+                spreadControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 spreadControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
             }
         }
@@ -1095,36 +1090,36 @@ namespace LizardSkin
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Bumps:", FLabelAlignment.Right));
                 children.Add(this.bumpsControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.bumps));
                 bumpsControl.SetRange(1, 100);
-                bumpsControl.OnChangeEvent += DataChangedRefreshNeeded;
+                bumpsControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 bumpsControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Length:", FLabelAlignment.Right));
                 children.Add(this.spineLengthControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.spineLength, 2));
                 spineLengthControl.SetRange(0.01f, 1f);
-                spineLengthControl.OnChangeEvent += DataChanged;
+                spineLengthControl.OnValueChangedEvent += DataChanged;
                 spineLengthControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Colored:", FLabelAlignment.Right));
                 children.Add(coloredHawkControl = new LizardSkinOI.EventfulCheckBox(PlaceInRow(24, 24), "", data.coloredHawk));
-                coloredHawkControl.OnChangeEvent += DataChanged;
+                coloredHawkControl.OnValueChangedEvent += DataChanged;
 
                 NewRow(30);
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "SizeMin:", FLabelAlignment.Right));
                 children.Add(this.sizeRangeMinControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.sizeRangeMin, 2));
                 sizeRangeMinControl.SetRange(0.01f, 10f);
-                sizeRangeMinControl.OnChangeEvent += DataChanged;
+                sizeRangeMinControl.OnValueChangedEvent += DataChanged;
                 sizeRangeMinControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "SizeMax:", FLabelAlignment.Right));
                 children.Add(this.sizeRangeMaxControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.sizeRangeMax, 2));
                 sizeRangeMaxControl.SetRange(0.1f, 10f);
-                sizeRangeMaxControl.OnChangeEvent += DataChanged;
+                sizeRangeMaxControl.OnValueChangedEvent += DataChanged;
                 sizeRangeMaxControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "SizeExp:", FLabelAlignment.Right));
                 children.Add(this.sizeSkewExponentControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.sizeSkewExponent, 1));
                 sizeSkewExponentControl.SetRange(-10f, 10f);
-                sizeSkewExponentControl.OnChangeEvent += DataChanged;
+                sizeSkewExponentControl.OnValueChangedEvent += DataChanged;
                 sizeSkewExponentControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
             }
         }
@@ -1253,68 +1248,68 @@ namespace LizardSkin
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Count:", FLabelAlignment.Right));
                 children.Add(this.countControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.count));
                 countControl.SetRange(1, 100);
-                countControl.OnChangeEvent += DataChangedRefreshNeeded;
+                countControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 countControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Spread:", FLabelAlignment.Right));
                 children.Add(this.spreadControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.spread, 1));
                 spreadControl.SetRange(-10f, 10f);
-                spreadControl.OnChangeEvent += DataChanged;
+                spreadControl.OnValueChangedEvent += DataChanged;
                 spreadControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "InvOverlap:", FLabelAlignment.Right));
                 children.Add(invertOverlapControl = new LizardSkinOI.EventfulCheckBox(PlaceInRow(24, 24), "", data.invertOverlap));
-                invertOverlapControl.OnChangeEvent += DataChangedRefreshNeeded;
+                invertOverlapControl.OnValueChangedEvent += DataChangedRefreshNeeded;
 
                 NewRow(30);
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "SpineStart:", FLabelAlignment.Right));
                 children.Add(this.spineStartControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.spineStart, 2));
                 spineStartControl.SetRange(0.01f, 1f);
-                spineStartControl.OnChangeEvent += DataChanged;
+                spineStartControl.OnValueChangedEvent += DataChanged;
                 spineStartControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "SpineStop:", FLabelAlignment.Right));
                 children.Add(this.spineStopControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.spineStop, 2));
                 spineStopControl.SetRange(0.01f, 1f);
-                spineStopControl.OnChangeEvent += DataChanged;
+                spineStopControl.OnValueChangedEvent += DataChanged;
                 spineStopControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "SpineExp:", FLabelAlignment.Right));
                 children.Add(this.spineExponentControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.spineExponent, 1));
                 spineExponentControl.SetRange(0.01f, 10f);
-                spineExponentControl.OnChangeEvent += DataChanged;
+                spineExponentControl.OnValueChangedEvent += DataChanged;
                 spineExponentControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 NewRow(30);
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "ScaleStart:", FLabelAlignment.Right));
                 children.Add(this.scaleStartControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.scaleStart, 2));
                 scaleStartControl.SetRange(0.01f, 10f);
-                scaleStartControl.OnChangeEvent += DataChanged;
+                scaleStartControl.OnValueChangedEvent += DataChanged;
                 scaleStartControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "ScaleStop:", FLabelAlignment.Right));
                 children.Add(this.scaleStopControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.scaleStop, 2));
                 scaleStopControl.SetRange(0.01f, 10f);
-                scaleStopControl.OnChangeEvent += DataChanged;
+                scaleStopControl.OnValueChangedEvent += DataChanged;
                 scaleStopControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "ScaleExp:", FLabelAlignment.Right));
                 children.Add(this.scaleExponentControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.scaleExponent, 1));
                 scaleExponentControl.SetRange(0.01f, 10f);
-                scaleExponentControl.OnChangeEvent += DataChanged;
+                scaleExponentControl.OnValueChangedEvent += DataChanged;
                 scaleExponentControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 NewRow(30);
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Thickness:", FLabelAlignment.Right));
                 children.Add(this.thicknessControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.thickness, 2));
                 thicknessControl.SetRange(0.01f, 10f);
-                thicknessControl.OnChangeEvent += DataChanged;
+                thicknessControl.OnValueChangedEvent += DataChanged;
                 thicknessControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "InnerScale:", FLabelAlignment.Right));
                 children.Add(this.innerScaleControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.innerScale, 2));
                 innerScaleControl.SetRange(0.01f, 10f);
-                innerScaleControl.OnChangeEvent += DataChanged;
+                innerScaleControl.OnValueChangedEvent += DataChanged;
                 innerScaleControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
             }
         }
@@ -1393,19 +1388,19 @@ namespace LizardSkin
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "SpinePos:", FLabelAlignment.Right));
                 children.Add(this.spinePosControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.spinePos, 2));
                 spinePosControl.SetRange(0.01f, 1f);
-                spinePosControl.OnChangeEvent += DataChanged;
+                spinePosControl.OnValueChangedEvent += DataChanged;
                 spinePosControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Offset:", FLabelAlignment.Right));
                 children.Add(this.offsetControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.offset, 1));
                 offsetControl.SetRange(0f, 10f);
-                offsetControl.OnChangeEvent += DataChanged;
+                offsetControl.OnValueChangedEvent += DataChanged;
                 offsetControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Angle:", FLabelAlignment.Right));
                 children.Add(this.angleControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.angle, 2));
                 angleControl.SetRange(-1f, 1f);
-                angleControl.OnChangeEvent += DataChanged;
+                angleControl.OnValueChangedEvent += DataChanged;
                 angleControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
             }
         }
@@ -1475,7 +1470,7 @@ namespace LizardSkin
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "MinSize:", FLabelAlignment.Right));
                 children.Add(this.minSizeControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.minSize, 2));
                 minSizeControl.SetRange(0.01f, 1f);
-                minSizeControl.OnChangeEvent += DataChangedRefreshNeeded;
+                minSizeControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 minSizeControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 MakeBodyScalesModeControls();
@@ -1483,7 +1478,7 @@ namespace LizardSkin
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "SizeExpo:", FLabelAlignment.Right));
                 children.Add(this.sizeExponentControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.sizeExponent, 2));
                 sizeExponentControl.SetRange(-10f, 10f);
-                sizeExponentControl.OnChangeEvent += DataChangedRefreshNeeded;
+                sizeExponentControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 sizeExponentControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
             }
         }
@@ -1555,13 +1550,13 @@ namespace LizardSkin
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Scale:", FLabelAlignment.Right));
                 children.Add(this.scaleControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.scale, 2));
                 scaleControl.SetRange(0.01f, 10f);
-                scaleControl.OnChangeEvent += DataChangedRefreshNeeded;
+                scaleControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 scaleControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Thickness:", FLabelAlignment.Right));
                 children.Add(this.thicknessControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.thickness, 2));
                 thicknessControl.SetRange(0.01f, 10f);
-                thicknessControl.OnChangeEvent += DataChangedRefreshNeeded;
+                thicknessControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 thicknessControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
             }
         }
@@ -1639,19 +1634,19 @@ namespace LizardSkin
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "SizeMin:", FLabelAlignment.Right));
                 children.Add(this.sizeMinControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.sizeMin, 2));
                 sizeMinControl.SetRange(0.01f, 1f);
-                sizeMinControl.OnChangeEvent += DataChanged;
+                sizeMinControl.OnValueChangedEvent += DataChanged;
                 sizeMinControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 NewRow(30);
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "SizeExpo:", FLabelAlignment.Right));
                 children.Add(this.sizeExponentControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.sizeExponent, 2));
                 sizeExponentControl.SetRange(-10f, 10f);
-                sizeExponentControl.OnChangeEvent += DataChanged;
+                sizeExponentControl.OnValueChangedEvent += DataChanged;
                 sizeExponentControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "ColorFade:", FLabelAlignment.Right));
                 children.Add(colorFadeControl = new LizardSkinOI.EventfulCheckBox(PlaceInRow(24, 24), "", data.colorFade));
-                colorFadeControl.OnChangeEvent += DataChangedRefreshNeeded;
+                colorFadeControl.OnValueChangedEvent += DataChangedRefreshNeeded;
             }
         }
     }
@@ -1716,7 +1711,7 @@ namespace LizardSkin
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "UndersideSize:", FLabelAlignment.Right));
                 children.Add(this.undersideSizeControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.undersideSize, 2));
                 undersideSizeControl.SetRange(0.01f, 2f);
-                undersideSizeControl.OnChangeEvent += DataChanged;
+                undersideSizeControl.OnValueChangedEvent += DataChanged;
                 undersideSizeControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
             }
         }
@@ -1793,18 +1788,18 @@ namespace LizardSkin
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Rows:", FLabelAlignment.Right));
                 children.Add(this.rowsControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.rows));
                 rowsControl.SetRange(2, 100);
-                rowsControl.OnChangeEvent += DataChangedRefreshNeeded;
+                rowsControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 rowsControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Lines:", FLabelAlignment.Right));
                 children.Add(this.linesControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.lines));
                 linesControl.SetRange(2, 100);
-                linesControl.OnChangeEvent += DataChangedRefreshNeeded;
+                linesControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 linesControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "BigScales:", FLabelAlignment.Right));
                 children.Add(bigScalesControl = new LizardSkinOI.EventfulCheckBox(PlaceInRow(24, 24), "", data.bigScales));
-                bigScalesControl.OnChangeEvent += DataChangedRefreshNeeded;
+                bigScalesControl.OnValueChangedEvent += DataChangedRefreshNeeded;
             }
         }
     }
@@ -1874,7 +1869,7 @@ namespace LizardSkin
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "MinSize:", FLabelAlignment.Right));
                 children.Add(this.minSizeControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.minSize, 2));
                 minSizeControl.SetRange(0.01f, 1f);
-                minSizeControl.OnChangeEvent += DataChangedRefreshNeeded;
+                minSizeControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 minSizeControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
             }
         }
@@ -1964,32 +1959,32 @@ namespace LizardSkin
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Count:", FLabelAlignment.Right));
                 children.Add(this.countControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.count));
                 countControl.SetRange(1, 20);
-                countControl.OnChangeEvent += DataChangedRefreshNeeded;
+                countControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 countControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Length:", FLabelAlignment.Right));
                 children.Add(this.lengthControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.length, 2));
                 lengthControl.SetRange(0.01f, 10f);
-                lengthControl.OnChangeEvent += DataChangedRefreshNeeded;
+                lengthControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 lengthControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Thickness:", FLabelAlignment.Right));
                 children.Add(this.thicknessControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.thickness, 2));
                 thicknessControl.SetRange(0.01f, 10f);
-                thicknessControl.OnChangeEvent += DataChangedRefreshNeeded;
+                thicknessControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 thicknessControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 NewRow(30f);
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Spread:", FLabelAlignment.Right));
                 children.Add(this.spreadControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.spread, 2));
                 spreadControl.SetRange(0.01f, 10f);
-                spreadControl.OnChangeEvent += DataChangedRefreshNeeded;
+                spreadControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 spreadControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Spring:", FLabelAlignment.Right));
                 children.Add(this.springControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.spring, 2));
                 springControl.SetRange(0.01f, 10f);
-                springControl.OnChangeEvent += DataChangedRefreshNeeded;
+                springControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 springControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
             }
         }

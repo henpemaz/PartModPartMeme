@@ -4,33 +4,15 @@ using System.Linq;
 using System.Text;
 using Partiality.Modloader;
 
-
 using System.Security;
-using System.Runtime.CompilerServices;
 using System.Security.Permissions;
-using System.Runtime.InteropServices;
 using UnityEngine;
 using System.IO;
 using System.Collections;
 using System.Reflection;
 
-[assembly: IgnoresAccessChecksTo("Assembly-CSharp")]
-[assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 [module: UnverifiableCode]
-
-namespace System.Runtime.CompilerServices
-{
-    [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
-    public class IgnoresAccessChecksToAttribute : Attribute
-    {
-        public IgnoresAccessChecksToAttribute(string assemblyName)
-        {
-            AssemblyName = assemblyName;
-        }
-
-        public string AssemblyName { get; }
-    }
-}
+[assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
 
 namespace LizardSkin
@@ -41,13 +23,14 @@ namespace LizardSkin
         public LizardSkin()
         {
             this.ModID = "LizardSkin";
-            this.Version = "0.1";
+            this.Version = "0.5";
             this.author = "Henpemaz";
 
             instance = this;
         }
 
         public static LizardSkin instance;
+        internal static LizardSkinOI instanceOI;
 
         public static OptionalUI.OptionInterface LoadOI()
         {
@@ -227,11 +210,11 @@ namespace LizardSkin
                 if ((isStorySession && (CGStoryProgressionStep < 1) && !CGSkipProgression)
                 || (!isStorySession && !CGEverBeaten && !CGSkipProgression)) return new List<LizKinCosmeticData>(); // empty
             }
-            if(LizardSkinOI.configuration == null) // CM hasn't run yet and we're in the game, huh :/
+            if(LizardSkinOI.configBeingUsed == null) // CM hasn't run yet and we're in the game, huh :/
             {
                 LizardSkinOI.LoadLizKinData();
             }
-            return LizardSkinOI.configuration.GetCosmeticsForSlugcat(name, slugcatCharacter, playerNumber);
+            return LizardSkinOI.configBeingUsed.GetCosmeticsForSlugcat(name, slugcatCharacter, playerNumber);
         }
     }
 }
