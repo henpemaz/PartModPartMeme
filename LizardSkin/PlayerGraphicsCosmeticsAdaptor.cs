@@ -20,6 +20,16 @@ namespace LizardSkin
             On.PlayerGraphics.ApplyPalette += PlayerGraphics_ApplyPalette_hk;
             On.PlayerGraphics.Reset += PlayerGraphics_Reset_hk;
             On.PlayerGraphics.AddToContainer += PlayerGraphics_AddToContainer_hk;
+
+            // Bugfix: Voidsea scene moves the player around and moves bodyparts too intead of calling a reset. Cosmetics wouldn't follow.
+            On.VoidSea.VoidSeaScene.Move += VoidSeaScene_Move;
+        }
+
+        private static void VoidSeaScene_Move(On.VoidSea.VoidSeaScene.orig_Move orig, VoidSea.VoidSeaScene self, Player player, Vector2 move, bool moveCamera)
+        {
+            orig(self, player, move, moveCamera);
+            if (player.graphicsModule != null) 
+                GetAdaptor(player.graphicsModule as PlayerGraphics).Reset();
         }
 
         public static void ApplyHooksToJollyPlayerGraphicsHK()

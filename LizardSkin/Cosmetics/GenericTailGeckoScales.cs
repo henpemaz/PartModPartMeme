@@ -48,11 +48,12 @@ namespace LizardSkin
 		{
 			if (this.bigScales)
 			{
-				SpineData lizardSpineData = this.iGraphics.SpinePosition(0.4f, true, timeStacker);
+				SpineData lizardSpineData = this.iGraphics.SpinePosition(Mathf.Max(0f, Mathf.Lerp(tailGeckoScalesData.start, 2*tailGeckoScalesData.start - tailGeckoScalesData.stop, Mathf.Pow(1f / (float)(this.rows - 1), tailGeckoScalesData.exponent))), true, timeStacker);
 				for (int i = 0; i < this.rows; i++)
 				{
 					float num = Mathf.InverseLerp(0f, (float)(this.rows - 1), (float)i);
-					float num2 = Mathf.Lerp(0.5f, 0.99f, Mathf.Pow(num, 0.8f));
+					//float num2 = Mathf.Lerp(0.5f, 0.99f, Mathf.Pow(num, 0.8f));
+					float num2 = Mathf.Lerp(tailGeckoScalesData.start, tailGeckoScalesData.stop, Mathf.Pow(num, tailGeckoScalesData.exponent));
 					SpineData lizardSpineData2 = this.iGraphics.SpinePosition(num2, true, timeStacker);
 					Color a = this.cosmeticData.GetBaseColor(iGraphics, num2);
 					for (int j = 0; j < this.lines; j++)
@@ -75,30 +76,30 @@ namespace LizardSkin
 						sLeaser.sprites[this.startSprite + i * this.lines + j].rotation = Custom.AimFromOneVectorToAnother(vector, vector2);
 						sLeaser.sprites[this.startSprite + i * this.lines + j].scaleX = Custom.LerpMap(Mathf.Abs(num3), 0.4f, 1f, lizardSpineData2.rad * 3.5f / (float)this.rows, 0f) / 10f;
 						sLeaser.sprites[this.startSprite + i * this.lines + j].scaleY = Vector2.Distance(vector, vector2) * 1.1f / 20f;
-						//if (this.iGraphics.iVars.tailColor > 0f)
-						//{
-						//	float num4 = Mathf.InverseLerp(0.5f, 1f, Mathf.Abs(Vector2.Dot(Custom.DirVec(vector2, vector), Custom.DegToVec(-45f + 120f * num3))));
-						//num4 = Custom.LerpMap(Mathf.Abs(num3), 0.5f, 1f, 0.3f, 0f) + 0.7f * Mathf.Pow(num4 * Mathf.Pow(this.iGraphics.iVars.tailColor, 0.3f), Mathf.Lerp(2f, 0.5f, num));
-						//num4 = Custom.LerpMap(Mathf.Abs(num3), 0.5f, 1f, 0.3f, 0f) + 0.7f * Mathf.Pow(num4 * Mathf.Pow(0.5f, 0.3f), Mathf.Lerp(2f, 0.5f, num));
-						//if (num < 0.5f)
-						//	{
-						//		num4 *= Custom.LerpMap(num, 0f, 0.5f, 0.2f, 1f);
-						//	}
-						//	num4 = Mathf.Pow(num4, Mathf.Lerp(2f, 0.5f, num));
-						//	if (num4 < 0.5f)
-						//	{
-						//		sLeaser.sprites[this.startSprite + i * this.lines + j].color = Color.Lerp(a, this.cosmeticData.effectColor, Mathf.InverseLerp(0f, 0.5f, num4));
-						//	}
-						//	else
-						//	{
-						//		sLeaser.sprites[this.startSprite + i * this.lines + j].color = Color.Lerp(this.cosmeticData.effectColor, Color.white, Mathf.InverseLerp(0.5f, 1f, num4));
-						//	}
-						//}
-						//else
-						//{
-						sLeaser.sprites[this.startSprite + i * this.lines + j].color = Color.Lerp(a, this.cosmeticData.effectColor, Custom.LerpMap(num, 0f, 0.8f, 0.2f, Custom.LerpMap(Mathf.Abs(num3), 0.5f, 1f, 0.8f, 0.4f), 0.8f));
-						//}
-					}
+                        if (tailGeckoScalesData.shine > 0f)
+                        {
+                            float num4 = Mathf.InverseLerp(0.5f, 1f, Mathf.Abs(Vector2.Dot(Custom.DirVec(vector2, vector), Custom.DegToVec(-45f + 120f * num3))));
+							//num4 = Custom.LerpMap(Mathf.Abs(num3), 0.5f, 1f, 0.3f, 0f) + 0.7f * Mathf.Pow(num4 * Mathf.Pow(this.iGraphics.iVars.tailColor, 0.3f), Mathf.Lerp(2f, 0.5f, num));
+							num4 = Custom.LerpMap(Mathf.Abs(num3), 0.5f, 1f, 0.3f, 0f) + 0.7f * Mathf.Pow(num4 * Mathf.Pow(tailGeckoScalesData.shine, 0.3f), Mathf.Lerp(2f, 0.5f, num));
+							if (num < 0.5f)
+							{
+								num4 *= Custom.LerpMap(num, 0f, 0.5f, 0.2f, 1f);
+							}
+							num4 = Mathf.Pow(num4, Mathf.Lerp(2f, 0.5f, num));
+							if (num4 < 0.5f)
+							{
+								sLeaser.sprites[this.startSprite + i * this.lines + j].color = Color.Lerp(a, this.cosmeticData.effectColor, Mathf.InverseLerp(0f, 0.5f, num4));
+							}
+							else
+							{
+								sLeaser.sprites[this.startSprite + i * this.lines + j].color = Color.Lerp(this.cosmeticData.effectColor, Color.white, Mathf.InverseLerp(0.5f, 1f, num4));
+							}
+                        }
+                        else
+                        {
+                            sLeaser.sprites[this.startSprite + i * this.lines + j].color = Color.Lerp(a, this.cosmeticData.effectColor, Custom.LerpMap(num, 0f, 0.8f, 0.2f, Custom.LerpMap(Mathf.Abs(num3), 0.5f, 1f, 0.8f, 0.4f), 0.8f));
+                        }
+                    }
 					lizardSpineData = lizardSpineData2;
 				}
 			}
@@ -107,7 +108,7 @@ namespace LizardSkin
 				for (int k = 0; k < this.rows; k++)
 				{
 					float f = Mathf.InverseLerp(0f, (float)(this.rows - 1), (float)k);
-					float num5 = Mathf.Lerp(0.4f, 0.95f, Mathf.Pow(f, 0.8f));
+					float num5 = Mathf.Lerp(tailGeckoScalesData.start, tailGeckoScalesData.stop, Mathf.Pow(f, tailGeckoScalesData.exponent));
 					SpineData lizardSpineData3 = this.iGraphics.SpinePosition(num5, true, timeStacker);
 					Color color = Color.Lerp(this.cosmeticData.GetBaseColor(iGraphics, num5), this.cosmeticData.effectColor, 0.2f + 0.8f * Mathf.Pow(f, 0.5f));
 					for (int l = 0; l < this.lines; l++)
@@ -127,18 +128,18 @@ namespace LizardSkin
 						Vector2 vector3 = lizardSpineData3.pos + lizardSpineData3.perp * (lizardSpineData3.rad + 0.5f) * num6;
 						sLeaser.sprites[this.startSprite + k * this.lines + l].x = vector3.x - camPos.x;
 						sLeaser.sprites[this.startSprite + k * this.lines + l].y = vector3.y - camPos.y;
-						sLeaser.sprites[this.startSprite + k * this.lines + l].color = new Color(1f, 0f, 0f);
+						//sLeaser.sprites[this.startSprite + k * this.lines + l].color = new Color(1f, 0f, 0f);
 						sLeaser.sprites[this.startSprite + k * this.lines + l].rotation = Custom.VecToDeg(lizardSpineData3.dir);
 						sLeaser.sprites[this.startSprite + k * this.lines + l].scaleX = Custom.LerpMap(Mathf.Abs(num6), 0.4f, 1f, 1f, 0f);
-						sLeaser.sprites[this.startSprite + k * this.lines + l].color = color;
+						sLeaser.sprites[this.startSprite + k * this.lines + l].color = Color.Lerp(color, Color.white, Custom.LerpMap(Mathf.Abs(num6), 0.4f, 1f, 0f, tailGeckoScalesData.shine));
 					}
 				}
 			}
 		}
 
-		public override void ApplyPalette(LeaserAdaptor sLeaser, CameraAdaptor rCam, PaletteAdaptor palette)
-		{
-		
-		}
+		//public override void ApplyPalette(LeaserAdaptor sLeaser, CameraAdaptor rCam, PaletteAdaptor palette)
+		//{
+		//// dynanically colored
+		//}
 	}
 }

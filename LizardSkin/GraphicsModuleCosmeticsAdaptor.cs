@@ -182,15 +182,20 @@ namespace LizardSkin
             }
         }
 
+        // Bodypart reset
+        public override void Reset(Vector2 resetPoint)
+        {
+            base.Reset(resetPoint);
+            Reset();
+        }
+
+        // graphics hookpoint reset
         public virtual void Reset()
         {
-            base.Reset(graphics.owner.firstChunk.pos);
-
             for (int l = 0; l < this.cosmetics.Count; l++)
             {
                 this.cosmetics[l].Reset();
             }
         }
-
     }
 }

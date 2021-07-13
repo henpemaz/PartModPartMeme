@@ -45,7 +45,7 @@ namespace LizardSkin
 				case LizKinCosmeticData.CosmeticInstanceType.ScavEartlers:
 					return new GenericEartlers(iGraphics, cosmeticData);
                 default:
-                    throw new Exception("Unsupported cosmetic data type :/");
+                    throw new Exception("Unsupported cosmetic data type");
             }
         }
 

@@ -58,6 +58,10 @@ You can pick Cosmetics of several types, edit their settings and configure rando
 
             if (ConfigMenu.instance == null || !(bool)typeof(ConfigMenu).GetField("refresh", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(ConfigMenu.instance))
             {
+                // This needs to run
+                // 1; when the config is loaded at launch
+                // 2; when opening the configmenu
+                // 3; when coming back from a config reset, but not from a reset
                 Debug.Log("LizardSkinOI Init load data");
                 LoadLizKinData();
                 configBeingEdited = LizKinConfiguration.Clone(configBeingUsed);
@@ -124,7 +128,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             base.Update(dt);
 
             // I'd love to hide these from the ctor but CM won't let me :/
-            // I still need to create the checkbox so the confic is stored and not discarted even if the setting isn't relevant atm.
+            // I still need to create the checkbox so the config is stored and not discarted even if the setting isn't relevant atm because the other mod isn't running.
             if (!LizardSkin.CGIntegration && ConfigMenu.tabCtrler.index == 0)
             {
                 cglabel1.Hide();
@@ -1058,7 +1062,8 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 // base.Signal();
                 if (!currentlyPicking)
                 {
-                    this.colorPicker.pos = (this.inScrollBox ? (this.GetPos() + scrollBox.GetPos()) : this.GetPos()) + new Vector2(-60, 24);
+                    //this.colorPicker.pos = (this.inScrollBox ? (this.GetPos() + scrollBox.GetPos()) : this.GetPos()) + new Vector2(-60, 24);
+                    this.colorPicker.pos = (this.inScrollBox ? (this.GetPos() + scrollBox.GetPos() + new Vector2(0f, scrollBox.ScrollOffset)) : this.GetPos()) + new Vector2(-60, 24);
                     colorPicker.Show();
                     currentlyPicking = true;
                 }

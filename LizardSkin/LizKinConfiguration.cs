@@ -1719,16 +1719,26 @@ namespace LizardSkin
 
     internal class CosmeticTailGeckoScalesData : LizKinCosmeticData
     {
-        const int version = 1;
+        const int version = 2;
+        // v1
         internal int rows;
         internal int lines;
         internal bool bigScales;
+        // v2
+        internal float start;
+        internal float stop;
+        internal float exponent;
+        internal float shine;
 
         public CosmeticTailGeckoScalesData()
         {
             rows = 11;
             lines = 4;
             bigScales = false;
+            start = 0.5f;
+            stop = 0.98f;
+            exponent = 0.8f;
+            shine = 0.5f;
         }
 
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.TailGeckoScales;
@@ -1746,6 +1756,17 @@ namespace LizardSkin
 
                     return;
                 }
+                if ((long)json["CosmeticTailGeckoScalesData.version"] == 2)
+                {
+                    rows = (int)(long)json["rows"];
+                    lines = (int)(long)json["lines"];
+                    bigScales = (bool)json["bigScales"];
+                    start = (float)(double)json["start"];
+                    stop = (float)(double)json["stop"];
+                    exponent = (float)(double)json["exponent"];
+                    shine = (float)(double)json["shine"];
+                    return;
+                }
             }
             if (!ignoremissing) throw new SerializationException("CosmeticTailGeckoScalesData version unsuported");
         }
@@ -1758,6 +1779,10 @@ namespace LizardSkin
                     {"rows", (long)rows },
                     {"lines", (long)lines },
                     {"bigScales", (bool)bigScales },
+                    {"start", (double)start },
+                    {"stop", (double)stop },
+                    {"exponent", (double)exponent },
+                    {"shine", (double)shine },
 
                 }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
@@ -1769,6 +1794,10 @@ namespace LizardSkin
             rows = p.rowsControl.valueInt;
             lines = p.linesControl.valueInt;
             bigScales = p.bigScalesControl.valueBool;
+            start = p.startControl.valueFloat;
+            stop = p.stopControl.valueFloat;
+            exponent = p.exponentControl.valueFloat;
+            shine = p.shineControl.valueFloat;
         }
 
         internal override CosmeticPanel MakeEditPanel(LizardSkinOI.ProfileManager manager)
@@ -1781,6 +1810,10 @@ namespace LizardSkin
             internal LizardSkinOI.EventfulUpdown rowsControl;
             internal LizardSkinOI.EventfulUpdown linesControl;
             internal LizardSkinOI.EventfulCheckBox bigScalesControl;
+            internal LizardSkinOI.EventfulUpdown startControl;
+            internal LizardSkinOI.EventfulUpdown stopControl;
+            internal LizardSkinOI.EventfulUpdown exponentControl;
+            internal LizardSkinOI.EventfulUpdown shineControl;
 
             public CosmeticTailGeckoScalesPanel(CosmeticTailGeckoScalesData data, LizardSkinOI.ProfileManager manager) : base(data, manager)
             {
@@ -1800,6 +1833,32 @@ namespace LizardSkin
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "BigScales:", FLabelAlignment.Right));
                 children.Add(bigScalesControl = new LizardSkinOI.EventfulCheckBox(PlaceInRow(24, 24), "", data.bigScales));
                 bigScalesControl.OnValueChangedEvent += DataChangedRefreshNeeded;
+
+                NewRow(30);
+                children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Start:", FLabelAlignment.Right));
+                children.Add(this.startControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.start, 2));
+                startControl.SetRange(0f, 1f);
+                startControl.OnValueChangedEvent += DataChanged;
+                startControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
+
+                children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Stop:", FLabelAlignment.Right));
+                children.Add(this.stopControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.stop, 2));
+                stopControl.SetRange(0f, 1f);
+                stopControl.OnValueChangedEvent += DataChanged;
+                stopControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
+
+                children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Exponent:", FLabelAlignment.Right));
+                children.Add(this.exponentControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.exponent, 2));
+                exponentControl.SetRange(0.01f, 10f);
+                exponentControl.OnValueChangedEvent += DataChanged;
+                exponentControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
+
+                NewRow(30);
+                children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Shine:", FLabelAlignment.Right));
+                children.Add(this.shineControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.shine, 2));
+                shineControl.SetRange(0f, 1f);
+                shineControl.OnValueChangedEvent += DataChanged;
+                shineControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
             }
         }
     }
