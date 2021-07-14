@@ -1019,6 +1019,33 @@ You can pick Cosmetics of several types, edit their settings and configure rando
 
         }
 
+        class FlatColorPicker : OpColorPicker
+        {
+            private FlatColorPicker(Vector2 pos, string key, string defaultHex = "FFFFFF") : base(pos, key, defaultHex) { }
+
+            public override void OnChange()
+            {
+                Vector2 oldPos = this._pos;
+                this._pos = Vector2.zero;
+                base.OnChange();
+                this._pos = oldPos;
+                if (!ctor || !_init) { return; }
+                this.myContainer.SetPosition(this.ScreenPos);
+            }
+
+            public static OpColorPicker MakeFlatColorpicker(Vector2 pos, string key, string defaultHex = "FFFFFF")
+            {
+                FContainer container = new FContainer();
+                FContainer pgctr = OptionScript.configMenu.pages[0].Container;
+                OptionScript.configMenu.pages[0].Container = container;
+                FlatColorPicker pkr = new FlatColorPicker(pos, key, defaultHex);
+                OptionScript.configMenu.pages[0].Container = pgctr;
+                FContainer pfkcontainer = (FContainer)typeof(OpColorPicker).GetField("myContainer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(pkr);
+                pfkcontainer.AddChildAtIndex(container, 0);
+                return pkr;
+            }
+        }
+
         internal class OpTinyColorPicker : EventfulButton, IHaveChildren
         {
             private OpColorPicker colorPicker;
@@ -1028,7 +1055,8 @@ You can pick Cosmetics of several types, edit their settings and configure rando
 
             public OpTinyColorPicker(Vector2 pos, string signal, string defaultHex) : base(pos, new Vector2(24, 24), signal)
             {
-                this.colorPicker = new OpColorPicker(pos + new Vector2(-60, 24), "", defaultHex);
+                //this.colorPicker = new OpColorPicker(pos + new Vector2(-60, 24), "", defaultHex);
+                this.colorPicker = FlatColorPicker.MakeFlatColorpicker(pos + new Vector2(-60, 24), "", defaultHex);
 
                 this.currentlyPicking = false;
 
