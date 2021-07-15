@@ -65,6 +65,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DecalsHook", "DecalsHook\De
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShaderTester", "ShaderTester\ShaderTester.csproj", "{2D796E3F-318E-4388-B5D6-798579F7E8FE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SilentEchos", "SilentEchos\SilentEchos.csproj", "{429F7F9E-10A5-4346-A118-19489694B304}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -195,6 +197,10 @@ Global
 		{2D796E3F-318E-4388-B5D6-798579F7E8FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2D796E3F-318E-4388-B5D6-798579F7E8FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2D796E3F-318E-4388-B5D6-798579F7E8FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{429F7F9E-10A5-4346-A118-19489694B304}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{429F7F9E-10A5-4346-A118-19489694B304}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{429F7F9E-10A5-4346-A118-19489694B304}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{429F7F9E-10A5-4346-A118-19489694B304}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
