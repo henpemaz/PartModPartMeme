@@ -1296,7 +1296,9 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 {
                     bool change = value != _value;
                     base.value = value;
-                    if (change) OnValueChangedEvent?.Invoke();
+                    if (change && _value == value &&
+                        !(bool)typeof(OpTextBox).GetField("_keyboardOn", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic).GetValue(this)
+                        ) OnValueChangedEvent?.Invoke();
                 }
             }
 

@@ -125,6 +125,9 @@
     <EmbeddedResource Include="Resources\LizKinIcons.png" />
     <EmbeddedResource Include="Resources\LizKinIcons.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="todo.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy /Y $(TargetPath) "C:\Program Files (x86)\Steam\steamapps\common\Rain World - Dev\Mods"</PostBuildEvent>

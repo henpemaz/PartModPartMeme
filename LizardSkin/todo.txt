@@ -1,0 +1,54 @@
+﻿-configmachine ui
+	done
+-properly do rotation
+	somewhat done, could use a bit of dynamic layering in some assets but its ok
+	head rotation could track looking-at, blends in for z < 0.1 (z = 0 = center of face, then up to center of head, then down spine)
+	better smoother blending of direction between body-tail bit
+- Slugcat menu preview
+	load sprites, correct distances and thicknesses
+	follow rotation
+	
+feature requests:
+	layering option for all default/behind/behindhead/ontop
+	flip scales
+	better head-tracking for antennae
+	SpinePos and Angle settings for the gills
+		
+void sea spawns antena zooms through screen missing a position reset or smth https://youtu.be/IXIaptekU34
+	done in 0.6
+	
+gecko scales needs to be adjustable where it starts
+	done in 0.6
+TailGeckoScales used to be shinier, more reflective, what changed (mehri)
+make the large tail gecko scales multicolored, like with actual cyans (bigabyte)
+	done in 0.6
+	
+top row of color selectors break in scrollbox (several)
+	done in 0.6
+		
+having a tail[] != 4 causes issues for updaterotation and probably spineposition
+	done in 0.7
+	
+customtails messes around with my trimeshes (customtails + antennae) (mehri)
+	customtails update shall fix it soon
+	
+Have to switch tabs for profile name to save (me)
+editing filters checkboxes doesnt trigger CM save (me)	
+	
+graphic selector went to 7 somehow despite the limit and bluescreened (sunshine, foxy too)
+Int upandown causes bluescreen still, I've patched out the event but i'll still be read by other events (topaz)
+Can type in invalid values and it reads them
+	maybe possibly fixed in 0.7
+	
+add selector for rendering on top, behindhead, behind, particularly for headstuff (mehri)
+	
+bitten by a lizard causes layer freakout (several)
+	
+new profile seems to duplicate ? (topaz) nonreproduceable, missing steps
+	
+freaky scales when going fast (some cosmetics call reset when too far ? thought I fixed this, maybe its something else, do they bend backwards maybe ?)
+	
+with expedition the liz accessiories are slucat's color (topaz)
+	needs special compatibilification or poke lee about it.
+	
+the antennaes kinda go off slugcat. segment too long = huge offset from sluggy (topaz)

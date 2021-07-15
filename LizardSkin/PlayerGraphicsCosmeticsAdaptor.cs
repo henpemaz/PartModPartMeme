@@ -317,7 +317,7 @@ namespace LizardSkin
             Vector2 previoustailpos = (hips * 3f + neck) / 4f;
             float d = 1f - 0.2f * this.pGraphics.malnourished;
             float d2 = 6f;
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < this.pGraphics.tail.Length; i++)
             {
                 Vector2 tailpos = this.pGraphics.tail[i].pos;
                 Vector2 taildir = (tailpos - previoustailpos).normalized;
