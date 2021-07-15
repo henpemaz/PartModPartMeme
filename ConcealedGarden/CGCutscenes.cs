@@ -14,7 +14,6 @@ namespace ConcealedGarden
             game.manager.RequestMainProcessSwitch(ProcessManager.ProcessID.SlideShow, 2.5f);
         }
 
-
         public static class EnumExt_CGCutscenes
         {
 #pragma warning disable 0649
@@ -38,6 +37,9 @@ namespace ConcealedGarden
             On.Menu.SlideShow.ctor += SlideShow_ctor;
             On.Menu.SlideShowMenuScene.ctor += SlideShowMenuScene_ctor;
             On.Menu.SlideShowMenuScene.ApplySceneSpecificAlphas += SlideShowMenuScene_ApplySceneSpecificAlphas;
+
+            // Waiting on CM progression data update :)
+            //On.Menu.SlugcatSelectMenu.
         }
 
         private static void SlideShowMenuScene_ApplySceneSpecificAlphas(On.Menu.SlideShowMenuScene.orig_ApplySceneSpecificAlphas orig, Menu.SlideShowMenuScene self)

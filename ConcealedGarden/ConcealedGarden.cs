@@ -47,20 +47,15 @@ namespace ConcealedGarden
                 base.Initialize();
                 this.Tabs = new OpTab[1] { new OpTab() };
                 CompletelyOptional.GeneratedOI.AddBasicProfile(Tabs[0], rwMod);
-                instanceOI.LoadData();
+                LoadData();
             }
 
             public override void DataOnChange()
             {
                 base.DataOnChange();
                 ConcealedGardenProgression.LoadProgression();
-                //if (progression == null) return;
-
                 LizardSkin.LizardSkin.SetCGEverBeaten(progression.everBeaten);
                 LizardSkin.LizardSkin.SetCGStoryProgression(progression.transfurred ? 1 : 0);
-                //Debug.Log("CG: Sent everBeaten = " + progression.everBeaten);
-                //Debug.Log("CG: Sent progression = " + (progression.transfurred ? 1 : 0));
-
             }
         }
 

@@ -178,8 +178,8 @@ namespace ShelterBehaviors
             }
             else
             {
-                closedFac = ((!room.game.setupValues.cycleStartUp) ? 1f : Mathf.InverseLerp(data.GetValue<int>("ini") + data.GetValue<int>("ouf"), data.GetValue<int>("ini"), (float)this.room.game.world.rainCycle.timer));
-                closeSpeed = this.room.game.world.rainCycle.timer <= data.GetValue<int>("ini") ? 0f : -1f / data.GetValue<int>("ouf");
+                closedFac = ((!room.game.setupValues.cycleStartUp) ? 0f : Mathf.InverseLerp(data.GetValue<int>("ini") + data.GetValue<int>("ouf"), data.GetValue<int>("ini"), (float)this.room.game.world.rainCycle.timer));
+                closeSpeed = this.room.game.world.rainCycle.timer <= data.GetValue<int>("ini") ? 0f : -1f / (float)data.GetValue<int>("ouf");
             }
 
             for (int i = 0; i < room.updateList.Count; i++)
