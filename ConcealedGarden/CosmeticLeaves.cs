@@ -133,8 +133,8 @@ namespace ConcealedGarden
                     Vector2 ab = b - a;
                     //Vector2 per = Custom.PerpendicularVector(ab);
                     float shine = Mathf.Abs(ab.x) / ab.magnitude;
-                    Color[] pala = palette.texture.GetPixels(Mathf.Clamp(Mathf.FloorToInt(a.z), 0, 29), 2, 1, 3);
-                    Color[] palb = palette.texture.GetPixels(Mathf.Clamp(Mathf.FloorToInt(b.z), 0, 29), 2, 1, 3);
+                    Color[] pala = palette.texture.GetPixels(Mathf.Clamp(Mathf.FloorToInt(a.z), 0, 29), 3, 1, 3);
+                    Color[] palb = palette.texture.GetPixels(Mathf.Clamp(Mathf.FloorToInt(b.z), 0, 29), 3, 1, 3);
 
                     Color upperA = Color.Lerp(pala[1], pala[0], shine);
                     Color lowerA = Color.Lerp(pala[1], pala[2], shine);
