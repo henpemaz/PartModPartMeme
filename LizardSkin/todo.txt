@@ -13,7 +13,8 @@ feature requests:
 	flip scales
 	better head-tracking for antennae
 	SpinePos and Angle settings for the gills
-		
+	spinepos on antennae to minus values (or have zero be higher)
+
 void sea spawns antena zooms through screen missing a position reset or smth https://youtu.be/IXIaptekU34
 	done in 0.6
 	
@@ -43,6 +44,9 @@ Can type in invalid values and it reads them
 add selector for rendering on top, behindhead, behind, particularly for headstuff (mehri)
 	
 bitten by a lizard causes layer freakout (several)
+	(grabbed by a white liz tongue - topaz)
+	Jolly player-grabbing-player also messes things up
+
 	
 new profile seems to duplicate ? (topaz) nonreproduceable, missing steps
 	
