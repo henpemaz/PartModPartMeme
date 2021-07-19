@@ -12,6 +12,9 @@ using ManagedPlacedObjects;
 
 namespace ShelterBehaviors
 {
+    /// <summary>
+    /// Main partmod class.
+    /// </summary>
     public class ShelterBehaviorsMod : PartialityMod
     {
         public ShelterBehaviorsMod()
@@ -24,9 +27,13 @@ namespace ShelterBehaviors
             instance = this;
 
         }
-
         public static ShelterBehaviorsMod instance;
 
+        /// <summary>
+        /// Makes creatures <see cref="ShelterBehaviorManager.CycleSpawnPosition"/> on <see cref="AbstractCreature.RealizeInRoom"/>
+        /// </summary>
+        /// <param name="orig"></param>
+        /// <param name="instance"></param>
         public static void CreatureShuffleHook (On.AbstractCreature.orig_RealizeInRoom orig, AbstractCreature instance)
         {
             var mngr = instance.Room.realizedRoom?.updateList?.FirstOrDefault(x => x is ShelterBehaviorManager) as ShelterBehaviorManager;
@@ -34,7 +41,6 @@ namespace ShelterBehaviors
             orig(instance);
 
         }
-
         public override void OnEnable()
         {
             base.OnEnable();

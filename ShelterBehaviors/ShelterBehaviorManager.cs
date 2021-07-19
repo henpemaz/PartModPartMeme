@@ -5,6 +5,9 @@ using System.Linq;
 
 namespace ShelterBehaviors
 {
+    /// <summary>
+    /// As the name suggests...
+    /// </summary>
     public static class ExtensionsForThingsIHateTypingOut
     {
         public static float Abs(this float f)
@@ -32,43 +35,101 @@ namespace ShelterBehaviors
         }
     }
 
-
+    /// <summary>
+    /// Interface used to notify <see cref="UpdatableAndDeletable"/>s about shelter door related events. Notifications are issued by an instance of <see cref="ShelterBehaviorManager"/> in the room.
+    /// </summary>
     public interface IReactToShelterEvents
     {
+        /// <summary>
+        /// Notification about shelter closing/opening state.
+        /// </summary>
+        /// <param name="newFactor">New value of close/open factor; similar to <see cref="ShelterDoor.closedFac"/>.</param>
+        /// <param name="closeSpeed">Current speed of doors closing.</param>
         void ShelterEvent(float newFactor, float closeSpeed);
     }
-
-    internal class ShelterBehaviorManager : UpdatableAndDeletable, INotifyWhenRoomIsReady
+    /// <summary>
+    /// Main object used to change how shelters behave; required for all other placedObjects to function.
+    /// </summary>
+    public class ShelterBehaviorManager : UpdatableAndDeletable, INotifyWhenRoomIsReady
     {
-        //private Room room;
-        private bool noVanillaDoors;
-        private IntVector2 vanillaSpawnPosition;
-        private List<IntVector2> spawnPositions;
-        private List<ShelterDoor> customDoors;
-        private bool holdToTrigger;
-        private List<IntRect> triggers;
-        private List<IntRect> noTriggers;
-        private bool broken;
-        private int noMovingCounter;
-        private bool closing;
-
-        private AttachedField<Player, int> actualForceSleepCounter;
+        /// <summary>
+        /// Whether vanilla door should be disabled.
+        /// </summary>
+        public bool noVanillaDoors;
+        /// <summary>
+        /// Default spawn pos for the room.
+        /// </summary>
+        public IntVector2 vanillaSpawnPosition;
+        /// <summary>
+        /// List of tiles to <see cref="AbstractCreature.RealizeInRoom"/> on; is linearly cycled through each time a new creature wants to realize.
+        /// </summary>
+        public List<IntVector2> spawnPositions;
+        /// <summary>
+        /// Additional doors managed by the object.
+        /// </summary>
+        public List<ShelterDoor> customDoors;
+        /// <summary>
+        /// Whether the shelter requires player to hold Down control to sleep.
+        /// </summary>
+        public bool holdToTrigger;
+        /// <summary>
+        /// Trigger zones.
+        /// </summary>
+        public List<IntRect> triggers;
+        /// <summary>
+        /// No-trigger zones.
+        /// </summary>
+        public List<IntRect> noTriggers;
+        /// <summary>
+        /// Whether shelter is treated as broken.
+        /// </summary>
+        public bool broken;
+        /// <summary>
+        /// Alternative to <see cref="Player.touchedNoInputCounter"/>.
+        /// </summary>
+        public int noMovingCounter;
+        /// <summary>
+        /// Whether the shelter is currently closing.
+        /// </summary>
+        public bool closing;
+        /// <summary>
+        /// Weakdict for replacement of <see cref="Player.forceSleepCounter"/>.
+        /// </summary>
+        public AttachedField<Player, int> actualForceSleepCounter;
 
 
         bool _debug = false;
-        private int noDoorCloseCount;
-        private bool hasNoDoors;
-        private ShelterDoor tempSpawnPosHackDoor;
-        private bool deleteHackDoorNextFrame;
-        private bool isConsumed;
-        private int placedObjectIndex;
-        private List<IReactToShelterEvents> subscribers;
-        private readonly PlacedObject pObj;
-        private readonly ManagedPlacedObjects.PlacedObjectsManager.ManagedData data;
+        /// <summary>
+        /// Close counter for situation where <see cref="hasNoDoors"/> is true.
+        /// </summary>
+        public int noDoorCloseCount;
+        /// <summary>
+        /// Whether there is no vanilla door or <see cref="customDoors"/>.
+        /// </summary>
+        public bool hasNoDoors;
+        /// <summary>
+        /// Short living door used to <see cref="CycleSpawnPosition"/>.
+        /// </summary>
+        public ShelterDoor tempSpawnPosHackDoor;
+        /// <summary>
+        /// Whether <see cref="tempSpawnPosHackDoor"/> should be deleted next frame.
+        /// </summary>
+        public bool deleteHackDoorNextFrame;
+        /// <summary>
+        /// Whether shelter marked as consumable is currently depleted.
+        /// </summary>
+        public bool isConsumed;
+        public int placedObjectIndex;
+        /// <summary>
+        /// List of <see cref="IReactToShelterEvents"/> to notify when opening/closing.
+        /// </summary>
+        public List<IReactToShelterEvents> subscribers;
+        public readonly PlacedObject pObj;
+        public readonly ManagedPlacedObjects.PlacedObjectsManager.ManagedData data;
 
         private void ContitionalLog(string str)
         {
-            if (_debug && UnityEngine.Input.GetKey("l"))
+            if (_debug && Input.GetKey("l"))
             {
                 Debug.LogError(str);
             }
@@ -131,14 +192,18 @@ namespace ShelterBehaviors
                     }
                 }
             }
+            spawnCycleCtr = Random.Range(0, spawnPositions.Count);
         }
 
+        /// <summary>
+        /// Depletes the shelter.
+        /// </summary>
         public void Consume()
         {
             if (!data.GetValue<bool>("cs")) return;
             if (this.isConsumed) return;
             this.isConsumed = true;
-            Debug.Log("CONSUMED: Consumable Shelter ;)");
+            Debug.Log($"CONSUMED: Consumable Shelter in room {room.abstractRoom?.name})");
             if (room.world.game.session is StoryGameSession)
             {
                 int minCycles = data.GetValue<int>("csmin");
@@ -147,6 +212,9 @@ namespace ShelterBehaviors
             }
         }
 
+        /// <summary>
+        /// Implemented from <see cref="INotifyWhenRoomIsReady"/>. 
+        /// </summary>
         public void ShortcutsReady()
         {
             // housekeeping once all objects are placed
@@ -154,19 +222,7 @@ namespace ShelterBehaviors
 
             if (hasNoDoors)
             {
-                ApplySpawnHack(GetSpawnPosition(0)); //moved into a separate method
-                //room.drawableObjects.Remove(tempSpawnPosHackDoor);
-                //tempSpawnPosHackDoor.workingLoop = null;
-                //for (int i = 0; i < room.game.cameras.Length; i++)
-                //{
-                //    for (int j = 0; j < room.game.cameras[i].spriteLeasers.Count; j++)
-                //    {
-                //        if (room.game.cameras[i].spriteLeasers[j].drawableObject == tempSpawnPosHackDoor)
-                //        {
-                //            room.game.cameras[i].spriteLeasers[j].CleanSpritesAndRemove();
-                //        }
-                //    }
-                //}
+                ApplySpawnHack(GetSpawnPosition(0));
             }
 
             float closedFac;
@@ -192,6 +248,9 @@ namespace ShelterBehaviors
             }
         }
 
+        /// <summary>
+        /// Implemented from <see cref="INotifyWhenRoomIsReady"/>
+        /// </summary>
         public void AIMapReady()
         {
             deleteHackDoorNextFrame = true;
@@ -399,6 +458,9 @@ namespace ShelterBehaviors
             }
         }
 
+        /// <summary>
+        /// Sends a close notification to all doors if neccessary.
+        /// </summary>
         private void Close()
         {
             closing = true;
@@ -426,7 +488,11 @@ namespace ShelterBehaviors
             Debug.LogError("CLOSE");
         }
 
-        internal void ApplySpawnHack(IntVector2 coords)
+        /// <summary>
+        /// Makes the next creature to be realized spawn in a given position.
+        /// </summary>
+        /// <param name="coords">Tile to be treated as spawn point.</param>
+        public void ApplySpawnHack(IntVector2 coords)
         {
             if (tempSpawnPosHackDoor != null && room.updateList.Contains(tempSpawnPosHackDoor)) room.updateList.Remove(tempSpawnPosHackDoor);
             tempSpawnPosHackDoor = new ShelterDoor(room);
@@ -436,13 +502,19 @@ namespace ShelterBehaviors
             
         }
         internal int spawnCycleCtr;
-        internal void CycleSpawnPosition()
+        /// <summary>
+        /// Applies the next queued spawn position from <see cref="spawnPositions"/>, applies vanilla one if there is none.
+        /// </summary>
+        public  void CycleSpawnPosition()
         {
             spawnCycleCtr++;
             if (spawnCycleCtr >= spawnPositions.Count) spawnCycleCtr = 0;
             ApplySpawnHack((spawnPositions.Count > 0) ? spawnPositions[spawnCycleCtr] : vanillaSpawnPosition); 
         }
-
+        /// <summary>
+        /// Checks whether players are in a zone eligible for starting sleep sequence.
+        /// </summary>
+        /// <returns></returns>
         private bool PlayersInTriggerZone()
         {
             for (int i = 0; i < room.game.Players.Count; i++) // Any alive players missing ? Still in starting shelter ?
@@ -478,11 +550,16 @@ namespace ShelterBehaviors
             }
             return true;
         }
+        /// <summary>
+        /// Prevents vanilla door from closing if neccessary.
+        /// </summary>
         private void PreventVanillaClose()
         {
             if (!noVanillaDoors) room.shelterDoor.closeSpeed = Mathf.Min(0f, room.shelterDoor.closeSpeed);
         }
-
+        /// <summary>
+        /// Deletes vanilla door.
+        /// </summary>
         internal void RemoveVanillaDoors()
         {
             room.shelterDoor.Destroy();
@@ -491,33 +568,44 @@ namespace ShelterBehaviors
             this.noVanillaDoors = true;
         }
 
+        /// <summary>
+        /// Unused thing for RNG salting in <see cref="GetSpawnPosition(int)"/>.
+        /// </summary>
         static private int incrementalsalt;
         private PlacedObject brokenWaterLevel;
 
+        /// <summary>
+        /// Chooses a random spawn pos from the list.
+        /// </summary>
+        /// <param name="salt"></param>
+        /// <returns></returns>
         internal IntVector2 GetSpawnPosition(int salt)
         {
-            int oldseed = UnityEngine.Random.seed;
+            int oldseed = Random.seed;
             try
             {
                 if(room.game.IsStorySession)
-                    UnityEngine.Random.seed = salt + incrementalsalt++ + room.game.clock + room.game.GetStorySession.saveState.seed + room.game.GetStorySession.saveState.cycleNumber + room.game.GetStorySession.saveState.deathPersistentSaveData.deaths + room.game.GetStorySession.saveState.deathPersistentSaveData.survives + Mathf.FloorToInt(room.game.GetStorySession.difficulty * 100) + Mathf.FloorToInt(room.game.GetStorySession.saveState.deathPersistentSaveData.howWellIsPlayerDoing * 100);
+                    Random.seed = salt + incrementalsalt++ + room.game.clock + room.game.GetStorySession.saveState.seed + room.game.GetStorySession.saveState.cycleNumber + room.game.GetStorySession.saveState.deathPersistentSaveData.deaths + room.game.GetStorySession.saveState.deathPersistentSaveData.survives + Mathf.FloorToInt(room.game.GetStorySession.difficulty * 100) + Mathf.FloorToInt(room.game.GetStorySession.saveState.deathPersistentSaveData.howWellIsPlayerDoing * 100);
                 if (noVanillaDoors)
                 {
-                    if (spawnPositions.Count > 0) return spawnPositions[UnityEngine.Random.Range(0, spawnPositions.Count)];
+                    if (spawnPositions.Count > 0) return spawnPositions[Random.Range(0, spawnPositions.Count)];
                     return vanillaSpawnPosition;
                 }
 
-                int roll = UnityEngine.Random.Range(0, spawnPositions.Count + 1);
+                int roll = Random.Range(0, spawnPositions.Count + 1);
                 if (spawnPositions.Count < roll) return spawnPositions[roll];
                 return vanillaSpawnPosition;
             }
             finally
             {
-                UnityEngine.Random.seed = oldseed;
+                Random.seed = oldseed;
             }
         }
-
-        internal void AddPlacedDoor(PlacedObject placedObject)
+        /// <summary>
+        /// Creates a door from a PlacedObject.
+        /// </summary>
+        /// <param name="placedObject">pObj to use; its <see cref="PlacedObject.data"/> must be an appropriate instance of <see cref="ManagedPlacedObjects.PlacedObjectsManager.ManagedData"/>.</param> 
+        public void AddPlacedDoor(PlacedObject placedObject)
         {
             int preCounter = room.game.rainWorld.progression.miscProgressionData.starvationTutorialCounter; // Prevent starvation tutorial dupes
             if (room.game.IsStorySession)
@@ -556,16 +644,26 @@ namespace ShelterBehaviors
             }
         }
 
-        internal void AddTriggerZone(PlacedObject placedObject)
+        /// <summary>
+        /// Registers a trigger zone.
+        /// </summary>
+        /// <param name="placedObject">pObj to use; its <see cref="PlacedObject.data"/> must be an appropriate instance of <see cref="PlacedObject.GridRectObjectData"/>.</param>
+        public void AddTriggerZone(PlacedObject placedObject)
         {
             this.triggers.Add((placedObject.data as PlacedObject.GridRectObjectData).Rect);
         }
-
-        internal void AddNoTriggerZone(PlacedObject placedObject)
+        /// <summary>
+        /// Registers a no-trigger zone.
+        /// </summary>
+        /// <param name="placedObject">pObj to use; its <see cref="PlacedObject.data"/> must be an appropriate instance of <see cref="PlacedObject.GridRectObjectData"/>.</param>
+        public void AddNoTriggerZone(PlacedObject placedObject)
         {
             this.noTriggers.Add((placedObject.data as PlacedObject.GridRectObjectData).Rect);
         }
 
+        /// <summary>
+        /// Displays a HTT tutorial message, then destroys itself.
+        /// </summary>
         public class HoldToTriggerTutorialObject : UpdatableAndDeletable
         {
             public HoldToTriggerTutorialObject(Room room, PlacedObject pObj)
