@@ -122,7 +122,7 @@ namespace ConcealedGarden
         // Dynamic relationship to be hooked to creatures for friendly behavior
         // handles gift, protection, passiveness
         // in use by spiders and vultures
-        private static CreatureTemplate.Relationship IUseARelationshipTracker_UpdateDynamicRelationship(On.IUseARelationshipTracker.orig_UpdateDynamicRelationship orig, IUseARelationshipTracker self, RelationshipTracker.DynamicRelationship dRelation)
+        private static CreatureTemplate.Relationship IUseARelationshipTracker_UpdateDynamicRelationship(IUART_UDR orig, IUseARelationshipTracker self, RelationshipTracker.DynamicRelationship dRelation)
         {
             var result = orig(self, dRelation);
             if(self is ArtificialIntelligence ai && ai.friendTracker != null)
@@ -717,5 +717,7 @@ namespace ConcealedGarden
             // because if the creature lost all relationships it wouldnd save the block
             orig(self, s);
         }
+
+        public delegate CreatureTemplate.Relationship IUART_UDR(IUseARelationshipTracker self, RelationshipTracker.DynamicRelationship drel);
     }
 }

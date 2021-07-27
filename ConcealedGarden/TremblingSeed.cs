@@ -205,20 +205,28 @@ namespace ConcealedGarden
             public override void Update(bool eu)
             {
                 base.Update(eu);
-                if (owner != null)
+                try
                 {
-                    this.stayAlive = true;
-                    this.setPos = owner.firstChunk.pos;
-                    
-                    this.setRad = Mathf.Lerp(30f, 220f, timeRemaining);
-                    this.setAlpha = Mathf.Lerp(0f, 1f, timeRemaining);
-                    foreach (var chunk in owner.bodyChunks)
+                    if (owner != null)
                     {
-                        chunk.vel.y += owner.gravity * effectiveGReduction;
+                        this.stayAlive = true;
+                        this.setPos = owner.firstChunk.pos;
+
+                        this.setRad = Mathf.Lerp(30f, 220f, timeRemaining);
+                        this.setAlpha = Mathf.Lerp(0f, 1f, timeRemaining);
+                        foreach (var chunk in owner.bodyChunks)
+                        {
+                            chunk.vel.y += owner.gravity * effectiveGReduction;
+                        }
                     }
+                    lifetime--;
+                    if (lifetime <= 0 || this.tiedToObject?.room != this.room) { this.Destroy(); Debug.Log("Seedlight is dead. Bye!"); }
                 }
-                lifetime--;
-                if (lifetime <= 0 || this.tiedToObject?.room != this.room) { this.Destroy(); Debug.Log("Seedlight is dead. Bye!"); }
+                catch (NullReferenceException nue)
+                {
+                    Debug.LogWarning("nullref in mysteriousLight.Update!");
+                    this.Destroy();
+                }
             }
 
             PhysicalObject owner => tiedToObject as PhysicalObject;

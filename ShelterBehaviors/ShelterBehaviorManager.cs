@@ -71,7 +71,13 @@ namespace ShelterBehaviors
         /// <summary>
         /// Whether the shelter requires player to hold Down control to sleep.
         /// </summary>
-        public bool holdToTrigger;
+        public bool holdToTrigger { get { return _htt || Override_HTT; } set { _htt = value; } }
+        /// <summary>
+        /// Global HTT override.
+        /// </summary>
+        public static bool Override_HTT;
+        private bool _htt;
+
         /// <summary>
         /// Trigger zones.
         /// </summary>
@@ -141,6 +147,7 @@ namespace ShelterBehaviors
             this.pObj = pObj;
             this.data = pObj.data as ManagedPlacedObjects.PlacedObjectsManager.ManagedData;
             this.placedObjectIndex = room.roomSettings.placedObjects.IndexOf(pObj);
+
             spawnPositions = new List<IntVector2>();
             customDoors = new List<ShelterDoor>();
             triggers = new List<IntRect>();
