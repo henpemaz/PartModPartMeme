@@ -439,13 +439,13 @@ namespace ConcealedGarden
             {
                 for (int i = 0; i < locks.Length; i++)
                 {
-                    sLeaser.sprites[i].x = Mathf.Lerp(this.locks[i].lastPos.x, this.locks[i].pos.x, timeStacker) - rCam.pos.x;
-                    sLeaser.sprites[i].y = Mathf.Lerp(this.locks[i].lastPos.y, this.locks[i].pos.y, timeStacker) - rCam.pos.y;
+                    sLeaser.sprites[i].x = Mathf.Lerp(this.locks[i].lastPos.x, this.locks[i].pos.x, timeStacker) - camPos.x;
+                    sLeaser.sprites[i].y = Mathf.Lerp(this.locks[i].lastPos.y, this.locks[i].pos.y, timeStacker) - camPos.y;
                 }
                 for (int i = 0; i < blobs.Length; i++)
                 {
-                    sLeaser.sprites[locks.Length + i].x = Mathf.Lerp(this.blobs[i].lastPos.x, this.blobs[i].pos.x, timeStacker) - rCam.pos.x;
-                    sLeaser.sprites[locks.Length + i].y = Mathf.Lerp(this.blobs[i].lastPos.y, this.blobs[i].pos.y, timeStacker) - rCam.pos.y;
+                    sLeaser.sprites[locks.Length + i].x = Mathf.Lerp(this.blobs[i].lastPos.x, this.blobs[i].pos.x, timeStacker) - camPos.x;
+                    sLeaser.sprites[locks.Length + i].y = Mathf.Lerp(this.blobs[i].lastPos.y, this.blobs[i].pos.y, timeStacker) - camPos.y;
                 }
             }
         }

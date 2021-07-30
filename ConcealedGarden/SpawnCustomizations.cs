@@ -10,7 +10,8 @@ namespace ConcealedGarden
         internal static void Apply()
         {
             // ID spawndata support
-            On.WorldLoader.ctor += WorldLoader_ctor;
+            //On.WorldLoader.ctor += WorldLoader_ctor;
+            On.RainWorld.Start += RainWorld_Start; // Deferred hooks because of bad load order and mods that dont call orig
             On.RainWorldGame.GetNewID_1 += RainWorldGame_GetNewID_1;
 
             // Assignable Trader support
@@ -48,6 +49,13 @@ namespace ConcealedGarden
             On.FriendTracker.GiftRecieved += FriendTracker_GiftRecieved;
             // Aggression value fix for friendly creatures
             On.ArtificialIntelligence.CurrentPlayerAggression += ArtificialIntelligence_CurrentPlayerAggression;
+        }
+
+        // Defferred hoookks aaaaugh
+        private static void RainWorld_Start(On.RainWorld.orig_Start orig, RainWorld self)
+        {
+            On.WorldLoader.ctor += WorldLoader_ctor;
+            orig(self);
         }
 
         private static Creature SocialEventRecognizer_ItemOffered(On.SocialEventRecognizer.orig_ItemOffered orig, SocialEventRecognizer self, Creature gifter, PhysicalObject item, Creature offeredTo)
@@ -484,7 +492,7 @@ namespace ConcealedGarden
                 {
                     // game.overWorld isn't set until the constructor is done so we can't use that reference
                     // Overworld.LoadWorld doesn't set a reference to worldloader anywhere while its doing its thing :/
-                    if (currentWorldLoader.Target is WorldLoader worldLoader && !worldLoader.Finished && worldLoader.world.region != null && worldLoader.world.region.regionNumber == region)
+                    if (currentWorldLoader?.Target is WorldLoader worldLoader && !worldLoader.Finished && worldLoader.world.region != null && worldLoader.world.region.regionNumber == region)
                     {
                         if (worldLoader.world.spawners[inregionspawn] is World.SimpleSpawner simpleSpawner)
                         {
@@ -571,7 +579,7 @@ namespace ConcealedGarden
         {
             orig(self, world, creatureTemplate, realizedCreature, pos, ID);
 
-            if (currentWorldLoader.Target is WorldLoader worldLoader && ID.spawner >= 0 && worldLoader.game.IsStorySession) // called juuuust from WorldLoader.GeneratePopulation most likely, lets play safe though
+            if (currentWorldLoader?.Target is WorldLoader worldLoader && ID.spawner >= 0 && worldLoader.game.IsStorySession) // called juuuust from WorldLoader.GeneratePopulation most likely, lets play safe though
             {
                 int region = UnityEngine.Mathf.FloorToInt(ID.spawner / 1000f);
                 int inregionspawn = ID.spawner - region * 1000;
@@ -636,7 +644,7 @@ namespace ConcealedGarden
         {
             orig(self, creature);
             string spawnData = "";
-            if (currentWorldLoader.Target is WorldLoader worldLoader && creature.ID.spawner >= 0 && worldLoader.game.IsStorySession) // called juuuust from WorldLoader.GeneratePopulation most likely, lets play safe though
+            if (currentWorldLoader?.Target is WorldLoader worldLoader && creature.ID.spawner >= 0 && worldLoader.game.IsStorySession) // called juuuust from WorldLoader.GeneratePopulation most likely, lets play safe though
             {
                 int region = UnityEngine.Mathf.FloorToInt(creature.ID.spawner / 1000f);
                 int inregionspawn = creature.ID.spawner - region * 1000;

@@ -81,6 +81,8 @@
     <Compile Include="BunkerShelterParts.cs" />
     <Compile Include="CameraZoomEffect.cs" />
     <Compile Include="CGGateFix.cs" />
+    <Compile Include="CGSkyLine.cs" />
+    <Compile Include="CGCosmeticWater.cs" />
     <Compile Include="ConcealedGarden.cs" />
     <Compile Include="CosmeticLeaves.cs" />
     <Compile Include="ElectricArcs.cs" />

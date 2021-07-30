@@ -164,6 +164,10 @@ namespace ConcealedGarden
 
             //On.Rock.ApplyPalette += Rock_ApplyPalette;
             //On.RainWorld.Start += RainWorld_Start;
+
+            CGSkyLine.Register();
+
+            CGCosmeticWater.Register();
         }
 
         //private void RainWorld_Start(On.RainWorld.orig_Start orig, RainWorld self)

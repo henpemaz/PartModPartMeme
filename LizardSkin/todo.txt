@@ -14,6 +14,8 @@ feature requests:
 	better head-tracking for antennae
 	SpinePos and Angle settings for the gills
 	spinepos on antennae to minus values (or have zero be higher)
+	SpinePos and lenght for Spinespikes
+	Better smoother interpolation between tail and body direction
 
 void sea spawns antena zooms through screen missing a position reset or smth https://youtu.be/IXIaptekU34
 	done in 0.6
