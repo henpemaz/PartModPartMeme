@@ -58,3 +58,7 @@ with expedition the liz accessiories are slucat's color (topaz)
 	needs special compatibilification or poke lee about it.
 	
 the antennaes kinda go off slugcat. segment too long = huge offset from sluggy (topaz)
+
+the cosmetic colour isn't dulling out when in starving state
+	I think adding a setting for the cosmetic colour to inherit slugcat's menu colours could be a possible fix
+		a "base collor as effect" option could solve that, making it use fancy's slugcatcolor for the effect

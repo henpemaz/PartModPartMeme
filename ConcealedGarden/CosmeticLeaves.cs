@@ -44,15 +44,44 @@ namespace ConcealedGarden
             }
         }
 
-        public class Branch
+        public abstract class BranchPart
         {
-            private readonly CosmeticLeaves owner;
-            private readonly Branch connectsTo;
-            private readonly int connectsToIndex;
+            protected static float windspeed = 0.01f;
+            protected CosmeticLeaves owner;
+            protected BranchPart connectsTo;
+            protected int connectsToIndex;
+            protected float rotation;
+
+            protected Vector3[] relpos;
+            protected Vector3[,] pos;
+
+            protected Vector3 attachedPoint { get { return connectsTo?.pos[0, connectsToIndex] ?? new Vector3(owner.pObj.pos.x, owner.pObj.pos.y, owner.data.depth); } }
+            protected float parentRotation { get { return connectsTo?.rotation ?? 0f; } }
+            public void UpdatePositions()
+            {
+                Vector3 rootpos = attachedPoint;
+                Quaternion rotP = Quaternion.Euler(0, 0, parentRotation);
+                Vector3 relative = rotP * relpos[relpos.Length - 1];
+                Vector2 dir = new Vector2(relative.x, relative.y);
+                float windfactor = dir.normalized.y * Mathf.Sign(dir.x) *
+                    Mathf.PerlinNoise(windspeed * (rootpos.x + owner.room.game.clock), 0.1f * windspeed * rootpos.y)
+                    / Mathf.Pow(dir.magnitude, 0.2f)
+                    * Mathf.Lerp(1f, 0.25f, rootpos.z / 30f);
+                this.rotation = parentRotation + 15f * windfactor;
+                Quaternion rotQ = Quaternion.Euler(0, 0, rotation);
+                for (int i = 0; i < relpos.Length; i++)
+                {
+                    pos[1, i] = pos[0, i];
+                    pos[0, i] = rootpos + rotQ * relpos[i];
+                    // maybe instead of relative to rootpos we could have stacked relative positions for better movement ?
+                }
+            }
+        }
+
+        public class Branch : BranchPart
+        {
             private readonly Vector3 goal;
-            private Vector3[] relpos;
             private float[] thicknesses;
-            public Vector3[,] pos;
 
             public Branch(CosmeticLeaves owner, Branch connectsTo, int connectsToIndex, Vector3 goal, float thicknessAtBase)
             {
@@ -92,7 +121,10 @@ namespace ConcealedGarden
                     }
                     if (thicknessAtBase < 5f && UnityEngine.Random.value < Mathf.Pow(owner.data.leaves, thicknessAtBase / 2f))
                     {
-                        new Leaf(owner, this, i, (dir * 0.6f + UnityEngine.Random.insideUnitSphere + (Vector3)UnityEngine.Random.insideUnitCircle).normalized);
+                        Vector3 sproutDir = (dir * 0.6f + UnityEngine.Random.insideUnitSphere + (Vector3)UnityEngine.Random.insideUnitCircle).normalized;
+                        if (Mathf.Abs(sproutDir.y) < 0.2f) sproutDir.y = -0.2f;
+                        sproutDir.y = Mathf.Sign(sproutDir.y) * Mathf.Pow(Mathf.Abs(sproutDir.y), 0.8f); // favor anything but flat to the camera
+                        new Leaf(owner, this, i, sproutDir.normalized);
                     }
                 }
             }
@@ -101,20 +133,9 @@ namespace ConcealedGarden
             {
                 // Update dynamic poss
                 // wind and such would go here
+                
                 UpdatePositions();
             }
-
-            public void UpdatePositions()
-            {
-                Vector3 rootpost = attachedPoint;
-                for (int i = 0; i < relpos.Length; i++)
-                {
-                    pos[1, i] = pos[0, i];
-                    pos[0, i] = rootpost + relpos[i];
-                }
-            }
-
-            Vector3 attachedPoint { get { return connectsTo?.pos[0, connectsToIndex] ?? new Vector3(owner.pObj.pos.x, owner.pObj.pos.y, owner.data.depth); } }
 
             internal FSprite InitSprite(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
             {
@@ -172,15 +193,10 @@ namespace ConcealedGarden
             }
         }
 
-        public class Leaf
+        public class Leaf : BranchPart
         {
-            private CosmeticLeaves owner;
-            private Branch connectsTo;
-            private int connectsToIndex;
             private Vector3 dir;
             private float[] widths;
-            private Vector3[] relpos;
-            public Vector3[,] pos;
 
             public Leaf(CosmeticLeaves owner, Branch connectsTo, int connectsToIndex, Vector3 direction)
             {
@@ -203,18 +219,6 @@ namespace ConcealedGarden
             {
                 UpdatePositions();
             }
-
-            public void UpdatePositions()
-            {
-                Vector3 rootpost = attachedPoint;
-                for (int i = 0; i < relpos.Length; i++)
-                {
-                    pos[1, i] = pos[0, i];
-                    pos[0, i] = rootpost + relpos[i];
-                }
-            }
-
-            Vector3 attachedPoint { get { return connectsTo?.pos[0, connectsToIndex] ?? owner.pObj.pos; } }
 
             internal FSprite InitSprite(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
             {
