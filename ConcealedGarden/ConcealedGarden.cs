@@ -39,7 +39,7 @@ namespace ConcealedGarden
             public ConcealedGardenOI() : base(mod:instance)
             {
                 instanceOI = this;
-                progressData = true;
+                hasProgData = true;
             }
 
             public override void Initialize()
@@ -47,53 +47,64 @@ namespace ConcealedGarden
                 base.Initialize();
                 this.Tabs = new OpTab[1] { new OpTab() };
                 CompletelyOptional.GeneratedOI.AddBasicProfile(Tabs[0], rwMod);
-                LoadData();
             }
 
-            public override void DataOnChange()
+            protected override void ProgressionChanged(bool saveAndPers, bool misc)
             {
-                base.DataOnChange();
+                base.ProgressionChanged(saveAndPers, misc);
+                LoadData();
                 ConcealedGardenProgression.LoadProgression();
                 LizardSkin.LizardSkin.SetCGEverBeaten(progression.everBeaten);
                 LizardSkin.LizardSkin.SetCGStoryProgression(progression.transfurred ? 1 : 0);
+            }
+
+            protected override void ProgressionPreSave()
+            {
+                instanceOI.SaveData();
+                ConcealedGardenProgression.SaveProgression();
+                base.ProgressionPreSave();
             }
         }
 
         public class ConcealedGardenProgression
         {
             private Dictionary<string, object> playerProgression;
-            private Dictionary<string, object> miscProgression;
-            public ConcealedGardenProgression(Dictionary<string, object> ppDict, Dictionary<string, object> miscDict) 
+            private Dictionary<string, object> globalProgression;
+            public ConcealedGardenProgression(Dictionary<string, object> ppDict, Dictionary<string, object> gDict) 
             {
                 playerProgression = ppDict ?? new Dictionary<string, object>();
-                miscProgression = miscDict ?? new Dictionary<string, object>();
+                globalProgression = gDict ?? new Dictionary<string, object>();
             }
 
             public bool transfurred // transformed
             {
                 get { if (playerProgression.TryGetValue("transfurred", out object obj)) return (bool)obj; return false; }
-                internal set { playerProgression["transfurred"] = value; miscProgression["everBeaten"] = true; SaveProgression(); }
+                internal set { playerProgression["transfurred"] = value; globalProgression["everBeaten"] = true;}
             }
 
             public bool fishDream {
                 get { if (playerProgression.TryGetValue("fishDream", out object obj)) return (bool)obj; return false; }
-                internal set { playerProgression["fishDream"] = value; SaveProgression(); }
+                internal set { playerProgression["fishDream"] = value;}
             }
 
             public bool everBeaten
             {
-                get { if (miscProgression.TryGetValue("everBeaten", out object obj)) return (bool)obj; return false; }
-                internal set { miscProgression["everBeaten"] = value; SaveProgression(); }
+                get { if (globalProgression.TryGetValue("everBeaten", out object obj)) return (bool)obj; return false; }
+                internal set { globalProgression["everBeaten"] = value;}
             }
 
             internal static void LoadProgression()
             {
                 object storedPp;
-                object storedMisc;
+                object storedg;
+                Debug.Log("CG Progression loading with:");
+                Debug.Log($"persData :{instanceOI.persData}");
+                Debug.Log($"data : {instanceOI.data}");
+
                 progression = new ConcealedGardenProgression(
-                    (!string.IsNullOrEmpty(instanceOI.data) && (storedPp = Json.Deserialize(instanceOI.data)) != null && typeof(Dictionary<string, object>).IsAssignableFrom(storedPp.GetType())) ? (Dictionary<string, object>)storedPp
+                    (!string.IsNullOrEmpty(instanceOI.persData) && (storedPp = Json.Deserialize(instanceOI.persData)) != null && typeof(Dictionary<string, object>).IsAssignableFrom(storedPp.GetType())) ? (Dictionary<string, object>)storedPp
                     : null,
-                    (!string.IsNullOrEmpty(instanceOI.miscdata) && (storedMisc = Json.Deserialize(instanceOI.miscdata)) != null && typeof(Dictionary<string, object>).IsAssignableFrom(storedMisc.GetType())) ? (Dictionary<string, object>)storedMisc
+                    (!string.IsNullOrEmpty(instanceOI.data) && (storedg = Json.Deserialize(instanceOI.data)) != null && typeof(Dictionary<string, object>).IsAssignableFrom(storedg.GetType())) ? (Dictionary<string, object>)storedg
                     : null);
                 
             }
@@ -101,25 +112,26 @@ namespace ConcealedGarden
             {
                 if (progression != null)
                 {
-                    var pp = progression.playerProgression;
-                    var misc = progression.miscProgression;
-                    // Causes CM to call OnDataChange which we use to read progression :/
-                    // funny bug that wasted me an hour and some pizza
-                    instanceOI.data = Json.Serialize(pp);
-                    instanceOI.miscdata = Json.Serialize(misc);
+                    instanceOI.persData = Json.Serialize(progression.playerProgression);
+                    instanceOI.data = Json.Serialize(progression.globalProgression);
                 }
                 else
                 {
-                    instanceOI.data = instanceOI.defaultData;
-                    instanceOI.miscdata = instanceOI.defaultMiscData;
+                    instanceOI.persData = instanceOI.defaultData;
+                    instanceOI.data = instanceOI.defaultMiscData;
                 }
-                instanceOI.SaveData();
+                Debug.Log("CG Progression saved with:");
+                Debug.Log($"persData :{instanceOI.persData}");
+                Debug.Log($"data : {instanceOI.data}");
             }
         }
 
         public override void OnEnable()
         {
             base.OnEnable();
+            Debug.Log("CG Loading Start");
+
+            //throw new Exception("modding");
 
             LizardSkin.LizardSkin.SetCGStoryProgression(0); // CG Progression Mode
 
