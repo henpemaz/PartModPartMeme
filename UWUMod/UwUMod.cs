@@ -203,7 +203,7 @@ namespace UwUMod
         public static string UwU_ConfigMachinyeTwanswate(OwigConfigMachinyeTwanswate owig, string owigstwing)
         {
             string wetuwnvaw = owig(owigstwing);
-            Debug.Log("UWU I'm in!!! - " + wetuwnvaw);
+            //Debug.Log("UWU I'm in!!! - " + wetuwnvaw);
             if(wetuwnvaw == "There was an issue initializing OptionInterface.")
                 wetuwnvaw = "[[OOPSIE WOOPSIE!! UwU We made a fucky wucky!! A wittwe\nfucko boingo! The code monkeys at our headquawtews\nare wowking VEWY HAWD to fix this!]]";
             return wetuwnvaw;

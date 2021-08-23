@@ -66,8 +66,8 @@ namespace ConcealedGarden
                 float windfactor = dir.normalized.y * Mathf.Sign(dir.x) *
                     Mathf.PerlinNoise(windspeed * (rootpos.x + owner.room.game.clock), 0.1f * windspeed * rootpos.y)
                     / Mathf.Pow(dir.magnitude, 0.2f)
-                    * Mathf.Lerp(1f, 0.25f, rootpos.z / 30f);
-                this.rotation = parentRotation + 15f * windfactor;
+                    * Mathf.Lerp(1f, 0.33f, rootpos.z / 30f);
+                this.rotation = parentRotation + 12f * windfactor;
                 Quaternion rotQ = Quaternion.Euler(0, 0, rotation);
                 for (int i = 0; i < relpos.Length; i++)
                 {

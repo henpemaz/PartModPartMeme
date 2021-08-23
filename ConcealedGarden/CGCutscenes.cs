@@ -147,7 +147,7 @@ namespace ConcealedGarden
         private static void SaveState_SessionEnded(On.SaveState.orig_SessionEnded orig, SaveState self, RainWorldGame game, bool survived, bool newMalnourished)
         {
             orig(self, game, survived, newMalnourished);
-            if (survived && !ConcealedGarden.progression.fishDream)
+            if (survived && self.dreamsState != null && !ConcealedGarden.progression.fishDream)
             {
                 for (int i = 0; i < game.GetStorySession.playerSessionRecords.Length; i++)
                 {
