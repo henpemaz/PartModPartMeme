@@ -57,6 +57,7 @@ namespace LizardSkin
 
             if(!ignoremissing) throw new SerializationException("LizKinConfiguration version unsuported");
         }
+
         public static LizKinConfiguration MakeFromJson(Dictionary<string, object> json)
         {
             LizKinConfiguration instance = new LizKinConfiguration();

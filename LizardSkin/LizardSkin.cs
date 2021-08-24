@@ -65,6 +65,7 @@ namespace LizardSkin
         {
             CGIntegration = true;
             CGEverBeaten = beaten;
+            if (!beaten) LizardSkinOI.ConfigureForCG();
         }
 
         public static void SetCGStoryProgression(int step)

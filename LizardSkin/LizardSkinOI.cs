@@ -45,6 +45,7 @@ When on a profile tab, you can select which characters that profile should apply
 Inside a profile you can add Cosmetics by clicking on the box with a +. Cosmetics can be reordered, copied, pasted, duplicated and deleted. You can also control the base color and effect color for your slugcat to match any custom sprites or skins. For the color override to take effect you must tick the checkbox next to the color picker.
 
 You can pick Cosmetics of several types, edit their settings and configure randomization. When you're done customizing, hit refresh on the preview panel to see what your sluggo looks like :3";
+
         private OpLabel cglabel1;
         private OpCheckBox cgbox1;
         private OpLabelLong cglabel2;
@@ -291,9 +292,74 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             return conf;
         }
 
+        internal static void ConfigureForCG()
+        {
+            Debug.Log("LizardSkin ConfigureForCG");
+            if (configBeingUsed == null) return; // Bad call
+            bool whiteFound = false, yellowFound = false, redFound = false;
+            foreach (var profile in configBeingUsed.profiles)
+            {
+                if (profile.profileName == "CG - Survivor") whiteFound = true;
+                else if (profile.profileName == "CG - Monk") yellowFound = true;
+                else if (profile.profileName == "CG - Hunter") redFound = true;
+                else
+                {
+                    profile.appliesToList = new List<int>() { }; // Disable others
+                }
+            }
+            if (!whiteFound)
+            {
+                LizKinProfileData myProfile = new LizKinProfileData();
+                myProfile.profileName = "CG - Survivor";
+                myProfile.appliesToList = new List<int>() { 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+                myProfile.effectColor = new Color(33f / 255f, 245f / 255f, 235f / 255f);
+
+                LizKinCosmeticData myCosmetic = new CosmeticAntennaeData() { profile = myProfile };
+                LizKinCosmeticData myCosmetic1 = new CosmeticTailTuftData() { profile = myProfile };
+
+                myProfile.cosmetics.Add(myCosmetic);
+                myProfile.cosmetics.Add(myCosmetic1);
+                configBeingUsed.profiles.Add(myProfile);
+            }
+            if (!yellowFound)
+            {
+                LizKinProfileData myProfile = new LizKinProfileData();
+                myProfile.profileName = "CG - Monk";
+                myProfile.appliesToList = new List<int>() { 1 };
+                myProfile.effectColor = new Color(250f / 255f, 16f / 255f, 235f / 255f);
+
+                LizKinCosmeticData myCosmetic = new CosmeticAntennaeData() { profile = myProfile };
+                LizKinCosmeticData myCosmetic1 = new CosmeticTailTuftData() { profile = myProfile, graphic = 6, scale = 0.66f, thickness = 0.75f, count = 6, roundness = 0.4f };
+                LizKinCosmeticData myCosmetic2 = new CosmeticLongShoulderScalesData() { profile = myProfile, graphic = 3, scale = 0.66f, count = 12, roundness = 0.6f, minSize = 0.4f, start = 0.2f };
+
+                myProfile.cosmetics.Add(myCosmetic);
+                myProfile.cosmetics.Add(myCosmetic1);
+                myProfile.cosmetics.Add(myCosmetic2);
+                configBeingUsed.profiles.Add(myProfile);
+            }
+            if (!redFound)
+            {
+                LizKinProfileData myProfile = new LizKinProfileData();
+                myProfile.profileName = "CG - Hunter";
+                myProfile.appliesToList = new List<int>() { 2 };
+                myProfile.effectColor = new Color(50f / 255f, 205f / 255f, 50f / 255f);
+
+                LizKinCosmeticData myCosmetic = new CosmeticAntennaeData() { profile = myProfile };
+                LizKinCosmeticData myCosmetic1 = new CosmeticTailTuftData() { profile = myProfile, graphic = 2, scale = 1.4f, thickness = 0.6f, count = 8, roundness = 0.6f, length = 0.48f };
+                LizKinCosmeticData myCosmetic2 = new CosmeticLongHeadScalesData() { profile = myProfile, graphic = 2, scale = 1.4f, thickness = 0.6f, spinePos = 0.13f };
+
+                myProfile.cosmetics.Add(myCosmetic);
+                myProfile.cosmetics.Add(myCosmetic1);
+                myProfile.cosmetics.Add(myCosmetic2);
+                configBeingUsed.profiles.Add(myProfile);
+            }
+            SaveLizKinData();
+        }
+
         internal static void SaveLizKinData()
         {
             Debug.Log("LizardSkinOI SaveLizKinData");
+            if (configBeingUsed == null) return;
             string path = GetPath();
             File.WriteAllText(path, Json.Serialize(configBeingUsed));
         }
