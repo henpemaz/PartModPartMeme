@@ -174,7 +174,7 @@ namespace ConcealedGarden
             this.room.PlaySound(SoundID.Broken_Anti_Gravity_Switch_On, this.firstChunk);
             this.ChangeMode(Mode.StuckInWall);
             this.RemainingUses = Max(RemainingUses - 1, 0);
-            this.room.AddObject(new SeedDistortion(this.firstChunk.pos, this.ActionCycle, 120f));
+            this.room.AddObject(new SeedDistortion(this, this.ActionCycle, 120f));
         }
         internal void CancelEverything()
         {
