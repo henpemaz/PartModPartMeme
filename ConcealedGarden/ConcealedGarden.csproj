@@ -81,11 +81,13 @@
     <Compile Include="BunkerShelterParts.cs" />
     <Compile Include="CameraZoomEffect.cs" />
     <Compile Include="CGGateFix.cs" />
+    <Compile Include="CGMenuScenes.cs" />
     <Compile Include="CGSkyLine.cs" />
     <Compile Include="CGCosmeticWater.cs" />
     <Compile Include="ConcealedGarden.cs" />
     <Compile Include="CosmeticLeaves.cs" />
     <Compile Include="ElectricArcs.cs" />
+    <Compile Include="FourthLayerFix.cs" />
     <Compile Include="GravityGradient.cs" />
     <Compile Include="LifeSimProjection.cs" />
     <Compile Include="LRUPickup.cs" />

@@ -49,9 +49,9 @@ namespace ConcealedGarden
                 CompletelyOptional.GeneratedOI.AddBasicProfile(Tabs[0], rwMod);
             }
 
-            protected override void ProgressionChanged(bool saveAndPers, bool misc)
+            protected override void ProgressionLoaded()
             {
-                base.ProgressionChanged(saveAndPers, misc);
+                base.ProgressionLoaded();
                 LoadData();
                 ConcealedGardenProgression.LoadProgression();
                 LizardSkin.LizardSkin.SetCGEverBeaten(progression.everBeaten);
@@ -115,11 +115,6 @@ namespace ConcealedGarden
                     instanceOI.persData = Json.Serialize(progression.playerProgression);
                     instanceOI.data = Json.Serialize(progression.globalProgression);
                 }
-                else
-                {
-                    instanceOI.persData = instanceOI.defaultData;
-                    instanceOI.data = instanceOI.defaultMiscData;
-                }
                 Debug.Log("CG Progression saved with:");
                 Debug.Log($"persData :{instanceOI.persData}");
                 Debug.Log($"data : {instanceOI.data}");
@@ -157,8 +152,6 @@ namespace ConcealedGarden
 
             SpawnCustomizations.Apply();
 
-            ShaderTester.Register();
-
             NoLurkArea.Register();
 
             GravityGradient.Register();
@@ -174,135 +167,17 @@ namespace ConcealedGarden
 
             CGCutscenes.Apply();
 
-            //On.Rock.ApplyPalette += Rock_ApplyPalette;
-            //On.RainWorld.Start += RainWorld_Start;
+            CGMenuScenes.Apply();
 
             CGSkyLine.Register();
 
             CGCosmeticWater.Register();
 
-            On.PersistentData.ctor += PersistentData_ctor;
-            On.RoomCamera.MoveCamera_1 += RoomCamera_MoveCamera_1;
+            FourthLayerFix.Apply();
 
+
+            // Screaming into the void
             Debug.Log("CG Fully Loaded");
-        }
-
-        private void RoomCamera_MoveCamera_1(On.RoomCamera.orig_MoveCamera_1 orig, RoomCamera self, Room newRoom, int camPos)
-        {
-            orig(self, newRoom, camPos);
-
-            if(self.bkgwww == null)
-            {
-                string text = string.Concat(new object[]
-                {
-                    WorldLoader.FindRoomFileDirectory(newRoom.abstractRoom.name, true),
-                    "_",
-                    camPos + 1,
-                    "_bkg.png"
-                });
-                Uri uri = new Uri(text);
-                if (uri.IsFile && System.IO.File.Exists(uri.LocalPath))
-                {
-                    Debug.Log("RoomCamera_MoveCamera loading bkg img from: " + text);
-                    self.bkgwww = new WWW(text);
-                }
-                //Debug.Log("RoomCamera_MoveCamera_1 would load from:" + text);
-                //Debug.Log("RoomCamera_MoveCamera_1 would load :" + System.IO.File.Exists(text));
-                //Debug.Log("RoomCamera_MoveCamera_1 bkgwww real " + (self.bkgwww != null));
-            }
-        }
-
-        private void PersistentData_ctor(On.PersistentData.orig_ctor orig, PersistentData self, RainWorld rainWorld)
-        {
-            self.cameraTextures = new Texture2D[2, 2];
-            for (int i = 0; i < 2; i++)
-            {
-                for (int j = 0; j < 2; j++)
-                {
-                    self.cameraTextures[i, j] = new Texture2D(1400, 800, TextureFormat.ARGB32, false);
-                    self.cameraTextures[i, j].anisoLevel = 0;
-                    self.cameraTextures[i, j].filterMode = FilterMode.Point;
-                    self.cameraTextures[i, j].wrapMode = TextureWrapMode.Clamp;
-                    // This part originally loaded the same texture into both atlases
-                    // In the normal game, this had no effect, but if it remained, the background
-                    // Would always be a copy of the foreground
-                    if (j == 0)
-                        Futile.atlasManager.LoadAtlasFromTexture("LevelTexture" + ((i != 0) ? i.ToString() : string.Empty), self.cameraTextures[i, j]);
-                    else
-                        Futile.atlasManager.LoadAtlasFromTexture("BackgroundTexture" + ((i != 0) ? i.ToString() : string.Empty), self.cameraTextures[i, j]);
-                }
-            }
-        }
-
-        //private void RainWorld_Start(On.RainWorld.orig_Start orig, RainWorld self)
-        //{
-        //    orig(self);
-
-        //    self.processManager.RequestMainProcessSwitch(ProcessManager.ProcessID.ConsoleOptionsMenu);
-        //}
-
-        //private void Rock_ApplyPalette(On.Rock.orig_ApplyPalette orig, Rock self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
-        //{
-        //    orig(self, sLeaser, rCam, palette);
-        //    self.color = UnityEngine.Color.white;
-        //    sLeaser.sprites[0].color = UnityEngine.Color.white;
-        //    sLeaser.sprites[0].element = Futile.atlasManager.GetElementWithName(UnityEngine.Random.value > 0.5f ? "pebble69" : "borget");
-        //}
-
-        public class ShaderTester : CosmeticSprite
-        {
-            public enum Shader { Basic, LevelColor, Background, WaterSurface, DeepWater, Shortcuts, DeathRain, LizardLaser, WaterLight, WaterFall, ShockWave, Smoke, Spores, Steam, ColoredSprite, ColoredSprite2, LightSource, LightBloom, SkyBloom, Adrenaline, CicadaWing, BulletRain, CustomDepth, UnderWaterLight, FlatLight, FlatLightBehindTerrain, VectorCircle, VectorCircleFadable, FlareBomb, Fog, WaterSplash, EelFin, EelBody, JaggedCircle, JaggedSquare, TubeWorm, LizardAntenna, TentaclePlant, LevelMelt, LevelMelt2, CoralCircuit, DeadCoralCircuit, CoralNeuron, Bloom, GravityDisruptor, GlyphProjection, BlackGoo, Map, MapAerial, MapShortcut, LightAndSkyBloom, SceneBlur, EdgeFade, HeatDistortion, Projection, SingleGlyph, DeepProcessing, Cloud, CloudDistant, DistantBkgObject, BkgFloor, House, DistantBkgObjectRepeatHorizontal, Dust, RoomTransition, VoidCeiling, FlatLightNoisy, VoidWormBody, VoidWormFin, VoidWormPincher, FlatWaterLight, WormLayerFade, OverseerZip, GhostSkin, GhostDistortion, GateHologram, OutPostAntler, WaterNut, Hologram, FireSmoke, HoldButtonCircle, GoldenGlow, ElectricDeath, VoidSpawnBody, SceneLighten, SceneBlurLightEdges, SceneRain, SceneOverlay, SceneSoftLight, HologramImage, HologramBehindTerrain, Decal, SpecificDepth, LocalBloom, MenuText, DeathFall, KingTusk, HoloGrid, SootMark, NewVultureSmoke, SmokeTrail, RedsIllness, HazerHaze, Rainbow, LightBeam }
-            public enum Container { Shadows, BackgroundShortcuts, Background, Midground, Items, Foreground, ForegroundLights, Shortcuts, Water, GrabShaders, Bloom, HUD, HUD2 }
-
-            private readonly PlacedObject pObj;
-            PlacedObjectsManager.ManagedData data => pObj.data as PlacedObjectsManager.ManagedData;
-
-            public ShaderTester(Room room, PlacedObject pObj)
-            {
-                this.room = room;
-                this.pObj = pObj;
-            }
-
-            public override void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
-            {
-                base.InitiateSprites(sLeaser, rCam);
-                sLeaser.sprites = new FSprite[1] { new FSprite("Futile_White", true) };
-            }
-
-            public override void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, UnityEngine.Vector2 camPos)
-            {
-                base.DrawSprites(sLeaser, rCam, timeStacker, camPos);
-                rCam.ReturnFContainer(data.GetValue<Container>("container").ToString())
-                    .AddChildAtIndex(sLeaser.sprites[0],
-                        UnityEngine.Mathf.FloorToInt(data.GetValue<float>("depth") * rCam.ReturnFContainer(data.GetValue<Container>("container").ToString()).GetChildCount()));
-                try
-                {
-                    sLeaser.sprites[0].SetElementByName(data.GetValue<string>("sprite"));
-                }
-                catch { }
-                sLeaser.sprites[0].shader = rCam.game.rainWorld.Shaders[data.GetValue<Shader>("shader").ToString()];
-                sLeaser.sprites[0].color = data.GetValue<UnityEngine.Color>("color");
-                sLeaser.sprites[0].alpha = data.GetValue<float>("alpha");
-                sLeaser.sprites[0].scale = data.GetValue<float>("scale");
-                sLeaser.sprites[0].rotation = data.GetValue<float>("rotation");
-
-                sLeaser.sprites[0].SetPosition(pObj.pos - camPos);
-            }
-
-            public static void Register()
-            {
-                PlacedObjectsManager.RegisterFullyManagedObjectType(new PlacedObjectsManager.ManagedField[]
-                {
-                    new PlacedObjectsManager.StringField("sprite", "Futile_White"),
-                    new PlacedObjectsManager.FloatField("scale", 0.1f, 20f, 1f, 0.1f),
-                    new PlacedObjectsManager.FloatField("rotation", -360f, 360f, 0f, 1f),
-                    new PlacedObjectsManager.EnumField("shader", typeof(Shader), Shader.Basic),
-                    new PlacedObjectsManager.EnumField("container", typeof(Container), Container.Shadows),
-                    new PlacedObjectsManager.FloatField("depth", 0f, 1f, 0f, 0.01f),
-                    new PlacedObjectsManager.ColorField("color", UnityEngine.Color.white, controlType: PlacedObjectsManager.ManagedFieldWithPanel.ControlType.slider),
-                    new PlacedObjectsManager.FloatField("alpha", 0f, 1f, 0f, 0.01f),
-                }, typeof(ShaderTester), "ShaderTester");
-            }
         }
     }
 }
