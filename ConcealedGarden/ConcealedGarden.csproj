@@ -99,6 +99,10 @@
     <Compile Include="SlipperySlope.cs" />
     <Compile Include="SpawnCustomizations.cs" />
     <Compile Include="TremblingSeed.cs" />
+    <Compile Include="Utils\CGExtensions.cs" />
+    <Compile Include="Utils\CGUtils.cs" />
+    <Compile Include="Utils\ContainerCodes.cs" />
+    <Compile Include="Utils\GOscParams.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CustomSpritesLoader\CustomSpritesLoader.csproj">
@@ -121,6 +125,7 @@
       <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>if defined RWMods (copy /Y "$(TargetPath)" "%25RWMods%25")</PostBuildEvent>

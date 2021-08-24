@@ -220,6 +220,21 @@ namespace ManagedPlacedObjects
             Apply();
             managedObjectTypes.Add(obj);
         }
+        /// <summary>
+        /// Same as <see cref="RegisterManagedObject(ManagedObjectType)"/>, but with generics.
+        /// </summary>
+        /// <typeparam name="UAD"></typeparam>
+        /// <typeparam name="DATA"></typeparam>
+        /// <typeparam name="REPR"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="singleInstance"></param>
+        public static void RegistermanagedObject<UAD, DATA, REPR>(string key, bool singleInstance = false)
+            where UAD : UpdatableAndDeletable
+            where DATA : ManagedData
+            where REPR : ManagedRepresentation
+        {
+            RegisterManagedObject(new ManagedObjectType(key, typeof(UAD), typeof(DATA), typeof(REPR), singleInstance));
+        }
 
         /// <summary>
         /// Shorthand for registering a <see cref="FullyManagedObjectType"/>.
@@ -251,6 +266,18 @@ namespace ManagedPlacedObjects
         {
             ManagedObjectType emptyObjectType = new ManagedObjectType(name, null, dataType, reprType);
             RegisterManagedObject(emptyObjectType);
+        }
+        /// <summary>
+        /// Same as <see cref="RegisterEmptyObjectType(string, Type, Type)"/>, but with generics.
+        /// </summary>
+        /// <typeparam name="DATA"></typeparam>
+        /// <typeparam name="REPR"></typeparam>
+        /// <param name="key"></param>
+        public static void RegisterEmptyObjectType<DATA, REPR>(string key)
+            where DATA : ManagedData
+            where REPR : ManagedRepresentation
+        {
+            RegisterEmptyObjectType(key, typeof(DATA), typeof(REPR));
         }
 
         #region MANAGED
@@ -1228,6 +1255,11 @@ namespace ManagedPlacedObjects
                 this.label = label ?? "";
             }
 
+            public Vector2Field(string key, float defX, float defY, VectorReprType ct = VectorReprType.line, string label = null) 
+                : this(key, new Vector2(defX, defY), ct, label)
+            {
+
+            }
             public enum VectorReprType
             {
                 none,
@@ -1271,6 +1303,11 @@ namespace ManagedPlacedObjects
             {
                 this.controlType = controlType;
             }
+            public IntVector2Field(string key, int defX, int defY, IntVectorReprType ct = IntVectorReprType.line)
+                : this(key, new RWCustom.IntVector2(defX, defY), ct)
+            {
+
+            }
 
             public enum IntVectorReprType
             {
@@ -1313,6 +1350,9 @@ namespace ManagedPlacedObjects
             /// <param name="defaultColor">the value a new data object is generated with</param>
             /// <param name="controlType">one of <see cref="ManagedFieldWithPanel.ControlType.text"/> or <see cref="ManagedFieldWithPanel.ControlType.slider"/></param>
             public ColorField(string key, Color defaultColor, ControlType controlType = ControlType.text, string displayName = null) : base(key, defaultColor, controlType, displayName) { }
+            public ColorField(string key, float defR, float defG, float defB, 
+                float defA = 1f, ControlType ct = ControlType.text, string DisplayName = null)
+                : this(key, new Color(defR, defG, defB, defA), ct, DisplayName) { }
 
             public override object FromString(string str)
             {
