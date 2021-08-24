@@ -12,15 +12,17 @@ namespace ConcealedGarden
             On.Menu.SleepAndDeathScreen.AddBkgIllustration += SleepAndDeathScreen_AddBkgIllustration;
         }
 
-        private static string replacementFolder = "Scenes" + Path.DirectorySeparatorChar + "CGMenuAlt";
-        private static Dictionary<string, string> transfurrReplacemens = new Dictionary<string, string>()
+
+        private static string VanillaPath(string scene, string sprite) => "Scenes" + Path.DirectorySeparatorChar + scene + Path.DirectorySeparatorChar + sprite;
+        private static readonly string replacementFolder = "Scenes" + Path.DirectorySeparatorChar + "CGMenuAlt";
+        private static readonly Dictionary<string, string> transfurrReplacemens = new Dictionary<string, string>()
         {
-            {"Sleep - 2 - White"   ,"Sleep - 2 - White - tf" },
-            {"Sleep - 2 - Yellow"  ,"Sleep - 2 - Yellow - tf"},
-            {"Sleep - 2 - Red"     ,"Sleep - 2 - Red - tf"   },
-            {"White Slugcat - 2"   ,"White Slugcat - 2 - tf" },
-            {"Yellow Slugcat - 1"  ,"Yellow Slugcat - 1 - tf"},
-            {"Red Slugcat - 1"     ,"Red Slugcat - 1 - tf"   },
+            {VanillaPath("Sleep Screen - White", "Sleep - 2 - White"), "Sleep - 2 - White - tf"},
+            {VanillaPath("Sleep Screen - Yellow", "Sleep - 2 - Yellow"), "Sleep - 2 - Yellow - tf"},
+            {VanillaPath("Sleep Screen - Red", "Sleep - 2 - Red"), "Sleep - 2 - Red - tf"},
+            {VanillaPath("Slugcat - White", "White Slugcat - 2"), "White Slugcat - 2 - tf"},
+            {VanillaPath("Slugcat - Yellow", "Yellow Slugcat - 1"), "Yellow Slugcat - 1 - tf"},
+            {VanillaPath("Slugcat - Red", "Red Slugcat - 1"), "Red Slugcat - 1 - tf"},
         };
 
         private static void SlugcatPage_AddImage(On.Menu.SlugcatSelectMenu.SlugcatPage.orig_AddImage orig, Menu.SlugcatSelectMenu.SlugcatPage self, bool ascended)
@@ -35,7 +37,7 @@ namespace ConcealedGarden
                 {
                     foreach(var i in self.slugcatImage.depthIllustrations)
                     {
-                        if(transfurrReplacemens.TryGetValue(i.fileName, out string replacement))
+                        if(transfurrReplacemens.TryGetValue(i.folderName + Path.DirectorySeparatorChar + i.fileName, out string replacement))
                         {
                             i.fileName = replacement;
                             i.folderName = replacementFolder;
@@ -59,7 +61,7 @@ namespace ConcealedGarden
                 {
                     foreach (var i in self.scene.depthIllustrations)
                     {
-                        if (transfurrReplacemens.TryGetValue(i.fileName, out string replacement))
+                        if (transfurrReplacemens.TryGetValue(i.folderName + Path.DirectorySeparatorChar + i.fileName, out string replacement))
                         {
                             i.fileName = replacement;
                             i.folderName = replacementFolder;
