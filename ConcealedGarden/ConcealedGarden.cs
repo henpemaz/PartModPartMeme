@@ -175,6 +175,7 @@ namespace ConcealedGarden
 
             FourthLayerFix.Apply();
 
+            YellowTalk.Apply();
 
             // Screaming into the void
             Debug.Log("CG Fully Loaded");

@@ -105,6 +105,7 @@
     <Compile Include="Utils\CGUtils.cs" />
     <Compile Include="Utils\ContainerCodes.cs" />
     <Compile Include="Utils\GOscParams.cs" />
+    <Compile Include="YellowTalk.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CustomSpritesLoader\CustomSpritesLoader.csproj">
