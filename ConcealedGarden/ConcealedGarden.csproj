@@ -90,6 +90,7 @@
     <Compile Include="FourthLayerFix.cs" />
     <Compile Include="GravityGradient.cs" />
     <Compile Include="LifeSimProjection.cs" />
+    <Compile Include="LizardBehaviorChange.cs" />
     <Compile Include="LRUPickup.cs" />
     <Compile Include="CGCutscenes.cs" />
     <Compile Include="ProgressionFilter.cs" />
@@ -105,7 +106,7 @@
     <Compile Include="Utils\CGUtils.cs" />
     <Compile Include="Utils\ContainerCodes.cs" />
     <Compile Include="Utils\GOscParams.cs" />
-    <Compile Include="YellowTalk.cs" />
+    <Compile Include="YellowThoughtsAdaptor.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CustomSpritesLoader\CustomSpritesLoader.csproj">

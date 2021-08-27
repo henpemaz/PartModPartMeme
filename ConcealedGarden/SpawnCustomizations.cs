@@ -130,6 +130,7 @@ namespace ConcealedGarden
         // Dynamic relationship to be hooked to creatures for friendly behavior
         // handles gift, protection, passiveness
         // in use by spiders and vultures
+        // Copied and adjusted from lizard's
         private static CreatureTemplate.Relationship IUseARelationshipTracker_UpdateDynamicRelationship(IUART_UDR orig, IUseARelationshipTracker self, RelationshipTracker.DynamicRelationship dRelation)
         {
             var result = orig(self, dRelation);
@@ -192,6 +193,8 @@ namespace ConcealedGarden
                 float ownMass = self.creature.TotalMass;
                 float otherMass = food.TotalMass;
                 float amount = ((!food.dead) ? 0.6f : 1.2f) * foodRelationship.intensity * ((ownMass != 0f && otherMass != 0f) ? Mathf.Lerp(otherMass / ownMass, 1f, 0.5f) : 1f) / self.tamingDifficlty;
+                // Slight boost when transformed
+                if (self.creature.room.game.session is StoryGameSession && (ConcealedGarden.progression?.transfurred ?? false)) amount *= 1f + 0.4f * Mathf.Clamp01(self.creature.abstractCreature.personality.sympathy * 1.2f - self.creature.abstractCreature.personality.dominance * 0.5f);
 
                 if (orInitiateRelationship.like > -0.9f)
                 {

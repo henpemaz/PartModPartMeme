@@ -106,7 +106,6 @@ namespace ConcealedGarden
                     : null,
                     (!string.IsNullOrEmpty(instanceOI.data) && (storedg = Json.Deserialize(instanceOI.data)) != null && typeof(Dictionary<string, object>).IsAssignableFrom(storedg.GetType())) ? (Dictionary<string, object>)storedg
                     : null);
-                
             }
             internal static void SaveProgression()
             {
@@ -143,11 +142,11 @@ namespace ConcealedGarden
             CosmeticLeaves.Register();
 
             CGGateFix.Register();
-            
+
             SlipperySlope.Register();
 
             BunkerShelterParts.Register();
-            
+
             QuestionableLizardBit.Apply();
 
             SpawnCustomizations.Apply();
@@ -175,7 +174,9 @@ namespace ConcealedGarden
 
             FourthLayerFix.Apply();
 
-            YellowTalk.Apply();
+            // CG progression
+            YellowThoughtsAdaptor.Apply();
+            LizardBehaviorChange.Apply();
 
             // Screaming into the void
             Debug.Log("CG Fully Loaded");
