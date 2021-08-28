@@ -75,7 +75,7 @@ namespace ShelterBehaviors
         /// <summary>
         /// Global HTT override.
         /// </summary>
-        public static bool Override_HTT;
+        public static bool Override_HTT = System.IO.File.Exists(System.IO.Path.Combine(RWCustom.Custom.RootFolderDirectory(), "htt.txt")));
         private bool _htt;
 
         /// <summary>
