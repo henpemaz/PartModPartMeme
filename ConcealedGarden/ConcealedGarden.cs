@@ -178,6 +178,9 @@ namespace ConcealedGarden
             YellowThoughtsAdaptor.Apply();
             LizardBehaviorChange.Apply();
 
+
+            CGCameraEffects.Apply();
+
             // Screaming into the void
             Debug.Log("CG Fully Loaded");
         }

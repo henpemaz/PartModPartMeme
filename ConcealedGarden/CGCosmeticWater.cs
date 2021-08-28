@@ -42,6 +42,7 @@ namespace ConcealedGarden
             }
             this.water.pointsToRender = RWCustom.Custom.IntClamp((int)((room.game.rainWorld.options.ScreenSize.x + 60f) / this.water.triangleWidth) + 2, 0, this.water.surface.GetLength(0));
             this.water.waterSounds.rect = rect;
+            this.water.waterSounds.Volume = Mathf.Pow(Mathf.Clamp01((rect.right - rect.left) / room.game.rainWorld.options.ScreenSize.x), 0.7f) * (room.water ? 0.5f : 1f);
         }
 
         public override void Update(bool eu)
@@ -58,6 +59,7 @@ namespace ConcealedGarden
         public void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
         {
             this.water.DrawSprites(sLeaser, rCam, timeStacker, camPos);
+
             FloatRect rect = data.rect;
             int num = RWCustom.Custom.IntClamp(this.water.PreviousSurfacePoint(camPos.x - 30f), 0, this.water.surface.GetLength(0) - 1);
             int num2 = RWCustom.Custom.IntClamp(num + this.water.pointsToRender, 0, this.water.surface.GetLength(0) - 1);
