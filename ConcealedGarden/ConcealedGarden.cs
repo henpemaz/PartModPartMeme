@@ -60,7 +60,6 @@ namespace ConcealedGarden
 
             protected override void ProgressionPreSave()
             {
-                instanceOI.SaveData();
                 ConcealedGardenProgression.SaveProgression();
                 base.ProgressionPreSave();
             }
@@ -90,7 +89,19 @@ namespace ConcealedGarden
             public bool everBeaten
             {
                 get { if (globalProgression.TryGetValue("everBeaten", out object obj)) return (bool)obj; return false; }
-                internal set { globalProgression["everBeaten"] = value;}
+                internal set { globalProgression["everBeaten"] = value; SaveGlobalData(); }
+            }
+
+            public bool achievementEcho
+            {
+                get { if (globalProgression.TryGetValue("achievementEcho", out object obj)) return (bool)obj; return false; }
+                internal set { globalProgression["achievementEcho"] = value; SaveGlobalData(); }
+            }
+
+            public bool achievementTransfurred
+            {
+                get { if (globalProgression.TryGetValue("achievementTransfurred", out object obj)) return (bool)obj; return false; }
+                internal set { globalProgression["achievementTransfurred"] = value; SaveGlobalData(); }
             }
 
             internal static void LoadProgression()
@@ -109,14 +120,17 @@ namespace ConcealedGarden
             }
             internal static void SaveProgression()
             {
-                if (progression != null)
-                {
-                    instanceOI.persData = Json.Serialize(progression.playerProgression);
-                    instanceOI.data = Json.Serialize(progression.globalProgression);
-                }
+                SaveGlobalData();
+                instanceOI.persData = Json.Serialize(progression.playerProgression);
                 Debug.Log("CG Progression saved with:");
                 Debug.Log($"persData :{instanceOI.persData}");
                 Debug.Log($"data : {instanceOI.data}");
+            }
+
+            internal static void SaveGlobalData()
+            {
+                instanceOI.data = Json.Serialize(progression.globalProgression);
+                instanceOI.SaveData();
             }
         }
 
@@ -178,8 +192,9 @@ namespace ConcealedGarden
             YellowThoughtsAdaptor.Apply();
             LizardBehaviorChange.Apply();
 
-
             CGCameraEffects.Apply();
+
+            CGAchievementManager.Apply();
 
             // Screaming into the void
             Debug.Log("CG Fully Loaded");

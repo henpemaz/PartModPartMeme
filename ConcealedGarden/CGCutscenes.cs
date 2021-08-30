@@ -38,8 +38,17 @@ namespace ConcealedGarden
             On.Menu.SlideShowMenuScene.ctor += SlideShowMenuScene_ctor;
             On.Menu.SlideShowMenuScene.ApplySceneSpecificAlphas += SlideShowMenuScene_ApplySceneSpecificAlphas;
 
-            // Waiting on CM progression data update :)
-            //On.Menu.SlugcatSelectMenu.
+            On.Menu.SlideShow.CommunicateWithUpcomingProcess += SlideShow_CommunicateWithUpcomingProcess;
+        }
+
+        private static void SlideShow_CommunicateWithUpcomingProcess(On.Menu.SlideShow.orig_CommunicateWithUpcomingProcess orig, Menu.SlideShow self, MainLoopProcess nextProcess)
+        {
+            orig(self, nextProcess);
+
+            if (nextProcess is RainWorldGame && (self.slideShowID == EnumExt_CGCutscenes.CGSpiral))
+            {
+                self.manager.CueAchievement(CGAchievementManager.EnumExt_CGAchievementManager.CGTransfurred, 2f);
+            }
         }
 
         private static void SlideShowMenuScene_ApplySceneSpecificAlphas(On.Menu.SlideShowMenuScene.orig_ApplySceneSpecificAlphas orig, Menu.SlideShowMenuScene self)

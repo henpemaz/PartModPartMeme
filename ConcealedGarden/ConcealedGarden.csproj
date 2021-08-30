@@ -80,6 +80,7 @@
     <Compile Include="AttachedField.cs" />
     <Compile Include="BunkerShelterParts.cs" />
     <Compile Include="CameraZoomEffect.cs" />
+    <Compile Include="CGAchievementManager.cs" />
     <Compile Include="CGGateFix.cs" />
     <Compile Include="CGMenuScenes.cs" />
     <Compile Include="CGSkyLine.cs" />
@@ -131,6 +132,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Achievement_1_popup.png" />
+    <EmbeddedResource Include="Resources\Achievement_2_popup.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>if defined RWMods (copy /Y "$(TargetPath)" "%25RWMods%25")</PostBuildEvent>

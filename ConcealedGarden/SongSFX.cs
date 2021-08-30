@@ -38,7 +38,7 @@ namespace ConcealedGarden
 			{
 				if (!(this.musicPlayer.manager.currentMainLoop is RainWorldGame game) || game.pauseMenu == null)
 					this.destroyCounter++;
-				if (this.destroyCounter > 150)
+				if (this.destroyCounter == 150)
 				{
 					Debug.Log("Destroyed SongSFX");
 					base.FadeOut(400f);
