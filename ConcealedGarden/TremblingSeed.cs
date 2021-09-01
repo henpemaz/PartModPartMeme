@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using ManagedPlacedObjects;
 
+using static ManagedPlacedObjects.PlacedObjectsManager;
 using static ConcealedGarden.Utils.CGUtils;
 using static RWCustom.Custom;
 using ConcealedGarden.Utils;
@@ -12,9 +14,6 @@ using static UnityEngine.Mathf;
 
 namespace ConcealedGarden
 {
-    //todo: redo aoe, add visual area indication, add cooldown color telegraph, make and import sprites
-    //make midair stopping smoother, make 
-    //idea stash: downslam on hang expire
     public static class EnumExt_SeedEnumThings
     {
         public static AbstractPhysicalObject.AbstractObjectType ShockSeed;
@@ -30,9 +29,10 @@ namespace ConcealedGarden
             gravity = 0.7f;
             collisionLayer = 2;
             buoyancy = 1.03f;
+            var R = new System.Random(apo.ID.RandomSeed);
             tailPos = firstChunk.pos;
-            osp = new GOscParams(UnityEngine.Random.Range(5f, 7f), 
-                UnityEngine.Random.Range(0.05f, 0.15f), 
+            osp = new GOscParams(UnityEngine.Random.Range(2f, 3f), 
+                UnityEngine.Random.Range(0.01f, 0.03f), 
                 UnityEngine.Random.Range(-0.5f, 0.5f),
                 (UnityEngine.Random.value > 0.5f) ? new Func<float, float>(Sin) : new Func<float, float>(Cos));
         }
@@ -41,75 +41,24 @@ namespace ConcealedGarden
         //#warning finish ChangeMode
         //more or less like that?
         //should watch out for escaping indeces
-            var oldmode = this.mode;
+            var oldmode = mode;
             base.ChangeMode(newMode);
             switch (newMode)
             {
                 case Mode.Thrown:
-                    windup = 7;
+                    windup = 4;
                     popCharge = 0;
                     break;
                 case Mode.StuckInWall:
-                    stuckPos = firstChunk.pos;
+                    //stuckPos = firstChunk.pos;
                     popCharge = 0;
                     ActionCycle = 200;
                     break;
                 default:
-                    if (oldmode == Mode.StuckInWall) { Cooldown = 1200; }
+                    if (oldmode == Mode.StuckInWall) { Cooldown = AbstractTremblingSeed.nominalCooldown; }
                     break;
             }
         }
-        #region idrawable things
-        float lt;
-        GOscParams osp;
-        float lastShellOffset;
-        float shellOffset;
-        //just a green rock for now
-        const int core = 2;
-        int shell(bool first) => (first)? 0 : 1;
-        const int tail = 3;
-
-        public override void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
-        {
-            sLeaser.sprites = new FSprite[4];
-            sLeaser.sprites[core] = new FSprite("Circle20") { scale = 0.5f, color = new Color(0f, 1f, 0f) };
-            sLeaser.sprites[shell(true)] = new FSprite("pixel") { scale = 5, color = new Color(1f, 0f, 0f) };
-            sLeaser.sprites[shell(false)] = new FSprite("pixel") { scale = 5, color = new Color(1f, 0f, 0f) };
-            var meshT = new TriangleMesh.Triangle[]
-            {
-                new TriangleMesh.Triangle(0, 1, 2)
-            };
-            var MESH = new TriangleMesh("Futile_White", meshT, false, false) { color = Color.white };
-            sLeaser.sprites[tail] = MESH;
-            AddToContainer(sLeaser, rCam, null);
-        }
-        public override void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
-        {
-            var cOrigin = Vector2.Lerp(firstChunk.lastPos, firstChunk.pos, timeStacker) - camPos;
-            var cRot = LerpAngle(VecToDeg(lastRotation), VecToDeg(rotation), timeStacker);
-            sLeaser.sprites[core].SetPosition(cOrigin);
-            var shellDir = PerpendicularVector(rotation).normalized;
-            var sOf = shellDir * Lerp(lastShellOffset, shellOffset, timeStacker);
-            sLeaser.sprites[shell(true)].SetPosition(cOrigin + sOf);
-            sLeaser.sprites[shell(true)].rotation = VecToDeg(shellDir);
-            sLeaser.sprites[shell(false)].SetPosition(cOrigin - sOf);
-            sLeaser.sprites[shell(false)].rotation = VecToDeg(shellDir * -1f);
-            var tailmesh = sLeaser.sprites[tail] as TriangleMesh;
-            tailmesh.MoveVertice(0, cOrigin + shellDir * 3f);
-            tailmesh.MoveVertice(1, cOrigin + shellDir * -3f);
-            tailmesh.MoveVertice(2, Vector2.Lerp(tailPos, firstChunk.lastPos, timeStacker) - camPos);
-            if (slatedForDeletetion) sLeaser.CleanSpritesAndRemove();
-        }
-        public override void AddToContainer(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
-        {
-            base.AddToContainer(sLeaser, rCam, newContatiner);
-        }
-        public override void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
-        {
-
-            //base.ApplyPalette(sLeaser, rCam, palette);
-        }
-        #endregion
         //kills windups
         public override void HitWall()
         {
@@ -119,33 +68,72 @@ namespace ConcealedGarden
         //kills windups
         public override bool HitSomething(SharedPhysics.CollisionResult result, bool eu)
         {
-            var outcome = base.HitSomething(result, eu);
-            if (outcome) CancelEverything();
-            return outcome;
+            //copied from rock
+            if (result.obj == null)
+            {
+                return false;
+            }
+            if (thrownBy is Scavenger && (thrownBy as Scavenger).AI != null)
+            {
+                (thrownBy as Scavenger).AI.HitAnObjectWithWeapon(this, result.obj);
+            }
+            vibrate = 20;
+            ChangeMode(Mode.Free);
+            if (result.obj is Creature)
+            {
+                (result.obj as Creature).Violence(firstChunk, new Vector2?(firstChunk.vel * firstChunk.mass), result.chunk, result.onAppendagePos, Creature.DamageType.Blunt, 0.1f, 150f);
+            }
+            else if (result.chunk != null)
+            {
+                result.chunk.vel += firstChunk.vel * firstChunk.mass / result.chunk.mass;
+            }
+            else if (result.onAppendagePos != null)
+            {
+                (result.obj as IHaveAppendages).ApplyForceOnAppendage(result.onAppendagePos, firstChunk.vel * firstChunk.mass);
+            }
+            firstChunk.vel = firstChunk.vel * -0.28f + RNV() * Lerp(0.05f, 0.15f, UnityEngine.Random.value) * firstChunk.vel.magnitude;
+            room.PlaySound(SoundID.Rock_Hit_Creature, firstChunk, false, 1.2f, 0.8f);
+            if (result.chunk != null)
+            {
+                room.AddObject(new ExplosionSpikes(room, result.chunk.pos + DirVec(result.chunk.pos, result.collisionPoint) * result.chunk.rad, 5, 2f, 4f, 4.5f, 30f, new Color(1f, 1f, 1f, 0.5f)));
+            }
+            SetRandomSpin();
+            CancelEverything();
+            return true;
         }
-        //override 
-
+        public override void Thrown(Creature thrownBy, Vector2 thrownPos, Vector2? firstFrameTraceFromPos, IntVector2 throwDir, float frc, bool eu)
+        {
+            base.Thrown(thrownBy, thrownPos, firstFrameTraceFromPos, throwDir, frc, eu);
+            
+        }
         public override void Update(bool eu)
         {
             lt++;
             if (firstChunk.ContactPoint.y != 0) rotationSpeed = 0f;
             base.Update(eu);
+            CollideWithTerrain = true;
             lastShellOffset = shellOffset;
             shellOffset = osp.GetRes(lt);
             lastPopCharge = popCharge;
             lastActionCycle = ActionCycle;
-            switch (this.mode)
+            lastCoreColor = coreColor;
+            coreColor.g = Lerp(0.3f, 0.8f, 1f - (float)Cooldown / (float)AbstractTremblingSeed.nominalCooldown);
+            coreColor.r = Lerp(0.2f, 0.6f, (float)RemainingUses / (float)AbstractTremblingSeed.maxUses);
+            coreColor.b = 0.15f;
+            coreColor.a = 1f;
+            coreColor.ClampToNormal();
+            switch (mode)
             {
                 case Mode.Thrown:
                     windup--;
                     if (windup > 0 || Cooldown > 0 || RemainingUses == 0) break;
-                    this.RunChargeupCheck();
+                    RunTheCounters();
                     break;
                 case Mode.StuckInWall:
-                    airFriction = 5f;
+                    airFriction = 0.85f;
                     gravity = -0.02f;
                     ActionCycle--;
-                    if (ActionCycle <= 0) { this.ChangeMode(Mode.Free); CancelEverything(); }
+                    if (ActionCycle <= 0) { ChangeMode(Mode.Free); CancelEverything(); }
                     break;
                 default:
                     airFriction = 1f;
@@ -154,11 +142,9 @@ namespace ConcealedGarden
                     break;
             }
         }
-
-        private Vector2 stuckPos;
         //increasing chance to pop every frame, faster if creatures are nearby
         //could also make it home in on creatures slightly?.. bad idea prolly
-        public void RunChargeupCheck()
+        public void RunTheCounters()
         {
             if (this.room?.abstractRoom == null) return;
             foreach (var crit in this.room.abstractRoom.creatures)
@@ -201,6 +187,69 @@ namespace ConcealedGarden
         internal int popCharge;
         internal int lastPopCharge;
 
+        #region idrawable things
+        float lt;
+        GOscParams osp;
+        
+        float lastShellOffset;
+        float shellOffset;
+        float shellOffsetBase = 3f;
+
+        Color coreColor;
+        Color lastCoreColor;
+
+        const int core = 2;
+        int shell(bool first) => (first)? 0 : 1;
+        const int tail = 3;
+
+        public override void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
+        {
+            sLeaser.sprites = new FSprite[4];
+            sLeaser.sprites[core] = new FSprite("Circle20") { scale = 0.5f, color = new Color(0f, 1f, 0f) };
+            sLeaser.sprites[shell(true)] = new FSprite("pixel") { scale = 5, color = new Color(1f, 0f, 0f) };
+            sLeaser.sprites[shell(false)] = new FSprite("pixel") { scale = 5, color = new Color(1f, 0f, 0f) };
+            var meshT = new TriangleMesh.Triangle[]
+            {
+                new TriangleMesh.Triangle(0, 1, 2)
+            };
+            var MESH = new TriangleMesh("Futile_White", meshT, true, false) { color = Color.white };
+            sLeaser.sprites[tail] = MESH;
+            AddToContainer(sLeaser, rCam, null);
+        }
+        public override void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+        {
+            var cOrigin = Vector2.Lerp(firstChunk.lastPos, firstChunk.pos, timeStacker) - camPos;
+            var cRot = LerpAngle(VecToDeg(lastRotation), VecToDeg(rotation), timeStacker);
+            //core
+            sLeaser.sprites[core].SetPosition(cOrigin);
+            sLeaser.sprites[core].color = Color.Lerp(lastCoreColor, coreColor, timeStacker);
+            //shells
+            var shellDir = PerpendicularVector(rotation).normalized;
+            var sOf = shellDir * Lerp(lastShellOffset + shellOffsetBase, shellOffset + shellOffsetBase, timeStacker);
+            sLeaser.sprites[shell(true)].SetPosition(cOrigin + sOf);
+            sLeaser.sprites[shell(true)].rotation = VecToDeg(shellDir);
+            sLeaser.sprites[shell(false)].SetPosition(cOrigin - sOf);
+            sLeaser.sprites[shell(false)].rotation = VecToDeg(shellDir * -1f);
+            //tail
+            var tailmesh = sLeaser.sprites[tail] as TriangleMesh;
+            tailmesh.MoveVertice(0, cOrigin + shellDir * 2f);
+            tailmesh.MoveVertice(1, cOrigin + shellDir * -2f);
+            tailmesh.MoveVertice(2, Vector2.Lerp(tailPos, firstChunk.lastPos, timeStacker) - camPos);
+            tailmesh.verticeColors[0].a = 1f;
+            tailmesh.verticeColors[1].a = 1f;
+            tailmesh.verticeColors[2].a = 0.8f;
+            if (slatedForDeletetion) sLeaser.CleanSpritesAndRemove();
+        }
+        public override void AddToContainer(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
+        {
+            base.AddToContainer(sLeaser, rCam, newContatiner);
+        }
+        public override void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
+        {
+            sLeaser.sprites[tail].color = palette.blackColor;
+        }
+        #endregion
+
         public class SeedDistortion : UpdatableAndDeletable//, IDrawable
         {
             //magical light it is
@@ -216,16 +265,18 @@ namespace ConcealedGarden
                 mLs = new LightSource(pos, false, new Color(0.2f, 0.8f, 0.2f).Deviation(new Color(0.05f, 0.2f, 0.05f)), this);
                 mLs.HardSetPos(pos);
                 mLs.requireUpKeep = true;
-                Debug.Log($"Seed distortion created: {ownerID}, d:{duration}, rad:{rad}"); }
+                //Debug.Log($"Seed distortion created: {ownerID}, d:{duration}, rad:{rad}"); 
+            }
 
-            Color forDevs = new Color(0.01f, 0.01f, 0.01f);
+            readonly Color lightcBase = new Color(0.2f, 0.8f, 0.2f);
+            readonly Color lightcDev = new Color(0.08f, 0.08f, 0.08f);
             LightSource mLs;
             Smoke.FireSmoke mySmoke;
-            //List<Smoke.FireSmoke> mSmokes;
+            //this smoke is janky, replace with something else?
             TremblingSeed oSeed;
             float gSlice;
             internal Vector2 pos => oSeed.firstChunk.pos;
-            internal int? ownerID;
+            //internal int? ownerID;
             internal int distortionLifetime;
             internal float radius;
             //could do with attachedfields but eh
@@ -233,6 +284,7 @@ namespace ConcealedGarden
             public override void Update(bool eu)
             {
                 base.Update(eu);
+                
                 if (mySmoke == null)
                 {
                     mySmoke = new Smoke.FireSmoke(room);
@@ -240,12 +292,12 @@ namespace ConcealedGarden
                     room.AddObject(mySmoke);
                 }
                 mLs.setAlpha = ClampedFloatDeviation(0.8f, 0.07f);
-                mLs.setRad = ClampedFloatDeviation(radius * 0.9f, 10f);
+                mLs.setRad = ClampedFloatDeviation(radius * 0.9f, 5f);
                 mLs.setPos = pos;
                 mLs.stayAlive = true;
-                mLs.color = mLs.color.Deviation(forDevs);
+                mLs.color = lightcBase.Deviation(lightcDev);
                 mLs.color.ClampToNormal();
-                foreach (var layer in this.room.physicalObjects)
+                foreach (var layer in room.physicalObjects)
                 {
                     for (int i = layer.Count - 1; i > -1; i--)
                     {
@@ -254,39 +306,51 @@ namespace ConcealedGarden
                         foreach (var chunk in obj.bodyChunks) {
                             if (DistLess(chunk.pos, pos, radius)) chunk.vel.y += obj.gravity * Max(0, gSlice * Dist(chunk.pos, pos) / radius);
                         } 
-                        if (obj is Weapon w && w.mode == Mode.Thrown)
+                        if (DistLess(obj.firstChunk.pos, pos, radius) && !DistLess(obj.firstChunk.lastLastPos, pos, radius) && obj is Weapon w && w.mode == Mode.Thrown)
                         {
-                            if (UnityEngine.Random.value < 0.14f) w.WeaponDeflect(w.firstChunk.pos + w.firstChunk.vel * 0.1f, (w.firstChunk.vel * -1).normalized * 3f, 5f);
+                            w.WeaponDeflect(w.firstChunk.pos + w.firstChunk.vel * 0.1f, (w.firstChunk.vel * -1).normalized * 3f, 2f);
                         }
-                        //for (int i )
                     }
                 }
                 distortionLifetime--;
                 if (distortionLifetime < 0) this.Destroy();
-                for (int i = 0; i < UnityEngine.Random.Range(3, 7); i++)
+                for (int i = 0; i < UnityEngine.Random.Range(4, 8); i++)
                 {
                     var off = RNV();
                     var nsmPos = pos + off * radius;
                     if (room.GetTile(nsmPos).Solid) continue;
-                    mySmoke.EmitSmoke(nsmPos, PerpendicularVector(off) * UnityEngine.Random.Range(2f, 5f), new Color(0.3f, 0.1f, 0.1f).Deviation(new Color(0.1f, 0.05f, 0.05f)), 10);
+
+                    //var smokeBit = mySmoke.AddParticle(nsmPos, PerpendicularVector(off) * 2f, 15f);
+                    //if (smokeBit != null)
+                    //{
+                    //    smokeBit.pos = nsmPos;
+                    //    room.AddObject(smokeBit);
+                    //}
+                    //mySmoke.EmitSmoke(nsmPos, PerpendicularVector(off).normalized, Color.cyan, 2);
+                    var nsp = new Smoke.FireSmoke.FireSmokeParticle();
+                    nsp.Reset(mySmoke, nsmPos, PerpendicularVector(off), 40f);
+                    nsp.moveDir = VecToDeg(PerpendicularVector(off));
+                    nsp.effectColor = Color.cyan;
+                    nsp.colorFadeTime = 20;
+                    room.AddObject(nsp);
                 }
             }
-            internal void AttemptReachOut(PhysicalObject po)
-            {
-                //Debug.Log($"Seed distortion trying to touch {po}...");
-                if (po.room != this.room || po is TremblingSeed || (po.firstChunk.pos - pos).magnitude < 100f) return;
-                var hash = po.GetHashCode();
-                if (affectedObjects.Contains(hash)) return;
-                this.room.AddObject(new MysteriousLight(
-                    po.firstChunk.pos,
-                    false,
-                    po,
-                    initialLifetime: UnityEngine.Random.Range(this.distortionLifetime / 2, distortionLifetime * 2),
-                    gravityMultiplier: Mathf.Lerp(0.3f, 0.9f, UnityEngine.Random.value)
-                    ));
-                affectedObjects.Add(hash);
-                Debug.Log($"Seed [{this.ownerID}] reaching out to {po.GetType()}, {po.abstractPhysicalObject.ID}");
-            }
+            //internal void AttemptReachOut(PhysicalObject po)
+            //{
+            //    //Debug.Log($"Seed distortion trying to touch {po}...");
+            //    if (po.room != this.room || po is TremblingSeed || (po.firstChunk.pos - pos).magnitude < 100f) return;
+            //    var hash = po.GetHashCode();
+            //    if (affectedObjects.Contains(hash)) return;
+            //    this.room.AddObject(new MysteriousLight(
+            //        po.firstChunk.pos,
+            //        false,
+            //        po,
+            //        initialLifetime: UnityEngine.Random.Range(this.distortionLifetime / 2, distortionLifetime * 2),
+            //        gravityMultiplier: Mathf.Lerp(0.3f, 0.9f, UnityEngine.Random.value)
+            //        ));
+            //    affectedObjects.Add(hash);
+            //    //Debug.Log($"Seed [{this.ownerID}] reaching out to {po.GetType()}, {po.abstractPhysicalObject.ID}");
+            //}
             public override void Destroy()
             {
                 mySmoke.Destroy();
@@ -318,91 +382,77 @@ namespace ConcealedGarden
             }
             #endregion
         }
-        public class MysteriousLight : LightSource
-        {
-#warning unfinished, would likely cause issues
-            //not modifying g anymore
-            //tho math might be sketchy
-            public MysteriousLight (Vector2 initpos, bool envir, UpdatableAndDeletable bindTo, int initialLifetime = 80, float gravityMultiplier = 1f) : base (initpos, envir, new Color(0.6f, 0.8f, 0.8f).Deviation(new Color(0.3f, 0.2f, 0.2f)), bindTo)
-            {
-                this.requireUpKeep = false;
-                this.maxLifetime = initialLifetime;
-                this.lifetime = initialLifetime;
-                this.initialGReduction = gravityMultiplier;
-                Debug.Log($"Seed light created {bindTo.GetType()}, {owner?.abstractPhysicalObject.ID}");
-                
-            }
-            public override void Update(bool eu)
-            {
-                base.Update(eu);
-                try
-                {
-                    if (owner != null)
-                    {
-                        stayAlive = true;
-                        setPos = owner.firstChunk.pos;
-
-                        setRad = Lerp(30f, 220f, timeRemaining);
-                        setAlpha = Lerp(0f, 1f, timeRemaining);
-                        foreach (var chunk in owner.bodyChunks)
-                        {
-                            chunk.vel.y += owner.gravity * effectiveGReduction;
-                        }
-                    }
-                    else Destroy();
-                    lifetime--;
-                    if (lifetime < 0 || this.tiedToObject?.room != this.room) { this.Destroy(); Debug.Log("Seedlight is dead. Bye!"); }
-                }
-                catch (NullReferenceException)
-                {
-                    Debug.LogWarning("nullref in mysteriousLight.Update!");
-                    this.Destroy();
-                }
-            }
-
-            PhysicalObject owner => tiedToObject as PhysicalObject;
-            internal float initialGReduction;
-            internal float effectiveGReduction => Lerp(0f, initialGReduction, timeRemaining);
-            internal float timeRemaining => Clamp(lifetime / (float)maxLifetime, 0f, 1f);
-            internal int maxLifetime;
-            internal int lifetime;
-        }
         public class AbstractTremblingSeed : AbstractPhysicalObject
         {
-            public AbstractTremblingSeed(World world, PhysicalObject po, WorldCoordinate wc, EntityID eid, int usesLeft) : base(world, EnumExt_SeedEnumThings.ShockSeed, po, wc, eid)
+            public AbstractTremblingSeed(World world, PhysicalObject po, WorldCoordinate wc, EntityID eid, int usesLeft = maxUses) : base(world, EnumExt_SeedEnumThings.ShockSeed, po, wc, eid)
             {
                 RemainingUses = usesLeft;
             }
             public override void Update(int time)
             {
                 base.Update(time);
-                Cooldown = Max(0, Cooldown - time);
+                if (realizedObject != null) Cooldown = Max(0, Cooldown - time);
             }
             public override void Realize()
             {
 
-                this.realizedObject = new TremblingSeed(this, world);
+                realizedObject = new TremblingSeed(this, world);
                 base.Realize();
             }
-            public int RemainingUses;
+            public int RemainingUses = maxUses;
+            public const int maxUses = 100;
             public int Cooldown;
+            public const int nominalCooldown = 160;
         }
-        
         public static class SeedHooks
         {
-#warning add hooks to spawn in, deser, etc
+        //add hooks to spawn in, deser, etc
             public static void TempSpawnIn(On.Player.orig_ctor orig, Player instance, AbstractCreature absc, World world)
             {
                 orig(instance, absc, world);
-                var seed = new AbstractTremblingSeed(world, null, instance.abstractCreature.pos, instance.room.game.GetNewID(), 4);
+                if (absc.Room.shelter) return;
+                var seed = new AbstractTremblingSeed(world, null, instance.abstractCreature.pos, instance.room.game.GetNewID());
                 instance.room.abstractRoom.entities.Add(seed);
                 //seed.Realize();
                 seed.RealizeInRoom();
             }
             public static void Apply()
             {
+                On.SaveState.AbstractPhysicalObjectFromString += seed_APOFS;
                 On.Player.ctor += TempSpawnIn;
             }
+
+            private static AbstractPhysicalObject seed_APOFS(On.SaveState.orig_AbstractPhysicalObjectFromString orig, World world, string objString)
+            {
+                var res = orig(world, objString);
+                try
+                {
+                    var objAtts = System.Text.RegularExpressions.Regex.Split(objString, "<oA>");
+                    var aotype = ParseEnum<AbstractPhysicalObject.AbstractObjectType>(objAtts[1]);
+                    var EID = EntityID.FromString(objAtts[0]);
+                    var wctext = objAtts[2].Split('.');
+                    var wc = new WorldCoordinate(
+                        int.Parse(wctext[0]), 
+                        int.Parse(wctext[1]), 
+                        int.Parse(wctext[2]), 
+                        int.Parse(wctext[3]));
+                    if (aotype == EnumExt_SeedEnumThings.ShockSeed)
+                    {
+                        return new AbstractTremblingSeed(world, null, wc, EID);
+                    }
+                }
+                catch { }
+                
+                return res;
+            }
         }
+
+        //todo:
+        //make and import sprites
+        //make stalk
+        //add windup and action cycle telegraph
+        //
+        //idea stash:
+        //downslam on hang expire?
     }
 }

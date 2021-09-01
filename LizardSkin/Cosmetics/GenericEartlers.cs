@@ -208,7 +208,7 @@ namespace LizardSkin
 		private GenericEartlersCosmeticData eartlersData => cosmeticData as GenericEartlersCosmeticData;
 		private float GetBodyAxis(float ts)
         {
-#warning figure out bodyaxis math
+			//figure out bodyaxis math
 			return -Custom.VecToDeg(Vector3.Slerp(this.lastBodyAxis, this.bodyAxis, ts).normalized);
 		}
 		private Vector2 bodyAxis;
