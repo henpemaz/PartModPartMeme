@@ -9,6 +9,7 @@ using System.Security.Permissions;
 using System.Reflection;
 using OptionalUI;
 using UnityEngine;
+using Menu;
 
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
@@ -47,6 +48,56 @@ namespace ConcealedGarden
                 base.Initialize();
                 this.Tabs = new OpTab[1] { new OpTab() };
                 CompletelyOptional.GeneratedOI.AddBasicProfile(Tabs[0], rwMod);
+
+               MakeAchievementsOi(Tabs[0]);
+            }
+
+            private void MakeAchievementsOi(OpTab opTab)
+            {
+                AchievementEntry ae = new AchievementEntry(new Vector2(100, 100), "Achievement (:");
+                opTab.AddItems(ae);
+            }
+
+            private class AchievementEntry : UIelement
+            {
+                private FSprite bg;
+                private MenuLabel label;
+
+                public AchievementEntry(Vector2 pos, string testText) : base(pos, new Vector2(400, 60))
+                {
+                    if (!_init) { return; }
+                    this.bg = new FSprite("Futile_White", true)
+                    {
+                        color = new Color(0.1f, 0.1f, 0.4f),
+                        alpha = 0.25f,
+                        width = 384f,
+                        height = 44f,
+                        anchorX = 0f, anchorY = 0f,
+                        x = 8f, y = 8f,
+                    };
+                    this.myContainer.AddChild(this.bg);
+                    this.label = new Menu.MenuLabel(menu, owner, testText, this.pos, this.size, false);
+                    //this.label.label.color = this.color;
+                    this.subObjects.Add(this.label);
+                    OnChange();
+                }
+                public override void Hide()
+                {
+                    base.Hide();
+                    this.bg.isVisible = false;
+                    this.label.label.isVisible = false;
+                }
+                public override void Show()
+                {
+                    base.Show();
+                    this.bg.isVisible = true;
+                    this.label.label.isVisible = true;
+                }
+                public override void Unload()
+                {
+                    base.Unload();
+                    this.bg.RemoveFromContainer();
+                }
             }
 
             protected override void ProgressionLoaded()
