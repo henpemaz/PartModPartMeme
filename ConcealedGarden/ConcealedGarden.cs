@@ -118,69 +118,91 @@ namespace ConcealedGarden
 
         public class ConcealedGardenProgression
         {
-            private Dictionary<string, object> playerProgression;
-            private Dictionary<string, object> globalProgression;
-            public ConcealedGardenProgression(Dictionary<string, object> ppDict, Dictionary<string, object> gDict) 
+            private Dictionary<string, object> saveData;
+            private Dictionary<string, object> persData;
+            private Dictionary<string, object> miscData;
+            private Dictionary<string, object> globalData;
+            
+            public ConcealedGardenProgression(Dictionary<string, object> saveData = null, Dictionary<string, object> persData = null, Dictionary<string, object> miscData = null, Dictionary<string, object> globalData = null)
             {
-                playerProgression = ppDict ?? new Dictionary<string, object>();
-                globalProgression = gDict ?? new Dictionary<string, object>();
+                saveData = saveData ?? ((!string.IsNullOrEmpty(instanceOI.saveData) && Json.Deserialize(instanceOI.saveData) is Dictionary<string, object> storedSd) ? storedSd : new Dictionary<string, object>());
+                persData = persData ?? ((!string.IsNullOrEmpty(instanceOI.persData) && Json.Deserialize(instanceOI.persData) is Dictionary<string, object> storedPd) ? storedPd : new Dictionary<string, object>());
+                miscData = miscData ?? ((!string.IsNullOrEmpty(instanceOI.miscData) && Json.Deserialize(instanceOI.miscData) is Dictionary<string, object> storedMd) ? storedMd : new Dictionary<string, object>());
+                globalData = globalData ?? ((!string.IsNullOrEmpty(instanceOI.data) && Json.Deserialize(instanceOI.data) is Dictionary<string, object> storedData) ? storedData : new Dictionary<string, object>());
+                this.saveData = saveData;
+                this.persData = persData;
+                this.miscData = miscData;
+                this.globalData = globalData;
             }
 
             public bool transfurred // transformed
             {
-                get { if (playerProgression.TryGetValue("transfurred", out object obj)) return (bool)obj; return false; }
-                internal set { playerProgression["transfurred"] = value; globalProgression["everBeaten"] = true;}
+                get { if (persData.TryGetValue("transfurred", out object obj)) return (bool)obj; return false; }
+                internal set { persData["transfurred"] = value; everBeaten = true;}
             }
 
             public bool fishDream {
-                get { if (playerProgression.TryGetValue("fishDream", out object obj)) return (bool)obj; return false; }
-                internal set { playerProgression["fishDream"] = value;}
+                get { if (persData.TryGetValue("fishDream", out object obj)) return (bool)obj; return false; }
+                internal set { persData["fishDream"] = value;}
             }
 
             public bool everBeaten
             {
-                get { if (globalProgression.TryGetValue("everBeaten", out object obj)) return (bool)obj; return false; }
-                internal set { globalProgression["everBeaten"] = value; SaveGlobalData(); }
+                get { if (globalData.TryGetValue("everBeaten", out object obj)) return (bool)obj; return false; }
+                internal set { globalData["everBeaten"] = value; SaveGlobalData(); }
             }
 
             public bool achievementEcho
             {
-                get { if (globalProgression.TryGetValue("achievementEcho", out object obj)) return (bool)obj; return false; }
-                internal set { globalProgression["achievementEcho"] = value; SaveGlobalData(); }
+                get { if (globalData.TryGetValue("achievementEcho", out object obj)) return (bool)obj; return false; }
+                internal set { globalData["achievementEcho"] = value; SaveGlobalData(); }
             }
 
             public bool achievementTransfurred
             {
-                get { if (globalProgression.TryGetValue("achievementTransfurred", out object obj)) return (bool)obj; return false; }
-                internal set { globalProgression["achievementTransfurred"] = value; SaveGlobalData(); }
+                get { if (globalData.TryGetValue("achievementTransfurred", out object obj)) return (bool)obj; return false; }
+                internal set { globalData["achievementTransfurred"] = value; SaveGlobalData(); }
+            }
+
+            public long savestateFood {
+                get { if (saveData.TryGetValue("savestateFood", out object obj)) return (long)obj; return 0; }
+                internal set { saveData["savestateFood"] = value; }
+            }
+            public long deathpersFood {
+                get { if (persData.TryGetValue("deathpersFood", out object obj)) return (long)obj; return 0; }
+                internal set { persData["deathpersFood"] = value; }
+            }
+            public long progressionFood {
+                get { if (miscData.TryGetValue("progressionFood", out object obj)) return (long)obj; return 0; }
+                internal set { miscData["progressionFood"] = value; }
             }
 
             internal static void LoadProgression()
             {
-                object storedPp;
-                object storedg;
                 Debug.Log("CG Progression loading with:");
+                Debug.Log($"saveData :{instanceOI.saveData}");
                 Debug.Log($"persData :{instanceOI.persData}");
+                Debug.Log($"miscData :{instanceOI.miscData}");
                 Debug.Log($"data : {instanceOI.data}");
 
-                progression = new ConcealedGardenProgression(
-                    (!string.IsNullOrEmpty(instanceOI.persData) && (storedPp = Json.Deserialize(instanceOI.persData)) != null && typeof(Dictionary<string, object>).IsAssignableFrom(storedPp.GetType())) ? (Dictionary<string, object>)storedPp
-                    : null,
-                    (!string.IsNullOrEmpty(instanceOI.data) && (storedg = Json.Deserialize(instanceOI.data)) != null && typeof(Dictionary<string, object>).IsAssignableFrom(storedg.GetType())) ? (Dictionary<string, object>)storedg
-                    : null);
+                progression = new ConcealedGardenProgression();
             }
             internal static void SaveProgression()
             {
                 SaveGlobalData();
-                instanceOI.persData = Json.Serialize(progression.playerProgression);
+                instanceOI.saveData = Json.Serialize(progression.saveData);
+                instanceOI.persData = Json.Serialize(progression.persData);
+                instanceOI.miscData = Json.Serialize(progression.miscData);
                 Debug.Log("CG Progression saved with:");
+                Debug.Log($"saveData :{instanceOI.saveData}");
                 Debug.Log($"persData :{instanceOI.persData}");
+                Debug.Log($"miscData :{instanceOI.miscData}");
                 Debug.Log($"data : {instanceOI.data}");
             }
 
             internal static void SaveGlobalData()
             {
-                instanceOI.data = Json.Serialize(progression.globalProgression);
+                instanceOI.data = Json.Serialize(progression.globalData);
                 instanceOI.SaveData();
             }
         }
@@ -247,8 +269,46 @@ namespace ConcealedGarden
 
             CGAchievementManager.Apply();
 
+
+            FoodCounterTest.Apply();
+
             // Screaming into the void
             Debug.Log("CG Fully Loaded");
+        }
+
+        static class FoodCounterTest
+        {
+            public static void Apply()
+            {
+                On.PlayerGraphics.ctor += PlayerGraphics_ctor;
+                On.PlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites;
+                On.Player.AddFood += Player_AddFood;
+            }
+
+            private static void Player_AddFood(On.Player.orig_AddFood orig, Player self, int add)
+            {
+                orig(self, add);
+                progression.savestateFood += add;
+                progression.deathpersFood += add;
+                progression.progressionFood += add;
+            }
+
+            private static void PlayerGraphics_DrawSprites(On.PlayerGraphics.orig_DrawSprites orig, PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+            {
+                orig(self, sLeaser, rCam, timeStacker, camPos);
+                self.DEBUGLABELS[0].label.text = "Savestate Food:" + progression.savestateFood;
+                self.DEBUGLABELS[1].label.text = "Deathpers Food:" + progression.deathpersFood;
+                self.DEBUGLABELS[2].label.text = "Misc Food:" + progression.progressionFood;
+            }
+
+            private static void PlayerGraphics_ctor(On.PlayerGraphics.orig_ctor orig, PlayerGraphics self, PhysicalObject ow)
+            {
+                orig(self, ow);
+                self.DEBUGLABELS = new DebugLabel[3];
+                self.DEBUGLABELS[0] = new DebugLabel(ow, new Vector2(10f, 20f));
+                self.DEBUGLABELS[1] = new DebugLabel(ow, new Vector2(10f, 10f));
+                self.DEBUGLABELS[2] = new DebugLabel(ow, new Vector2(10f, 0f));
+            }
         }
     }
 }

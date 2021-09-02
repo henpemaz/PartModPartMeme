@@ -443,17 +443,17 @@ namespace LizardSkin
             this.depthRotation = Mathf.Lerp(this.depthRotation, Mathf.Clamp(newDepth, -1f, 1f), 0.2f);
             this.headDepthRotation = Mathf.Lerp(this.headDepthRotation, Mathf.Clamp(newHeadDepth, -1f, 1f), 0.2f);
 
-            if (this.pGraphics.DEBUGLABELS != null)
-            {
-                this.pGraphics.DEBUGLABELS[0].label.text = "depthRotation: " + depthRotation;
-                this.pGraphics.DEBUGLABELS[1].label.text = "headDepthRotation: " + depthRotation;
-                SpineData spinehead = SpinePosition(0f, true, 1f);
-                SpineData spinetail = SpinePosition(1f, true, 1f);
-                this.pGraphics.DEBUGLABELS[2].label.text = "spineDepthAtHead: " + spinehead.depthRotation;
-                this.pGraphics.DEBUGLABELS[3].label.text = "spineDepthAtTail: " + spinetail.depthRotation;
-                this.pGraphics.DEBUGLABELS[4].label.text = "spineAngleAtHead: " + Custom.VecToDeg(spinehead.dir);
-                this.pGraphics.DEBUGLABELS[5].label.text = "spineAngleAtTail: " + Custom.VecToDeg(spinetail.dir);
-            }
+            //if (this.pGraphics.DEBUGLABELS != null)
+            //{
+            //    this.pGraphics.DEBUGLABELS[0].label.text = "depthRotation: " + depthRotation;
+            //    this.pGraphics.DEBUGLABELS[1].label.text = "headDepthRotation: " + depthRotation;
+            //    SpineData spinehead = SpinePosition(0f, true, 1f);
+            //    SpineData spinetail = SpinePosition(1f, true, 1f);
+            //    this.pGraphics.DEBUGLABELS[2].label.text = "spineDepthAtHead: " + spinehead.depthRotation;
+            //    this.pGraphics.DEBUGLABELS[3].label.text = "spineDepthAtTail: " + spinetail.depthRotation;
+            //    this.pGraphics.DEBUGLABELS[4].label.text = "spineAngleAtHead: " + Custom.VecToDeg(spinehead.dir);
+            //    this.pGraphics.DEBUGLABELS[5].label.text = "spineAngleAtTail: " + Custom.VecToDeg(spinetail.dir);
+            //}
         }
 
         public override SpineData SpinePosition(float spineFactor, bool inFront, float timeStacker)
