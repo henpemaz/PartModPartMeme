@@ -271,7 +271,7 @@ namespace LizardSkin
         }
 		internal class EartlersConfigPanel : LizKinCosmeticData.CosmeticPanel
         {
-#warning config panel is a stub
+			//config panel is a stub
 			internal EartlersConfigPanel(GenericEartlersCosmeticData cd, LizardSkinOI.ProfileManager mngr) : base (cd, mngr)
             {
 				

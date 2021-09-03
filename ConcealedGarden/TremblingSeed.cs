@@ -106,6 +106,24 @@ namespace ConcealedGarden
             base.Thrown(thrownBy, thrownPos, firstFrameTraceFromPos, throwDir, frc, eu);
             
         }
+        //public override void Grabbed(Creature.Grasp grasp)
+        //{
+        //    base.Grabbed(grasp);
+        //    stalk?.SeedTakenAway();
+        //    stalk = null;
+        //}
+        //public override void HitByWeapon(Weapon weapon)
+        //{
+        //    base.HitByWeapon(weapon);
+        //    stalk?.SeedTakenAway(true);
+        //    stalk = null;
+        //}
+        //public override void HitByExplosion(float hitFac, Explosion explosion, int hitChunk)
+        //{
+        //    base.HitByExplosion(hitFac, explosion, hitChunk);
+        //    stalk?.SeedTakenAway(true);
+        //    stalk = null;
+        //}
         public override void Update(bool eu)
         {
             lt++;
@@ -131,7 +149,7 @@ namespace ConcealedGarden
                     break;
                 case Mode.StuckInWall:
                     airFriction = 0.85f;
-                    gravity = -0.02f;
+                    gravity = -0.03f;
                     ActionCycle--;
                     if (ActionCycle <= 0) { ChangeMode(Mode.Free); CancelEverything(); }
                     break;
@@ -141,6 +159,7 @@ namespace ConcealedGarden
                     CancelEverything();
                     break;
             }
+            //if (stalk != null) gravity = 0;
         }
         //increasing chance to pop every frame, faster if creatures are nearby
         //could also make it home in on creatures slightly?.. bad idea prolly
@@ -187,6 +206,7 @@ namespace ConcealedGarden
         internal int popCharge;
         internal int lastPopCharge;
 
+        //internal SeedStalk stalk;
         #region idrawable things
         float lt;
         GOscParams osp;
@@ -238,7 +258,7 @@ namespace ConcealedGarden
             tailmesh.verticeColors[0].a = 1f;
             tailmesh.verticeColors[1].a = 1f;
             tailmesh.verticeColors[2].a = 0.8f;
-            if (slatedForDeletetion) sLeaser.CleanSpritesAndRemove();
+            if (slatedForDeletetion || room != rCam.room) sLeaser.CleanSpritesAndRemove();
         }
         public override void AddToContainer(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
         {
@@ -395,7 +415,6 @@ namespace ConcealedGarden
             }
             public override void Realize()
             {
-
                 realizedObject = new TremblingSeed(this, world);
                 base.Realize();
             }
@@ -404,9 +423,88 @@ namespace ConcealedGarden
             public int Cooldown;
             public const int nominalCooldown = 160;
         }
+        //public class SeedStalk : UpdatableAndDeletable, IDrawable
+        //{
+        //    public SeedStalk(PlacedObject owner) { Owner = owner; fixpos = Owner.pos; }
+        //    PlacedObject Owner;
+        //    SeedConsData scd => Owner?.data as SeedConsData;
+        //    Vector2 fixpos;
+        //    bool amConsumed => (room?.game.session as StoryGameSession)?.saveState.ItemConsumed(room.world, false, room.abstractRoom.index, room.roomSettings.placedObjects.IndexOf(Owner)) ?? false;
+        //    public override void Update(bool eu)
+        //    {
+        //        base.Update(eu);
+        //        if (!amConsumed && abSeed == null) { 
+        //            abSeed = new AbstractTremblingSeed(room.world, null, room.GetWorldCoordinate(fixpos), room.game.GetNewID());
+        //            room.abstractRoom.AddEntity(abSeed);
+        //            abSeed.RealizeInRoom();
+        //            abSeed.realizedObject.firstChunk.HardSetPosition(fixpos);
+        //            (abSeed.realizedObject as TremblingSeed).stalk = this;
+        //        }
+        //        if (rSeed != null)
+        //        {
+
+        //        }
+        //    }
+        //    public void SeedTakenAway(bool violent = false) 
+        //            { (room.game.session as StoryGameSession)?.saveState.
+        //            ReportConsumedItem(room.world, false, 
+        //            room.abstractRoom.index, 
+        //            room.roomSettings.placedObjects.IndexOf(Owner), 
+        //            UnityEngine.Random.Range(scd.minC, scd.maxC)); 
+        //    }
+        //    AbstractTremblingSeed abSeed;
+        //    TremblingSeed rSeed => abSeed.realizedObject as TremblingSeed;
+        //    public void AddToContainer(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
+        //    {
+        //        throw new NotImplementedException();
+        //    }
+        //    public void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
+        //    {
+        //        throw new NotImplementedException();
+        //    }
+        //    public void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+        //    {
+        //        throw new NotImplementedException();
+        //    }
+        //    public void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
+        //    {
+        //        throw new NotImplementedException();
+        //    }
+        //}
+
+        public class SeedConsData : ManagedData
+        {
+            [IntegerField("minC", 1, 40, 3, ManagedFieldWithPanel.ControlType.slider, "min cooldown")]
+            public int minC;
+            [IntegerField("maxC", 1, 40, 3, ManagedFieldWithPanel.ControlType.slider, "max cooldown")]
+            public int maxC;
+            [Vector2Field("basePoint", 30f, 30f)]
+            public Vector2 stalkBase;
+            public SeedConsData(PlacedObject owner) : base(owner, null) { }
+        }
         public static class SeedHooks
         {
         //add hooks to spawn in, deser, etc
+            public static void Apply()
+            {
+                //for later: chaange hooks from On to manual
+                //RegistermanagedObject<SeedStalk, SeedConsData, ManagedRepresentation>("CGSeed");
+                On.SaveState.AbstractPhysicalObjectFromString += seed_APOFS;
+                On.Room.Loaded += Room_Loaded;
+                On.Player.ctor += TempSpawnIn;
+            }
+
+            private static void Room_Loaded(On.Room.orig_Loaded orig, Room self)
+            {
+                orig(self);
+                if (self.game == null || !self.abstractRoom.firstTimeRealized) return;
+                for (int i = 0; i < self.roomSettings.placedObjects.Count; i++) 
+                    if (self.roomSettings.placedObjects[i].data is SeedConsData sd)
+                    {
+                    
+                }
+            }
+
             public static void TempSpawnIn(On.Player.orig_ctor orig, Player instance, AbstractCreature absc, World world)
             {
                 orig(instance, absc, world);
@@ -416,12 +514,6 @@ namespace ConcealedGarden
                 //seed.Realize();
                 seed.RealizeInRoom();
             }
-            public static void Apply()
-            {
-                On.SaveState.AbstractPhysicalObjectFromString += seed_APOFS;
-                On.Player.ctor += TempSpawnIn;
-            }
-
             private static AbstractPhysicalObject seed_APOFS(On.SaveState.orig_AbstractPhysicalObjectFromString orig, World world, string objString)
             {
                 var res = orig(world, objString);
@@ -442,14 +534,13 @@ namespace ConcealedGarden
                     }
                 }
                 catch { }
-                
                 return res;
             }
         }
 
         //todo:
         //make and import sprites
-        //make stalk
+        //make stalk (or make it appear on branches?)
         //add windup and action cycle telegraph
         //
         //idea stash:
