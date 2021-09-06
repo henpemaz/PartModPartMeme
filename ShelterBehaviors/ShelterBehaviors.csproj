@@ -51,6 +51,9 @@
       <HintPath>..\References\MonoMod.Common.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="MonoMod.RuntimeDetour">
+      <HintPath>..\References\MonoMod.RuntimeDetour.dll</HintPath>
+    </Reference>
     <Reference Include="Partiality">
       <HintPath>..\References\Partiality.dll</HintPath>
       <Private>False</Private>
@@ -68,16 +71,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AttachedField.cs" />
+    <Compile Include="PlacedObjectsManager.cs" />
     <Compile Include="ShelterBehaviorManager.cs" />
     <Compile Include="ShelterBehaviorsMod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ManagedPlacedObjects\ManagedPlacedObjects.csproj">
-      <Project>{a5e1e800-ee17-4347-9488-ef8f3e929b78}</Project>
-      <Name>ManagedPlacedObjects</Name>
-      <Private>False</Private>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

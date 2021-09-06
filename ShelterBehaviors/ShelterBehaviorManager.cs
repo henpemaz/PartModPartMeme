@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using ShelterBehaviors.POM;
 
 namespace ShelterBehaviors
 {
@@ -75,7 +76,7 @@ namespace ShelterBehaviors
         /// <summary>
         /// Global HTT override.
         /// </summary>
-        public static bool Override_HTT = System.IO.File.Exists(System.IO.Path.Combine(RWCustom.Custom.RootFolderDirectory(), "htt.txt"));
+        public static bool Override_HTT = System.IO.File.Exists(System.IO.Path.Combine(Custom.RootFolderDirectory(), "htt.txt"));
         private bool _htt;
 
         /// <summary>
@@ -131,7 +132,7 @@ namespace ShelterBehaviors
         /// </summary>
         public List<IReactToShelterEvents> subscribers;
         public readonly PlacedObject pObj;
-        public readonly ManagedPlacedObjects.PlacedObjectsManager.ManagedData data;
+        public readonly PlacedObjectsManager.ManagedData data;
 
         private void ContitionalLog(string str)
         {
@@ -145,7 +146,7 @@ namespace ShelterBehaviors
         {
             this.room = instance;
             this.pObj = pObj;
-            this.data = pObj.data as ManagedPlacedObjects.PlacedObjectsManager.ManagedData;
+            this.data = pObj.data as PlacedObjectsManager.ManagedData;
             this.placedObjectIndex = room.roomSettings.placedObjects.IndexOf(pObj);
 
             spawnPositions = new List<IntVector2>();
@@ -611,7 +612,7 @@ namespace ShelterBehaviors
         /// <summary>
         /// Creates a door from a PlacedObject.
         /// </summary>
-        /// <param name="placedObject">pObj to use; its <see cref="PlacedObject.data"/> must be an appropriate instance of <see cref="ManagedPlacedObjects.PlacedObjectsManager.ManagedData"/>.</param> 
+        /// <param name="placedObject">pObj to use; its <see cref="PlacedObject.data"/> must be an appropriate instance of <see cref="PlacedObjectsManager.ManagedData"/>.</param> 
         public void AddPlacedDoor(PlacedObject placedObject)
         {
             int preCounter = room.game.rainWorld.progression.miscProgressionData.starvationTutorialCounter; // Prevent starvation tutorial dupes
@@ -623,7 +624,7 @@ namespace ShelterBehaviors
 
             //Vector2 origin = placedObject.pos;
             IntVector2 originTile = room.GetTilePosition(placedObject.pos);
-            IntVector2 dir = (placedObject.data as ManagedPlacedObjects.PlacedObjectsManager.ManagedData).GetValue<IntVector2>("dir");
+            IntVector2 dir = (placedObject.data as PlacedObjectsManager.ManagedData).GetValue<IntVector2>("dir");
             //dir = dir.ToCardinals();
 
             newDoor.pZero = room.MiddleOfTile(originTile);
@@ -730,7 +731,7 @@ namespace ShelterBehaviors
                 Debug.Log("CONSUMED: HoldToTriggerTutorialObject ;)");
                 if (room.world.game.session is StoryGameSession)
                 {
-                    (room.world.game.session as StoryGameSession).saveState.ReportConsumedItem(room.world, false, room.abstractRoom.index, this.placedObjectIndex, (placedObject.data as ManagedPlacedObjects.PlacedObjectsManager.ManagedData).GetValue<int>("htttcd"));
+                    (room.world.game.session as StoryGameSession).saveState.ReportConsumedItem(room.world, false, room.abstractRoom.index, this.placedObjectIndex, (placedObject.data as PlacedObjectsManager.ManagedData).GetValue<int>("htttcd"));
                 }
                 this.Destroy();
             }
