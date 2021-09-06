@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using ManagedPlacedObjects;
 using System.Security;
 using System.Security.Permissions;
 using System.Reflection;
@@ -17,7 +16,7 @@ namespace ElectricArcsMod
         public ElectricArcsMod()
         {
             this.ModID = "ElectricArcsMod";
-            this.Version = "1.0";
+            this.Version = "1.2";
             this.author = "Henpemaz";
         }
 

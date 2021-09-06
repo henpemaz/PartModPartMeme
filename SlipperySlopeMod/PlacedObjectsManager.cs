@@ -13,7 +13,7 @@ using System.Reflection;
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
-namespace ManagedPlacedObjects
+namespace SlipperySlopeMod
 {
     public static class PlacedObjectsManager
     {

@@ -1,5 +1,4 @@
-﻿using ManagedPlacedObjects;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace SlipperySlopeMod
 {

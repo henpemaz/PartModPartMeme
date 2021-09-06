@@ -11,7 +11,7 @@ namespace ShaderTesterMod
         public ShaderTesterMod()
         {
             this.ModID = "ShaderTesterMod";
-            this.Version = "1.0";
+            this.Version = "1.2";
             this.author = "Henpemaz";
         }
 

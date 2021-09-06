@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using ManagedPlacedObjects;
 using System.Security;
 using System.Security.Permissions;
 using System.Reflection;
@@ -18,7 +17,7 @@ namespace SlipperySlopeMod
         public SlipperySlopeMod()
         {
             this.ModID = "SlipperySlopeMod";
-            this.Version = "1.1";
+            this.Version = "1.2";
             this.author = "Henpemaz";
 
             instance = this;
