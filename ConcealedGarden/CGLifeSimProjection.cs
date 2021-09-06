@@ -40,7 +40,7 @@ namespace ConcealedGarden
 
             foreach (var pobj in room.roomSettings.placedObjects)
             {
-                if (pobj.active && pobj.type.ToString() == "LifeSimProjectionSegment") places.Add(pobj);
+                if (pobj.active && pobj.type.ToString() == "CGLifeSimProjectionSegment") places.Add(pobj);
             }
 
             loadingState = LoadingState.Start;
