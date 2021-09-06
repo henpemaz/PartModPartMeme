@@ -13,14 +13,14 @@ using Menu;
 
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
-
+[assembly: System.Runtime.CompilerServices.SuppressIldasmAttribute()]
 namespace ConcealedGarden
 {
     public partial class ConcealedGarden : PartialityMod
     {
         public ConcealedGarden()
         {
-            this.ModID = "ConcealedGarden";
+            this.ModID = "Concealed Garden";
             this.Version = "1.0";
             this.author = "Henpemaz";
 
@@ -49,55 +49,19 @@ namespace ConcealedGarden
                 this.Tabs = new OpTab[1] { new OpTab() };
                 CompletelyOptional.GeneratedOI.AddBasicProfile(Tabs[0], rwMod);
 
-               MakeAchievementsOi(Tabs[0]);
-            }
-
-            private void MakeAchievementsOi(OpTab opTab)
-            {
-                AchievementEntry ae = new AchievementEntry(new Vector2(100, 100), "Achievement (:");
-                opTab.AddItems(ae);
-            }
-
-            private class AchievementEntry : UIelement
-            {
-                private FSprite bg;
-                private MenuLabel label;
-
-                public AchievementEntry(Vector2 pos, string testText) : base(pos, new Vector2(400, 60))
-                {
-                    if (!_init) { return; }
-                    this.bg = new FSprite("Futile_White", true)
-                    {
-                        color = new Color(0.1f, 0.1f, 0.4f),
-                        alpha = 0.25f,
-                        width = 384f,
-                        height = 44f,
-                        anchorX = 0f, anchorY = 0f,
-                        x = 8f, y = 8f,
-                    };
-                    this.myContainer.AddChild(this.bg);
-                    this.label = new Menu.MenuLabel(menu, owner, testText, this.pos, this.size, false);
-                    //this.label.label.color = this.color;
-                    this.subObjects.Add(this.label);
-                    OnChange();
-                }
-                public override void Hide()
-                {
-                    base.Hide();
-                    this.bg.isVisible = false;
-                    this.label.label.isVisible = false;
-                }
-                public override void Show()
-                {
-                    base.Show();
-                    this.bg.isVisible = true;
-                    this.label.label.isVisible = true;
-                }
-                public override void Unload()
-                {
-                    base.Unload();
-                    this.bg.RemoveFromContainer();
-                }
+                if (!isOptionMenu) return;
+                        
+                CGAchievementManager.MakeAchievementsOi(this, Tabs[0]);
+                Tabs[0].AddItems(new OpLabel(40, 150, "Concealed Garden was brought to you by:", true),
+                    new OpLabelLong(new Vector2(40, 10), new Vector2(530, 140),
+@"Henpemaz - Lead Dev, most of the stuff in the region unless otherwise noted!
+Thalber - Assistant+ Dev, most of the underground rooms, bug-hunting, productive discussions and psychological support in my DMs :flushed:
+Mehri'Kairothep - Playtester, loved the region, helped me figure out what needed polishing.
+LB Gamer - Playtester & Dev, helpful and resourceful, also helped with a couple rooms!
+Wrayk - Almost playtester, made a connection room (:
+DryCryCrystal - Colab, special tileset for LRU room.
+Garrakx & Topicular - Makers of the awesome mods that help people make more mods!"
+));
             }
 
             protected override void ProgressionLoaded()
@@ -164,19 +128,6 @@ namespace ConcealedGarden
                 internal set { globalData["achievementTransfurred"] = value; SaveGlobalData(); }
             }
 
-            public long savestateFood {
-                get { if (saveData.TryGetValue("savestateFood", out object obj)) return (long)obj; return 0; }
-                internal set { saveData["savestateFood"] = value; }
-            }
-            public long deathpersFood {
-                get { if (persData.TryGetValue("deathpersFood", out object obj)) return (long)obj; return 0; }
-                internal set { persData["deathpersFood"] = value; }
-            }
-            public long progressionFood {
-                get { if (miscData.TryGetValue("progressionFood", out object obj)) return (long)obj; return 0; }
-                internal set { miscData["progressionFood"] = value; }
-            }
-
             internal static void LoadProgression()
             {
                 Debug.Log("CG Progression loading with:");
@@ -218,38 +169,39 @@ namespace ConcealedGarden
 
             // Hooking code goose hre
 
-            ElectricArcs.Register();
+            CGElectricArcs.Register();
 
-            OrganicShelter.Register();
+            CGOrganicShelter.Register();
 
-            LifeSimProjection.Register();
+            CGLifeSimProjection.Register();
 
-            SongSFX.Register();
+            CGSongSFX.Register();
 
-            CosmeticLeaves.Register();
+            CGCosmeticLeaves.Register();
 
-            CGGateFix.Register();
+            CGGateCustomization.Register();
 
-            SlipperySlope.Register();
+            // Almost sure I ended up not using these
+            CGSlipperySlope.Register();
 
-            BunkerShelterParts.Register();
+            CGBunkerShelterParts.Register();
 
-            QuestionableLizardBit.Apply();
+            CGQuestionableLizardBits.Apply();
 
-            SpawnCustomizations.Apply();
+            CGSpawnCustomizations.Apply();
 
-            NoLurkArea.Register();
+            CGNoLurkArea.Register();
 
-            GravityGradient.Register();
+            CGGravityGradient.Register();
 
-            //quack
+            // *sad quack*
             TremblingSeed.SeedHooks.Apply();
 
-            ProgressionFilter.Register();
+            CGProgressionFilter.Register();
 
-            LRUPickup.Register();
+            CGLRUPickup.Register();
 
-            CameraZoomEffect.Apply();
+            CGCameraZoomEffect.Apply();
 
             CGCutscenes.Apply();
 
@@ -259,56 +211,20 @@ namespace ConcealedGarden
 
             CGCosmeticWater.Register();
 
-            FourthLayerFix.Apply();
+            CGFourthLayerFix.Apply();
 
             // CG progression
-            YellowThoughtsAdaptor.Apply();
-            LizardBehaviorChange.Apply();
+            CGYellowThoughtsAdaptor.Apply();
+            CGLizardBehaviorChange.Apply();
 
             CGCameraEffects.Apply();
 
             CGAchievementManager.Apply();
 
-
-            FoodCounterTest.Apply();
+            CGAmbienceFix.Apply();
 
             // Screaming into the void
             Debug.Log("CG Fully Loaded");
-        }
-
-        static class FoodCounterTest
-        {
-            public static void Apply()
-            {
-                On.PlayerGraphics.ctor += PlayerGraphics_ctor;
-                On.PlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites;
-                On.Player.AddFood += Player_AddFood;
-            }
-
-            private static void Player_AddFood(On.Player.orig_AddFood orig, Player self, int add)
-            {
-                orig(self, add);
-                progression.savestateFood += add;
-                progression.deathpersFood += add;
-                progression.progressionFood += add;
-            }
-
-            private static void PlayerGraphics_DrawSprites(On.PlayerGraphics.orig_DrawSprites orig, PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
-            {
-                orig(self, sLeaser, rCam, timeStacker, camPos);
-                self.DEBUGLABELS[0].label.text = "Savestate Food:" + progression.savestateFood;
-                self.DEBUGLABELS[1].label.text = "Deathpers Food:" + progression.deathpersFood;
-                self.DEBUGLABELS[2].label.text = "Misc Food:" + progression.progressionFood;
-            }
-
-            private static void PlayerGraphics_ctor(On.PlayerGraphics.orig_ctor orig, PlayerGraphics self, PhysicalObject ow)
-            {
-                orig(self, ow);
-                self.DEBUGLABELS = new DebugLabel[3];
-                self.DEBUGLABELS[0] = new DebugLabel(ow, new Vector2(10f, 20f));
-                self.DEBUGLABELS[1] = new DebugLabel(ow, new Vector2(10f, 10f));
-                self.DEBUGLABELS[2] = new DebugLabel(ow, new Vector2(10f, 0f));
-            }
         }
     }
 }

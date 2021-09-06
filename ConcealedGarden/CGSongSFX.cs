@@ -5,25 +5,24 @@ using UnityEngine;
 
 namespace ConcealedGarden
 {
-	public class SongSFX : Music.Song
+	public class CGSongSFX : Music.Song
 	{
 		public static void Register()
 		{
-			PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("SongSFXTrigger",
-				typeof(SongSFXTrigger), typeof(SongSFXTrigger.SongSFXTriggerData), typeof(PlacedObjectsManager.ManagedRepresentation)));
-			PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("SongSFXGradient",
-				typeof(SongSFXGradient), typeof(SongSFXGradient.SongSFXGradientData), typeof(PlacedObjectsManager.ManagedRepresentation)));
-
+			PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("CGSongSFXTrigger",
+				typeof(CGSongSFXTrigger), typeof(CGSongSFXTrigger.CGSongSFXTriggerData), typeof(PlacedObjectsManager.ManagedRepresentation)));
+			PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("CGSongSFXGradient",
+				typeof(CGSongSFXGradient), typeof(CGSongSFXGradient.CGSongSFXGradientData), typeof(PlacedObjectsManager.ManagedRepresentation)));
 		}
 
-		public SongSFX(Music.MusicPlayer musicPlayer, string title) : base(musicPlayer, title, Music.MusicPlayer.MusicContext.StoryMode)
+		public CGSongSFX(Music.MusicPlayer musicPlayer, string title) : base(musicPlayer, title, Music.MusicPlayer.MusicContext.StoryMode)
 		{
 			this.priority = 1.1f;
 			this.stopAtGate = true;
 			this.stopAtDeath = true;
 			this.fadeInTime = 120f;
 			base.Loop = true;
-			Debug.Log("Created SongSFX for " + title);
+			Debug.Log("Created CGSongSFX for " + title);
 		}
 
 		public override void Update()
@@ -40,7 +39,7 @@ namespace ConcealedGarden
 					this.destroyCounter++;
 				if (this.destroyCounter == 150)
 				{
-					Debug.Log("Destroyed SongSFX");
+					Debug.Log("Destroyed CGSongSFX");
 					base.FadeOut(400f);
 				}
 			}
@@ -52,22 +51,22 @@ namespace ConcealedGarden
 		public int destroyCounter;
 	}
 
-	public class SongSFXTrigger : UpdatableAndDeletable
+	public class CGSongSFXTrigger : UpdatableAndDeletable
     {
 
-        public class SongSFXTriggerData : PlacedObjectsManager.ManagedData
+        public class CGSongSFXTriggerData : PlacedObjectsManager.ManagedData
         {
 			[PlacedObjectsManager.StringField("1name", "songname", "Name")]
 			public string name;
 			[PlacedObjectsManager.FloatField("2intensity", 0f, 1f, 0.1f, 0.01f, displayName: "Intensity")]
 			public float intensity;
-			public SongSFXTriggerData(PlacedObject owner) : base(owner, null) { }
-			public SongSFXTriggerData(PlacedObject owner, PlacedObjectsManager.ManagedField[] fields) : base(owner, fields) { }
+			public CGSongSFXTriggerData(PlacedObject owner) : base(owner, null) { }
+			public CGSongSFXTriggerData(PlacedObject owner, PlacedObjectsManager.ManagedField[] fields) : base(owner, fields) { }
 		}
 
 		public readonly PlacedObject pObj;
-        private SongSFXTriggerData data => pObj.data as SongSFXTriggerData;
-        public SongSFXTrigger(Room room, PlacedObject pObj)
+        private CGSongSFXTriggerData data => pObj.data as CGSongSFXTriggerData;
+        public CGSongSFXTrigger(Room room, PlacedObject pObj)
         {
             this.room = room;
             this.pObj = pObj;
@@ -103,14 +102,14 @@ namespace ConcealedGarden
 			{
 				return;
 			}
-			if (player.song == null || !(player.song is SongSFX) || !(player.song.name == this.data.name))
+			if (player.song == null || !(player.song is CGSongSFX) || !(player.song.name == this.data.name))
 			{
 				//this.room.game.manager.musicPlayer.RequestSSSong();
-				if (player.song != null && player.song is SongSFX && player.song.name == this.data.name)
+				if (player.song != null && player.song is CGSongSFX && player.song.name == this.data.name)
 				{
 					return;
 				}
-				if (player.nextSong != null && player.nextSong is SongSFX && player.nextSong.name == this.data.name)
+				if (player.nextSong != null && player.nextSong is CGSongSFX && player.nextSong.name == this.data.name)
 				{
 					return;
 				}
@@ -118,7 +117,7 @@ namespace ConcealedGarden
 				{
 					return;
 				}
-				Music.Song song = new SongSFX(player, data.name);
+				Music.Song song = new CGSongSFX(player, data.name);
 				if (player.song == null)
 				{
 					player.song = song;
@@ -130,20 +129,20 @@ namespace ConcealedGarden
 					player.nextSong.playWhenReady = false;
 				}
 			}
-			else if ((player.song as SongSFX).setVolume != null)
+			else if ((player.song as CGSongSFX).setVolume != null)
 			{
-				(player.song as SongSFX).setVolume = new float?(Mathf.Max((player.song as SongSFX).setVolume.Value, intensity));
+				(player.song as CGSongSFX).setVolume = new float?(Mathf.Max((player.song as CGSongSFX).setVolume.Value, intensity));
 			}
 			else
 			{
-				(player.song as SongSFX).setVolume = new float?(intensity);
+				(player.song as CGSongSFX).setVolume = new float?(intensity);
 			}
 		}
 	}
 
-    public class SongSFXGradient : SongSFXTrigger
+    public class CGSongSFXGradient : CGSongSFXTrigger
     {
-        public class SongSFXGradientData : SongSFXTrigger.SongSFXTriggerData
+        public class CGSongSFXGradientData : CGSongSFXTrigger.CGSongSFXTriggerData
         {
 			[PlacedObjectsManager.FloatField("3intensityb", 0f, 1f, 0.1f, 0.01f, displayName: "Intensity B")]
 			public float intensityB;
@@ -155,13 +154,13 @@ namespace ConcealedGarden
 			   };
 			[BackedByField("5ev")]
 			public Vector2 handle;
-			public SongSFXGradientData(PlacedObject owner) : base(owner, customFields) { }
-			public SongSFXGradientData(PlacedObject owner, PlacedObjectsManager.ManagedField[] fields) : base(owner, customFields.ToList().Concat(fields.ToList()).ToArray()) { }
+			public CGSongSFXGradientData(PlacedObject owner) : base(owner, customFields) { }
+			public CGSongSFXGradientData(PlacedObject owner, PlacedObjectsManager.ManagedField[] fields) : base(owner, customFields.ToList().Concat(fields.ToList()).ToArray()) { }
 		}
 
-		private SongSFXGradientData data => pObj.data as SongSFXGradientData;
+		private CGSongSFXGradientData data => pObj.data as CGSongSFXGradientData;
 
-		public SongSFXGradient(Room room, PlacedObject pObj) : base(room, pObj) { }
+		public CGSongSFXGradient(Room room, PlacedObject pObj) : base(room, pObj) { }
 
         protected override bool ShouldTrigger()
         {

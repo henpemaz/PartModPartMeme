@@ -7,7 +7,7 @@ using UnityEngine;
 namespace ConcealedGarden
 {
 	// I said don't look
-	internal class QuestionableLizardBit : LizardCosmetics.Template
+	internal class CGQuestionableLizardBits : LizardCosmetics.Template
 	{
 		// Stop, what are you doing
 		private static bool allOfThem = false;
@@ -22,10 +22,9 @@ namespace ConcealedGarden
 		{
             // You're not gonna like it
             string str = "Disclaimer: only applies if NudeMod is ON ;o";
-            string str2 = "Anyone who finds this knows exactly what they're in for";
+            string str2 = "They know what they're in for";
 			string str3 = str + "\n" + str2;
             On.RainWorld.Start += RainWorld_Start;
-			
 		}
 
 		private static void InternalApply()
@@ -130,7 +129,7 @@ namespace ConcealedGarden
 							':'
 						});
 						string text = array2[0].Trim().ToLowerInvariant();
-						if (text == "male" && !alreadyRolled)
+						if (text == "cgmale" && !alreadyRolled)
                         {
 							shouldHaveAQuestionableBit = array2.Length <= 1 || UnityEngine.Random.value < float.Parse(array2[1]);
 							alreadyRolled = true;
@@ -177,7 +176,7 @@ namespace ConcealedGarden
 				ivInfluence = 1.2f;
 			}
 			//Debug.Log("Lizord has a QuestionableLizardBit? " + shouldHaveAQuestionableBit);
-			if (shouldHaveAQuestionableBit) self.AddCosmetic(self.startOfExtraSprites + self.extraSprites, new QuestionableLizardBit(self, self.startOfExtraSprites + self.extraSprites, innateLength, ivInfluence));
+			if (shouldHaveAQuestionableBit) self.AddCosmetic(self.startOfExtraSprites + self.extraSprites, new CGQuestionableLizardBits(self, self.startOfExtraSprites + self.extraSprites, innateLength, ivInfluence));
 			UnityEngine.Random.seed = seed;
 		}
 
@@ -190,7 +189,7 @@ namespace ConcealedGarden
 		protected bool colored = true;
 		protected float happiness;
 
-		public QuestionableLizardBit(LizardGraphics self, int v, float innateLength, float ivInfluence) : base(self, v)
+		public CGQuestionableLizardBits(LizardGraphics self, int v, float innateLength, float ivInfluence) : base(self, v)
 		{
             this.spritesOverlap = SpritesOverlap.Behind;
             //this.spritesOverlap = SpritesOverlap.InFront;
@@ -216,8 +215,8 @@ namespace ConcealedGarden
 							':'
 						});
 						string text = array2[0].Trim().ToLowerInvariant();
-						if (text == "happy") happy = array2.Length > 1 ? float.Parse(array2[1]) : 1f;
-						if (text == "innate") innateLength = array2.Length > 1 ? float.Parse(array2[1]) : innateLength*1.3f;
+						if (text == "cghappy") happy = array2.Length > 1 ? float.Parse(array2[1]) : 1f;
+						if (text == "cginnate") innateLength = array2.Length > 1 ? float.Parse(array2[1]) : innateLength*1.3f;
 
 					}
 				}
@@ -355,7 +354,7 @@ namespace ConcealedGarden
 			if (happiness < happy) happiness = happy;
 			else if (happiness < this.lGraphics.showDominance * 0.8f)
 			{
-				if (UnityEngine.Input.GetKey("l")) Debug.Log("liz happy coz showing off");
+				//if (UnityEngine.Input.GetKey("l")) Debug.Log("liz happy coz showing off");
 				happiness = RWCustom.Custom.LerpAndTick(happiness, this.lGraphics.showDominance * 0.8f, 0.008f, 0.002f);
 			}
 			else if (lGraphics.lizard.AI != null && lGraphics.lizard.AI.friendTracker != null && lGraphics.lizard.AI.friendTracker.friend != null
@@ -364,19 +363,19 @@ namespace ConcealedGarden
 				&& lGraphics.lizard.AI.behavior == LizardAI.Behavior.FollowFriend
 				&& lGraphics.lizard.AI.friendTracker.RunSpeed() == 0f)
 			{
-				if (UnityEngine.Input.GetKey("l")) Debug.Log("liz happy coz friend");
+				//if (UnityEngine.Input.GetKey("l")) Debug.Log("liz happy coz friend");
 				float dist = lGraphics.lizard.AI.friendTracker.friend.abstractCreature.pos.Tile.FloatDist(lGraphics.lizard.AI.creature.pos.Tile);
 				float distFactor = Mathf.Clamp01((dist - 2f) / 12f);
 				happiness = RWCustom.Custom.LerpAndTick(happiness, 1 - 0.6f*distFactor, 0.002f, 0.0008f - 0.0006f * distFactor);
 			}
 			else if (lGraphics.lizard.AI != null && happiness < this.lGraphics.lizard.AI.excitement * 0.6f && this.lGraphics.lizard.AI.CombinedFear < 0.2f)
 			{
-				if (UnityEngine.Input.GetKey("l")) Debug.Log("liz happy coz excited");
+				//if (UnityEngine.Input.GetKey("l")) Debug.Log("liz happy coz excited");
 				happiness = RWCustom.Custom.LerpAndTick(happiness, this.lGraphics.lizard.AI.excitement * 0.6f, 0.011f, 0.008f);
 			}
 			else
 			{
-				if (UnityEngine.Input.GetKey("l")) Debug.Log("liz unhappy");
+				//if (UnityEngine.Input.GetKey("l")) Debug.Log("liz unhappy");
 				this.happiness -= lGraphics.lizard.AI.panic > 0 ? 0.02f
 					: (lGraphics.lizard.AI != null && (this.lGraphics.lizard.AI.CombinedFear > 0.2f) || this.lGraphics.lizard.AI.behavior == LizardAI.Behavior.Flee) ? 0.01f 
 					: (lGraphics.lizard.AI != null && this.lGraphics.lizard.AI.behavior == LizardAI.Behavior.Injured) ? 0.005f

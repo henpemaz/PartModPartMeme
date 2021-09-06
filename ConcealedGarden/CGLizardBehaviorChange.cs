@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ConcealedGarden
 {
-    internal static class LizardBehaviorChange
+    internal static class CGLizardBehaviorChange
     {
         internal static void Apply()
         {

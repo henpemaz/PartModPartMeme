@@ -7,12 +7,12 @@ using RWCustom;
 
 namespace ConcealedGarden
 {
-    internal class CosmeticLeaves : UpdatableAndDeletable, IDrawable
+    internal class CGCosmeticLeaves : UpdatableAndDeletable, IDrawable
     {
         internal static void Register()
         {
-            PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("CosmeticLeaves",
-                typeof(CosmeticLeaves), typeof(CosmeticLeavesObjectData), typeof(PlacedObjectsManager.ManagedRepresentation)));
+            PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("CGCosmeticLeaves",
+                typeof(CGCosmeticLeaves), typeof(CosmeticLeavesObjectData), typeof(PlacedObjectsManager.ManagedRepresentation)));
         }
 
         private CosmeticLeavesObjectData data => (pObj.data as CosmeticLeavesObjectData);
@@ -21,7 +21,7 @@ namespace ConcealedGarden
         private List<Branch> branches;
         private List<Leaf> leaves;
 
-        public CosmeticLeaves(PlacedObject placedObject, Room instance)
+        public CGCosmeticLeaves(PlacedObject placedObject, Room instance)
         {
             this.pObj = placedObject;
             this.room = instance;
@@ -47,7 +47,7 @@ namespace ConcealedGarden
         public abstract class BranchPart
         {
             protected static float windspeed = 0.01f;
-            protected CosmeticLeaves owner;
+            protected CGCosmeticLeaves owner;
             protected BranchPart connectsTo;
             protected int connectsToIndex;
             protected float rotation;
@@ -83,7 +83,7 @@ namespace ConcealedGarden
             private readonly Vector3 goal;
             private float[] thicknesses;
 
-            public Branch(CosmeticLeaves owner, Branch connectsTo, int connectsToIndex, Vector3 goal, float thicknessAtBase)
+            public Branch(CGCosmeticLeaves owner, Branch connectsTo, int connectsToIndex, Vector3 goal, float thicknessAtBase)
             {
                 owner.branches.Add(this);
                 this.owner = owner;
@@ -198,7 +198,7 @@ namespace ConcealedGarden
             private Vector3 dir;
             private float[] widths;
 
-            public Leaf(CosmeticLeaves owner, Branch connectsTo, int connectsToIndex, Vector3 direction)
+            public Leaf(CGCosmeticLeaves owner, Branch connectsTo, int connectsToIndex, Vector3 direction)
             {
                 this.owner = owner;
                 owner.leaves.Add(this);

@@ -4,13 +4,13 @@ using UnityEngine;
 
 namespace ConcealedGarden
 {
-    internal static class NoLurkArea
+    internal static class CGNoLurkArea
     {
         private static PlacedObjectsManager.ManagedObjectType noLurkType;
         public static void Register()
         {
-            PlacedObjectsManager.RegisterManagedObject(noLurkType = new PlacedObjectsManager.ManagedObjectType("NoLurkArea", null,
-                dataType: typeof(NoLurkAreaData), typeof(PlacedObjectsManager.ManagedRepresentation)));
+            PlacedObjectsManager.RegisterManagedObject(noLurkType = new PlacedObjectsManager.ManagedObjectType("CGNoLurkArea", null,
+                dataType: typeof(CGNoLurkAreaData), typeof(PlacedObjectsManager.ManagedRepresentation)));
 
             On.LizardAI.LurkTracker.LurkPosScore += LurkPosScore_Hk;
         }
@@ -26,7 +26,7 @@ namespace ConcealedGarden
                 {
                     if(item.active && item.type == nolurktype)
                     {
-                        if (RWCustom.Custom.DistLess(lurkPos, item.pos, (item.data as NoLurkAreaData).handle.magnitude))
+                        if (RWCustom.Custom.DistLess(lurkPos, item.pos, (item.data as CGNoLurkAreaData).handle.magnitude))
                         {
                             //Debug.LogError("NO LURK");
                             return -100000f;
@@ -37,7 +37,7 @@ namespace ConcealedGarden
             return retval;
         }
 
-        private class NoLurkAreaData : PlacedObjectsManager.ManagedData
+        private class CGNoLurkAreaData : PlacedObjectsManager.ManagedData
         {
             private static PlacedObjectsManager.ManagedField[] paramFields = new PlacedObjectsManager.ManagedField[]
             {
@@ -45,7 +45,7 @@ namespace ConcealedGarden
             };
             [BackedByField("handle")]
             public Vector2 handle;
-            public NoLurkAreaData(PlacedObject owner) : base(owner, paramFields) { }
+            public CGNoLurkAreaData(PlacedObject owner) : base(owner, paramFields) { }
         }
 
         //private PlacedObject pObj;

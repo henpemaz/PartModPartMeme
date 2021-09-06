@@ -4,16 +4,16 @@ using UnityEngine;
 
 namespace ConcealedGarden
 {
-    internal class LRUPickup : CosmeticSprite
+    internal class CGLRUPickup : CosmeticSprite
     {
         internal static void Register()
         {
-            PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("LRUPickup",
-                typeof(LRUPickup), null, null));
+            PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("CGLRUPickup",
+                typeof(CGLRUPickup), null, null));
         }
 
         private readonly PlacedObject pObj;
-        public LRUPickup(Room room, PlacedObject pObj)
+        public CGLRUPickup(Room room, PlacedObject pObj)
         {
             this.room = room;
             this.pObj = pObj;

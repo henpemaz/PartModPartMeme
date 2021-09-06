@@ -6,7 +6,7 @@ using UnityEngine;
 namespace ConcealedGarden
 {
 
-    public class LifeSimProjection : UpdatableAndDeletable, INotifyWhenRoomIsReady, IDrawable
+    public class CGLifeSimProjection : UpdatableAndDeletable, INotifyWhenRoomIsReady, IDrawable
     {
         internal List<PlacedObject> places;
 
@@ -33,7 +33,7 @@ namespace ConcealedGarden
         }
 
 
-        public LifeSimProjection(Room owner)
+        public CGLifeSimProjection(Room owner)
         {
             this.room = owner;
             this.places = new List<PlacedObject>();
@@ -51,8 +51,8 @@ namespace ConcealedGarden
 
         internal static void Register()
         {
-            PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("LifeSimProjectionSegment",
-                typeof(LifeSimProjection), typeof(PlacedObject.GridRectObjectData), typeof(DevInterface.GridRectObjectRepresentation), singleInstance: true));
+            PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("CGLifeSimProjectionSegment",
+                typeof(CGLifeSimProjection), typeof(PlacedObject.GridRectObjectData), typeof(DevInterface.GridRectObjectRepresentation), singleInstance: true));
             //PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("LifeSimProjectionPulser",
             //    typeof(LifeSimProjection), typeof(PlacedObject.GridRectObjectData), typeof(DevInterface.GridRectObjectRepresentation), singleInstance: true));
             //PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("LifeSimProjectionKiller",
@@ -359,7 +359,7 @@ namespace ConcealedGarden
             // lets make GC easier
             //private LifeSimProjection owner;
 
-            public Tile(LifeSimProjection owner, int index, int currentX, int currentY)
+            public Tile(CGLifeSimProjection owner, int index, int currentX, int currentY)
             {
                 this.gridX = currentX;
                 this.gridY = currentY;
@@ -368,7 +368,7 @@ namespace ConcealedGarden
                 this.pixelY = owner.rootY * 20f + gridY * 40f + 20f;
             }
 
-            internal void MapNeighbours(LifeSimProjection lifeSimProjection)
+            internal void MapNeighbours(CGLifeSimProjection lifeSimProjection)
             {
                 int tmpx, tmpy;
                 int maxx = lifeSimProjection.gridWidth - 1;
@@ -392,7 +392,7 @@ namespace ConcealedGarden
                 }
             }
 
-            internal void Tick(LifeSimProjection lifeSimProjection, int generation)
+            internal void Tick(CGLifeSimProjection lifeSimProjection, int generation)
             {
                 // Debug.Log("LifeSimProjection: tile " + index + " ticked");
                 this.generation = generation;
@@ -421,7 +421,7 @@ namespace ConcealedGarden
                 }
             }
 
-            private void Death(LifeSimProjection lifeSimProjection)
+            private void Death(CGLifeSimProjection lifeSimProjection)
             {
                 //Debug.Log("LifeSimProjection: Death");
                 alive = false;
@@ -430,7 +430,7 @@ namespace ConcealedGarden
                 // removed from active once sprite is hid
             }
 
-            private void Birth(LifeSimProjection lifeSimProjection)
+            private void Birth(CGLifeSimProjection lifeSimProjection)
             {
                 //Debug.Log("LifeSimProjection: Birth!");
                 alive = true;

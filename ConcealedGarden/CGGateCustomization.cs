@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace ConcealedGarden
 {
-    internal class CGGateFix : UpdatableAndDeletable, IDrawable
+    internal class CGGateCustomization : UpdatableAndDeletable, IDrawable
     {
         private readonly PlacedObject pObj;
         private RegionGateGraphics.DoorGraphic leftDoor;
@@ -13,7 +13,7 @@ namespace ConcealedGarden
 
         ManagedPlacedObjects.PlacedObjectsManager.ManagedData data => pObj.data as ManagedPlacedObjects.PlacedObjectsManager.ManagedData;
 
-        public CGGateFix(Room room, PlacedObject pObj)
+        public CGGateCustomization(Room room, PlacedObject pObj)
         {
             this.room = room;
             this.pObj = pObj;
@@ -29,7 +29,7 @@ namespace ConcealedGarden
                         break;
                     }
                 }
-                room.drawableObjects.Remove(water);
+                if (water != null) room.drawableObjects.Remove(water);
             }
 
             if (data.GetValue<bool>("noleft"))
@@ -51,8 +51,8 @@ namespace ConcealedGarden
             {
                 new PlacedObjectsManager.BooleanField("noleft", false, displayName:"No Left Door"),
                 new PlacedObjectsManager.BooleanField("noright", false, displayName:"No Right Door"),
-                new PlacedObjectsManager.BooleanField("nowater", false, displayName:"No Water, stoopid"),
-            }, typeof(CGGateFix), "CGGateFix");
+                new PlacedObjectsManager.BooleanField("nowater", false, displayName:"No Water"),
+            }, typeof(CGGateCustomization), "CGGateCustomization");
         }
 
         public override void Update(bool eu)

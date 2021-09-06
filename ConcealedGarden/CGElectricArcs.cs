@@ -7,16 +7,16 @@ using RWCustom;
 
 namespace ConcealedGarden
 {
-    internal static class ElectricArcs
+    internal static class CGElectricArcs
     {
         internal static void Register()
         {
             //throw new NotImplementedException();
-            PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("ElectricArc", typeof(ElectricArc), typeof(ElectricArcData), typeof(PlacedObjectsManager.ManagedRepresentation)));
-            PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("ElectricArcGenerator", typeof(ElectricArcGenerator), typeof(ElectricArcGeneratorData), typeof(PlacedObjectsManager.ManagedRepresentation)));
+            PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("CGElectricArc", typeof(CGElectricArc), typeof(CGElectricArcData), typeof(PlacedObjectsManager.ManagedRepresentation)));
+            PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("CGElectricArcGenerator", typeof(CGElectricArcGenerator), typeof(CGElectricArcGeneratorData), typeof(PlacedObjectsManager.ManagedRepresentation)));
         }
 
-        public abstract class ElectricSparkData : PlacedObjectsManager.ManagedData
+        public abstract class CGElectricSparkData : PlacedObjectsManager.ManagedData
         {
             private static PlacedObjectsManager.ManagedField[] customFields = new PlacedObjectsManager.ManagedField[]{
                     new PlacedObjectsManager.ColorField("01", new Color(0.56f, 0.66f, 0.98f), displayName: "Inner Color"),
@@ -58,11 +58,11 @@ namespace ConcealedGarden
             public float lightrad;
 
 #pragma warning restore 0649
-            public ElectricSparkData(PlacedObject owner) : base(owner, customFields) { }
-            public ElectricSparkData(PlacedObject owner, PlacedObjectsManager.ManagedField[] fields = null) : base(owner, fields == null ? customFields : customFields.ToList().Concat(fields.ToList()).ToArray()) { }
+            public CGElectricSparkData(PlacedObject owner) : base(owner, customFields) { }
+            public CGElectricSparkData(PlacedObject owner, PlacedObjectsManager.ManagedField[] fields = null) : base(owner, fields == null ? customFields : customFields.ToList().Concat(fields.ToList()).ToArray()) { }
         }
 
-        public class ElectricArcData : ElectricSparkData
+        public class CGElectricArcData : CGElectricSparkData
         {
             private static PlacedObjectsManager.ManagedField[] customFields = new PlacedObjectsManager.ManagedField[]{
                 new PlacedObjectsManager.Vector2Field("20", new Vector2(-100, 30)),
@@ -75,11 +75,11 @@ namespace ConcealedGarden
             [PlacedObjectsManager.IntegerField("22", 0, 400, 40, displayName: "Shockcooldown")]
             public int shockcooldown;
 #pragma warning restore 0649
-            public ElectricArcData(PlacedObject owner) : base(owner, customFields) { }
-            public ElectricArcData(PlacedObject owner, PlacedObjectsManager.ManagedField[] fields = null) : base(owner, fields == null ? customFields : customFields.ToList().Concat(fields.ToList()).ToArray()) { }
+            public CGElectricArcData(PlacedObject owner) : base(owner, customFields) { }
+            public CGElectricArcData(PlacedObject owner, PlacedObjectsManager.ManagedField[] fields = null) : base(owner, fields == null ? customFields : customFields.ToList().Concat(fields.ToList()).ToArray()) { }
         }
 
-        public class ElectricArcGeneratorData : ElectricSparkData
+        public class CGElectricArcGeneratorData : CGElectricSparkData
         {
             private static PlacedObjectsManager.ManagedField[] customFields = new PlacedObjectsManager.ManagedField[]{
                     new PlacedObjectsManager.Vector2Field("20", new Vector2(-100, 30)),
@@ -100,33 +100,33 @@ namespace ConcealedGarden
             [PlacedObjectsManager.FloatField("25", -2f, 2f, 0.5f, 0.01f, displayName: "Forwardness")]
             public float forwardness;
 #pragma warning restore 0649
-            public ElectricArcGeneratorData(PlacedObject owner) : base(owner, customFields) { }
-            public ElectricArcGeneratorData(PlacedObject owner, PlacedObjectsManager.ManagedField[] fields = null) : base(owner, fields == null ? customFields : customFields.ToList().Concat(fields.ToList()).ToArray()) { }
+            public CGElectricArcGeneratorData(PlacedObject owner) : base(owner, customFields) { }
+            public CGElectricArcGeneratorData(PlacedObject owner, PlacedObjectsManager.ManagedField[] fields = null) : base(owner, fields == null ? customFields : customFields.ToList().Concat(fields.ToList()).ToArray()) { }
 
         }
 
-        public class ElectricArcGenerator : UpdatableAndDeletable
+        public class CGElectricArcGenerator : UpdatableAndDeletable
         {
             private readonly PlacedObject pObj;
 
-            List<ElectricArc.Spark> sparks;
+            List<CGElectricArc.Spark> sparks;
             int cooldown;
             private bool powered = true;
 
-            private ElectricArcGeneratorData data => pObj.data as ElectricArcGeneratorData;
-            public ElectricArcGenerator(PlacedObject pObj, Room room)
+            private CGElectricArcGeneratorData data => pObj.data as CGElectricArcGeneratorData;
+            public CGElectricArcGenerator(PlacedObject pObj, Room room)
             {
                 this.pObj = pObj;
                 this.room = room;
                 PowerCycle(true);
-                sparks = new List<ElectricArc.Spark>();
+                sparks = new List<CGElectricArc.Spark>();
                 cooldown = 0;
                 if (powered)
                 {
                     float framesToTravel = 10f / data.speed;
                     for (int i = 0; i < framesToTravel/data.interval; i++)
                     {
-                        sparks.Add(new ElectricArc.Spark(room, pObj.pos + i* data.interval*data.startto * data.speed / 10f, pObj.pos + data.end + i * data.interval * data.endto * data.speed / 10f, this, data.numberOfSparks, data));
+                        sparks.Add(new CGElectricArc.Spark(room, pObj.pos + i* data.interval*data.startto * data.speed / 10f, pObj.pos + data.end + i * data.interval * data.endto * data.speed / 10f, this, data.numberOfSparks, data));
                         room.AddObject(sparks.Last());
                     }
                 }
@@ -159,7 +159,7 @@ namespace ConcealedGarden
                 PowerCycle(false);
                 if (cooldown < 0 && powered)
                 {
-                    sparks.Add(new ElectricArc.Spark(room, pObj.pos, pObj.pos + data.end, this, data.numberOfSparks, data));
+                    sparks.Add(new CGElectricArc.Spark(room, pObj.pos, pObj.pos + data.end, this, data.numberOfSparks, data));
                     room.AddObject(sparks.Last());
                     cooldown = data.interval;
                 }
@@ -170,7 +170,7 @@ namespace ConcealedGarden
                     if ((sparkie.start - pObj.pos).sqrMagnitude > data.startto.sqrMagnitude) sparkie.Break();
                     for (int i = 0; i < sparkie.nodes.Length; i++)
                     {
-                        ElectricArc.Spark.SparkNode node = sparkie.nodes[i];
+                        CGElectricArc.Spark.SparkNode node = sparkie.nodes[i];
                         node.pos += (sparkie.nodes.Length > 1 ? Vector2.Lerp(data.startto, data.endto, (float)i / (float)(sparkie.nodes.Length - 1)) : data.startto) * data.forwardness * data.speed / 10f;
                         //node.pos += (Vector2.Lerp(data.startto, data.endto, (float)i / (float)(sparkie.nodes.Length - 1))) * data.forwardness * data.speed / 10f;
                     }
@@ -190,12 +190,12 @@ namespace ConcealedGarden
             }
         }
 
-        public class ElectricArc : UpdatableAndDeletable
+        public class CGElectricArc : UpdatableAndDeletable
         {
             private readonly PlacedObject pObj;
 
-            private ElectricArcData data => pObj.data as ElectricArcData;
-            public ElectricArc(PlacedObject pObj)
+            private CGElectricArcData data => pObj.data as CGElectricArcData;
+            public CGElectricArc(PlacedObject pObj)
             {
                  this.pObj = pObj;
             }
@@ -224,7 +224,7 @@ namespace ConcealedGarden
                 public Vector2 stop;
                 private readonly UpdatableAndDeletable owner;
                 private readonly int nNodes;
-                private readonly ElectricSparkData data;
+                private readonly CGElectricSparkData data;
                 private readonly float spacing;
                 internal SparkNode[] nodes;
                 public bool broken = false;
@@ -234,7 +234,7 @@ namespace ConcealedGarden
                 private float weightedDisruption;
                 private LightSource light;
 
-                public Spark(Room room, Vector2 start, Vector2 stop, UpdatableAndDeletable owner, int nNodes, ElectricSparkData data)
+                public Spark(Room room, Vector2 start, Vector2 stop, UpdatableAndDeletable owner, int nNodes, CGElectricSparkData data)
                 {
 
                     this.start = start;
@@ -368,7 +368,7 @@ namespace ConcealedGarden
                     {
                         this.intensity = Mathf.Lerp(2.0f, phys.TotalMass, 0.5f);
                         this.broken = true;
-                        if (owner is ElectricArc arc)
+                        if (owner is CGElectricArc arc)
                             arc.Break(true);
                         if(phys.grabbedBy != null && phys.grabbedBy.Count!= 0)
                         {
@@ -394,7 +394,7 @@ namespace ConcealedGarden
                     if (broken) return;
                     this.broken = true;
                     this.intensity = 1.5f;
-                    if (owner is ElectricArc arc)
+                    if (owner is CGElectricArc arc)
                         arc.Break(false);
                 }
 

@@ -5,18 +5,18 @@ using UnityEngine;
 namespace ConcealedGarden
 { 
 
-	public class GravityGradient : UpdatableAndDeletable
+	public class CGGravityGradient : UpdatableAndDeletable
 	{
         private readonly PlacedObject pObj;
-		private GravityGradientData data => pObj.data as GravityGradientData;
+		private CGGravityGradientData data => pObj.data as CGGravityGradientData;
 
 		internal static void Register()
 		{
-			PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("GravityGradient",
-				typeof(GravityGradient), typeof(GravityGradient.GravityGradientData), typeof(PlacedObjectsManager.ManagedRepresentation)));
+			PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("CGGravityGradient",
+				typeof(CGGravityGradient), typeof(CGGravityGradient.CGGravityGradientData), typeof(PlacedObjectsManager.ManagedRepresentation)));
 		}
 
-		public GravityGradient(Room room, PlacedObject pObj)
+		public CGGravityGradient(Room room, PlacedObject pObj)
 		{
 			this.room = room;
             this.pObj = pObj;
@@ -47,7 +47,7 @@ namespace ConcealedGarden
 			return Mathf.Clamp01(Vector2.Dot(AV, AB) / AB.sqrMagnitude);
 		}
 
-		private class GravityGradientData : PlacedObjectsManager.ManagedData
+		private class CGGravityGradientData : PlacedObjectsManager.ManagedData
 		{
 #pragma warning disable 0649
 			[PlacedObjectsManager.FloatField("1g", 0f, 1f, 0.1f, 0.01f, displayName: "Gravity A")]
@@ -63,7 +63,7 @@ namespace ConcealedGarden
 			[BackedByField("4h")]
 			public Vector2 handle;
 #pragma warning restore 0649
-			public GravityGradientData(PlacedObject owner) : base(owner, customFields) { }
+			public CGGravityGradientData(PlacedObject owner) : base(owner, customFields) { }
 		}
 
 	}

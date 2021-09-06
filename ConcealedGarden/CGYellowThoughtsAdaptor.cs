@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ConcealedGarden
 {
-    internal class YellowThoughtsAdaptor
+    internal class CGYellowThoughtsAdaptor
     {
         // Make yellow lizards to 'talk' on mark + cg-tf
         internal static void Apply()
@@ -15,18 +15,18 @@ namespace ConcealedGarden
 
         // Using weakref dict, avoid cyclic key
         // Pass 'self' on all methods, don't hold ref
-        static readonly AttachedField<YellowAI, YellowThoughtsAdaptor> LizardThought = new AttachedField<YellowAI, YellowThoughtsAdaptor>();
+        static readonly AttachedField<YellowAI, CGYellowThoughtsAdaptor> LizardThought = new AttachedField<YellowAI, CGYellowThoughtsAdaptor>();
         private int noTalk;
 
         private static void YellowAI_ctor(On.YellowAI.orig_ctor orig, YellowAI self, ArtificialIntelligence AI)
         {
             orig(self, AI);
-            LizardThought[self] = new YellowThoughtsAdaptor();
+            LizardThought[self] = new CGYellowThoughtsAdaptor();
         }
 
         private static void YellowAI_Update(On.YellowAI.orig_Update orig, YellowAI self)
         {
-            YellowThoughtsAdaptor @this = LizardThought[self];
+            CGYellowThoughtsAdaptor @this = LizardThought[self];
             @this?.Update(self);
             orig(self);
         }

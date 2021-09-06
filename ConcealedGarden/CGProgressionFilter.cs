@@ -6,18 +6,17 @@ using UnityEngine;
 
 namespace ConcealedGarden
 {
-    internal class ProgressionFilter
+    internal class CGProgressionFilter
     {
         private static PlacedObjectsManager.ManagedObjectType progressionFilterType;
-        public enum ProgressionRequirement { No, Yes, Either } // int value important for yes/no
+        public enum ProgressionRequirement { No, Yes, Either } // int value important for yes/no, bool'd
         internal static void Register()
         {
-            PlacedObjectsManager.RegisterManagedObject(progressionFilterType = new PlacedObjectsManager.ManagedObjectType("ProgressionFilter",
-                null, typeof(ProgressionFilterData), typeof(PlacedObjectsManager.ManagedRepresentation)));
+            PlacedObjectsManager.RegisterManagedObject(progressionFilterType = new PlacedObjectsManager.ManagedObjectType("CGProgressionFilter",
+                null, typeof(CGProgressionFilterData), typeof(PlacedObjectsManager.ManagedRepresentation)));
 
             On.Room.ctor += Room_ctor;
             On.RoomSettings.LoadPlacedObjects += RoomSettings_LoadPlacedObjects;
-
         }
 
         private static WeakReference currentRoomLoading;
@@ -40,9 +39,9 @@ namespace ConcealedGarden
                 {
                     for (int k = 0; k < progressionFilters.Count; k++)
                     {
-                        if (RWCustom.Custom.DistLess(self.placedObjects[j].pos, progressionFilters[k].pos, (progressionFilters[k].data as ProgressionFilterData).handle.magnitude))
+                        if (RWCustom.Custom.DistLess(self.placedObjects[j].pos, progressionFilters[k].pos, (progressionFilters[k].data as CGProgressionFilterData).handle.magnitude))
                         {
-                            self.placedObjects[j].active &= (progressionFilters[k].data as ProgressionFilterData).ShouldActivate(room.game.GetStorySession.saveState);
+                            self.placedObjects[j].active &= (progressionFilters[k].data as CGProgressionFilterData).ShouldActivate(room.game.GetStorySession.saveState);
                             //break;
                         }
                     }
@@ -50,7 +49,7 @@ namespace ConcealedGarden
             }
         }
 
-        internal class ProgressionFilterData : PlacedObjectsManager.ManagedData
+        internal class CGProgressionFilterData : PlacedObjectsManager.ManagedData
         {
             private static readonly PlacedObjectsManager.ManagedField[] customFields = new PlacedObjectsManager.ManagedField[]
             {
@@ -73,7 +72,7 @@ namespace ConcealedGarden
             public Vector2 handle;
 #pragma warning restore 0649
 
-            public ProgressionFilterData(PlacedObject owner) : base(owner, customFields) { }
+            public CGProgressionFilterData(PlacedObject owner) : base(owner, customFields) { }
 
             internal bool ShouldActivate(SaveState saveState)
             {

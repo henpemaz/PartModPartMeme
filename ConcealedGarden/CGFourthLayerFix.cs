@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ConcealedGarden
 {
-    internal class FourthLayerFix
+    internal class CGFourthLayerFix
     {
         internal static void Apply()
         {

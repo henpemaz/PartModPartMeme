@@ -202,7 +202,7 @@ namespace ConcealedGarden
                     manager.loadingLabel = loadingLabel;
                     Futile.stage.AddChild(loadingLabel);
                 }
-                if (manager.musicPlayer != null && manager.musicPlayer.song is SongSFX songsfx) // LRU song is supposedly playing there
+                if (manager.musicPlayer != null && manager.musicPlayer.song is CGSongSFX songsfx) // LRU song is supposedly playing there
                 {
                     songsfx.destroyCounter = 150 - 28 * 40;
                 }

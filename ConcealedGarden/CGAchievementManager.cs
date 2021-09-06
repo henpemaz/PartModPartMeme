@@ -1,5 +1,9 @@
-﻿using System;
+﻿using Menu;
+using OptionalUI;
+using System;
+using System.Collections.Generic;
 using System.Reflection;
+using UnityEngine;
 
 namespace ConcealedGarden
 {
@@ -31,8 +35,140 @@ namespace ConcealedGarden
         {
             orig(self);
 
-            CustomAtlasLoader.LoadCustomAtlas("Achievement_1_popup", Assembly.GetExecutingAssembly().GetManifestResourceStream("ConcealedGarden.Resources.Achievement_1_popup.png"));
-            CustomAtlasLoader.LoadCustomAtlas("Achievement_2_popup", Assembly.GetExecutingAssembly().GetManifestResourceStream("ConcealedGarden.Resources.Achievement_2_popup.png"));
+            CustomAtlasLoader.LoadCustomAtlas("CGAchievement_1", Assembly.GetExecutingAssembly().GetManifestResourceStream("ConcealedGarden.Resources.Achievement_1.png"));
+            CustomAtlasLoader.LoadCustomAtlas("CGAchievement_1_popup", Assembly.GetExecutingAssembly().GetManifestResourceStream("ConcealedGarden.Resources.Achievement_1_popup.png"));
+            CustomAtlasLoader.LoadCustomAtlas("CGAchievement_2", Assembly.GetExecutingAssembly().GetManifestResourceStream("ConcealedGarden.Resources.Achievement_2.png"));
+            CustomAtlasLoader.LoadCustomAtlas("CGAchievement_2_popup", Assembly.GetExecutingAssembly().GetManifestResourceStream("ConcealedGarden.Resources.Achievement_2_popup.png"));
+        }
+
+        public static void MakeAchievementsOi(OptionInterface Oi, OpTab opTab)
+        {
+            opTab.AddItems(new OpLabel(40, 468, "Achievements", true));
+            OpScrollBox scrollBox = new OpScrollBox(new Vector2(40f, 260f), new Vector2(520, 200), 300f);
+            opTab.AddItems(scrollBox);
+            
+            List<AchievementEntry> achievements = new List<AchievementEntry>();
+            float placement = 300f;
+            if (ConcealedGarden.progression.achievementTransfurred)
+            {
+                placement -= 76f;
+                achievements.Add(new AchievementEntry(new Vector2(0f, placement), "CGAchievement_1", "Plastified", "You grow closer to the wilderness around you"));
+            }
+            if (ConcealedGarden.progression.achievementEcho)
+            {
+                placement -= 76f;
+                achievements.Add(new AchievementEntry(new Vector2(0f, placement), "CGAchievement_2", "A Green Crown over Shades of Blue", "You encountered the echo of A Green Crown over Shades of Blue"));
+            }
+            if(achievements.Count < 2)
+            {
+                placement -= 76f;
+                achievements.Add(new MissingAchievementsEntry(new Vector2(0f, placement), 2 - achievements.Count));
+            }
+
+            scrollBox.AddItems(achievements.ToArray());
+        }
+
+        private class AchievementEntry : UIelement
+        {
+            protected FSprite spr;
+            protected FSprite bg;
+            protected FLabel titlelbl;
+            protected FLabel descrlbl;
+
+            public AchievementEntry(Vector2 pos, string spriteName, string title, string description) : base(pos, Vector2.zero)
+            {
+                this.spr = new FSprite(spriteName, true)
+                {
+                    anchorX = 0f,
+                    anchorY = 0f,
+                    x = 6f,
+                    y = 6f,
+                };
+                this.bg = new FSprite("Futile_White", true)
+                {
+                    color = new Color(0.08f, 0.08f, 0.25f),
+                    alpha = 0.75f,
+                    width = 417f,
+                    height = 64f,
+                    anchorX = 0f,
+                    anchorY = 0f,
+                    x = 76f,
+                    y = 6f,
+                };
+                this.myContainer.AddChild(this.spr);
+                this.myContainer.AddChild(this.bg);
+                this.titlelbl = new FLabel("font", title);
+                this.titlelbl.SetPosition(titleOffset);
+                this.titlelbl.alignment = FLabelAlignment.Left;
+                this.descrlbl = new FLabel("font", description);
+                this.descrlbl.SetPosition(descOffset);
+                this.descrlbl.alpha = 0.6f;
+                this.descrlbl.alignment = FLabelAlignment.Left;
+                this.myContainer.AddChild(this.titlelbl);
+                this.myContainer.AddChild(this.descrlbl);
+                OnChange();
+            }
+
+            public Vector2 titleOffset => new Vector2(86f, 58f);
+
+            public Vector2 descOffset => new Vector2(86f, 44f);
+
+            public override void Hide()
+            {
+                base.Hide();
+                this.spr.isVisible = false;
+                this.bg.isVisible = false;
+                this.titlelbl.isVisible = false;
+                this.descrlbl.isVisible = false;
+            }
+            public override void Show()
+            {
+                base.Show();
+                this.spr.isVisible = true;
+                this.bg.isVisible = true;
+                this.titlelbl.isVisible = true;
+                this.descrlbl.isVisible = true;
+            }
+            public override void Unload()
+            {
+                base.Unload();
+                this.spr.RemoveFromContainer();
+                this.bg.RemoveFromContainer();
+                this.titlelbl.RemoveFromContainer();
+                this.descrlbl.RemoveFromContainer();
+            }
+        }
+
+        private class MissingAchievementsEntry : AchievementEntry
+        {
+            private FLabel plusText;
+
+            public MissingAchievementsEntry(Vector2 pos, int count) : base(pos, "Futile_White", count.ToString() + " hidden achievement" + (count > 1 ? "s" : string.Empty) + " remaining", "Details for each achievement will be revealed once unlocked")
+            {
+                this.spr.color = new Color(0.1f, 0.1f, 0.3f);
+                this.spr.alpha = 0.6f;
+                this.spr.scale = 4;
+                this.plusText = new FLabel("DisplayFont", "+" + count);
+                this.plusText.SetPosition(new Vector2(36, 40));
+                this.myContainer.AddChild(this.plusText);
+            }
+
+            public override void Hide()
+            {
+                base.Hide();
+                this.plusText.isVisible = false;
+            }
+            public override void Show()
+            {
+                base.Show();
+                this.plusText.isVisible = true;
+            }
+
+            public override void Unload()
+            {
+                base.Unload();
+                this.plusText.RemoveFromContainer();
+            }
         }
 
         public static class EnumExt_CGAchievementManager
@@ -108,8 +244,8 @@ namespace ConcealedGarden
 
         private static string GetAchievementPopup(RainWorld.AchievementID ID)
         {
-            if (ID == EnumExt_CGAchievementManager.CGTransfurred) return "Achievement_1_popup";
-            if (ID == EnumExt_CGAchievementManager.CGGhostCG) return "Achievement_2_popup";
+            if (ID == EnumExt_CGAchievementManager.CGTransfurred) return "CGAchievement_1_popup";
+            if (ID == EnumExt_CGAchievementManager.CGGhostCG) return "CGAchievement_2_popup";
             return null;
         }
 

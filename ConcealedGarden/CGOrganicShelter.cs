@@ -8,7 +8,7 @@ using ManagedPlacedObjects;
 
 namespace ConcealedGarden
 {
-    public static class OrganicShelter
+    public static class CGOrganicShelter
     {
 
         internal static void Register()
@@ -23,14 +23,14 @@ namespace ConcealedGarden
                 new PlacedObjectsManager.FloatField("bmax", 0, 1, 0.25f, 0.001f),
                 new PlacedObjectsManager.FloatField("stiff", 0, 1, 0.5f, 0.01f),
                 //new PlacedObjectsManager.IntegerField("ftc", 0, 400, 120, PlacedObjectsManager.ManagedFieldWithPanel.ControlType.slider),
-            }, typeof(OrganicShelter.OrganicShelterCoordinator), "OrganicShelterCoordinator");
+            }, typeof(CGOrganicShelter.CGOrganicShelterCoordinator), "CGOrganicShelterCoordinator");
 
             PlacedObjectsManager.RegisterFullyManagedObjectType(new PlacedObjectsManager.ManagedField[]
             {
                 new PlacedObjectsManager.Vector2Field("size", new UnityEngine.Vector2(40,40), PlacedObjectsManager.Vector2Field.VectorReprType.circle),
                 new PlacedObjectsManager.Vector2Field("dest", new UnityEngine.Vector2(0,50), PlacedObjectsManager.Vector2Field.VectorReprType.line),
                 new PlacedObjectsManager.FloatField("stiff", 0, 1, 0.5f, 0.01f),
-            }, null, "OrganicLockPart");
+            }, null, "CGOrganicLockPart");
 
             PlacedObjectsManager.RegisterFullyManagedObjectType(new PlacedObjectsManager.ManagedField[]
             {
@@ -42,10 +42,10 @@ namespace ConcealedGarden
                 new PlacedObjectsManager.FloatField("stiff", 0, 1, 0.5f, 0.01f),
                 new PlacedObjectsManager.FloatField("spread", 0, 20f, 2f, 0.1f),
                 new PlacedObjectsManager.IntegerField("seed", 0, 9999, 0),
-            }, null, "OrganicLining");
+            }, null, "CGOrganicLining");
         }
 
-        public class OrganicShelterCoordinator : UpdatableAndDeletable, IDrawable, ShelterBehaviors.IReactToShelterEvents
+        public class CGOrganicShelterCoordinator : UpdatableAndDeletable, IDrawable, ShelterBehaviors.IReactToShelterEvents
         {
             private readonly PlacedObject pObj;
             private readonly RainCycle rainCycle;
@@ -71,7 +71,7 @@ namespace ConcealedGarden
             private float bmin;
             private float bmax;
 
-            public OrganicShelterCoordinator(Room room, PlacedObject pObj)
+            public CGOrganicShelterCoordinator(Room room, PlacedObject pObj)
             {
                 this.room = room;
                 this.pObj = pObj;
@@ -88,8 +88,8 @@ namespace ConcealedGarden
                 this.stiff = data.GetValue<float>("stiff");
                 //this.framesToClose = data.GetValue<int>("ftc");
 
-                PlacedObject.Type lockType = (PlacedObject.Type)Enum.Parse(typeof(PlacedObject.Type), "OrganicLockPart");
-                PlacedObject.Type liningType = (PlacedObject.Type)Enum.Parse(typeof(PlacedObject.Type), "OrganicLining");
+                PlacedObject.Type lockType = (PlacedObject.Type)Enum.Parse(typeof(PlacedObject.Type), "CGOrganicLockPart");
+                PlacedObject.Type liningType = (PlacedObject.Type)Enum.Parse(typeof(PlacedObject.Type), "CGOrganicLining");
 
                 List<PlacedObject> locks = new List<PlacedObject>();
                 List<PlacedObject> linings = new List<PlacedObject>();

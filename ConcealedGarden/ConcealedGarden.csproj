@@ -78,37 +78,38 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AttachedField.cs" />
-    <Compile Include="BunkerShelterParts.cs" />
-    <Compile Include="CameraZoomEffect.cs" />
+    <Compile Include="CGBunkerShelterParts.cs" />
+    <Compile Include="CGCameraZoomEffect.cs" />
     <Compile Include="CGAchievementManager.cs" />
-    <Compile Include="CGGateFix.cs" />
+    <Compile Include="CGAmbienceFix.cs" />
+    <Compile Include="CGGateCustomization.cs" />
     <Compile Include="CGMenuScenes.cs" />
     <Compile Include="CGSkyLine.cs" />
     <Compile Include="CGCosmeticWater.cs" />
     <Compile Include="CGCameraEffects.cs" />
     <Compile Include="ConcealedGarden.cs" />
-    <Compile Include="CosmeticLeaves.cs" />
-    <Compile Include="ElectricArcs.cs" />
-    <Compile Include="FourthLayerFix.cs" />
-    <Compile Include="GravityGradient.cs" />
-    <Compile Include="LifeSimProjection.cs" />
-    <Compile Include="LizardBehaviorChange.cs" />
-    <Compile Include="LRUPickup.cs" />
+    <Compile Include="CGCosmeticLeaves.cs" />
+    <Compile Include="CGElectricArcs.cs" />
+    <Compile Include="CGFourthLayerFix.cs" />
+    <Compile Include="CGGravityGradient.cs" />
+    <Compile Include="CGLifeSimProjection.cs" />
+    <Compile Include="CGLizardBehaviorChange.cs" />
+    <Compile Include="CGLRUPickup.cs" />
     <Compile Include="CGCutscenes.cs" />
-    <Compile Include="ProgressionFilter.cs" />
-    <Compile Include="SongSFX.cs" />
-    <Compile Include="NoLurkArea.cs" />
-    <Compile Include="OrganicShelter.cs" />
+    <Compile Include="CGProgressionFilter.cs" />
+    <Compile Include="CGSongSFX.cs" />
+    <Compile Include="CGNoLurkArea.cs" />
+    <Compile Include="CGOrganicShelter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="QuestionableLizardBit.cs" />
-    <Compile Include="SlipperySlope.cs" />
-    <Compile Include="SpawnCustomizations.cs" />
+    <Compile Include="CGQuestionableLizardBits.cs" />
+    <Compile Include="CGSlipperySlope.cs" />
+    <Compile Include="CGSpawnCustomizations.cs" />
     <Compile Include="TremblingSeed.cs" />
     <Compile Include="Utils\CGExtensions.cs" />
     <Compile Include="Utils\CGUtils.cs" />
     <Compile Include="Utils\ContainerCodes.cs" />
     <Compile Include="Utils\GOscParams.cs" />
-    <Compile Include="YellowThoughtsAdaptor.cs" />
+    <Compile Include="CGYellowThoughtsAdaptor.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CustomSpritesLoader\CustomSpritesLoader.csproj">
@@ -131,7 +132,10 @@
       <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Achievement_1.png" />
+    <EmbeddedResource Include="Resources\Achievement_2.png" />
+  </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\Achievement_1_popup.png" />
     <EmbeddedResource Include="Resources\Achievement_2_popup.png" />

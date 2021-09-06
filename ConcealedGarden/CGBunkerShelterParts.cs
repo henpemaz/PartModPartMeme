@@ -6,9 +6,9 @@ using UnityEngine;
 
 namespace ConcealedGarden
 {
-    internal static class BunkerShelterParts
+    internal static class CGBunkerShelterParts
     {
-        class BunkerShelterFlapData : PlacedObjectsManager.ManagedData
+        class CGBunkerShelterFlapData : PlacedObjectsManager.ManagedData
         {
             private static PlacedObjectsManager.ManagedField[] customfields = new PlacedObjectsManager.ManagedField[]
                 {
@@ -25,12 +25,12 @@ namespace ConcealedGarden
             public IntVector2 handle;
 #pragma warning restore 0649
 
-            public BunkerShelterFlapData(PlacedObject owner) : base(owner, customfields) { }
+            public CGBunkerShelterFlapData(PlacedObject owner) : base(owner, customfields) { }
         }
         internal static void Register()
         {
-            PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("BunkerShelterFlap", typeof(BunkerShelterFlap),
-                dataType: typeof(BunkerShelterFlapData), typeof(PlacedObjectsManager.ManagedRepresentation)));
+            PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("CGBunkerShelterFlap", typeof(CGBunkerShelterFlap),
+                dataType: typeof(CGBunkerShelterFlapData), typeof(PlacedObjectsManager.ManagedRepresentation)));
 
             On.RainWorld.Start += RainWorld_Start;
         }
@@ -38,21 +38,10 @@ namespace ConcealedGarden
         private static void RainWorld_Start(On.RainWorld.orig_Start orig, RainWorld self)
         {
             orig(self);
-            try
-            {
-                TryLoad();
-            }
-            catch (Exception)
-            {
-            }
-        }
-        private static void TryLoad()
-        {
-            if (CustomRegions.Mod.CustomWorldMod.activatedPacks.ContainsKey("Concealed Garden"))
-                CustomAtlasLoader.ReadAndLoadCustomAtlas("bkr_parts", CustomRegions.Mod.CustomWorldMod.resourcePath + CustomRegions.Mod.CustomWorldMod.activatedPacks["Concealed Garden"] + Path.DirectorySeparatorChar + "Assets" + Path.DirectorySeparatorChar + "Futile" + Path.DirectorySeparatorChar + "Resources" + Path.DirectorySeparatorChar + "Atlases");
+            CustomAtlasLoader.ReadAndLoadCustomAtlas("cgbkr_parts", CustomRegions.Mod.CustomWorldMod.resourcePath + CustomRegions.Mod.CustomWorldMod.activatedPacks["Concealed Garden"] + Path.DirectorySeparatorChar + "Assets" + Path.DirectorySeparatorChar + "Futile" + Path.DirectorySeparatorChar + "Resources" + Path.DirectorySeparatorChar + "Atlases");
         }
 
-        private class BunkerShelterFlap : CosmeticSprite, ShelterBehaviors.IReactToShelterEvents
+        private class CGBunkerShelterFlap : CosmeticSprite, ShelterBehaviors.IReactToShelterEvents
         {
             private float closedFactor;
             private float lastClosedFactor;
@@ -66,9 +55,9 @@ namespace ConcealedGarden
             private float widthFloat;
             private StaticSoundLoop backgroundWorkingLoop;
 
-            BunkerShelterFlapData data => pObj.data as BunkerShelterFlapData;
+            CGBunkerShelterFlapData data => pObj.data as CGBunkerShelterFlapData;
 
-            public BunkerShelterFlap(Room room, PlacedObject pObj)
+            public CGBunkerShelterFlap(Room room, PlacedObject pObj)
             {
                 this.room = room;
                 this.pObj = pObj;
@@ -116,15 +105,15 @@ namespace ConcealedGarden
                 FShader shader = this.room.game.rainWorld.Shaders["ColoredSprite2"];
                 for (int i = 0; i < 2; i++)
                 {
-                    sLeaser.sprites[Cog(i)] = new FSprite("bkr_cog", true) { shader = shader };
+                    sLeaser.sprites[Cog(i)] = new FSprite("cgbkr_cog", true) { shader = shader };
                 }
                 for (int i = 0; i < height; i++)
                 {
-                    sLeaser.sprites[LidBL(i)] = new FSprite("bkr_lidB_left", true) { shader = shader };
-                    sLeaser.sprites[LidBR(i)] = new FSprite("bkr_lidB_right", true) { shader = shader };
+                    sLeaser.sprites[LidBL(i)] = new FSprite("cgbkr_lidB_left", true) { shader = shader };
+                    sLeaser.sprites[LidBR(i)] = new FSprite("cgbkr_lidB_right", true) { shader = shader };
                     for (int j = 0; j < width; j++)
                     {
-                        sLeaser.sprites[LidB(i, j)] = new FSprite("bkr_lidB_mid", true) { shader = shader };
+                        sLeaser.sprites[LidB(i, j)] = new FSprite("cgbkr_lidB_mid", true) { shader = shader };
                     }
                 }
 

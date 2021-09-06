@@ -5,13 +5,13 @@ using System.Reflection;
 
 namespace ConcealedGarden
 {
-    internal static class SpawnCustomizations
+    internal static class CGSpawnCustomizations
     {
         internal static void Apply()
         {
             // ID spawndata support
             //On.WorldLoader.ctor += WorldLoader_ctor;
-            On.RainWorld.Start += RainWorld_Start; // Deferred hooks because of bad load order and mods that dont call orig
+            On.RainWorld.Start += RainWorld_Start; // Deferred hooks because of bad load order and mods that dont call orig smh
             On.RainWorldGame.GetNewID_1 += RainWorldGame_GetNewID_1;
 
             // Assignable Trader support
@@ -36,11 +36,11 @@ namespace ConcealedGarden
             //On.ScavengerGraphics.ctor += ScavengerGraphics_ctor;
             // Spider friend + follow
             On.BigSpiderAI.Update += BigSpiderAI_Update;
-            new Hook(typeof(BigSpiderAI).GetMethod("IUseARelationshipTracker.UpdateDynamicRelationship", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance), typeof(SpawnCustomizations).GetMethod(nameof(IUseARelationshipTracker_UpdateDynamicRelationship), BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static));
+            new Hook(typeof(BigSpiderAI).GetMethod("IUseARelationshipTracker.UpdateDynamicRelationship", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance), typeof(CGSpawnCustomizations).GetMethod(nameof(IUseARelationshipTracker_UpdateDynamicRelationship), BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static));
             //On.IUseARelationshipTracker.UpdateDynamicRelationship += IUseARelationshipTracker_UpdateDynamicRelationship;
             // Vulture friend + follow
             On.VultureAI.Update += VultureAI_Update;
-            new Hook(typeof(VultureAI).GetMethod("IUseARelationshipTracker.UpdateDynamicRelationship", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance), typeof(SpawnCustomizations).GetMethod(nameof(IUseARelationshipTracker_UpdateDynamicRelationship), BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static));
+            new Hook(typeof(VultureAI).GetMethod("IUseARelationshipTracker.UpdateDynamicRelationship", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance), typeof(CGSpawnCustomizations).GetMethod(nameof(IUseARelationshipTracker_UpdateDynamicRelationship), BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static));
             On.VultureAbstractAI.AbstractBehavior += VultureAbstractAI_AbstractBehavior;
 
             // Support for gift offered for additional creatures
@@ -104,12 +104,12 @@ namespace ConcealedGarden
             return result;
         }
 
-        public static class EnumExt_SpawnCustomizations
+        public static class EnumExt_CGSpawnCustomizations
         {
 #pragma warning disable 0649
-            public static ScavengerAI.Behavior ScavengerFollowFriend;
-            public static BigSpiderAI.Behavior SpiderFollowFriend;
-            public static VultureAI.Behavior VultureFollowPlayer;
+            public static ScavengerAI.Behavior CGScavengerFollowFriend;
+            public static BigSpiderAI.Behavior CGSpiderFollowFriend;
+            public static VultureAI.Behavior CGVultureFollowPlayer;
 #pragma warning restore 0649
         }
 
@@ -253,11 +253,11 @@ namespace ConcealedGarden
                     {
                         if (self.friendTracker.friend.abstractCreature.pos.room == self.creature.pos.room && self.behavior != VultureAI.Behavior.ReturnPrey)
                         {
-                            self.behavior = EnumExt_SpawnCustomizations.VultureFollowPlayer;
+                            self.behavior = EnumExt_CGSpawnCustomizations.CGVultureFollowPlayer;
                         }
                     }
                 }
-                if (self.behavior == EnumExt_SpawnCustomizations.VultureFollowPlayer)
+                if (self.behavior == EnumExt_CGSpawnCustomizations.CGVultureFollowPlayer)
                 {
                     if (self.friendTracker.friend != null && self.friendTracker.friend.abstractCreature.pos.room == self.creature.pos.room && self.friendTracker.friendDest.room == self.creature.pos.room)
                     {
@@ -295,11 +295,11 @@ namespace ConcealedGarden
                     {
                         if (self.behavior != BigSpiderAI.Behavior.ReturnPrey && self.behavior != BigSpiderAI.Behavior.ReviveBuddy)
                         {
-                            self.behavior = EnumExt_SpawnCustomizations.SpiderFollowFriend;
+                            self.behavior = EnumExt_CGSpawnCustomizations.CGSpiderFollowFriend;
                         }
                     }
                 }
-                if (self.behavior == EnumExt_SpawnCustomizations.SpiderFollowFriend)
+                if (self.behavior == EnumExt_CGSpawnCustomizations.CGSpiderFollowFriend)
                 {
                     if (self.friendTracker.friend != null)
                     {
@@ -356,7 +356,7 @@ namespace ConcealedGarden
                     {
                         if (!(self.scavenger.abstractCreature.abstractAI as ScavengerAbstractAI).bringPearlHome)
                         {
-                            self.behavior = EnumExt_SpawnCustomizations.ScavengerFollowFriend;
+                            self.behavior = EnumExt_CGSpawnCustomizations.CGScavengerFollowFriend;
                         }
                         else // got pearl, gotta dip
                         {
@@ -366,7 +366,7 @@ namespace ConcealedGarden
                         }
                     }
                 }
-                if (self.behavior == EnumExt_SpawnCustomizations.ScavengerFollowFriend)
+                if (self.behavior == EnumExt_CGSpawnCustomizations.CGScavengerFollowFriend)
                 {
                     if (self.friendTracker.friend != null)
                     {
@@ -453,7 +453,7 @@ namespace ConcealedGarden
                         string[] array2 = array[i].Split(new char[] { ':' });
                         string text = array2[0].Trim().ToLowerInvariant();
 
-                        if (text == "friend")
+                        if (text == "cgfriend")
                         {
                             if (self.abstractAI.RealAI.friendTracker == null) self.abstractAI.RealAI.AddModule(new FriendTracker(self.abstractAI.RealAI));
                             self.abstractAI.RealAI.friendTracker.followClosestFriend = true; // Cicadas have tracker but flag unset
@@ -514,7 +514,7 @@ namespace ConcealedGarden
                                 {
                                     string[] array2 = array[i].Split(new char[] { ':' });
                                     string text = array2[0].Trim().ToLowerInvariant();
-                                    if (text == "id")
+                                    if (text == "cgid")
                                     {
                                         id.number = int.Parse(array2[1].Trim());
                                         Debug.Log("Configured ID.id in " + self);
@@ -554,7 +554,7 @@ namespace ConcealedGarden
                             ':'
                         });
                         string text = array2[0].Trim().ToLowerInvariant();
-                        if (text == "trader")
+                        if (text == "cgtrader")
                         {
                             score += 1f;
                             if (array2.Length > 1 && array2[1].Trim().ToLowerInvariant() == self.worldAI.world.GetAbstractRoom(self.room).name.Trim().ToLowerInvariant())
@@ -608,27 +608,27 @@ namespace ConcealedGarden
                                 {
                                     string[] array2 = array[i].Split(new char[] { ':' });
                                     string text = array2[0].Trim().ToLowerInvariant();
-                                    if (text == "sympathy")
+                                    if (text == "cgsympathy")
                                     {
                                         self.personality.sympathy = float.Parse(array2[1].Trim());
                                     }
-                                    else if (text == "energy")
+                                    else if (text == "cgenergy")
                                     {
                                         self.personality.energy = float.Parse(array2[1].Trim());
                                     }
-                                    else if (text == "bravery")
+                                    else if (text == "cgbravery")
                                     {
                                         self.personality.bravery = float.Parse(array2[1].Trim());
                                     }
-                                    else if (text == "nervous")
+                                    else if (text == "cgnervous")
                                     {
                                         self.personality.nervous = float.Parse(array2[1].Trim());
                                     }
-                                    else if (text == "aggression")
+                                    else if (text == "cgaggression")
                                     {
                                         self.personality.aggression = float.Parse(array2[1].Trim());
                                     }
-                                    else if (text == "dominance")
+                                    else if (text == "cgdominance")
                                     {
                                         self.personality.dominance = float.Parse(array2[1].Trim());
                                     }
@@ -675,7 +675,7 @@ namespace ConcealedGarden
                                 {
                                     string[] array2 = array[i].Split(new char[] { ':' });
                                     string text = array2[0].Trim().ToLowerInvariant();
-                                    if (text == "like")
+                                    if (text == "cglike")
                                     {
                                         if (self.socialMemory == null) self.socialMemory = new SocialMemory();
                                         float amount = array2.Length > 1 ? float.Parse(array2[1]) : 1f;
@@ -688,7 +688,7 @@ namespace ConcealedGarden
                                         }
                                         Debug.Log("Configured Like of "+amount+" in " + creature);
                                     }
-                                    else if (text == "fear")
+                                    else if (text == "cgfear")
                                     {
                                         if (self.socialMemory == null) self.socialMemory = new SocialMemory();
                                         float amount = array2.Length > 1 ? float.Parse(array2[1]) : 1f;
@@ -700,7 +700,7 @@ namespace ConcealedGarden
                                         }
                                         Debug.Log("Configured Fear in " + creature);
                                     }
-                                    else if (text == "know")
+                                    else if (text == "cgknow")
                                     {
                                         if (self.socialMemory == null) self.socialMemory = new SocialMemory();
                                         float amount = array2.Length > 1 ? float.Parse(array2[1]) : 1f;
@@ -729,6 +729,7 @@ namespace ConcealedGarden
             orig(self, s);
         }
 
+        // Fixes dragons being unable to find a delegate for this method
         public delegate CreatureTemplate.Relationship IUART_UDR(IUseARelationshipTracker self, RelationshipTracker.DynamicRelationship drel);
     }
 }

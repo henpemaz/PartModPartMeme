@@ -4,11 +4,11 @@ using UnityEngine;
 
 namespace ConcealedGarden
 {
-    internal class SlipperySlope : UpdatableAndDeletable
+    internal class CGSlipperySlope : UpdatableAndDeletable
     {
         private PlacedObject pObj;
-        private SlipperySlopeData data => pObj.data as SlipperySlopeData;
-        public SlipperySlope(Room room, PlacedObject pObj)
+        private CGSlipperySlopeData data => pObj.data as CGSlipperySlopeData;
+        public CGSlipperySlope(Room room, PlacedObject pObj)
         {
             this.room = room;
             this.pObj = pObj;
@@ -38,12 +38,12 @@ namespace ConcealedGarden
 
         internal static void Register()
         {
-            PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("SlipperySlope",
-                typeof(SlipperySlope), typeof(SlipperySlope.SlipperySlopeData), typeof(PlacedObjectsManager.ManagedRepresentation)));
+            PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("CGSlipperySlope",
+                typeof(CGSlipperySlope), typeof(CGSlipperySlope.CGSlipperySlopeData), typeof(PlacedObjectsManager.ManagedRepresentation)));
 
         }
 
-        internal class SlipperySlopeData : PlacedObjectsManager.ManagedData
+        internal class CGSlipperySlopeData : PlacedObjectsManager.ManagedData
         {
             private static readonly PlacedObjectsManager.ManagedField[] customFields = new PlacedObjectsManager.ManagedField[]
             {
@@ -54,7 +54,7 @@ namespace ConcealedGarden
             public Vector2 xhandle;
             [BackedByField("ev3")]
             public Vector2 yhandle;
-            public SlipperySlopeData(PlacedObject owner) : base(owner, customFields) { }
+            public CGSlipperySlopeData(PlacedObject owner) : base(owner, customFields) { }
         }
     }
 }

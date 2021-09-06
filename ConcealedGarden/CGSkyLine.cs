@@ -2,6 +2,7 @@
 using UnityEngine;
 using System;
 using System.Linq;
+using System.IO;
 
 namespace ConcealedGarden
 {
@@ -12,6 +13,24 @@ namespace ConcealedGarden
             PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("CGSkyLine",
                 typeof(CGSkyLine), typeof(CGSkyLineData), typeof(PlacedObjectsManager.ManagedRepresentation)));
             On.RoomCamera.DrawUpdate += RoomCamera_DrawUpdate;
+            On.RainWorld.Start += RainWorld_Start;
+        }
+
+        private static void RainWorld_Start(On.RainWorld.orig_Start orig, RainWorld self)
+        {
+            orig(self);
+            try
+            {
+                TryLoad();
+            }
+            catch (Exception)
+            {
+            }
+        }
+        private static void TryLoad()
+        {
+            if (CustomRegions.Mod.CustomWorldMod.activatedPacks.ContainsKey("Concealed Garden"))
+                CustomAtlasLoader.ReadAndLoadCustomAtlas("cgbasketsprt", CustomRegions.Mod.CustomWorldMod.resourcePath + CustomRegions.Mod.CustomWorldMod.activatedPacks["Concealed Garden"] + Path.DirectorySeparatorChar + "Assets" + Path.DirectorySeparatorChar + "Futile" + Path.DirectorySeparatorChar + "Resources" + Path.DirectorySeparatorChar + "Atlases");
         }
 
         private static void RoomCamera_DrawUpdate(On.RoomCamera.orig_DrawUpdate orig, RoomCamera self, float timeStacker, float timeSpeed)
@@ -59,7 +78,7 @@ namespace ConcealedGarden
         {
             sLeaser.sprites = new FSprite[]
             {
-                new FSprite("basketsprt", true){ 
+                new FSprite("cgbasketsprt", true){ 
                     shader = rCam.game.rainWorld.Shaders["ColoredSprite2"],
                     anchorX = 0f,
                     anchorY = 0f,

@@ -3,12 +3,12 @@ using UnityEngine;
 
 namespace ConcealedGarden
 {
-    public class CameraZoomEffect
+    public class CGCameraZoomEffect
     {
         public static class EnumExt_CameraZoomEffect
         {
 #pragma warning disable 0649
-            public static RoomSettings.RoomEffect.Type CameraZoom;
+            public static RoomSettings.RoomEffect.Type CGCameraZoom;
 #pragma warning restore 0649
         }
         
@@ -22,10 +22,10 @@ namespace ConcealedGarden
 			float zoom = 1f;
 			bool zoomed = false;
 			Vector2 offset = Vector2.zero;
-			if (self.room != null && self.room.roomSettings.GetEffectAmount(EnumExt_CameraZoomEffect.CameraZoom) > 0f)
+			if (self.room != null && self.room.roomSettings.GetEffectAmount(EnumExt_CameraZoomEffect.CGCameraZoom) > 0f)
 			{
 				//zoom = 1f;// self.room.roomSettings.GetEffectAmount(EnumExt_CameraZoomEffect.CameraZoom) * 10f;
-				zoom = self.room.roomSettings.GetEffectAmount(EnumExt_CameraZoomEffect.CameraZoom) * 20f;
+				zoom = self.room.roomSettings.GetEffectAmount(EnumExt_CameraZoomEffect.CGCameraZoom) * 20f;
 				zoomed = true;
 				Creature creature = (self.followAbstractCreature == null) ? null : self.followAbstractCreature.realizedCreature;
 				if (creature != null)
