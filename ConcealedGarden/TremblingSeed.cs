@@ -514,11 +514,6 @@ namespace ConcealedGarden
                 //seed.Realize();
                 seed.RealizeInRoom();
             }
-            public static void Apply()
-            {
-                On.SaveState.AbstractPhysicalObjectFromString += seed_APOFS;
-                //On.Player.ctor += TempSpawnIn;
-            }
 
             private static AbstractPhysicalObject seed_APOFS(On.SaveState.orig_AbstractPhysicalObjectFromString orig, World world, string objString)
             {
