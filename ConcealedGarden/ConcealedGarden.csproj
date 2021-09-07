@@ -87,6 +87,7 @@
     <Compile Include="CGSkyLine.cs" />
     <Compile Include="CGCosmeticWater.cs" />
     <Compile Include="CGCameraEffects.cs" />
+    <Compile Include="CGSlugFilter.cs" />
     <Compile Include="ConcealedGarden.cs" />
     <Compile Include="CGCosmeticLeaves.cs" />
     <Compile Include="CGElectricArcs.cs" />
