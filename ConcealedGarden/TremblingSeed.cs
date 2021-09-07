@@ -491,7 +491,7 @@ namespace ConcealedGarden
                 //RegistermanagedObject<SeedStalk, SeedConsData, ManagedRepresentation>("CGSeed");
                 On.SaveState.AbstractPhysicalObjectFromString += seed_APOFS;
                 On.Room.Loaded += Room_Loaded;
-                On.Player.ctor += TempSpawnIn;
+                //On.Player.ctor += TempSpawnIn;
             }
 
             private static void Room_Loaded(On.Room.orig_Loaded orig, Room self)

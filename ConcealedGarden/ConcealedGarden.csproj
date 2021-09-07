@@ -84,6 +84,7 @@
     <Compile Include="CGAmbienceFix.cs" />
     <Compile Include="CGGateCustomization.cs" />
     <Compile Include="CGMenuScenes.cs" />
+    <Compile Include="CGQuickAndDirtyFix.cs" />
     <Compile Include="CGShelterRain.cs" />
     <Compile Include="CGSkyLine.cs" />
     <Compile Include="CGCosmeticWater.cs" />
@@ -114,6 +115,10 @@
     <Compile Include="CGYellowThoughtsAdaptor.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Climbables\Climbables.csproj">
+      <Project>{7ae76355-80c1-4268-aba7-e73836345c32}</Project>
+      <Name>Climbables</Name>
+    </ProjectReference>
     <ProjectReference Include="..\CustomSpritesLoader\CustomSpritesLoader.csproj">
       <Project>{7aef23fe-5ab2-422c-89ee-ccb050b86a76}</Project>
       <Name>CustomSpritesLoader</Name>
