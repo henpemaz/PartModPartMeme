@@ -84,6 +84,7 @@
     <Compile Include="CGAmbienceFix.cs" />
     <Compile Include="CGGateCustomization.cs" />
     <Compile Include="CGMenuScenes.cs" />
+    <Compile Include="CGShelterRain.cs" />
     <Compile Include="CGSkyLine.cs" />
     <Compile Include="CGCosmeticWater.cs" />
     <Compile Include="CGCameraEffects.cs" />
