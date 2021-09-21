@@ -1,8 +1,12 @@
 ﻿Test if spider and volture pets still work
+	still work
 	
 CRS enable debug, cause issues, send to gar
+	menuscene in region view wont load
+	had bad merges in my logs ?
+	oi thumbnail scaling fix ?
 	
-Lizardskin bugfix + imprv
+Lizardskin bugfix + imprv for release
 	
 Waiting on CM progression update
 	or migrate progression system to CG
@@ -26,7 +30,7 @@ Push 4 release
 	Shelter realism overhaul ?
 		done
 		
-	mark unused content and wire in line + obervatory
+	mark unused content and wire in line + observatory
 		done
 		
 	Make underground map hint to ""more""
@@ -56,6 +60,7 @@ Audio
 Art
 	region menu art
 	region thumbnail
+		done
 	release poster
 	
 lizardfy pickup

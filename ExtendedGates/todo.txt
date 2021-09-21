@@ -4,3 +4,4 @@ What if broken gates for certain difficulties ?
 programmer opens UwU inherently
 lizardskin-only gate
 chieftain gate
+make having both locks.txt + extendedLocks.txt compatible and deterministic
