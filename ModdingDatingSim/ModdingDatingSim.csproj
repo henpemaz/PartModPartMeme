@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{847FEB67-DCBA-4C3E-8972-95C1A2475547}</ProjectGuid>
+    <ProjectGuid>{D3FB47DD-1BFF-4EA6-B67A-009564BDC428}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>BestestFriends</RootNamespace>
-    <AssemblyName>BestestFriends</AssemblyName>
+    <RootNamespace>ModdingDatingSim</RootNamespace>
+    <AssemblyName>ModdingDatingSim</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -33,21 +33,23 @@
   <ItemGroup>
     <Reference Include="Assembly-CSharp - publicitystuntd">
       <HintPath>..\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
-    </Reference>
-    <Reference Include="EnumExtender">
-      <HintPath>..\References\EnumExtender.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="HOOKS-Assembly-CSharp">
       <HintPath>..\References\HOOKS-Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="MonoMod.Common">
       <HintPath>..\References\MonoMod.Common.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="MonoMod.RuntimeDetour">
       <HintPath>..\References\MonoMod.RuntimeDetour.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Partiality">
       <HintPath>..\References\Partiality.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -57,23 +59,19 @@
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine">
       <HintPath>..\References\UnityEngine.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BestestFriends.cs" />
+    <Compile Include="ModdingDatingSim.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\hunterxcyan.ogv" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\hunterxgreen.ogv" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="todo.txt" />
+    <ProjectReference Include="..\ManagedPlacedObjects\ManagedPlacedObjects.csproj">
+      <Project>{a5e1e800-ee17-4347-9488-ef8f3e929b78}</Project>
+      <Name>ManagedPlacedObjects</Name>
+      <Private>False</Private>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>if defined RWMods (copy /Y "$(TargetPath)" "%25RWMods%25")</PostBuildEvent>
-  </PropertyGroup>
 </Project>

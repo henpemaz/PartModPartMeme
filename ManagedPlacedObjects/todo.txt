@@ -1,0 +1,17 @@
+﻿manual
+	could really use a wiki page
+tutorial
+	is almost good, should cover annotated fields better
+	using the enum vs storing the manager obj
+regionkit PR
+	done, 1.0 is out there
+	
+room-entrance / node picking field
+from-list picking field
+
+default from last edited object
+	kind of a big deal
+	
+rework data creation to remove reflection at runtime, make factory patterns
+	
+port handy ctors from regionkit ?

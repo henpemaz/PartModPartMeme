@@ -144,6 +144,9 @@
     <EmbeddedResource Include="wesuwwces\Title_UW.png" />
     <EmbeddedResource Include="wesuwwces\Title_UW_Shadow.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="todo.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy /Y $(TargetPath) "C:\Program Files (x86)\Steam\steamapps\common\Rain World - Dev\Mods"</PostBuildEvent>

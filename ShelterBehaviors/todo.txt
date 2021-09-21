@@ -1,0 +1,20 @@
+﻿done:
+	extra doors identical to vanilla
+	"hold down to trigger" behavior and tutorial
+	trigger/notrigger zones
+	consumable shelter
+	control over frames to trigger, to starve, to sleep, to go to sleep screen
+	api for making animated shelter parts
+
+shelters with no vanilla doors
+	maybe by default so door placement is easier to control
+
+bad door placement causes infinite loop on ctor, specially in open rooms
+
+extra spawn positions
+	broken, fix it
+		done ?
+shelter rain/rumble
+	see BSH
+		actually see CG rain fix
+the rest of the BSH features ?

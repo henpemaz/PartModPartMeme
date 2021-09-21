@@ -19,6 +19,7 @@ namespace ConcealedGarden
             if (self.room == null || self.room.abstractRoom == null || self.room.updateList == null) return;
             if (self.room.abstractRoom.shelter && self.room.updateList.Any(v => v is CGShelterRain))
             {
+                // copypaste from orig but runs here if the room is a shelter!
                 float num = 0f;
                 if (self.room.waterObject != null)
                 {
@@ -32,13 +33,11 @@ namespace ConcealedGarden
             }
         }
 
-        private readonly PlacedObject pobj;
         private RoomRain roomRain;
-        private static Vector2 lastCamPos;
+        private static Vector2 lastCamPos; // campos from last draw, probably breaks if cameras > 1
 
-        public CGShelterRain(PlacedObject pobj, Room rm)
+        public CGShelterRain(Room rm)
         {
-            this.pobj = pobj;
             this.room = rm;
             int shelterIndex = room.abstractRoom.shelterIndex;
             this.room.abstractRoom.shelterIndex = -1;

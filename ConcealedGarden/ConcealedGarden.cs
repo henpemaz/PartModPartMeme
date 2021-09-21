@@ -16,7 +16,7 @@ using Menu;
 [assembly: System.Runtime.CompilerServices.SuppressIldasmAttribute()]
 namespace ConcealedGarden
 {
-    public partial class ConcealedGarden : PartialityMod
+    public class ConcealedGarden : PartialityMod
     {
         public ConcealedGarden()
         {
@@ -55,11 +55,12 @@ namespace ConcealedGarden
                 Tabs[0].AddItems(new OpLabel(40, 150, "Concealed Garden was brought to you by:", true),
                     new OpLabelLong(new Vector2(40, 10), new Vector2(530, 140),
 @"Henpemaz - Lead Dev, most of the stuff in the region unless otherwise noted!
-Thalber - Assistant+ Dev, most of the underground rooms, shelter & some more, bug-hunting, productive discussions and psychological support in my DMs :flushed:
+Thalber - Dev, most of the underground rooms, shelter & some more, bug-hunting, productive discussions and psychological support in my DMs :flushed:
 Mehri'Kairothep - Playtester, loved the region, helped me figure out what needed polishing.
 LB Gamer - Playtester & Dev, helpful and resourceful, also helped with a couple rooms!
 Wrayk - Almost playtester, made a connection room (:
-DryCryCrystal - Colab, special tileset for LRU room.
+DryCryCrystal - Colab, made a special tileset for LRU room.
+ICWobbles & Sipik - Music mentorship every now and then.
 Garrakx & Topicular - Makers of the awesome mods that help people make more mods!"
 ));
             }

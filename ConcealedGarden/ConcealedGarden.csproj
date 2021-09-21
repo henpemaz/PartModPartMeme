@@ -147,6 +147,9 @@
     <EmbeddedResource Include="Resources\Achievement_1_popup.png" />
     <EmbeddedResource Include="Resources\Achievement_2_popup.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="todo.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>if defined RWMods (copy /Y "$(TargetPath)" "%25RWMods%25")</PostBuildEvent>

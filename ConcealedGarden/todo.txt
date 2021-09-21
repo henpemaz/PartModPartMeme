@@ -1,0 +1,208 @@
+﻿Test if spider and volture pets still work
+	
+CRS enable debug, cause issues, send to gar
+	
+Lizardskin bugfix + imprv
+	
+Waiting on CM progression update
+	or migrate progression system to CG
+
+Push 4 release
+	export Threat audio
+		or test WoodAndMetal as standalone track
+		sounds good so far
+	Proper credits on CM page
+		Done
+	CG-prefix on objects
+		done
+	Fix template issue in Underside
+		do other places work fine
+		fixed game bug (:
+		
+	Slugbase filter
+		place alt pearl
+		done
+		
+	Shelter realism overhaul ?
+		done
+		
+	mark unused content and wire in line + obervatory
+		done
+		
+	Make underground map hint to ""more""
+		done ?
+		
+	fix climbable arc showing up offset
+		done
+		
+	Regionart
+		done
+			
+	Thumbnail
+		done
+			
+	Trailer ??
+	
+Audio
+	Apply comms misfire song to pearl -> moved to treetop
+	add fleeting reminiscence music to tree left side
+	audio touchup for rootshelter
+	split export and test cgthreat2 as is
+		done
+		
+	audio touchup for drain3 + ds_cg
+	attempt at echo song
+	
+Art
+	region menu art
+	region thumbnail
+	release poster
+	
+lizardfy pickup
+	done:
+		dream/cutscene
+		lizardskin progression mode
+		progression filter
+		locked mode if CG present
+		main menu change based on progression
+		Lizardskin default should reflect it
+		Extra passive effect
+			Improved taming skills
+			Communicate with yellos if antenna in cosmetics set (:
+	MAYBE an option to disable some stuff in CM like custom art?
+		nah
+	
+Water
+	Contained cosmetic water
+		has issues, can't multiscreen etc
+		waterInFrontOfTerrain is global and passed to shaders
+	Placeable waterfall
+		shader supports global intensity and sideA/sideB intensity
+		restore player push!
+	Water level offset zone
+		preserving physics
+	waterfall full room effect
+		in front of terrain vs layer 2 ?
+	
+Treetop
+	gate done
+	FOLIAGE
+		branch that branches, leaves on tips
+		physics/wind
+			done-ish
+		dropped features
+			grow up at cycle start
+			gentle swing
+			fall on rain aproaching
+			edible for quarter pip ?
+			edible flower mayhaps ?
+	SunSeed
+		rain protection field
+		2handed, heavy as an eggbug
+		when picked up, rain approaches
+		graphics match intro tree
+	room
+		done
+	echo
+		done
+	
+Rooms
+	Drain3 NEEDS finishing
+		done
+	Drain2 Drain3 Gate and DS_CG don't blend super well together rn
+		done ?
+
+Fake Steam achievement
+	Plastified
+		You grow closer to the wilderness around you.
+	A Green Crown over Shades of Blue
+		You encountered the echo of A Green Crown over Shades of Blue
+		
+	in-game popup
+		done
+		
+	ConfigMachine list
+		:unknown: chievo icon
+			
+	
+Lore pearl from trader
+	seems complicated, but could be cool ?
+	Dream for traded pearl ?
+	store "player ever picked up trader pearl", not persistent
+	trader spawns with pearl if player never had it.
+	if using consumable data, make sure trader holding doesn't affect
+	
+Proper pearl pickup detection for custom dreams.
+	currently requires "scholar" eligibility, not the greatest
+
+programmer ALT pearl:
+	needs customcat filter
+	... and complementary opposite for regular pearl ?
+		
+CabinetBeast shelter
+	Done:
+		no shelter door, bio moveable parts
+		velvet wormgrass-like inside
+	NEEDS SOUND ON ACTIVATION
+	
+Bunker logic
+	done:
+		no-door shelter
+		moving shelter parts for the background
+		repositioned out of the pathing of most creatures
+		sound on activation
+			(while active)
+	could do a clank sound on end-activation or start even
+
+New decals
+	arent they adorable
+	place them throught subterrain rooms
+		done
+	
+lizard discomfort zone
+	done, nolurkarea
+		
+Kelpzard
+		
+Snakes https://discord.com/channels/291184728944410624/641574729173434369/838513257865674772
+
+Birds (cosmetic)
+	
+Caterpilar insect type (cosmetic)
+	
+Special Sleeping screens
+	bunker
+	cabinetbeast
+	
+I think it would be cool to have a "scav attractor" object to go along with it - mehri
+or just a scav spawner object
+		
+GameplayEnforcement
+	disable devtools
+	disable warp
+	gate only works with dependency mods installed
+		missing shortcutentrance connection maybe
+		special placedobject fixes it
+	gate to region checks installed mods
+		no deathprotection & other well known cheats
+	encrypt world file
+	
+Questionable Bits
+	take out of CG main, ship as own mod?
+	two is better than one ?
+	bind to having Changed in your library as aditional requirement ?
+		
+	lineage one of these somewhere 1084, 1366*, 2220, 3452, 4108, 4118, 5637, 5743, 7863, 7954, 8029, 8123, 8425, 8813, 9739, 9879, 11164, 11871, 12047, 12966, 13019, 14294, 15076, 15240, 16388, 16752*, 16849, 17186
+		done
+	
+Palette consolidation
+	surface
+		interiors
+			5 + 40% 4
+		exteriors
+			5 + 20%~60% 15
+	Tree
+		interiors
+			29 + 40% 3
+		exteriors
+			29 + 15~60% 5

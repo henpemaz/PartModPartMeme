@@ -1,0 +1,13 @@
+﻿alt sleepscreen art for when sleeping with friend lizard ?
+can the cat layer be tinted ingame
+	live2d unity sdk export
+	needs unity 5.2 ??? fuck
+	backporting it seemed like it would be hell because of the graphics pipeline thing in code that its used for clipping masks
+	
+maybe expand the scope to more than one lizard ? requires lots of art
+	could have just some sparse combos for the player to find 
+		
+squicada sleeping screen
+tiny centipede ?
+	
+get that one artpiece in, check for matching md5(steamuserid)
