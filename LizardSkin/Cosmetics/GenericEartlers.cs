@@ -9,8 +9,8 @@ namespace LizardSkin
 	{
 		public GenericEartlers(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cData) : base (iGraphics, cData)
 		{
-			
-			this.spritesOverlap = SpritesOverlap.BehindHead;
+
+			if (this.cosmeticData.spritesOverlap == LizKinCosmeticData.SpritesOverlapConfig.Default) this.spritesOverlap = SpritesOverlap.BehindHead;
 			this.GenerateSegments();
 			this.numberOfSprites = this.TotalSprites;
 		}

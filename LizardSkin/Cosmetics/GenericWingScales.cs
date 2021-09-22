@@ -8,7 +8,7 @@ namespace LizardSkin
 		CosmeticWingScalesData wingScalesData => cosmeticData as CosmeticWingScalesData;
 		public GenericWingScales(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
-			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.InFront;
+			if (this.cosmeticData.spritesOverlap == LizKinCosmeticData.SpritesOverlapConfig.Default) this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.InFront;
 			this.scales = new GenericBodyPartAdaptor[2, wingScalesData.count]; // (UnityEngine.Random.value >= 0.2f) ? 2 : 3];
 			this.graphic = wingScalesData.graphic; // ((UnityEngine.Random.value >= 0.4f) ? UnityEngine.Random.Range(0, 5) : 0);
 			//this.graphicLenght = Futile.atlasManager.GetElementWithName("LizardScaleA" + this.graphic).sourcePixelSize.y;

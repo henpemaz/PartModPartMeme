@@ -8,7 +8,7 @@ namespace LizardSkin
 		CosmeticWhiskersData whiskersData => cosmeticData as CosmeticWhiskersData;
 		public GenericWhiskers(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
-			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.InFront;
+			if (this.cosmeticData.spritesOverlap == LizKinCosmeticData.SpritesOverlapConfig.Default) this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.InFront;
 			this.amount = whiskersData.count; // UnityEngine.Random.Range(3, 5);
 			this.whiskers = new GenericBodyPartAdaptor[2, this.amount];
 			this.whiskerDirections = new Vector2[this.amount];

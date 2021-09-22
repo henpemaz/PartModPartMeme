@@ -37,7 +37,7 @@ namespace LizardSkin
             panelsToRemove = new List<LizKinCosmeticData.CosmeticPanel>();
         }
 
-        string modDescription =
+        readonly string modDescription =
 @"LizardSkinOI lets you create profiles of cosmetics to be applied on your slugcat. Use the tabs on the left to edit or create profiles.
 
 When on a profile tab, you can select which characters that profile should apply to. If more than one profile applies to a slugcat, all cosmetics found will be applied. Advanced mode lets you specify difficulty, player-number or character-number so that you can get it working with custom slugcats too.
@@ -62,7 +62,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 // This needs to run
                 // 1; when the config is loaded at launch
                 // 2; when opening the configmenu
-                // 3; when coming back from a config reset, but not from a reset
+                // 3; when coming back from a config reset, but not from a refresh
                 Debug.Log("LizardSkinOI Init load data");
                 LoadLizKinData();
                 configBeingEdited = LizKinConfiguration.Clone(configBeingUsed);
@@ -182,6 +182,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 if (configBeingEdited.MoveProfileUp(activeManager.profileData))
                 {
                     RequestRefresh();
+                    DataChanged();
                     ConfigMenu.tabCtrler.index--;
                     return;
                 }
@@ -192,6 +193,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 if (configBeingEdited.MoveProfileDown(activeManager.profileData))
                 {
                     RequestRefresh();
+                    DataChanged();
                     ConfigMenu.tabCtrler.index++;
                     return;
                 }
@@ -202,6 +204,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 if (configBeingEdited.DuplicateProfile(activeManager.profileData))
                 {
                     RequestRefresh();
+                    DataChanged();
                     ConfigMenu.tabCtrler.index = Tabs.Length-1;
                     return;
                 }
@@ -212,6 +215,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 if (configBeingEdited.DeleteProfile(activeManager.profileData))
                 {
                     RequestRefresh();
+                    DataChanged();
                     if (ConfigMenu.tabCtrler.index == Tabs.Length - 2) ConfigMenu.tabCtrler.index--;
                     return;
                 }
@@ -237,6 +241,14 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             loadingFromRefresh = false;
         }
 
+        // When our data changes so we can singal CM there's stuff to be saved
+        internal void DataChanged()
+        {
+            OptionScript.configChanged = true;
+        }
+
+
+        // CM callback
         public override void ConfigOnChange()
         {
             Debug.Log("LizardSkinOI ConfigOnChange");
@@ -437,8 +449,8 @@ You can pick Cosmetics of several types, edit their settings and configure rando
         {
             Debug.Log("LizardSkinOI RequestRefresh");
             if (refreshOnNextFrame) return;
-            if (activeManager != null) activeManager.SignalSwitchOut();
             this.refreshOnNextFrame = true;
+            if (activeManager != null) activeManager.SignalSwitchOut();
         }
 
         private void RequestNewPanel(LizKinCosmeticData.CosmeticPanel panel)
@@ -455,22 +467,23 @@ You can pick Cosmetics of several types, edit their settings and configure rando
         // full-tab element that manages a cosmetics profile for an associated profileData
         internal class ProfileManager : UIelement
         {
-            private LizardSkinOI lizardSkinOI;
+            internal LizardSkinOI lizardSkinOI;
             internal LizKinProfileData profileData;
-            private OpTextBox nameBox;
-            private OpResourceSelector appliesToModeSelector;
-            private OpResourceSelector appliesToSelectorSelector;
-            private OpCheckBox appliesTo0;
+            private OpTab opTab;
+            private EventfulTextBox nameBox;
+            private EventfulResourceSelector appliesToModeSelector;
+            private EventfulResourceSelector appliesToSelectorSelector;
+            private EventfulCheckBox appliesTo0;
             private OpLabel appliesTo0Label;
-            private OpCheckBox appliesTo1;
+            private EventfulCheckBox appliesTo1;
             private OpLabel appliesTo1Label;
-            private OpCheckBox appliesTo2;
+            private EventfulCheckBox appliesTo2;
             private OpLabel appliesTo2Label;
-            private OpCheckBox appliesTo3;
+            private EventfulCheckBox appliesTo3;
             private OpLabel appliesTo3Label;
-            private OpTextBox appliesToInput;
+            private EventfulTextBox appliesToInput;
             private OpTinyColorPicker effectColorPicker;
-            private OpCheckBox overrideBaseCkb;
+            private EventfulCheckBox overrideBaseCkb;
             private OpTinyColorPicker baseColorPicker;
             private EventfulFloatSlider previewRotationSlider;
             private MenuCosmeticsAdaptor cosmeticsPreview;
@@ -483,42 +496,52 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             {
                 this.lizardSkinOI = lizardSkinOI;
                 this.profileData = lizKinProfileData;
+                this.opTab = opTab;
 
                 // Profile management row
                 OpSimpleImageButton arrowDown;
                 opTab.AddItems(new OpLabel(profileMngmtPos, new Vector2(40, 24), text: "Profile:", alignment: FLabelAlignment.Left),
-                    this.nameBox = new OpTextBox(profileMngmtPos + new Vector2(50, 0), 100, "", defaultValue: profileData.profileName) { description = "Rename this profile" },
+                    this.nameBox = new EventfulTextBox(profileMngmtPos + new Vector2(50, 0), 100, "", defaultValue: profileData.profileName) { description = "Rename this profile" },
                     new OpSimpleImageButton(profileMngmtPos + new Vector2(160, 0), new Vector2(24, 24), "btnProfileMvUp", "LizKinArrow") { description = "Move this profile up" },
                     arrowDown = new OpSimpleImageButton(profileMngmtPos + new Vector2(190, 0), new Vector2(24, 24), "btnProfileMvDown", "LizKinArrow") { description = "Move this profile down" },
                     new OpSimpleImageButton(profileMngmtPos + new Vector2(220, 0), new Vector2(24, 24), "btnProfileDuplicate", "LizKinDuplicate") { description = "Duplicate this profile" },
                     new OpSimpleImageButton(profileMngmtPos + new Vector2(250, 0), new Vector2(24, 24), "btnProfileDelete", "LizKinDelete") { description = "Delete this profile" }
                     );
                 arrowDown.sprite.scaleY *= -1;
-
+                this.nameBox.OnValueChangedEvent += NameBox_OnValueChanged;
 
                 // Filters
                 opTab.AddItems(new OpLabel(characterMngmtPos + new Vector2(0, 0), new Vector2(40, 24), text: "Applies to:", alignment: FLabelAlignment.Left),
-                    appliesToModeSelector = new OpResourceSelector(characterMngmtPos + new Vector2(40, 30), 110, "", typeof(LizKinProfileData.ProfileAppliesToMode), profileData.appliesToMode.ToString()) { description = "How complicated should the selection filter be..." },
-                    appliesToSelectorSelector = new OpResourceSelector(characterMngmtPos + new Vector2(80, 0), 100, "", typeof(LizKinProfileData.ProfileAppliesToSelector), profileData.appliesToSelector.ToString()) { description = "Filter by Difficulty (story-mode), Character (arena) or Player-number..." },
+                    appliesToModeSelector = new EventfulResourceSelector(characterMngmtPos + new Vector2(40, 30), 110, "", typeof(LizKinProfileData.ProfileAppliesToMode), profileData.appliesToMode.ToString()) { description = "How complicated should the selection filter be..." },
+                    appliesToSelectorSelector = new EventfulResourceSelector(characterMngmtPos + new Vector2(80, 0), 100, "", typeof(LizKinProfileData.ProfileAppliesToSelector), profileData.appliesToSelector.ToString()) { description = "Filter by Difficulty (story-mode), Character (arena) or Player-number..." },
 
-                    appliesTo0 = new OpCheckBox(characterMngmtPos + new Vector2(0, -30), ""),
+                    appliesTo0 = new EventfulCheckBox(characterMngmtPos + new Vector2(0, -30), ""),
                     appliesTo0Label = new OpLabel(characterMngmtPos + new Vector2(40, -30), new Vector2(40, 24), text: "Survivor", alignment: FLabelAlignment.Left),
-                    appliesTo1 = new OpCheckBox(characterMngmtPos + new Vector2(100, -30), ""),
+                    appliesTo1 = new EventfulCheckBox(characterMngmtPos + new Vector2(100, -30), ""),
                     appliesTo1Label = new OpLabel(characterMngmtPos + new Vector2(140, -30), new Vector2(40, 24), text: "Monk", alignment: FLabelAlignment.Left),
-                    appliesTo2 = new OpCheckBox(characterMngmtPos + new Vector2(0, -60), ""),
+                    appliesTo2 = new EventfulCheckBox(characterMngmtPos + new Vector2(0, -60), ""),
                     appliesTo2Label = new OpLabel(characterMngmtPos + new Vector2(40, -60), new Vector2(40, 24), text: "Hunter", alignment: FLabelAlignment.Left),
-                    appliesTo3 = new OpCheckBox(characterMngmtPos + new Vector2(100, -60), ""),
+                    appliesTo3 = new EventfulCheckBox(characterMngmtPos + new Vector2(100, -60), ""),
                     appliesTo3Label = new OpLabel(characterMngmtPos + new Vector2(140, -60), new Vector2(40, 24), text: "Nightcat", alignment: FLabelAlignment.Left),
 
-                    appliesToInput = new OpTextBox(characterMngmtPos + new Vector2(10, -30), 160, "", defaultValue: "-1") { allowSpace = true, description = "Which indexes to apply to, comma-separated, everything being zero-indexed, or -1 for all" }
+                    appliesToInput = new EventfulTextBox(characterMngmtPos + new Vector2(10, -30), 160, "", defaultValue: "-1") { allowSpace = true, description = "Which indexes to apply to, comma-separated, everything being zero-indexed, or -1 for all" }
                     );
+
+                appliesToModeSelector.OnValueChangedEvent += FiltersSelector_OnValueChangedEvent;
+                appliesToSelectorSelector.OnValueChangedEvent += FiltersSelector_OnValueChangedEvent;
+
+                appliesTo0.OnValueChangedEvent += FiltersValues_OnValueChangedEvent;
+                appliesTo1.OnValueChangedEvent += FiltersValues_OnValueChangedEvent;
+                appliesTo2.OnValueChangedEvent += FiltersValues_OnValueChangedEvent;
+                appliesTo3.OnValueChangedEvent += FiltersValues_OnValueChangedEvent;
+                appliesToInput.OnValueChangedEvent += FiltersValues_OnValueChangedEvent;
 
                 FiltersConformToConfig();
 
                 // Colors
                 opTab.AddItems(new OpLabel(colorMngmtPos + new Vector2(80, 0), new Vector2(40, 24), text: "Effect Color:", alignment: FLabelAlignment.Right),
                 new OpLabel(colorMngmtPos + new Vector2(80, -30), new Vector2(40, 24), text: "Override Base Color:", alignment: FLabelAlignment.Right),
-                this.overrideBaseCkb = new OpCheckBox(colorMngmtPos + new Vector2(130, -30), "", profileData.overrideBaseColor) { description = "Use a different Base Color than the slugcat's default color" });
+                this.overrideBaseCkb = new EventfulCheckBox(colorMngmtPos + new Vector2(130, -30), "", profileData.overrideBaseColor) { description = "Use a different Base Color than the slugcat's default color" });
                 
                 // see iHaveChildren
                 this.effectColorPicker = new OpTinyColorPicker(colorMngmtPos + new Vector2(130, 0), "", OpColorPicker.ColorToHex(profileData.effectColor)) { description = "Pick the Effect Color for the highlights" };
@@ -526,9 +549,10 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 this.baseColorPicker = new OpTinyColorPicker(colorMngmtPos + new Vector2(160, -30), "", OpColorPicker.ColorToHex(profileData.baseColorOverride)) { description = "Pick the Base Color for the cosmetics" };
                 baseColorPicker.AddSelfAndChildrenToTab(opTab);
 
-                effectColorPicker.OnValueChangedEvent += ColorPicker_OnChanged;
+                overrideBaseCkb.OnValueChangedEvent += ColorStuff_OnChanged;
+                effectColorPicker.OnValueChangedEvent += ColorStuff_OnChanged;
                 effectColorPicker.OnFrozenUpdate += KeepPreviewUpdated;
-                baseColorPicker.OnValueChangedEvent += ColorPicker_OnChanged;
+                baseColorPicker.OnValueChangedEvent += ColorStuff_OnChanged;
                 baseColorPicker.OnFrozenUpdate += KeepPreviewUpdated;
 
                 // Preview pannel 
@@ -576,16 +600,33 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 //Debug.Log("ProfileTabManager done");
             }
 
+            private void FiltersValues_OnValueChangedEvent()
+            {
+                FiltersGrabConfig();
+            }
+
+            private void FiltersSelector_OnValueChangedEvent()
+            {
+                FiltersConformToConfig();
+                FiltersGrabConfig();
+            }
+
             Vector2 profileMngmtPos => new Vector2(15, 570);
             Vector2 characterMngmtPos => new Vector2(380, 540);
             Vector2 colorMngmtPos => new Vector2(380, 450);
             Vector2 previewPanelPos => new Vector2(380, 420);
             Vector2 cosmeticsPanelPos => new Vector2(0, 0);
 
+            private void NameBox_OnValueChanged()
+            {
+                profileData.profileName = nameBox.value;
+                lizardSkinOI.DataChanged();
+            }
+
             private void AddPanelPanel_OnAdd()
             {
                 profileData.AddEmptyCosmetic();
-                DataChanged();
+                lizardSkinOI.DataChanged();
                 LizKinCosmeticData.CosmeticPanel panel = profileData.cosmetics[profileData.cosmetics.Count - 1].MakeEditPanel(this);
                 cosmeticsPreview.Reset();
                 cosmPanels.Add(panel);
@@ -606,7 +647,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             {
                 profileData.cosmetics.Add(LizKinCosmeticData.Clone(data));
                 profileData.cosmetics[profileData.cosmetics.Count - 1].profile = profileData;
-                DataChanged();
+                lizardSkinOI.DataChanged();
                 cosmeticsPreview.Reset();
                 LizKinCosmeticData.CosmeticPanel panel = profileData.cosmetics[profileData.cosmetics.Count - 1].MakeEditPanel(this);
                 cosmPanels.Add(panel);
@@ -616,7 +657,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             internal void DeleteCosmetic(LizKinCosmeticData.CosmeticPanel panel)
             {
                 profileData.cosmetics.Remove(panel.data);
-                DataChanged();
+                lizardSkinOI.DataChanged();
                 panel.data.profile = null;
                 cosmeticsPreview.Reset();
                 cosmPanels.Remove(panel);
@@ -680,7 +721,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 profileData.cosmetics[profileData.cosmetics.IndexOf(panel.data)] = newCosmetic;
                 panel.data.profile = null; // Cosmetic is dead
                 cosmeticsPreview.Reset(); // Preview cannot use dead cosms
-                DataChanged();
+                lizardSkinOI.DataChanged();
 
                 LizKinCosmeticData.CosmeticPanel newPanel = newCosmetic.MakeEditPanel(this);
                 cosmPanels[cosmPanels.IndexOf(panel)] = newPanel;
@@ -716,11 +757,6 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 public event OnButtonSignalHandler OnPaste { add { pastebutton.OnSignal += value; } remove { pastebutton.OnSignal -= value; } }
             }
 
-            internal void DataChanged()
-            {
-                OptionScript.configChanged = true;
-            }
-
             internal void RefreshPreview()
             {
                 cosmeticsPreview.Reset();
@@ -736,12 +772,12 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 cosmeticsPreview.SetRotation(previewRotationSlider.valueFloat);
             }
 
-            private void ColorPicker_OnChanged()
+            private void ColorStuff_OnChanged()
             {
                 profileData.effectColor = effectColorPicker.valuecolor;
                 profileData.overrideBaseColor = overrideBaseCkb.valueBool;
                 profileData.baseColorOverride = baseColorPicker.valuecolor;
-                DataChanged();
+                lizardSkinOI.DataChanged();
             }
 
             public override void Update(float dt)
@@ -761,7 +797,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                     FiltersGrabConfig();
                     // might need layout change
                     FiltersConformToConfig();
-                    DataChanged();
+                    lizardSkinOI.DataChanged();
                 } else FiltersGrabConfig();
 
                 //profileData.effectColor = effectColorPicker.valuecolor;
@@ -782,18 +818,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             internal void SignalSwitchOut()
             {
                 Debug.Log("ProfileManager SignalSwitchOut");
-                bool needsRefresh = false;
-                // Save data
-                if (nameBox.value != profileData.profileName)
-                {
-                    profileData.profileName = nameBox.value;
-                    DataChanged();
-                    needsRefresh = true;
-                }
-
-                FiltersGrabConfig();
-
-                if (needsRefresh)
+                if (opTab.name != profileData.profileName)
                 {
                     lizardSkinOI.RequestRefresh();
                 }
@@ -812,7 +837,8 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 LizKinProfileData.ProfileAppliesToMode newMode = (LizKinProfileData.ProfileAppliesToMode)Enum.Parse(typeof(LizKinProfileData.ProfileAppliesToMode), appliesToModeSelector.value);
                 profileData.appliesToMode = newMode;
                 profileData.appliesToSelector = (LizKinProfileData.ProfileAppliesToSelector)Enum.Parse(typeof(LizKinProfileData.ProfileAppliesToSelector), appliesToSelectorSelector.value);
-                
+
+                List<int> previousList = profileData.appliesToList;
                 switch (previousMode)
                 {
                     case LizKinProfileData.ProfileAppliesToMode.Basic:
@@ -843,6 +869,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                         break;
                 }
                 //Debug.Log("profileData.appliesToList now is  " + String.Join(", ", profileData.appliesToList.Select(n => n.ToString()).ToArray()));
+                if(previousMode != newMode || String.Join(", ", previousList.Select(n => n.ToString()).ToArray()) != String.Join(", ", profileData.appliesToList.Select(n => n.ToString()).ToArray()) ) lizardSkinOI.DataChanged(); // This could probably be optimized
             }
 
 
@@ -1298,8 +1325,14 @@ You can pick Cosmetics of several types, edit their settings and configure rando
         internal class EventfulTextBox : OpTextBox
         {
             //public EventfulTextBox(Vector2 pos, float sizeX, string key, string defaultValue = "TEXT", Accept accept = Accept.StringASCII) : base(pos, sizeX, key, defaultValue, accept)
-            public EventfulTextBox(Vector2 pos, float sizeX, string key, string defaultValue = "TEXT") : base(pos, sizeX, key, defaultValue)
+            public EventfulTextBox(Vector2 pos, float sizeX, string key, string defaultValue = "TEXT") : base(pos, sizeX, key, "")
             {
+                // Attempt at fixing bug that happens when defaultvalue gets trimmed in the ctor, causes nullref in CM 1454?
+                this._value = defaultValue;
+                //this._lastValue = defaultValue;
+                typeof(EventfulTextBox).GetField("_lastValue", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(this, defaultValue);
+                this.defaultValue = defaultValue;
+                OnChange();
             }
 
             public event OnValueChangedHandler OnValueChangedEvent;
@@ -1317,8 +1350,9 @@ You can pick Cosmetics of several types, edit their settings and configure rando
             public override void Update(float dt)
             {
                 bool wasHeld = held;
+                string preupvalue = value;
                 base.Update(dt);
-
+                if (value != preupvalue) OnValueChangedEvent?.Invoke();
                 if (wasHeld && held) OnFrozenUpdate?.Invoke(dt);
             }
         }
@@ -1375,6 +1409,29 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 base.Update(dt);
 
                 if (wasHeld && held) OnFrozenUpdate?.Invoke(dt);
+            }
+        }
+
+        internal class EventfulResourceSelector : OpResourceSelector
+        {
+            public EventfulResourceSelector(Vector2 pos, float width, string key, Type enumType, string defaultName = "") : base(pos, width, key, enumType, defaultName)
+            {
+
+            }
+
+            public EventfulResourceSelector(Vector2 pos, float width, string key, SpecialEnum listType, string defaultName = "") : base(pos, width, key, listType, defaultName)
+            {
+            }
+
+            public event OnValueChangedHandler OnValueChangedEvent;
+            public override string value
+            {
+                set
+                {
+                    bool change = value != _value;
+                    base.value = value;
+                    if (change) OnValueChangedEvent?.Invoke();
+                }
             }
         }
     }

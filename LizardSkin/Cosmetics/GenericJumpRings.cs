@@ -11,7 +11,7 @@ namespace LizardSkin
 
 		public GenericJumpRings(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
-			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.InFront;
+			if (this.cosmeticData.spritesOverlap == LizKinCosmeticData.SpritesOverlapConfig.Default) this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.InFront;
 			this.numberOfRings = jumpRingsData.count;
 			this.numberOfSprites = 4 * numberOfRings;
 		}

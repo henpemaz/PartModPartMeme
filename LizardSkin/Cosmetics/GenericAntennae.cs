@@ -8,7 +8,7 @@ namespace LizardSkin
 		internal CosmeticAntennaeData antennaeData => cosmeticData as CosmeticAntennaeData;
         public GenericAntennae(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
-			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.BehindHead;
+			if (this.cosmeticData.spritesOverlap == LizKinCosmeticData.SpritesOverlapConfig.Default) this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.BehindHead;
 			//this.length = antennaeData.length; //UnityEngine.Random.value;
 			this.segments = antennaeData.segments; //Mathf.FloorToInt(Mathf.Lerp(3f, 8f, Mathf.Pow(this.length, Mathf.Lerp(1f, 6f, this.length))));
 			//this.alpha = antennaeData.alpha; // this.length * 0.9f + UnityEngine.Random.value * 0.1f;

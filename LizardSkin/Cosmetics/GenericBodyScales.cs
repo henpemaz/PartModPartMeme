@@ -13,7 +13,7 @@ namespace LizardSkin
 		{
 			//this.spritesOverlap = ((!(this is SlugcatLongHeadScales)) ? SlugcatCosmeticsTemplate.SpritesOverlap.BehindHead : SlugcatCosmeticsTemplate.SpritesOverlap.InFront);
 			//this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.BehindHead;
-			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.Behind;
+			if (this.cosmeticData.spritesOverlap == LizKinCosmeticData.SpritesOverlapConfig.Default) this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.Behind;
 		}
 
 		protected void MakeModeScales()

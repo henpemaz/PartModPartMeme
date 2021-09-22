@@ -15,7 +15,7 @@ namespace LizardSkin
 		// uses LongBodyScalesData because screw it im lazy
 		public GenericSpineSpikes(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
-			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.Behind;
+			if (this.cosmeticData.spritesOverlap == LizKinCosmeticData.SpritesOverlapConfig.Default) this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.Behind;
 
 			this.bumps = spineSpikesData.count; // (int)(this.spineLength / num);
 			this.graphic = spineSpikesData.graphic; // UnityEngine.Random.Range(0, 5);

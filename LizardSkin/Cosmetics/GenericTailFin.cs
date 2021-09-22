@@ -15,7 +15,7 @@ namespace LizardSkin
 		// uses CosmeticSpineSpikesData
 		public GenericTailFin(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
-			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.BehindHead;
+			if (this.cosmeticData.spritesOverlap == LizKinCosmeticData.SpritesOverlapConfig.Default) this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.BehindHead;
 
 			//float num = Mathf.Lerp(4f, 7f, Mathf.Pow(UnityEngine.Random.value, 0.7f));
 			//this.spineLength = Custom.ClampedRandomVariation(0.5f, 0.17f, 0.5f) * iGraphics.BodyAndTailLength;

@@ -40,6 +40,7 @@ customtails messes around with my trimeshes (customtails + antennae) (mehri)
 Have to switch tabs for profile name to save (me)
 editing filters checkboxes doesnt trigger CM save (me)
 	rewrite filter menus and name thinghie using new eventful stuff maybe ?
+	done in 0.7
 	
 graphic selector went to 7 somehow despite the limit and bluescreened (sunshine, foxy too)
 Int upandown causes bluescreen still (topaz)
@@ -47,6 +48,7 @@ Can type in invalid values and it reads them
 	maybe possibly fixed in 0.7
 	
 add selector for rendering on top, behindhead, behind, particularly for headstuff (mehri)
+	added in 0.7
 	
 bitten by a lizard causes layer freakout (several)
 	(grabbed by a white liz tongue - topaz)
@@ -66,3 +68,7 @@ the cosmetic colour isn't dulling out when in starving state
 		a "base collor as effect" option could solve that, making it use fancy's slugcatcolor for the effect
 
 crash CM with high seeds, 4-digits long seed works, 5 or more will break ? luna in my dms, reports 21/09/2021 in modding support
+	maxLength gets calculated on init, proceeds to trim defaultvalue, causes onchange before ctor returned, causes nullref
+	maxLength seems unused btw
+	solved by zeroing defaultvalue and assigning it after ctor
+	done in 0.7

@@ -10,6 +10,8 @@ namespace LizardSkin
 			this.iGraphics = iGraphics;
 			this.cosmeticData = cosmeticData;
 			UnityEngine.Random.seed = cosmeticData.seed;
+
+			if (this.cosmeticData.spritesOverlap != LizKinCosmeticData.SpritesOverlapConfig.Default) spritesOverlap = (SpritesOverlap)this.cosmeticData.spritesOverlap;
 		}
 
 		public static GenericCosmeticTemplate MakeCosmetic(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData)

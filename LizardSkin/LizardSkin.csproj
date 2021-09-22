@@ -116,6 +116,7 @@
     <ProjectReference Include="..\CustomSpritesLoader\CustomSpritesLoader.csproj">
       <Project>{7aef23fe-5ab2-422c-89ee-ccb050b86a76}</Project>
       <Name>CustomSpritesLoader</Name>
+      <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

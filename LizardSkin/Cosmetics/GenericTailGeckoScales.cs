@@ -13,7 +13,7 @@ namespace LizardSkin
 
 		public GenericTailGeckoScales(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
-			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.BehindHead;
+			if (this.cosmeticData.spritesOverlap == LizKinCosmeticData.SpritesOverlapConfig.Default) this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.BehindHead;
 			this.rows = tailGeckoScalesData.rows; //UnityEngine.Random.Range(7, 14);
 			this.lines = tailGeckoScalesData.lines; //  UnityEngine.Random.Range(3, UnityEngine.Random.Range(3, 4));
 			this.bigScales = tailGeckoScalesData.bigScales; // true; // ooopsie

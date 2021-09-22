@@ -271,8 +271,7 @@ namespace LizardSkin
 
     public abstract class LizKinCosmeticData : IJsonSerializable
     {
-
-        const int version = 1;
+        const int version = 2;
 
         public LizKinProfileData profile;
 
@@ -308,6 +307,18 @@ namespace LizardSkin
 
         public Color baseColorOverride;
 
+        // new in v0.7
+        // object version 2
+        public enum SpritesOverlapConfig
+        {
+            Default = -1,
+            Behind,
+            BehindHead,
+            InFront
+        }
+
+        public SpritesOverlapConfig spritesOverlap;
+
         public LizKinCosmeticData()
         {
             seed = (int)(10000 * UnityEngine.Random.value);
@@ -326,6 +337,7 @@ namespace LizardSkin
                     {"effectColorOverride", OptionalUI.OpColorPicker.ColorToHex(effectColorOverride) },
                     {"overrideBaseColor", overrideBaseColor },
                     {"baseColorOverride", OptionalUI.OpColorPicker.ColorToHex(baseColorOverride) },
+                    {"spritesOverlap", (long) spritesOverlap },
                 };
         }
 
@@ -349,8 +361,20 @@ namespace LizardSkin
 
                     return;
                 }
+                if ((long)json["LizKinCosmeticData.version"] == 2)
+                {
+                    seed = (int)(long)json["seed"];
+                    overrideEffectColor = (bool)json["overrideEffectColor"];
+                    effectColorOverride = OptionalUI.OpColorPicker.HexToColor((string)json["effectColorOverride"]);
+                    overrideBaseColor = (bool)json["overrideBaseColor"];
+                    baseColorOverride = OptionalUI.OpColorPicker.HexToColor((string)json["baseColorOverride"]);
+
+                    spritesOverlap = (SpritesOverlapConfig)(long)json["spritesOverlap"];
+                    return;
+                }
+
             }
-            if(!ignoremissing) throw new SerializationException("LizKinCosmeticData version unsuported");
+            if (!ignoremissing) throw new SerializationException("LizKinCosmeticData version unsuported");
         }
 
 
@@ -421,6 +445,8 @@ namespace LizardSkin
             this.effectColorOverride = panel.effectColorPicker.valuecolor;
             this.overrideBaseColor = panel.baseCkb.valueBool;
             this.baseColorOverride = panel.baseColorPicker.valuecolor;
+
+            this.spritesOverlap = (SpritesOverlapConfig)Enum.Parse(typeof(SpritesOverlapConfig), panel.spritesOverlapControl.value);
         }
 
         //abstract
@@ -437,10 +463,13 @@ namespace LizardSkin
             internal LizardSkinOI.EventfulCheckBox baseCkb;
             internal LizardSkinOI.OpTinyColorPicker baseColorPicker;
 
+            internal LizardSkinOI.EventfulComboBox spritesOverlapControl;
+
             //protected virtual float pannelHeight => 360f;
             //protected
             private Vector2 currentPlacement = new Vector2(3,-1);
             private float heightOfCurrentRow;
+
             protected void NewRow(float height, float verticalMargin=2)
             {
                 heightOfCurrentRow = height;
@@ -480,22 +509,33 @@ namespace LizardSkin
                 btnDelete.OnSignal += () => { this.manager.DeleteCosmetic(this); };
                 children.Add(btnDelete);
 
-                children.Add(new OptionalUI.OpLabel(PlaceInRow(70, 24), new Vector2(70, 24), "Seed:", FLabelAlignment.Right));
-                children.Add(seedBox = new LizardSkinOI.EventfulTextBox(PlaceInRow(45, 24), 45, "", data.seed.ToString()));
-                seedBox.OnValueChangedEvent += DataChangedRefreshNeeded;
-                seedBox.OnFrozenUpdate += TriggerUpdateWhileFrozen;
-
-                // Second row
-                NewRow(24);
-                // color overrides
-                children.Add(new OptionalUI.OpLabel(PlaceInRow(100, 24, 10), new Vector2(100, 24), "Effect Override:", FLabelAlignment.Right));
+                float theX = currentPlacement.x;
+                children.Add(new OptionalUI.OpLabel(PlaceInRow(75, 24, 4), new Vector2(75, 24), "Effect Overr.:", FLabelAlignment.Right));
                 children.Add(effectCkb = new LizardSkinOI.EventfulCheckBox(PlaceInRow(24, 24), "", data.overrideEffectColor));
                 effectCkb.OnValueChangedEvent += DataChanged;
                 children.Add(effectColorPicker = new LizardSkinOI.OpTinyColorPicker(PlaceInRow(24, 24), "", OptionalUI.OpColorPicker.ColorToHex(data.effectColorOverride)));
                 effectColorPicker.OnValueChangedEvent += DataChanged;
                 effectColorPicker.OnFrozenUpdate += TriggerUpdateWhileFrozen;
 
-                children.Add(new OptionalUI.OpLabel(PlaceInRow(100, 24, 12), new Vector2(100, 24), "Base Override:", FLabelAlignment.Right));
+                // Second row
+                NewRow(24);
+
+                children.Add(new OptionalUI.OpLabel(PlaceInRow(35, 24), new Vector2(35, 24), "Seed:", FLabelAlignment.Right));
+                children.Add(seedBox = new LizardSkinOI.EventfulTextBox(PlaceInRow(50, 24), 50, "", data.seed.ToString()));
+                seedBox.OnValueChangedEvent += DataChangedRefreshNeeded;
+                seedBox.OnFrozenUpdate += TriggerUpdateWhileFrozen;
+
+                // new in v0.7
+                // SpritesOverlapConfig spritesOverlap
+                children.Add(new OptionalUI.OpLabel(PlaceInRow(50, 24, 4), new Vector2(50, 24), "Overlap:", FLabelAlignment.Right));
+                this.spritesOverlapControl = new LizardSkinOI.EventfulComboBox(PlaceInRow(60, 24), 80, "", Enum.GetNames(typeof(SpritesOverlapConfig)), data.spritesOverlap.ToString());
+                spritesOverlapControl.OnValueChangedEvent += DataChangedRefreshNeeded;
+                children.Add(spritesOverlapControl);
+
+
+                // force align
+                currentPlacement.x = theX;
+                children.Add(new OptionalUI.OpLabel(PlaceInRow(75, 24, 4), new Vector2(75, 24), "Base Overr.:", FLabelAlignment.Right));
                 children.Add(baseCkb = new LizardSkinOI.EventfulCheckBox(PlaceInRow(24, 24), "", data.overrideBaseColor));
                 baseCkb.OnValueChangedEvent += DataChanged;
                 children.Add(baseColorPicker = new LizardSkinOI.OpTinyColorPicker(PlaceInRow(24, 24), "", OptionalUI.OpColorPicker.ColorToHex(data.baseColorOverride)));
@@ -511,7 +551,7 @@ namespace LizardSkin
             protected virtual void DataChanged()
             {
                 this.data.ReadEditPanel(this);
-                manager.DataChanged();
+                manager.lizardSkinOI.DataChanged();
             }
             protected virtual void DataChangedRefreshNeeded()
             {

@@ -8,7 +8,7 @@ namespace LizardSkin
 		CosmeticBumpHawkData cosmeticBumpHawkData => cosmeticData as CosmeticBumpHawkData;
 		public GenericBumpHawk(ICosmeticsAdaptor iGraphics, LizKinCosmeticData cosmeticData) : base(iGraphics, cosmeticData)
 		{
-			this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.Behind;
+			if (this.cosmeticData.spritesOverlap == LizKinCosmeticData.SpritesOverlapConfig.Default) this.spritesOverlap = GenericCosmeticTemplate.SpritesOverlap.Behind;
 
 			this.numberOfSprites = cosmeticBumpHawkData.bumps;
 		}
