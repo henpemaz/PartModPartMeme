@@ -324,6 +324,7 @@ namespace LizardSkin
             seed = (int)(10000 * UnityEngine.Random.value);
             effectColorOverride = Color.red;
             baseColorOverride = Color.red;
+            spritesOverlap = SpritesOverlapConfig.Default;
         }
 
         public virtual Dictionary<string, object> ToJson()
@@ -359,6 +360,7 @@ namespace LizardSkin
                     overrideBaseColor = (bool)json["overrideBaseColor"];
                     baseColorOverride = OptionalUI.OpColorPicker.HexToColor((string)json["baseColorOverride"]);
 
+                    spritesOverlap = SpritesOverlapConfig.Default;
                     return;
                 }
                 if ((long)json["LizKinCosmeticData.version"] == 2)
