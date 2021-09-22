@@ -12,6 +12,7 @@
 	
 feature requests:
 	layering option for all default/behind/behindhead/ontop
+		done in 0.7
 	flip scales
 	better head-tracking for antennae
 	SpinePos and Angle settings for the gills
@@ -53,15 +54,17 @@ add selector for rendering on top, behindhead, behind, particularly for headstuf
 bitten by a lizard causes layer freakout (several)
 	(grabbed by a white liz tongue - topaz)
 	Jolly player-grabbing-player also messes things up
-
-new profile seems to duplicate ? (topaz) nonreproduceable, missing steps
-	
-freaky scales when going fast (some cosmetics call reset when too far ? thought I fixed this, maybe its something else, do they bend backwards maybe ?)
-	
+	It was fancy, had ANOTHER override on addtocontainer
+	fixed in 0.7
+		
 with expedition the liz accessiories are slucat's color (topaz)
 	needs special compatibilification or poke lee about it.
+	attempted fix in 0.7, can't bother to check
 	
 the antennaes kinda go off slugcat. segment too long = huge offset from sluggy (topaz)
+	couldn't reproduce wont fix ?
+
+freaky scales when going fast (some cosmetics call reset when too far ? thought I fixed this, maybe its something else, do they bend backwards maybe ?)
 
 the cosmetic colour isn't dulling out when in starving state
 	I think adding a setting for the cosmetic colour to inherit slugcat's menu colours could be a possible fix

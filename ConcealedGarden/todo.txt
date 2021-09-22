@@ -2,6 +2,7 @@
 	still work
 	
 CRS enable debug, cause issues, send to gar
+	sent logs 21/09
 	menuscene in region view wont load
 	had bad merges in my logs ?
 	oi thumbnail scaling fix ?
@@ -89,33 +90,32 @@ Water
 	waterfall full room effect
 		in front of terrain vs layer 2 ?
 	
-Treetop
-	gate done
-	FOLIAGE
-		branch that branches, leaves on tips
-		physics/wind
-			done-ish
-		dropped features
-			grow up at cycle start
-			gentle swing
-			fall on rain aproaching
-			edible for quarter pip ?
-			edible flower mayhaps ?
-	SunSeed
-		rain protection field
-		2handed, heavy as an eggbug
-		when picked up, rain approaches
-		graphics match intro tree
-	room
-		done
-	echo
-		done
-	
 Rooms
 	Drain3 NEEDS finishing
 		done
 	Drain2 Drain3 Gate and DS_CG don't blend super well together rn
 		done ?
+	Treetop
+		gate done
+		room done
+		FOLIAGE
+			branch that branches, leaves on tips
+			physics/wind
+				done-ish
+			dropped features
+				grow up at cycle start
+				gentle swing - oh heck I actually did this
+				fall on rain aproaching
+				edible for quarter pip ?
+				edible flower mayhaps ?
+		SunSeed - abandoned in favor of tremblingseed ?
+			rain protection field
+			2handed, heavy as an eggbug
+			when picked up, rain approaches
+			graphics match intro tree
+
+		echo
+			done
 
 Fake Steam achievement
 	Plastified
@@ -127,7 +127,7 @@ Fake Steam achievement
 		done
 		
 	ConfigMachine list
-		:unknown: chievo icon
+		done
 			
 	
 Lore pearl from trader

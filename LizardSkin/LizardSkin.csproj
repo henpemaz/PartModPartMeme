@@ -47,6 +47,9 @@
       <HintPath>..\References\CustomTail.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Expedition">
+      <HintPath>..\References\Expedition.dll</HintPath>
+    </Reference>
     <Reference Include="FancySlugcats">
       <HintPath>..\References\FancySlugcats.dll</HintPath>
       <Private>False</Private>

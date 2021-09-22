@@ -35,14 +35,19 @@ namespace LizardSkin
         public static void ApplyHooksToJollyPlayerGraphicsHK()
         {
             Type jollypg = Type.GetType("JollyCoop.PlayerGraphicsHK, JollyCoop");
-            new Hook(jollypg.GetMethod("PlayerGraphics_ApplyPalette", BindingFlags.NonPublic | BindingFlags.Static), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("PlayerGraphics_ApplyPalette_jolly_fix", BindingFlags.NonPublic | BindingFlags.Static));
-            new Hook(jollypg.GetMethod("SwichtLayersVanilla", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("Jolly_SwichtLayersVanilla_fix", BindingFlags.NonPublic | BindingFlags.Static));
+            //new Hook(jollypg.GetMethod("PlayerGraphics_ApplyPalette", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("PlayerGraphics_ApplyPalette_jolly_fix", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static));
+            new Hook(jollypg.GetMethod("SwichtLayersVanilla", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("Jolly_SwichtLayersVanilla_fix", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static));
         }
 
         public static void ApplyHooksToColorfootPlayerGraphicsPatch()
         {
             Type colorfootpg = Type.GetType("Colorfoot.PlayerGraphicsPatch, Colorfoot");
-            new Hook(colorfootpg.GetMethod("ApplyPalette", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("Colorfoot_ApplyPalette_fix", BindingFlags.NonPublic | BindingFlags.Static));
+            new Hook(colorfootpg.GetMethod("ApplyPalette", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("Colorfoot_ApplyPalette_fix", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static));
+        }
+
+        public static void ApplyHooksToExpeditionRogueHooks()
+        {
+            new Hook(typeof(RogueHooks).GetMethod("PlayerGraphics_DrawSprites", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("Expedition_DrawSprites_fix", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static));
         }
 
         public static void InitDebugLabels(PlayerGraphics pg, PhysicalObject ow)
@@ -86,13 +91,14 @@ namespace LizardSkin
             GetAdaptor(instance).ApplyPalette(sLeaser, rCam, palette);
         }
 
-        public delegate void jolly_ApplyPalette_hook(On.PlayerGraphics.orig_ApplyPalette orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette);
-        protected static void PlayerGraphics_ApplyPalette_jolly_fix(jolly_ApplyPalette_hook orig_hook, On.PlayerGraphics.orig_ApplyPalette orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
-        {
-            // Who hooks the hookers ???
-            orig_hook(orig, instance, sLeaser, rCam, palette);
-            // Your code here
-        }
+        // Apparently unused, moved to loading the right jolly color in own applypalette
+        //public delegate void jolly_ApplyPalette_hook(On.PlayerGraphics.orig_ApplyPalette orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette);
+        //protected static void PlayerGraphics_ApplyPalette_jolly_fix(jolly_ApplyPalette_hook orig_hook, On.PlayerGraphics.orig_ApplyPalette orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
+        //{
+        //    // Who hooks the hookers ???
+        //    orig_hook(orig, instance, sLeaser, rCam, palette);
+        //    // Your code here
+        //}
 
         public delegate void SwichtLayersVanilla(PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, bool newOverlap);
         protected static void Jolly_SwichtLayersVanilla_fix(SwichtLayersVanilla orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, bool newOverlap)
@@ -111,6 +117,19 @@ namespace LizardSkin
                 GetAdaptor(instance).ApplyPalette(sLeaser, rCam, palette);
             }
         }
+
+        public delegate void expedition_DrawSprites_hook(On.PlayerGraphics.orig_DrawSprites orig, PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos);
+        protected static void Expedition_DrawSprites_fix(expedition_DrawSprites_hook orig_hook, On.PlayerGraphics.orig_DrawSprites orig, PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+        {
+            // Who hooks the hookers ???
+            orig_hook(orig, self, sLeaser, rCam, timeStacker, camPos);
+            // Your code here
+            if (RogueMenu.miscData.activeUnlocks.Contains(7))
+            {
+                GetAdaptor(self).ApplyPalette(sLeaser, rCam, rCam.currentPalette);
+            }
+        }
+
 
         protected static void PlayerGraphics_DrawSprites_hk(On.PlayerGraphics.orig_DrawSprites orig, PlayerGraphics instance, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
         {

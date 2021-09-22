@@ -20,10 +20,11 @@ namespace LizardSkin
         {
             Type fpg = Type.GetType("FancySlugcats.FancyPlayerGraphics, FancySlugcats");
 
-            new Hook(fpg.GetConstructor(new Type[] { typeof(PhysicalObject) }), typeof(FancyPlayerGraphicsCosmeticsAdaptor).GetMethod("FancyPlayerGraphics_ctor_hk", BindingFlags.NonPublic | BindingFlags.Static));
-            new Hook(fpg.GetMethod("InitiateSprites", BindingFlags.Public | BindingFlags.Instance), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("PlayerGraphics_InitiateSprites_hk", BindingFlags.NonPublic | BindingFlags.Static));
-            new Hook(fpg.GetMethod("DrawSprites", BindingFlags.Public | BindingFlags.Instance), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("PlayerGraphics_DrawSprites_hk", BindingFlags.NonPublic | BindingFlags.Static));
-            new Hook(fpg.GetMethod("ApplyPalette", BindingFlags.Public | BindingFlags.Instance), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("PlayerGraphics_ApplyPalette_hk", BindingFlags.NonPublic | BindingFlags.Static));
+            new Hook(fpg.GetConstructor(new Type[] { typeof(PhysicalObject) }), typeof(FancyPlayerGraphicsCosmeticsAdaptor).GetMethod("FancyPlayerGraphics_ctor_hk", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static));
+            new Hook(fpg.GetMethod("InitiateSprites", BindingFlags.Public | BindingFlags.Instance), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("PlayerGraphics_InitiateSprites_hk", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static));
+            new Hook(fpg.GetMethod("AddToContainer", BindingFlags.Public | BindingFlags.Instance), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("PlayerGraphics_AddToContainer_hk", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static));
+            new Hook(fpg.GetMethod("DrawSprites", BindingFlags.Public | BindingFlags.Instance), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("PlayerGraphics_DrawSprites_hk", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static));
+            new Hook(fpg.GetMethod("ApplyPalette", BindingFlags.Public | BindingFlags.Instance), typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("PlayerGraphics_ApplyPalette_hk", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static));
             
             //MethodInfo fpg_ = fpg.GetMethod("InitiateSprites", BindingFlags.Public | BindingFlags.Instance);
             //MethodInfo fpg_hk = typeof(PlayerGraphicsCosmeticsAdaptor).GetMethod("PlayerGraphics_InitiateSprites_hk", BindingFlags.NonPublic |  BindingFlags.Static);

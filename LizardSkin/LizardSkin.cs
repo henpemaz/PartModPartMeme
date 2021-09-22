@@ -41,6 +41,7 @@ namespace LizardSkin
         internal static Type jolly_ref;
         internal static Type custail_ref;
         internal static Type colorfoot_ref;
+        internal static Type expedition_ref;
 
         public override void OnEnable()
         {
@@ -97,6 +98,11 @@ namespace LizardSkin
                 if (asm.GetName().Name == "Colorfoot")
                 {
                     colorfoot_ref = asm.GetType("Colorfoot.LegMod");
+                }
+                else
+                if (asm.GetName().Name == "Rogue")
+                {
+                    expedition_ref = asm.GetType("Rogue.RogueHooks");
                 }
             }
 
@@ -169,6 +175,26 @@ namespace LizardSkin
             else
             {
                 Debug.Log("LizardSkin: NOT FOUND Colorfoot, integration disabled");
+            }
+
+            if (expedition_ref != null)
+            {
+                Debug.Log("LizardSkin: FOUND Expedition");
+                try
+                {
+                    PlayerGraphicsCosmeticsAdaptor.ApplyHooksToExpeditionRogueHooks();
+                    Debug.Log("LizardSkin: Expedition hooks applied");
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError("LizardSkin: ERROR hooking Expedition, integration disabled, send logs to henpe");
+                    expedition_ref = null;
+                    Debug.LogException(e);
+                }
+            }
+            else
+            {
+                Debug.Log("LizardSkin: NOT FOUND Expedition, integration disabled");
             }
 
             orig(self);
