@@ -25,11 +25,14 @@ feature requests:
 		1. make it consider the radius of the head (this would move all assets slighly up and some defaults might need adjusting)
 		2. interpolate better in the transition between body and tail
 	SpinePos and lenght for Spinespikes
+		done in 0.7
+
 void sea spawns antena zooms through screen missing a position reset or smth https://youtu.be/IXIaptekU34
 	done in 0.6
 	
 gecko scales needs to be adjustable where it starts
 	done in 0.6
+
 TailGeckoScales used to be shinier, more reflective, what changed (mehri)
 make the large tail gecko scales multicolored, like with actual cyans (bigabyte)
 	done in 0.6

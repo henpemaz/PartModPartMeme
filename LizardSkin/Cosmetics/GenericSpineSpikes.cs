@@ -48,7 +48,7 @@ namespace LizardSkin
 			for (int i = this.startSprite + this.bumps - 1; i >= this.startSprite; i--)
 			{
 				float num = Mathf.InverseLerp((float)this.startSprite, (float)(this.startSprite + this.bumps - 1), (float)i);
-				SpineData lizardSpineData = this.iGraphics.SpinePosition(Mathf.Lerp(spineSpikesData.start, spineSpikesData.length, num), false, timeStacker);
+				SpineData lizardSpineData = this.iGraphics.SpinePosition(Mathf.Lerp(spineSpikesData.start, spineSpikesData.start + spineSpikesData.length, num), false, timeStacker);
 				sLeaser.sprites[i].x = lizardSpineData.outerPos.x - camPos.x;
 				sLeaser.sprites[i].y = lizardSpineData.outerPos.y - camPos.y;
 				sLeaser.sprites[i].rotation = Custom.AimFromOneVectorToAnother(-lizardSpineData.perp * lizardSpineData.depthRotation, lizardSpineData.perp * lizardSpineData.depthRotation);
@@ -70,7 +70,7 @@ namespace LizardSkin
 		{
 			for (int i = this.startSprite; i < this.startSprite + this.bumps; i++)
 			{
-				float f = Mathf.Lerp(spineSpikesData.start, spineSpikesData.length, Mathf.InverseLerp((float)this.startSprite, (float)(this.startSprite + this.bumps - 1), (float)i));
+				float f = Mathf.Lerp(spineSpikesData.start, spineSpikesData.start+ spineSpikesData.length, Mathf.InverseLerp((float)this.startSprite, (float)(this.startSprite + this.bumps - 1), (float)i));
 				sLeaser.sprites[i].color = this.cosmeticData.GetBaseColor(iGraphics, f);
 				if (this.colored && !spineSpikesData.colorFade)
 				{

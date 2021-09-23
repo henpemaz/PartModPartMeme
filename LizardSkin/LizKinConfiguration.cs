@@ -1644,6 +1644,7 @@ namespace LizardSkin
 
         public CosmeticSpineSpikesData()
         {
+            mode = GenerationMode.Lines;
             sizeMin = 0.3f;
             sizeExponent = 0.6f;
             colorFade = true;
@@ -1703,6 +1704,11 @@ namespace LizardSkin
             public CosmeticSpineSpikesPanel(CosmeticSpineSpikesData data, LizardSkinOI.ProfileManager manager) : base(data, manager)
             {
                 rigorControl.greyedOut = true;
+
+                MakeBodyScalesModeControls();
+                this.modeControl.greyedOut = true;
+                this.roundnessControl.greyedOut = true;
+
                 // NewRow(30);
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "SizeMin:", FLabelAlignment.Right));
                 children.Add(this.sizeMinControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.sizeMin, 2));
