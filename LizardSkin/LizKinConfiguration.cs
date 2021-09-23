@@ -271,7 +271,8 @@ namespace LizardSkin
 
     public abstract class LizKinCosmeticData : IJsonSerializable
     {
-        const int version = 2;
+        //const int version = 1; until v0.6
+        const int version = 2; // v0.7 onwards
 
         public LizKinProfileData profile;
 
@@ -966,14 +967,19 @@ namespace LizardSkin
 
     internal class CosmeticAxolotlGillsData : LongBodyScalesData
     {
-        const int version = 1;
-        // internal int count;
+        //const int version = 1; // until 0.6
+        const int version = 2; // v0.7
+
+        // internal int count; // this is in upper classes
         internal float spread;
+        internal float angle; // new in v0.7
 
         public CosmeticAxolotlGillsData()
         {
+            start = 0f;
             count = 3;
             spread = 0.2f;
+            angle = 0f;
         }
 
         public override CosmeticInstanceType instanceType => CosmeticInstanceType.AxolotlGills;
@@ -988,6 +994,14 @@ namespace LizardSkin
                     // count = (int)(long)json["count"];
                     spread = (float)(double)json["spread"];
 
+                    angle = 0f; // new in v 2
+                    return;
+                }
+                if ((long)json["CosmeticAxolotlGillsData.version"] == 2)
+                {
+                    // count = (int)(long)json["count"];
+                    spread = (float)(double)json["spread"];
+                    angle = (float)(double)json["angle"];
                     return;
                 }
             }
@@ -1001,6 +1015,7 @@ namespace LizardSkin
                     {"CosmeticAxolotlGillsData.version", (long)version },
                     // {"count", (long)count },
                     {"spread", (double)spread },
+                    {"angle", (double)angle },
 
                 }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
@@ -1009,8 +1024,10 @@ namespace LizardSkin
         {
             base.ReadEditPanel(panel);
             AxolotlGillsPanel p = panel as AxolotlGillsPanel;
+            start = p.startControl.valueFloat;
             count = p.countControl.valueInt;
             spread = p.spreadControl.valueFloat;
+            angle = p.angleControl.valueFloat;
         }
 
         internal override CosmeticPanel MakeEditPanel(LizardSkinOI.ProfileManager manager)
@@ -1022,9 +1039,16 @@ namespace LizardSkin
         {
             // internal LizardSkinOI.EventfulUpdown countControl;
             internal LizardSkinOI.EventfulUpdown spreadControl;
+            internal LizardSkinOI.EventfulUpdown angleControl;
 
             public AxolotlGillsPanel(CosmeticAxolotlGillsData data, LizardSkinOI.ProfileManager manager) : base(data, manager)
             {
+                children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Start:", FLabelAlignment.Right));
+                children.Add(this.startControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.start, 2));
+                startControl.SetRange(0.0f, 0.9f);
+                startControl.OnValueChangedEvent += DataChangedRefreshNeeded;
+                startControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
+
                 NewRow(30);
                 children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Count:", FLabelAlignment.Right));
                 children.Add(this.countControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.count));
@@ -1037,6 +1061,12 @@ namespace LizardSkin
                 spreadControl.SetRange(-1f, 1f);
                 spreadControl.OnValueChangedEvent += DataChangedRefreshNeeded;
                 spreadControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
+
+                children.Add(new OptionalUI.OpLabel(PlaceInRow(60, 24), new Vector2(60, 24), "Angle:", FLabelAlignment.Right));
+                children.Add(this.angleControl = new LizardSkinOI.EventfulUpdown(PlaceInRow(55, 30), 55, "", data.angle, 2));
+                angleControl.SetRange(-1f, 1f);
+                angleControl.OnValueChangedEvent += DataChangedRefreshNeeded;
+                angleControl.OnFrozenUpdate += TriggerUpdateWhileFrozen;
             }
         }
     }

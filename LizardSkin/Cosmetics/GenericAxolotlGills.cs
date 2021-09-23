@@ -18,7 +18,7 @@ namespace LizardSkin
 			for (int i = 0; i < count; i++)
 			{
 				// Uuuuuuuh
-				float y = Mathf.Lerp(0f, 0.07f, Mathf.Pow(UnityEngine.Random.value, 1.3f));
+				float y = cosmeticAxolotlGillsData.start + spread * Mathf.Lerp(0f, 0.07f, Mathf.Pow(UnityEngine.Random.value, 1.3f));
 				float num4 = Mathf.Lerp(0.5f, 1.5f, UnityEngine.Random.value);
 				float num5 = Mathf.Lerp(0.2f, 1f, Mathf.Pow(UnityEngine.Random.value, 0.5f));
 				float num6 = Mathf.Pow(UnityEngine.Random.value, 0.5f);
@@ -29,7 +29,7 @@ namespace LizardSkin
 					this.scaleObjects[i * 2 + j] = new GenericLizardScale(this);
 					this.scaleObjects[i * 2 + j].length = scale * num5; // Mathf.Lerp(5f, 35f, scale * num5);
 					this.scaleObjects[i * 2 + j].width = thickness * scale * num7; // Mathf.Lerp(0.65f, 1.2f, thickness * scale);
-					this.backwardsFactors[i * 2 + j] = spread * num6;
+					this.backwardsFactors[i * 2 + j] = cosmeticAxolotlGillsData.angle + spread * num6;
 				}
 			}
 			this.numberOfSprites = ((!this.colored) ? this.scalesPositions.Length : (this.scalesPositions.Length * 2));

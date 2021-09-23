@@ -16,10 +16,15 @@ feature requests:
 	flip scales
 	better head-tracking for antennae
 	SpinePos and Angle settings for the gills
+		'done' in 0.7 8/10 passable I did my best
 	spinepos on antennae to minus values (or have zero be higher)
-	SpinePos and lenght for Spinespikes
+		waiting on spinepos rewrite
 	Better smoother interpolation between tail and body direction
-
+		coming with spinepos rewrite
+	Spinepos rewrite
+		1. make it consider the radius of the head (this would move all assets slighly up and some defaults might need adjusting)
+		2. interpolate better in the transition between body and tail
+	SpinePos and lenght for Spinespikes
 void sea spawns antena zooms through screen missing a position reset or smth https://youtu.be/IXIaptekU34
 	done in 0.6
 	
