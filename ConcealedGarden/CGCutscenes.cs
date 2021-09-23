@@ -158,23 +158,21 @@ namespace ConcealedGarden
             orig(self, game, survived, newMalnourished);
             if (survived && self.dreamsState != null && !ConcealedGarden.progression.fishDream)
             {
-                for (int i = 0; i < game.GetStorySession.playerSessionRecords.Length; i++)
+                foreach (var item in game.world.GetAbstractRoom(game.Players[0].pos).entities)
                 {
-                    if (game.GetStorySession.playerSessionRecords[i] != null)
+                    if(item is DataPearl.AbstractDataPearl porl)
                     {
-                        for (int l = 0; l < game.GetStorySession.playerSessionRecords[i].pearlsFound.Count; l++)
+                        string porlType = porl.dataPearlType.ToString();
+                        if(porlType =="Concealed_Garden_programmer" || porlType == "Concealed_Garden_programmer_alt")
                         {
-                            if (game.GetStorySession.playerSessionRecords[i].pearlsFound[l].ToString() == "Concealed_Garden_programmer"
-                                || game.GetStorySession.playerSessionRecords[i].pearlsFound[l].ToString() == "Concealed_Garden_programmer_alt")
-                            {
-                                ConcealedGarden.progression.fishDream = true;
-                                Debug.Log("CG Queued up fish dream");
-                                self.dreamsState.InitiateEventDream(EnumExt_CGCutscenes.CGDrowningDream);
-                                self.dreamsState.upcomingDream = self.dreamsState.eventDream;
-                            }
+                            // slept with porl!
+                            ConcealedGarden.progression.fishDream = true;
+                            Debug.Log("CG Queued up fish dream");
+                            self.dreamsState.InitiateEventDream(EnumExt_CGCutscenes.CGDrowningDream);
+                            self.dreamsState.upcomingDream = self.dreamsState.eventDream;
                         }
                     }
-                }     
+                }
             }
         }
 

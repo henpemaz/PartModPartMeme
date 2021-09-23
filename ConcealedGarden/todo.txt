@@ -8,9 +8,11 @@ CRS enable debug, cause issues, send to gar
 	oi thumbnail scaling fix ?
 	
 Lizardskin bugfix + imprv for release
+	eh, done-ish. v0.7 will be gnuff
 	
 Waiting on CM progression update
 	or migrate progression system to CG
+	wait until closet to oct 17, let don release his darn region first
 
 Push 4 release
 	export Threat audio
@@ -139,10 +141,13 @@ Lore pearl from trader
 	
 Proper pearl pickup detection for custom dreams.
 	currently requires "scholar" eligibility, not the greatest
+	rewrote to 'slept with pearl' fairly simple condition.
+		done
 
 programmer ALT pearl:
 	needs customcat filter
 	... and complementary opposite for regular pearl ?
+		done and done
 		
 CabinetBeast shelter
 	Done:
