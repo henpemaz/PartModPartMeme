@@ -19,3 +19,8 @@ notes:
 	option to add wind effect to the ropes?
 	the bendy poles should just have the same controls as normal poles if possible, theres a bunch of stuff you can do with them, also the invisibility option is a great idea. idk about the ropes though those probably need to be their own thing
 	it would be nice, also i think it looks. Abit weird that doesn't have slime or rust but I don't think is possible to fix that so as far i see from the poles, are pretty coo
+
+port to MPO?
+add color select option
+physics sliders
+can jump from arc (currently does a weak jump)

@@ -18,3 +18,14 @@ shelter rain/rumble
 	see BSH
 		actually see CG rain fix
 the rest of the BSH features ?
+
+
+validate behavior with door
+validate behavior with multi-door
+	should manager manage that too ?
+	prevent vanilla calling close/starve/win/etc, then do it from manager so to follow the timings ?
+	change the speed at which doors animate to match timings ?
+shelter rain object
+	from CG (:
+the other shelter-rumble-thinghie from BSH?
+anything else from BSH?

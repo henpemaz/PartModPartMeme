@@ -1,4 +1,12 @@
-﻿Test if spider and volture pets still work
+﻿echo song
+extra song for tree area
+progression filter for song
+	so not running into songfx while song playing
+rework progression filtering into something like a framework ? extendable expansable
+piano song for trailer, can reuse in cutcontent area
+if CM not done by oct 08, migrate progression system
+
+Test if spider and volture pets still work
 	still work
 	
 CRS enable debug, cause issues, send to gar
