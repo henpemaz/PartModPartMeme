@@ -13,5 +13,7 @@ default from last edited object
 	kind of a big deal
 	
 rework data creation to remove reflection at runtime, make factory patterns
-	
+
+expand scope to triggers, roomeffects ?
+
 port handy ctors from regionkit ?

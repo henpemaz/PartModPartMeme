@@ -1,13 +1,36 @@
 ﻿echo song
+	listen to all echo songs again, count voices, mark actions, judge melodies
+
 extra song for tree area
-progression filter for song
-	so not running into songfx while song playing
-rework progression filtering into something like a framework ? extendable expansable
+
+region bump sfx
+
 piano song for trailer, can reuse in cutcontent area
+
+progression filter for song
+	so not running into songfx while song playing ?
+
+rework progression filtering into something like a framework ? extendable expansable
+
 if CM not done by oct 08, migrate progression system
 
-Test if spider and volture pets still work
-	still work
+Tree arena
+	wip
+
+The trader sometimes leaves its post, happened ever since added more scavs
+ClimbableRope - grab on going out of crawlspace
+HI_CG gate maybe a tad too complex
+DS_CG gate broken and I doubt LB will fix it
+
+in-region gates are iffy
+hidden area too well hidden ?
+
+Go through HI with devtools open, study light, triggers, sounds
+judge wether there's too much Signs in CG
+
+dream triggers seemed iffy from code, check if it works
+
+crazy idea but... expand treetop, finish implemnting cablecar, connect to... ?
 	
 CRS enable debug, cause issues, send to gar
 	sent logs 21/09
@@ -90,6 +113,7 @@ lizardfy pickup
 	
 Water
 	Contained cosmetic water
+		partially done
 		has issues, can't multiscreen etc
 		waterInFrontOfTerrain is global and passed to shaders
 	Placeable waterfall

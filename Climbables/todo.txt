@@ -24,3 +24,5 @@ port to MPO?
 add color select option
 physics sliders
 can jump from arc (currently does a weak jump)
+
+IMPORTANT crawling from crawspace into rope should auto-grab

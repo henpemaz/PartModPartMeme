@@ -7,3 +7,4 @@ programmer opens UwU inherently
 lizardskin-only gate
 chieftain gate
 make having both locks.txt + extendedLocks.txt compatible and deterministic
+config override for "deserves alt" behavior, TXT in game folder most likely
