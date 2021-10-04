@@ -1,50 +1,67 @@
-﻿echo song
-	listen to all echo songs again, count voices, mark actions, judge melodies
-	done
+﻿sound stuff
+	echo song
+		listen to all echo songs again, count voices, mark actions, judge melodies
+		done
 
-piano song for trailer, can reuse in cutcontent area
-	done ?
-	doesn't sound the greatest
+	piano song for trailer, can reuse in cutcontent area
+		done ?
+		doesn't sound the greatest
 
-extra song for tree area
-progression filter for song
-	so not running into songfx while song playing ?
+	extra song for tree area
+	progression filter for song
+		so not running into songfx while song playing ?
+		
+	region bump sfx
+		study how the game handles that
+			region bump trigger matches subregion text on screen
+			a bunch ended up unused
+
+world stuff
+	DS_CG gate broken and I doubt LB will fix it
+		redo it, needed for proper DS map
 	
-region bump sfx
-	study how the game handles that
-		region bump trigger matches subregion text on screen
-		a bunch ended up unused
+	fix/render map for Industrial, Drainage
+		ongoing,
+		verify txt
+		drainage might need redo with fixed gate
+		HI png needs touchup
+		
+		fix vanilla files
+		
+	add -1 to world file connections so region menu loads properly
+		ok
 
-fix/render map for Industrial, Drainage
+	The trader sometimes leaves its post, happened ever since added more scavs
+		not too sure whats up
+	
+	HI_CG gate maybe a tad too complex
+	gate with template = bad ? no clue, check game
 
-if CM not done by oct 08, migrate progression system
+	in-region gates are iffy
+	hidden area too well hidden ?	
+	
+	
 
-add -1 to world file connections so region menu loads properly
-	ok
+Code stuff
+	if CM not done by oct 08, migrate progression system
 
-Tree arena
-	wip
+	ClimbableRope - grab on going out of crawlspace
+		done!
 
-The trader sometimes leaves its post, happened ever since added more scavs
-	not too sure whats up
+	rebalanced transf power so it's not really a super power or upgrade :/
+		maybe get rid of passive but keep taming boost
+		
+	dream triggers seemed iffy from code, check if it works
 
-ClimbableRope - grab on going out of crawlspace
-	done!
+extras
+	Gar decal
 
-HI_CG gate maybe a tad too complex
+	Trailler
 
-DS_CG gate broken and I doubt LB will fix it
+	Tree arena
+		wip
 
-in-region gates are iffy
-hidden area too well hidden ?
-
-Go through HI with devtools open, study light, triggers, sounds
-
-judge wether there's too much Signs in CG
-
-dream triggers seemed iffy from code, check if it works
-
-crazy idea but... expand treetop, finish implemnting cablecar, connect to... ?
+	crazy idea but... expand treetop, finish implemnting cablecar, connect to... ?
 	
 CRS enable debug, cause issues, send to gar
 	sent logs 21/09
