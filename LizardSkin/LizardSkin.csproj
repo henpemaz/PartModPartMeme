@@ -49,6 +49,7 @@
     </Reference>
     <Reference Include="Expedition">
       <HintPath>..\References\Expedition.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="FancySlugcats">
       <HintPath>..\References\FancySlugcats.dll</HintPath>
