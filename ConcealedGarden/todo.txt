@@ -1,31 +1,45 @@
 ﻿echo song
 	listen to all echo songs again, count voices, mark actions, judge melodies
-
-extra song for tree area
-
-region bump sfx
+	done
 
 piano song for trailer, can reuse in cutcontent area
+	done ?
+	doesn't sound the greatest
 
+extra song for tree area
 progression filter for song
 	so not running into songfx while song playing ?
+	
+region bump sfx
+	study how the game handles that
+		region bump trigger matches subregion text on screen
+		a bunch ended up unused
 
-rework progression filtering into something like a framework ? extendable expansable
+fix/render map for Industrial, Drainage
 
 if CM not done by oct 08, migrate progression system
+
+add -1 to world file connections so region menu loads properly
+	ok
 
 Tree arena
 	wip
 
 The trader sometimes leaves its post, happened ever since added more scavs
+	not too sure whats up
+
 ClimbableRope - grab on going out of crawlspace
+	done!
+
 HI_CG gate maybe a tad too complex
+
 DS_CG gate broken and I doubt LB will fix it
 
 in-region gates are iffy
 hidden area too well hidden ?
 
 Go through HI with devtools open, study light, triggers, sounds
+
 judge wether there's too much Signs in CG
 
 dream triggers seemed iffy from code, check if it works
@@ -248,3 +262,102 @@ Palette consolidation
 			29 + 40% 3
 		exteriors
 			29 + 15~60% 5
+
+
+notes on echo songs
+	else I
+		opens up in single low voice, persistant, ever so slightly oscilating in volume
+		at 14 medium voice joins, cuts at 28
+		melody is long continuous notes
+		at 36 medium and high chores join
+		high chore does a melody, medium becomes calm harmonic fill
+		high melody feels maybe a bit more detailed
+		fist phrase is 36 ~ 1:20
+		second phrase is 1:30 ~ 2:20
+		2:25 ~
+		3:00 ~
+		
+		low fill,
+		medium intro into fill
+		high melody
+		
+		voices had a metalic high noise
+		
+	else II
+		opens up on a low tone that oscilates, cuts off, comes back, lowers pitch etc etc
+			feels like a wind instrument all things considered
+		has a high-pitched noise from reverb
+		
+		high voice joins at 20, melodic, fleeting, non continuous
+		melody is short notes
+		first phrase is 20 ~ 36
+		
+		medium voices at 48, similar melody
+		at 1:25 high voices join, moooostly unison but different distortions
+		medium voice simplifies over time ?
+		20~36 high only
+		48~1:25 medium only
+		1:25~2:13 medium + high
+		2:19~2:50 medium only
+		
+		constant low from wind instrument, breath-in pauses
+	
+	else III
+		opens up in medium/low voice doing a melody
+		very high-pitched reverb noise doesn't follow the main voice precisely ?? added on its own
+		voice solos 0~40
+		40 high voice joins low, same melody
+		phrase 1 40~1:00
+		low keeps going
+		1:08 high joins again, goes more complex
+		1:46
+		1:50 joins again, calmer
+		2:02 calm
+		2:06 low solo
+		
+	else IV
+		opens with smooth low
+		12 smooth medium joins
+		there's a noise instrument around
+		34 medium voice pitches up
+		44 there's strings ???
+		melody is long, sparse notes
+		1:03 high voice joins, same smooth voice/pad
+		
+		could study this better its sort of unique
+	
+	else V
+		opens with wind instrument, low
+		14: voices join, high is strong, does a melody, low stays calmly, high fades
+		high: short melody
+		low: harmonic fill along instrument,
+		medium: intermitent fill when high ends
+		1:05: medium-high joins
+		1:13: high-high flirts
+		
+		1:30 melody changes
+		1:38 medium starts a melody, high follows, 2 semitones down
+		1:50 semitone up
+		
+		tone returns to normal, high back on lead
+		2:40 low and medium chorus together now ?
+		3:00 end of melodies, wind only until 3:28
+		
+	else VI
+		opens on distorted medium voice, high-pitched annoying metalic reverb
+		tapping noises in the mix, part of the sample ??
+		has a ton of reverb
+		12 pause, breath
+		16 low joins, this is medium+low as fill
+		low has no tapping
+		24 high pitch joins, melody is long notes, well-paused
+		notes have tapping but it overlaps rythmically
+		1st phrase is 24~48
+		on pause, only low keeps going
+		57 starts again
+		this is two voices
+		
+		1:50 melody ends,
+		2:10 distortion high pitch noises
+		2:20 melody high voice, heavily filtered
+		2:35 sound fill with wind ?? absurd reverb/distance 
