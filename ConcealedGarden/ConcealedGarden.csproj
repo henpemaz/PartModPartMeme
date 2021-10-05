@@ -82,6 +82,7 @@
     <Compile Include="CGCameraZoomEffect.cs" />
     <Compile Include="CGAchievementManager.cs" />
     <Compile Include="CGAmbienceFix.cs" />
+    <Compile Include="CGDrySpot.cs" />
     <Compile Include="CGGateCustomization.cs" />
     <Compile Include="CGMenuScenes.cs" />
     <Compile Include="CGQuickAndDirtyFix.cs" />

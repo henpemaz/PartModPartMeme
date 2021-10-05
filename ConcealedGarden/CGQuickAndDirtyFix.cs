@@ -23,7 +23,7 @@ namespace ConcealedGarden
         {
             Player.BodyModeIndex prevMode = self.bodyMode;
             orig(self, eu);
-            if (prevMode == Player.BodyModeIndex.CorridorClimb && self.bodyMode == Player.BodyModeIndex.Default)
+            if (prevMode == Player.BodyModeIndex.CorridorClimb && self.bodyMode == Player.BodyModeIndex.Default && self.room.climbableVines != null)
             {
                 ClimbableVinesSystem.VinePosition vinePosition2 = self.room.climbableVines.VineOverlap(self.mainBodyChunk.pos, self.mainBodyChunk.rad);
                 if (vinePosition2 != null)

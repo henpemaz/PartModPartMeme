@@ -17,30 +17,32 @@
 			a bunch ended up unused
 
 world stuff
-	DS_CG gate broken and I doubt LB will fix it
+	DS_CG gate broken and I doubt XX will fix it
 		redo it, needed for proper DS map
+			done
 	
 	fix/render map for Industrial, Drainage
 		ongoing,
 		verify txt
-		drainage might need redo with fixed gate
+		drainage might need redo with fixed gate ok
 		HI png needs touchup
-		
-		fix vanilla files
-		
+			all DONE
+				
 	add -1 to world file connections so region menu loads properly
-		ok
+		done
 
 	The trader sometimes leaves its post, happened ever since added more scavs
 		not too sure whats up
 	
 	HI_CG gate maybe a tad too complex
 	gate with template = bad ? no clue, check game
+		eyup, its a problem!!
+		fix'd
 
 	in-region gates are iffy
 	hidden area too well hidden ?	
 	
-	
+	floady bits and tremors for DS gate
 
 Code stuff
 	if CM not done by oct 08, migrate progression system

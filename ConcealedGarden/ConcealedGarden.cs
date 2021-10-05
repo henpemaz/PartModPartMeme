@@ -230,6 +230,8 @@ Garrakx & Topicular - Makers of the awesome mods that help people make more mods
 
             CGQuickAndDirtyFix.Register();
 
+            CGDrySpot.Register();
+
             // Screaming into the void
             Debug.Log("CG Fully Loaded");
         }
