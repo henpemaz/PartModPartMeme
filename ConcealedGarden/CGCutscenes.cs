@@ -155,7 +155,6 @@ namespace ConcealedGarden
         // called during Win, after dreamstate.EndOfCycleProgress, but has better params
         private static void SaveState_SessionEnded(On.SaveState.orig_SessionEnded orig, SaveState self, RainWorldGame game, bool survived, bool newMalnourished)
         {
-            orig(self, game, survived, newMalnourished);
             if (survived && self.dreamsState != null && !ConcealedGarden.progression.fishDream)
             {
                 foreach (var item in game.world.GetAbstractRoom(game.Players[0].pos).entities)
@@ -174,6 +173,7 @@ namespace ConcealedGarden
                     }
                 }
             }
+            orig(self, game, survived, newMalnourished);
         }
 
         // Dreams need scene

@@ -67,6 +67,7 @@ Garrakx & Topicular - Makers of the awesome mods that help people make more mods
 
             protected override void ProgressionLoaded()
             {
+                Debug.Log("CG ProgressionLoaded");
                 base.ProgressionLoaded();
                 LoadData();
                 ConcealedGardenProgression.LoadProgression();
@@ -76,8 +77,15 @@ Garrakx & Topicular - Makers of the awesome mods that help people make more mods
 
             protected override void ProgressionPreSave()
             {
+                Debug.Log("CG ProgressionPreSave");
                 ConcealedGardenProgression.SaveProgression();
                 base.ProgressionPreSave();
+            }
+
+            protected override void SaveDeath(bool saveAsIfPlayerDied, bool saveAsIfPlayerQuit)
+            {
+                Debug.Log("CG SaveDeath " + saveAsIfPlayerDied  + " " + saveAsIfPlayerQuit);
+                base.SaveDeath(saveAsIfPlayerDied, saveAsIfPlayerQuit);
             }
         }
 

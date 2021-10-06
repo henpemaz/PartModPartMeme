@@ -6,6 +6,7 @@
 	piano song for trailer, can reuse in cutcontent area
 		done ?
 		doesn't sound the greatest
+		sounds a little less bad now, still not really inspiring or anything
 
 	extra song for tree area
 	progression filter for song
@@ -15,25 +16,28 @@
 		study how the game handles that
 			region bump trigger matches subregion text on screen
 			a bunch ended up unused
+		made sfx, needs to be added
 
 world stuff
 	DS_CG gate broken and I doubt XX will fix it
 		redo it, needed for proper DS map
 			done
-	
+
 	fix/render map for Industrial, Drainage
 		ongoing,
 		verify txt
 		drainage might need redo with fixed gate ok
 		HI png needs touchup
 			all DONE
-				
+
 	add -1 to world file connections so region menu loads properly
 		done
 
 	The trader sometimes leaves its post, happened ever since added more scavs
 		not too sure whats up
-	
+		room attractciveness was off maybe that was it
+		it was a bug with a missing DISCONNECTED causing room tags to get lost somehow
+
 	HI_CG gate maybe a tad too complex
 	gate with template = bad ? no clue, check game
 		eyup, its a problem!!
@@ -43,6 +47,20 @@ world stuff
 	hidden area too well hidden ?	
 	
 	floady bits and tremors for DS gate
+		done
+	
+	verify ALL den-indexes, room by room
+		:plead:
+	
+	Rightroot can't be climbed back up by yellows
+		done
+	
+	Bridge touchup on that fence side
+		done
+		
+	DS Shelter too much hangroot, none on the screen above
+		done
+		
 
 Code stuff
 	if CM not done by oct 08, migrate progression system
@@ -52,11 +70,18 @@ Code stuff
 
 	rebalanced transf power so it's not really a super power or upgrade :/
 		maybe get rid of passive but keep taming boost
+		maybe keep it as is
 		
 	dream triggers seemed iffy from code, check if it works
+		works
+	
+	Vulture tame too easy
+		0.71 like after 2 feeds and it's no longer attacking
+		tuned, should be 50% harder now, so 3~4 feeds
 
 extras
 	Gar decal
+		done, suck it
 
 	Trailler
 

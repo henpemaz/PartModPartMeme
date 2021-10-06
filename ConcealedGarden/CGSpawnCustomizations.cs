@@ -192,7 +192,12 @@ namespace ConcealedGarden
                 SocialMemory.Relationship orInitiateRelationship = self.creature.State.socialMemory.GetOrInitiateRelationship(giftOfferedToMe.owner.abstractCreature.ID);
                 float ownMass = self.creature.TotalMass;
                 float otherMass = food.TotalMass;
-                float amount = ((!food.dead) ? 0.6f : 1.2f) * foodRelationship.intensity * ((ownMass != 0f && otherMass != 0f) ? Mathf.Lerp(otherMass / ownMass, 1f, 0.5f) : 1f) / self.tamingDifficlty;
+                // factors in:
+                // dead (100%)
+                // intensity (50%)
+                // mass ratio (66%)
+                // taming diff (100%) 
+                float amount = ((!food.dead) ? 0.6f : 1.2f) * ((foodRelationship.intensity + 1f) * 0.5f) * ((ownMass != 0f && otherMass != 0f) ? Mathf.Lerp(otherMass / ownMass, 1f, 0.33f) : 1f) / self.tamingDifficlty;
                 // Slight boost when transformed
                 if (self.creature.room.game.session is StoryGameSession && (ConcealedGarden.progression?.transfurred ?? false)) amount *= 1f + 0.4f * Mathf.Clamp01(self.creature.abstractCreature.personality.sympathy * 1.2f - self.creature.abstractCreature.personality.dominance * 0.5f);
 
@@ -517,7 +522,7 @@ namespace ConcealedGarden
                                     if (text == "cgid")
                                     {
                                         id.number = int.Parse(array2[1].Trim());
-                                        Debug.Log("Configured ID.id in " + self);
+                                        Debug.Log("Configured ID.id in spawner #" + spawner);
                                     }
                                 }
                             }

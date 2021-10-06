@@ -32,7 +32,7 @@ namespace ConcealedGarden
             Dictionary<string, object> storedPp;
             if (!string.IsNullOrEmpty(pdata) && (storedPp = (Dictionary<string, object>)Json.Deserialize(pdata)) != null)
             {
-                ConcealedGarden.ConcealedGardenProgression progOfCat = new ConcealedGarden.ConcealedGardenProgression(storedPp, null);
+                ConcealedGarden.ConcealedGardenProgression progOfCat = new ConcealedGarden.ConcealedGardenProgression(persData: storedPp);
                 if (progOfCat.transfurred)
                 {
                     foreach(var i in self.slugcatImage.depthIllustrations)
@@ -53,7 +53,6 @@ namespace ConcealedGarden
         {
             orig(self);
             string pdata = ConcealedGarden.instanceOI.GetProgDataOfSlugcat(self.manager.rainWorld.progression.PlayingAsSlugcat);
-            ;
             if (!string.IsNullOrEmpty(pdata) && (Json.Deserialize(pdata) is Dictionary<string, object> storedPp))
             {
                 ConcealedGarden.ConcealedGardenProgression progOfCat = new ConcealedGarden.ConcealedGardenProgression(persData: storedPp);
