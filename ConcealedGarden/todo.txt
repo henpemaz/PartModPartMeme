@@ -7,6 +7,7 @@
 		done ?
 		doesn't sound the greatest
 		sounds a little less bad now, still not really inspiring or anything
+		place in the place
 
 	extra song for tree area
 	progression filter for song
@@ -29,6 +30,8 @@ world stuff
 		drainage might need redo with fixed gate ok
 		HI png needs touchup
 			all DONE
+		
+		Drain gate got changed, CG side map needs up
 
 	add -1 to world file connections so region menu loads properly
 		done
@@ -84,7 +87,8 @@ extras
 		done, suck it
 
 	Trailler
-
+		done
+		
 	Tree arena
 		wip
 

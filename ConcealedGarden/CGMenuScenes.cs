@@ -28,11 +28,11 @@ namespace ConcealedGarden
         private static void SlugcatPage_AddImage(On.Menu.SlugcatSelectMenu.SlugcatPage.orig_AddImage orig, Menu.SlugcatSelectMenu.SlugcatPage self, bool ascended)
         {
             orig(self, ascended);
-            string pdata = ConcealedGarden.instanceOI.GetProgDataOfSlugcat(self.colorName);
+            string pdata = ConcealedGardenProgression.progression.GetProgDataOfSlugcat(self.colorName);
             Dictionary<string, object> storedPp;
             if (!string.IsNullOrEmpty(pdata) && (storedPp = (Dictionary<string, object>)Json.Deserialize(pdata)) != null)
             {
-                ConcealedGarden.ConcealedGardenProgression progOfCat = new ConcealedGarden.ConcealedGardenProgression(persData: storedPp);
+                ConcealedGardenProgression progOfCat = new ConcealedGardenProgression(persDict: storedPp);
                 if (progOfCat.transfurred)
                 {
                     foreach(var i in self.slugcatImage.depthIllustrations)
@@ -52,10 +52,10 @@ namespace ConcealedGarden
         private static void SleepAndDeathScreen_AddBkgIllustration(On.Menu.SleepAndDeathScreen.orig_AddBkgIllustration orig, Menu.SleepAndDeathScreen self)
         {
             orig(self);
-            string pdata = ConcealedGarden.instanceOI.GetProgDataOfSlugcat(self.manager.rainWorld.progression.PlayingAsSlugcat);
+            string pdata = ConcealedGardenProgression.progression.GetProgDataOfSlugcat(self.manager.rainWorld.progression.PlayingAsSlugcat);
             if (!string.IsNullOrEmpty(pdata) && (Json.Deserialize(pdata) is Dictionary<string, object> storedPp))
             {
-                ConcealedGarden.ConcealedGardenProgression progOfCat = new ConcealedGarden.ConcealedGardenProgression(persData: storedPp);
+                ConcealedGardenProgression progOfCat = new ConcealedGardenProgression(persDict: storedPp);
                 if (progOfCat.transfurred)
                 {
                     foreach (var i in self.scene.depthIllustrations)

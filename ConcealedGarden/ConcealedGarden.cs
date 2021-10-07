@@ -1,6 +1,5 @@
 ﻿using Partiality.Modloader;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ManagedPlacedObjects;
@@ -16,7 +15,7 @@ using Menu;
 [assembly: System.Runtime.CompilerServices.SuppressIldasmAttribute()]
 namespace ConcealedGarden
 {
-    public class ConcealedGarden : PartialityMod
+    public partial class ConcealedGarden : PartialityMod
     {
         public ConcealedGarden()
         {
@@ -29,7 +28,7 @@ namespace ConcealedGarden
 
         public static ConcealedGarden instance;
         public static ConcealedGardenOI instanceOI;
-        public static ConcealedGardenProgression progression;
+        public static ConcealedGardenProgression progression => ConcealedGardenProgression.progression;
         public static OptionalUI.OptionInterface LoadOI()
         {
             return new ConcealedGardenOI();
@@ -40,7 +39,6 @@ namespace ConcealedGarden
             public ConcealedGardenOI() : base(mod:instance)
             {
                 instanceOI = this;
-                hasProgData = true;
             }
 
             public override void Initialize()
@@ -63,107 +61,6 @@ DryCryCrystal - Colab, made a special tileset for LRU room.
 ICWobbles & Sipik - Music mentorship every now and then.
 Garrakx & Topicular - Makers of the awesome mods that help people make more mods!"
 ));
-            }
-
-            protected override void ProgressionLoaded()
-            {
-                Debug.Log("CG ProgressionLoaded");
-                base.ProgressionLoaded();
-                LoadData();
-                ConcealedGardenProgression.LoadProgression();
-                LizardSkin.LizardSkin.SetCGEverBeaten(progression.everBeaten);
-                LizardSkin.LizardSkin.SetCGStoryProgression(progression.transfurred ? 1 : 0);
-            }
-
-            protected override void ProgressionPreSave()
-            {
-                Debug.Log("CG ProgressionPreSave");
-                ConcealedGardenProgression.SaveProgression();
-                base.ProgressionPreSave();
-            }
-
-            protected override void SaveDeath(bool saveAsIfPlayerDied, bool saveAsIfPlayerQuit)
-            {
-                Debug.Log("CG SaveDeath " + saveAsIfPlayerDied  + " " + saveAsIfPlayerQuit);
-                base.SaveDeath(saveAsIfPlayerDied, saveAsIfPlayerQuit);
-            }
-        }
-
-        public class ConcealedGardenProgression
-        {
-            private Dictionary<string, object> saveData;
-            private Dictionary<string, object> persData;
-            private Dictionary<string, object> miscData;
-            private Dictionary<string, object> globalData;
-            
-            public ConcealedGardenProgression(Dictionary<string, object> saveData = null, Dictionary<string, object> persData = null, Dictionary<string, object> miscData = null, Dictionary<string, object> globalData = null)
-            {
-                saveData = saveData ?? ((!string.IsNullOrEmpty(instanceOI.saveData) && Json.Deserialize(instanceOI.saveData) is Dictionary<string, object> storedSd) ? storedSd : new Dictionary<string, object>());
-                persData = persData ?? ((!string.IsNullOrEmpty(instanceOI.persData) && Json.Deserialize(instanceOI.persData) is Dictionary<string, object> storedPd) ? storedPd : new Dictionary<string, object>());
-                miscData = miscData ?? ((!string.IsNullOrEmpty(instanceOI.miscData) && Json.Deserialize(instanceOI.miscData) is Dictionary<string, object> storedMd) ? storedMd : new Dictionary<string, object>());
-                globalData = globalData ?? ((!string.IsNullOrEmpty(instanceOI.data) && Json.Deserialize(instanceOI.data) is Dictionary<string, object> storedData) ? storedData : new Dictionary<string, object>());
-                this.saveData = saveData;
-                this.persData = persData;
-                this.miscData = miscData;
-                this.globalData = globalData;
-            }
-
-            public bool transfurred // transformed
-            {
-                get { if (persData.TryGetValue("transfurred", out object obj)) return (bool)obj; return false; }
-                internal set { persData["transfurred"] = value; everBeaten = true;}
-            }
-
-            public bool fishDream {
-                get { if (persData.TryGetValue("fishDream", out object obj)) return (bool)obj; return false; }
-                internal set { persData["fishDream"] = value;}
-            }
-
-            public bool everBeaten
-            {
-                get { if (globalData.TryGetValue("everBeaten", out object obj)) return (bool)obj; return false; }
-                internal set { globalData["everBeaten"] = value; SaveGlobalData(); }
-            }
-
-            public bool achievementEcho
-            {
-                get { if (globalData.TryGetValue("achievementEcho", out object obj)) return (bool)obj; return false; }
-                internal set { globalData["achievementEcho"] = value; SaveGlobalData(); }
-            }
-
-            public bool achievementTransfurred
-            {
-                get { if (globalData.TryGetValue("achievementTransfurred", out object obj)) return (bool)obj; return false; }
-                internal set { globalData["achievementTransfurred"] = value; SaveGlobalData(); }
-            }
-
-            internal static void LoadProgression()
-            {
-                Debug.Log("CG Progression loading with:");
-                Debug.Log($"saveData :{instanceOI.saveData}");
-                Debug.Log($"persData :{instanceOI.persData}");
-                Debug.Log($"miscData :{instanceOI.miscData}");
-                Debug.Log($"data : {instanceOI.data}");
-
-                progression = new ConcealedGardenProgression();
-            }
-            internal static void SaveProgression()
-            {
-                SaveGlobalData();
-                instanceOI.saveData = Json.Serialize(progression.saveData);
-                instanceOI.persData = Json.Serialize(progression.persData);
-                instanceOI.miscData = Json.Serialize(progression.miscData);
-                Debug.Log("CG Progression saved with:");
-                Debug.Log($"saveData :{instanceOI.saveData}");
-                Debug.Log($"persData :{instanceOI.persData}");
-                Debug.Log($"miscData :{instanceOI.miscData}");
-                Debug.Log($"data : {instanceOI.data}");
-            }
-
-            internal static void SaveGlobalData()
-            {
-                instanceOI.data = Json.Serialize(progression.globalData);
-                instanceOI.SaveData();
             }
         }
 
@@ -223,6 +120,7 @@ Garrakx & Topicular - Makers of the awesome mods that help people make more mods
             CGFourthLayerFix.Apply();
 
             // CG progression
+            ConcealedGardenProgression.Apply();
             CGYellowThoughtsAdaptor.Apply();
             CGLizardBehaviorChange.Apply();
 
