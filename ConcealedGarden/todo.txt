@@ -40,6 +40,7 @@ world stuff
 		not too sure whats up
 		room attractciveness was off maybe that was it
 		it was a bug with a missing DISCONNECTED causing room tags to get lost somehow
+			fixed and reported to the authorities
 
 	HI_CG gate maybe a tad too complex
 	gate with template = bad ? no clue, check game
@@ -67,6 +68,7 @@ world stuff
 
 Code stuff
 	if CM not done by oct 08, migrate progression system
+		done, needs careful testing
 
 	ClimbableRope - grab on going out of crawlspace
 		done!
@@ -271,16 +273,16 @@ Kelpzard
 Snakes https://discord.com/channels/291184728944410624/641574729173434369/838513257865674772
 
 Birds (cosmetic)
-	
+
 Caterpilar insect type (cosmetic)
-	
+
 Special Sleeping screens
 	bunker
 	cabinetbeast
-	
+
 I think it would be cool to have a "scav attractor" object to go along with it - mehri
 or just a scav spawner object
-		
+
 GameplayEnforcement
 	disable devtools
 	disable warp
@@ -290,7 +292,7 @@ GameplayEnforcement
 	gate to region checks installed mods
 		no deathprotection & other well known cheats
 	encrypt world file
-	
+
 Questionable Bits
 	take out of CG main, ship as own mod?
 	two is better than one ?

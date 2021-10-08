@@ -37,6 +37,12 @@ namespace ConcealedGarden
             progression = new ConcealedGardenProgression();
         }
 
+
+        #region HOOKS
+
+        // HOOKS
+        // General behavior: When saving/loading, save/load game first; when wiping, wipe mod first.
+        // this way, the game's current state is always avaiable for mods to read.
         private static void RainWorld_Start(On.RainWorld.orig_Start orig, RainWorld self)
         {
             rw = self;
@@ -50,12 +56,6 @@ namespace ConcealedGarden
 
             orig(self);
         }
-
-        #region HOOKS
-
-        // HOOKS
-        // General behavior: When saving/loading, save/load game first; when wiping, wipe mod first.
-        // this way, the game's current state is always avaiable for mods to read.
 
         // Called trying to load a file
         internal static void PlayerProgression_LoadProgression(On.PlayerProgression.orig_LoadProgression orig, PlayerProgression self)
@@ -189,14 +189,10 @@ namespace ConcealedGarden
 
         public ConcealedGardenProgression(Dictionary<string, object> saveDict = null, Dictionary<string, object> persDict = null, Dictionary<string, object> miscDict = null, Dictionary<string, object> globalDict = null)
         {
-            saveDict = saveDict ?? ((!string.IsNullOrEmpty(saveData) && Json.Deserialize(saveData) is Dictionary<string, object> storedSd) ? storedSd : new Dictionary<string, object>());
-            persDict = persDict ?? ((!string.IsNullOrEmpty(persData) && Json.Deserialize(persData) is Dictionary<string, object> storedPd) ? storedPd : new Dictionary<string, object>());
-            miscDict = miscDict ?? ((!string.IsNullOrEmpty(miscData) && Json.Deserialize(miscData) is Dictionary<string, object> storedMd) ? storedMd : new Dictionary<string, object>());
-            globalDict = globalDict ?? ((!string.IsNullOrEmpty(data) && Json.Deserialize(data) is Dictionary<string, object> storedData) ? storedData : new Dictionary<string, object>());
-            this.saveDict = saveDict;
-            this.persDict = persDict;
-            this.miscDict = miscDict;
-            this.globalDict = globalDict;
+            this.saveDict = saveDict ?? new Dictionary<string, object>();
+            this.persDict = persDict ?? new Dictionary<string, object>();
+            this.miscDict = miscDict ?? new Dictionary<string, object>();
+            this.globalDict = globalDict ?? new Dictionary<string, object>();
         }
 
         public bool transfurred // transformed
@@ -231,6 +227,7 @@ namespace ConcealedGarden
 
         internal void LoadProgressionDicts()
         {
+            LoadGlobalData();
             Debug.Log("CG Progression loading with:");
             Debug.Log($"saveData :{saveData}");
             Debug.Log($"persData :{persData}");
@@ -258,14 +255,19 @@ namespace ConcealedGarden
 
         internal void SaveGlobalData()
         {
-            data = Json.Serialize(progression.globalDict);
+            data = Json.Serialize(globalDict);
             SaveData();
+        }
+
+        internal void LoadGlobalData()
+        {
+            LoadData();
+            globalDict = ((!string.IsNullOrEmpty(data) && Json.Deserialize(data) is Dictionary<string, object> storedData) ? storedData : new Dictionary<string, object>());
         }
 
         protected void ProgressionLoaded()
         {
             Debug.Log("CG ProgressionLoaded");
-            LoadData();
             LoadProgressionDicts();
             LizardSkin.LizardSkin.SetCGEverBeaten(progression.everBeaten);
             LizardSkin.LizardSkin.SetCGStoryProgression(progression.transfurred ? 1 : 0);
@@ -350,7 +352,7 @@ namespace ConcealedGarden
         /// </summary>
         public bool dataTinkered { get; private set; } = false;
 
-        private string CryptoDataKey => "OptionalData" + "ConcealedGarden";
+        private string CryptoDataKey => "OptionalData" + ConcealedGarden.instance.ModID;
 
         /// <summary>
         /// Save your raw <see cref="data"/> in file. Call this by your own.
@@ -647,7 +649,7 @@ namespace ConcealedGarden
                     Custom.RootFolderDirectory(),
                     "ModConfigs",
                     Path.DirectorySeparatorChar,
-                    "ConcealedGarden",
+                    ConcealedGarden.instance.ModID,
                     Path.DirectorySeparatorChar
                     ));
         #endregion ProgIO
@@ -843,7 +845,7 @@ namespace ConcealedGarden
 
         #endregion SlugBase
 
-        private string CryptoProgDataKey(string slugName) => "OptionalProgData" + (string.IsNullOrEmpty(slugName) ? "Misc" : slugName) + "ConcealedGarden";
+        private string CryptoProgDataKey(string slugName) => "OptionalProgData" + (string.IsNullOrEmpty(slugName) ? "Misc" : slugName) + ConcealedGarden.instance.ModID;
         #endregion progData
     }
 }
