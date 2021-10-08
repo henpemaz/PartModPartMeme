@@ -8,16 +8,19 @@
 		doesn't sound the greatest
 		sounds a little less bad now, still not really inspiring or anything
 		place in the place
-
-	extra song for tree area
-	progression filter for song
-		so not running into songfx while song playing ?
+			done
 		
 	region bump sfx
 		study how the game handles that
 			region bump trigger matches subregion text on screen
 			a bunch ended up unused
 		made sfx, needs to be added
+			placed around underside, more fitting, super echoy and low
+	
+	extra song for tree area
+	progression filter for song
+		so not running into songfx while song playing ?
+	actual regionbump ?
 
 world stuff
 	DS_CG gate broken and I doubt XX will fix it
@@ -64,6 +67,8 @@ world stuff
 		
 	DS Shelter too much hangroot, none on the screen above
 		done
+		
+	Re-reneder map. Drainage gate got adjusted in CG side
 		
 
 Code stuff
