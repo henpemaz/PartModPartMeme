@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System;
 using RWCustom;
 using System.Linq;
-using ManagedPlacedObjects;
 
 namespace ConcealedGarden
 {
@@ -51,7 +50,7 @@ namespace ConcealedGarden
             private readonly RainCycle rainCycle;
             private float closedFac;
             private float closeSpeed;
-            ManagedPlacedObjects.PlacedObjectsManager.ManagedData data;
+            PlacedObjectsManager.ManagedData data;
 
             private Vector2[] lockPos;
             private Vector2[] lockTarget;
@@ -75,7 +74,7 @@ namespace ConcealedGarden
             {
                 this.room = room;
                 this.pObj = pObj;
-                this.data = pObj.data as ManagedPlacedObjects.PlacedObjectsManager.ManagedData;
+                this.data = pObj.data as PlacedObjectsManager.ManagedData;
                 //Debug.Log("Coordinator start");
                 //Debug.Log("Reading data");
 
@@ -110,7 +109,7 @@ namespace ConcealedGarden
                 for (int i = 0; i < locks.Count; i++)
                 {
                     PlacedObject lk = locks[i];
-                    ManagedPlacedObjects.PlacedObjectsManager.ManagedData lkdata = (lk.data as ManagedPlacedObjects.PlacedObjectsManager.ManagedData);
+                    PlacedObjectsManager.ManagedData lkdata = (lk.data as PlacedObjectsManager.ManagedData);
                     this.lockPos[i] = lk.pos;
                     this.lockTarget[i] = lk.pos + lkdata.GetValue<Vector2>("dest");
                     this.locks[i] = new RootedPaart(lk.pos, lkdata.GetValue<Vector2>("size").magnitude, UnityEngine.Random.value*360f, lkdata.GetValue<float>("stiff"), 0);
@@ -125,7 +124,7 @@ namespace ConcealedGarden
                 for (int i = 0; i < linings.Count; i++)
                 {
                     //Debug.Log("and " + (i+1));
-                    ManagedPlacedObjects.PlacedObjectsManager.ManagedData lidata = (linings[i].data as ManagedPlacedObjects.PlacedObjectsManager.ManagedData);
+                    PlacedObjectsManager.ManagedData lidata = (linings[i].data as PlacedObjectsManager.ManagedData);
                     float placerad = lidata.GetValue<Vector2>("size").magnitude;
                     float smin = lidata.GetValue<float>("sizemin");
                     float smax = lidata.GetValue<float>("sizemax");

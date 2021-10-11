@@ -1,5 +1,4 @@
-﻿using ManagedPlacedObjects;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -108,7 +107,7 @@ namespace ConcealedGarden
             this.water.AddToContainer(sLeaser, rCam, newContatiner);
         }
 
-        class CGCosmeticWaterData : ManagedPlacedObjects.PlacedObjectsManager.ManagedData
+        class CGCosmeticWaterData : PlacedObjectsManager.ManagedData
         {
             public FloatRect rect
             {

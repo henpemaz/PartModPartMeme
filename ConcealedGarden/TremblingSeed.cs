@@ -4,9 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
-using ManagedPlacedObjects;
 
-using static ManagedPlacedObjects.PlacedObjectsManager;
+using static ConcealedGarden.PlacedObjectsManager;
 using static ConcealedGarden.Utils.CGUtils;
 using static RWCustom.Custom;
 using ConcealedGarden.Utils;

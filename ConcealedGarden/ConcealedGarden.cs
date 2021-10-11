@@ -2,7 +2,6 @@
 using System;
 using System.Linq;
 using System.Text;
-using ManagedPlacedObjects;
 using System.Security;
 using System.Security.Permissions;
 using System.Reflection;
@@ -54,11 +53,12 @@ namespace ConcealedGarden
                     new OpLabelLong(new Vector2(40, 10), new Vector2(530, 215),
 @"Henpemaz - Lead Dev, most of the stuff in the region unless otherwise noted!
 Thalber - Dev, made most of the underground rooms, overhauled the fist shelter & some more, bug-hunting, productive discussions and psychological support in my DMs :flushed:
-Mehri'Kairothep - Early playtester, loved the region, helped me figure out what needed polishing.
-LB Gamer - Playtester, helpful and resourceful, also tried to help with a couple rooms.
-Wrayk - Almost playtester, made a connection room (:
 DryCryCrystal - Colab, made a special tileset for LRU room, in exchange for the electricarc object.
-Donschnulione & Sideways_Tumble - Playtesters!
+Mehri'Kairothep - Early playtester, loved the region, helped me figure out what needed polishing.
+Wrayk - Almost playtester, made a connection room (:
+LB Gamer - Playtester, helpful and resourceful, also tried to help with a couple rooms.
+Donschnulione - Playtester!
+Sideways_Tumble - Playtester and room touchups!
 ICWobbles & Sipik - Music mentorship every now and then.
 Garrakx & Topicular - Makers of the awesome mods that help people make more mods!"
 ));

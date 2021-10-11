@@ -1,5 +1,4 @@
-﻿using ManagedPlacedObjects;
-using RWCustom;
+﻿using RWCustom;
 using System;
 using UnityEngine;
 
@@ -150,7 +149,7 @@ namespace ConcealedGarden
         public void AddToContainer(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner) { }
 
 
-        class CGDrySpotData : ManagedPlacedObjects.PlacedObjectsManager.ManagedData
+        class CGDrySpotData : PlacedObjectsManager.ManagedData
         {
             public FloatRect rect
             {

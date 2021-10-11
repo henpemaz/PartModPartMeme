@@ -1,5 +1,4 @@
-﻿using ManagedPlacedObjects;
-using RWCustom;
+﻿using RWCustom;
 using System;
 using System.IO;
 using UnityEngine;

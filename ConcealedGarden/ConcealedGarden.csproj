@@ -45,6 +45,9 @@
       <HintPath>..\References\CustomRegions.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="EnumExtender">
+      <HintPath>..\References\EnumExtender.dll</HintPath>
+    </Reference>
     <Reference Include="HOOKS-Assembly-CSharp">
       <HintPath>..\References\HOOKS-Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
@@ -109,6 +112,8 @@
     <Compile Include="CGNoLurkArea.cs" />
     <Compile Include="CGOrganicShelter.cs" />
     <Compile Include="ConcealedGardenProgression.cs" />
+    <Compile Include="CustomAtlasLoader.cs" />
+    <Compile Include="PlacedObjectsManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CGQuestionableLizardBits.cs" />
     <Compile Include="CGSlipperySlope.cs" />
@@ -125,19 +130,9 @@
       <Project>{7ae76355-80c1-4268-aba7-e73836345c32}</Project>
       <Name>Climbables</Name>
     </ProjectReference>
-    <ProjectReference Include="..\CustomSpritesLoader\CustomSpritesLoader.csproj">
-      <Project>{7aef23fe-5ab2-422c-89ee-ccb050b86a76}</Project>
-      <Name>CustomSpritesLoader</Name>
-      <Private>False</Private>
-    </ProjectReference>
     <ProjectReference Include="..\LizardSkin\LizardSkin.csproj">
       <Project>{61cc62be-031e-475e-b30c-0e0ac08ae4f2}</Project>
       <Name>LizardSkin</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ManagedPlacedObjects\ManagedPlacedObjects.csproj">
-      <Project>{a5e1e800-ee17-4347-9488-ef8f3e929b78}</Project>
-      <Name>ManagedPlacedObjects</Name>
-      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\ShelterBehaviors\ShelterBehaviors.csproj">
       <Project>{5a1afae3-8c39-43ed-a204-0cdefbd06264}</Project>

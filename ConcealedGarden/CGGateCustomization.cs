@@ -1,5 +1,4 @@
-﻿using ManagedPlacedObjects;
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace ConcealedGarden
@@ -11,7 +10,7 @@ namespace ConcealedGarden
         private RegionGateGraphics.DoorGraphic rightDoor;
         private bool swappedDrawOrder;
 
-        ManagedPlacedObjects.PlacedObjectsManager.ManagedData data => pObj.data as ManagedPlacedObjects.PlacedObjectsManager.ManagedData;
+        PlacedObjectsManager.ManagedData data => pObj.data as PlacedObjectsManager.ManagedData;
 
         public CGGateCustomization(Room room, PlacedObject pObj)
         {
