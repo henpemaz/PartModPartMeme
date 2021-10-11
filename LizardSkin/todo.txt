@@ -1,4 +1,6 @@
-﻿-configmachine ui
+﻿Version bump to 1.0 ?
+
+-configmachine ui
 	done
 -properly do rotation
 	somewhat done, could use a bit of dynamic layering in some assets but its ok
@@ -83,3 +85,14 @@ crash CM with high seeds, 4-digits long seed works, 5 or more will break ? luna 
 	maxLength seems unused btw
 	solved by zeroing defaultvalue and assigning it after ctor
 	done in 0.7
+
+CG release: bumping to 1.0
+0.6 - 1.0 cummulative changelog
+- Added layering option for cosmetics (default/behind/behindhead/ontop)
+- SpinePos and Angle settings for the axogills
+- SpinePos and Lenght settings for Spinespikes
+- Bugfix: Now it should save profile name and filter options without having to switch tabs.
+- Bugfix: now works correctly with 'long' tails in fancyslugcats
+- Bugfix: you can no longer select a graphics number of 7 or above causing the mod to bluescreen.
+- Bugfix: being bitten by a lizard should no longer cause the overlap of the sprites to change when using fancyslugcats.
+- Bugfix: using a seed of more than 4 digits for a cosmetic should no longer crash when loading the menu again.

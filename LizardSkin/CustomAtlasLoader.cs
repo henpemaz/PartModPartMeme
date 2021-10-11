@@ -14,6 +14,11 @@ using System.Linq;
 
 public static class CustomAtlasLoader
 {
+    /// <summary>
+    /// Helper for parsing the unity .meta file format
+    /// </summary>
+    /// <param name="input">a line in .meta format</param>
+    /// <returns>string:string pairs for building a dictionary</returns>
     public static KeyValuePair<string, string> MetaEntryToKeyVal(string input)
     {
         if (string.IsNullOrEmpty(input)) return new KeyValuePair<string, string>("", "");
@@ -23,6 +28,14 @@ public static class CustomAtlasLoader
         return new KeyValuePair<string, string>(pieces[0].Trim(), pieces[1].Trim());
     }
 
+    /// <summary>
+    /// Reads and loads a custom atlas from the file system. Looks for a .png, .txt and .png.meta, but just the png is required.
+    /// If only a png is found, it'll load as single-image element of same name. If .txt slicing data is found, will load as atlas with elements, if there's metadata, it'll be applied to the texture settings.
+    /// </summary>
+    /// <param name="basename">name of the atlas to look for with no extention</param>
+    /// <param name="folder">folder to look for the atlas files</param>
+    /// <param name="atlasName">optional alternate name for the atlas once loaded</param>
+    /// <returns>A reference to the loaded atlas, which is available through futile</returns>
     public static FAtlas ReadAndLoadCustomAtlas(string basename, string folder, string atlasName=null)
     {
         Debug.Log("CustomAtlasLoader: Loading atlas " + basename + " from " + folder);
@@ -46,6 +59,16 @@ public static class CustomAtlasLoader
         return CustomAtlasLoader.LoadCustomAtlas(atlasName, imageData, slicerData, metaData);
     }
 
+    /// <summary>
+    /// Loads an atlas or single-image into futile
+    /// If only a png stream is provided, it'll load as single-image element of same name. If slicing data is provided, will load as atlas with elements, if there's metadata, it'll be applied to the texture settings.
+    /// An atlas loaded through this method can overwrite other loaded atlases based on their name, or overwrite single elements from other atlases. If the name colides but it doesn't replace all the elements from the conflicting atlas, the name of the resulting atlas is salted.
+    /// </summary>
+    /// <param name="atlasName">Name of the atlas</param>
+    /// <param name="textureStream">png file/memory stream, required</param>
+    /// <param name="slicerStream">atlas slicer data file/memory stream, optional</param>
+    /// <param name="metaStream">unity texture metadata file/memory stream, optional</param>
+    /// <returns>A reference to the loaded atlas, which is available through futile</returns>
     public static FAtlas LoadCustomAtlas(string atlasName, System.IO.Stream textureStream, System.IO.Stream slicerStream = null, System.IO.Stream metaStream = null)
     {
         try
@@ -80,6 +103,17 @@ public static class CustomAtlasLoader
             metaStream?.Close();
         }
     }
+
+    /// <summary>
+    /// Loads an atlas or single-image into futile
+    /// If only image data is provided, it'll load as single-image element of same name. If slicing data is provided, will load as atlas with elements, if there's metadata, it'll be applied to the texture settings.
+    /// An atlas loaded through this method can overwrite other loaded atlases based on their name, or overwrite single elements from other atlases. If the name colides but it doesn't replace all the elements from the conflicting atlas, the name of the resulting atlas is salted.
+    /// </summary>
+    /// <param name="atlasName">Name of the atlas</param>
+    /// <param name="imageData">texture of the atlas, required</param>
+    /// <param name="slicerData">parsed atlas slicer data, optional</param>
+    /// <param name="metaData">parsed unity texture metadata, optional</param>
+    /// <returns>A reference to the loaded atlas, which is available through futile</returns>
     public static FAtlas LoadCustomAtlas(string atlasName, Texture2D imageData, Dictionary<string, object> slicerData, Dictionary<string, string> metaData)
     {
         // Some defaults, metadata can overwrite

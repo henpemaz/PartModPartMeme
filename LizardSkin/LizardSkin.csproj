@@ -89,6 +89,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Cosmetics\GenericEartlers.cs" />
+    <Compile Include="CustomAtlasLoader.cs" />
     <Compile Include="FancyPlayerGraphicsCosmeticsAdaptor.cs" />
     <Compile Include="Cosmetics\GenericAntennae.cs" />
     <Compile Include="Cosmetics\GenericAxolotlGills.cs" />
@@ -115,13 +116,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Cosmetics\GenericBodyScales.cs" />
     <Compile Include="Cosmetics\GenericTailTuft.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\CustomSpritesLoader\CustomSpritesLoader.csproj">
-      <Project>{7aef23fe-5ab2-422c-89ee-ccb050b86a76}</Project>
-      <Name>CustomSpritesLoader</Name>
-      <Private>False</Private>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\LizKinIcons.png" />

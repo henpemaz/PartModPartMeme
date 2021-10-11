@@ -23,7 +23,7 @@ namespace LizardSkin
         public LizardSkin()
         {
             this.ModID = "LizardSkin";
-            this.Version = "0.7";
+            this.Version = "1.0";
             this.author = "Henpemaz";
 
             instance = this;
