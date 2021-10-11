@@ -12,7 +12,7 @@ using System.Collections.Generic;
 /// </remarks>
 /// <typeparam name="TKey">The type to attach the value to.</typeparam>
 /// <typeparam name="TValue">The type the the attached value.</typeparam>
-public class AttachedField<TKey, TValue>
+internal class AttachedField<TKey, TValue>
 {
     private static IEqualityComparer<object> _comparer = new KeyComparer();
 

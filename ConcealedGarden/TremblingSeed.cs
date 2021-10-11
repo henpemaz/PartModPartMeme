@@ -471,7 +471,7 @@ namespace ConcealedGarden
         //    }
         //}
 
-        public class SeedConsData : ManagedData
+        internal class SeedConsData : ManagedData
         {
             [IntegerField("minC", 1, 40, 3, ManagedFieldWithPanel.ControlType.slider, "min cooldown")]
             public int minC;

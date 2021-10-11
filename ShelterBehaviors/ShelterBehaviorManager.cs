@@ -102,7 +102,7 @@ namespace ShelterBehaviors
         /// <summary>
         /// Weakdict for replacement of <see cref="Player.forceSleepCounter"/>.
         /// </summary>
-        public AttachedField<Player, int> actualForceSleepCounter;
+        internal AttachedField<Player, int> actualForceSleepCounter;
 
 
         bool _debug = false;
@@ -132,13 +132,13 @@ namespace ShelterBehaviors
         /// </summary>
         public List<IReactToShelterEvents> subscribers;
         public readonly PlacedObject pObj;
-        public readonly PlacedObjectsManager.ManagedData data;
+        internal readonly PlacedObjectsManager.ManagedData data;
 
         private void ContitionalLog(string str)
         {
             if (_debug && Input.GetKey("l"))
             {
-                Debug.LogError(str);
+                Debug.Log("Shelterbehaviormanager " + str);
             }
         }
 
@@ -493,7 +493,7 @@ namespace ShelterBehaviors
                 room.AddWater(); // animate water level
                 Debug.LogError("added watre");
             }
-            Debug.LogError("CLOSE");
+            Debug.Log("Shelterbehaviormanager CLOSE");
         }
 
         /// <summary>

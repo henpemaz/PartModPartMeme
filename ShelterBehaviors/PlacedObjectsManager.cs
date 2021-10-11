@@ -24,7 +24,7 @@ using RWCustom;
 
 namespace ShelterBehaviors.POM
 {
-    public static partial class PlacedObjectsManager
+    internal static partial class PlacedObjectsManager
     {
         #region HOOKS
         private static bool _hooked = false;

@@ -53,7 +53,7 @@ namespace ConcealedGarden
 	public class CGSongSFXTrigger : UpdatableAndDeletable
     {
 
-        public class CGSongSFXTriggerData : PlacedObjectsManager.ManagedData
+        internal class CGSongSFXTriggerData : PlacedObjectsManager.ManagedData
         {
 			[PlacedObjectsManager.StringField("1name", "songname", "Name")]
 			public string name;
@@ -141,7 +141,7 @@ namespace ConcealedGarden
 
     public class CGSongSFXGradient : CGSongSFXTrigger
     {
-        public class CGSongSFXGradientData : CGSongSFXTrigger.CGSongSFXTriggerData
+        internal class CGSongSFXGradientData : CGSongSFXTrigger.CGSongSFXTriggerData
         {
 			[PlacedObjectsManager.FloatField("3intensityb", 0f, 1f, 0.1f, 0.01f, displayName: "Intensity B")]
 			public float intensityB;
