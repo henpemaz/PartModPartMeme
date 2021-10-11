@@ -22,7 +22,7 @@ namespace CustomSpritesLoader
         public CustomSpritesLoader()
         {
             this.ModID = modid;
-            this.Version = "1.1";
+            this.Version = "1.2";
             this.author = "Henpemaz";
 
             instance = this;
