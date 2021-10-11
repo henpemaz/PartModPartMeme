@@ -164,15 +164,34 @@ namespace ConcealedGarden
                         string porlType = porl.dataPearlType.ToString();
                         if(porlType =="Concealed_Garden_programmer" || porlType == "Concealed_Garden_programmer_alt")
                         {
-                            // slept with porl!
-                            ConcealedGarden.progression.fishDream = true;
-                            Debug.Log("CG Queued up fish dream");
-                            self.dreamsState.InitiateEventDream(EnumExt_CGCutscenes.CGDrowningDream);
-                            self.dreamsState.upcomingDream = self.dreamsState.eventDream;
+                            goto Found;
+                        }
+                    }
+                }
+                foreach(var abspl in game.Players)
+                {
+                    if(abspl.realizedCreature is Player pl)
+                    {
+                        if(pl.objectInStomach is DataPearl.AbstractDataPearl porl)
+                        {
+                            string porlType = porl.dataPearlType.ToString();
+                            if (porlType == "Concealed_Garden_programmer" || porlType == "Concealed_Garden_programmer_alt")
+                            {
+                                goto Found;
+                            }
                         }
                     }
                 }
             }
+            goto Done;
+        Found:
+            // slept with porl!
+            ConcealedGarden.progression.fishDream = true;
+            Debug.Log("CG Queued up fish dream");
+            self.dreamsState.InitiateEventDream(EnumExt_CGCutscenes.CGDrowningDream);
+            self.dreamsState.upcomingDream = self.dreamsState.eventDream;
+            goto Done;
+        Done:
             orig(self, game, survived, newMalnourished);
         }
 

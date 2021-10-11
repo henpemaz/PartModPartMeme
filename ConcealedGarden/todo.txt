@@ -41,6 +41,9 @@ world stuff
 		
 
 Code stuff
+	dream pearl could be item in stomach
+		done
+	
 	if CM not done by oct 08, migrate progression system
 		done, needs careful testing
 
