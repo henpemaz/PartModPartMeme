@@ -1,74 +1,43 @@
 ﻿sound stuff
-	echo song
-		listen to all echo songs again, count voices, mark actions, judge melodies
-		done
-
-	piano song for trailer, can reuse in cutcontent area
-		done ?
-		doesn't sound the greatest
-		sounds a little less bad now, still not really inspiring or anything
-		place in the place
-			done
-		
-	region bump sfx
-		study how the game handles that
-			region bump trigger matches subregion text on screen
-			a bunch ended up unused
-		made sfx, needs to be added
-			placed around underside, more fitting, super echoy and low
-	
 	extra song for tree area
 	progression filter for song
 		so not running into songfx while song playing ?
-	actual regionbump ?
+
+	done:
+		echo song
+			listen to all echo songs again, count voices, mark actions, judge melodies
+		piano song for trailer, can reuse in cutcontent area
+		region bump sfx
+			region bump trigger matches subregion text on screen
 
 world stuff
-	DS_CG gate broken and I doubt XX will fix it
-		redo it, needed for proper DS map
-			done
+	done:
+		FIX regpack name dang thing stoopid
+			done preemptive future crs param, will be fixed if regpack name matches region
+		DS_CG gate broken and I doubt XX will fix it
+		fix/render map for Industrial, Drainage
+		add -1 to world file connections so region menu loads properly
+		The trader sometimes leaves its post, happened ever since added more scavs
+			it was a bug with a missing DISCONNECTED causing room tags to get lost somehow,fixed and reported to the authorities
+		gate with template = bad ? no clue, check game
+		floady bits and tremors for DS gate
+		Rightroot can't be climbed back up by yellows
+		Bridge touchup on that fence side
+		DS Shelter too much hangroot, none on the screen above
+		Small changes to die-a-log
 
-	fix/render map for Industrial, Drainage
-		ongoing,
-		verify txt
-		drainage might need redo with fixed gate ok
-		HI png needs touchup
-			all DONE
-		
-		Drain gate got changed, CG side map needs up
-
-	add -1 to world file connections so region menu loads properly
-		done
-
-	The trader sometimes leaves its post, happened ever since added more scavs
-		not too sure whats up
-		room attractciveness was off maybe that was it
-		it was a bug with a missing DISCONNECTED causing room tags to get lost somehow
-			fixed and reported to the authorities
 
 	HI_CG gate maybe a tad too complex
-	gate with template = bad ? no clue, check game
-		eyup, its a problem!!
-		fix'd
-
-	in-region gates are iffy
-	hidden area too well hidden ?	
 	
-	floady bits and tremors for DS gate
-		done
+	in-region gates are iffy
+	
+	hidden area too well hidden ?	
 	
 	verify ALL den-indexes, room by room
 		:plead:
-	
-	Rightroot can't be climbed back up by yellows
-		done
-	
-	Bridge touchup on that fence side
-		done
-		
-	DS Shelter too much hangroot, none on the screen above
-		done
 		
 	Re-reneder map. Drainage gate got adjusted in CG side
+		wainting on Thrones
 		
 
 Code stuff
@@ -88,6 +57,8 @@ Code stuff
 	Vulture tame too easy
 		0.71 like after 2 feeds and it's no longer attacking
 		tuned, should be 50% harder now, so 3~4 feeds
+	
+	more low-hanging-fruit in Lizardskin ?
 
 extras
 	Gar decal
