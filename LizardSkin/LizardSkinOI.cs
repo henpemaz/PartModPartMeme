@@ -607,8 +607,8 @@ You can pick Cosmetics of several types, edit their settings and configure rando
 
             private void FiltersSelector_OnValueChangedEvent()
             {
-                FiltersConformToConfig();
                 FiltersGrabConfig();
+                FiltersConformToConfig();
             }
 
             Vector2 profileMngmtPos => new Vector2(15, 570);
@@ -790,15 +790,15 @@ You can pick Cosmetics of several types, edit their settings and configure rando
 
                 base.Update(dt);
 
-                if (profileData.appliesToMode != (LizKinProfileData.ProfileAppliesToMode)Enum.Parse(typeof(LizKinProfileData.ProfileAppliesToMode), appliesToModeSelector.value)
-                    || profileData.appliesToSelector != (LizKinProfileData.ProfileAppliesToSelector)Enum.Parse(typeof(LizKinProfileData.ProfileAppliesToSelector), appliesToSelectorSelector.value))
-                {
-                    // config change
-                    FiltersGrabConfig();
-                    // might need layout change
-                    FiltersConformToConfig();
-                    lizardSkinOI.DataChanged();
-                } else FiltersGrabConfig();
+                //if (profileData.appliesToMode != (LizKinProfileData.ProfileAppliesToMode)Enum.Parse(typeof(LizKinProfileData.ProfileAppliesToMode), appliesToModeSelector.value)
+                //    || profileData.appliesToSelector != (LizKinProfileData.ProfileAppliesToSelector)Enum.Parse(typeof(LizKinProfileData.ProfileAppliesToSelector), appliesToSelectorSelector.value))
+                //{
+                //    // config change
+                //    FiltersGrabConfig();
+                //    // might need layout change
+                //    FiltersConformToConfig();
+                //    lizardSkinOI.DataChanged();
+                //} else FiltersGrabConfig();
 
                 //profileData.effectColor = effectColorPicker.valuecolor;
                 //profileData.overrideBaseColor = overrideBaseCkb.valueBool;
@@ -831,7 +831,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
 
             private void FiltersGrabConfig()
             {
-                //Debug.Log("FiltersGrabConfig");
+                Debug.Log("FiltersGrabConfig");
                 //Debug.Log("profileData.appliesToList was " + String.Join(", ", profileData.appliesToList.Select(n => n.ToString()).ToArray()));
                 LizKinProfileData.ProfileAppliesToMode previousMode = profileData.appliesToMode;
                 LizKinProfileData.ProfileAppliesToMode newMode = (LizKinProfileData.ProfileAppliesToMode)Enum.Parse(typeof(LizKinProfileData.ProfileAppliesToMode), appliesToModeSelector.value);
@@ -875,14 +875,19 @@ You can pick Cosmetics of several types, edit their settings and configure rando
 
             private void FiltersConformToConfig()
             {
-                //Debug.Log("FiltersConformToConfig");
+                Debug.Log("FiltersConformToConfig");
                 //Debug.Log("profileData.appliesToList was " + String.Join(", ", profileData.appliesToList.Select(n => n.ToString()).ToArray()));
                 LizKinProfileData.ProfileAppliesToMode currentMode = profileData.appliesToMode;
-                appliesTo0.valueBool = profileData.appliesToList.Contains(-1) || profileData.appliesToList.Contains(0);
-                appliesTo1.valueBool = profileData.appliesToList.Contains(-1) || profileData.appliesToList.Contains(1);
-                appliesTo2.valueBool = profileData.appliesToList.Contains(-1) || profileData.appliesToList.Contains(2);
-                appliesTo3.valueBool = profileData.appliesToList.Contains(-1) || profileData.appliesToList.Contains(3);
-                appliesToInput.value = String.Join(", ", profileData.appliesToList.Select(n => n.ToString()).ToArray());
+                appliesTo0._newvalue = (profileData.appliesToList.Contains(-1) || profileData.appliesToList.Contains(0)) ? "true" : "false";
+                appliesTo1._newvalue = (profileData.appliesToList.Contains(-1) || profileData.appliesToList.Contains(1)) ? "true" : "false";
+                appliesTo2._newvalue = (profileData.appliesToList.Contains(-1) || profileData.appliesToList.Contains(2)) ? "true" : "false";
+                appliesTo3._newvalue = (profileData.appliesToList.Contains(-1) || profileData.appliesToList.Contains(3)) ? "true" : "false";
+                appliesTo0.OnChange();
+                appliesTo1.OnChange();
+                appliesTo2.OnChange();
+                appliesTo3.OnChange();
+                appliesToInput._newvalue = String.Join(", ", profileData.appliesToList.Select(n => n.ToString()).ToArray());
+                appliesToInput.OnChange();
                 switch (currentMode)
                 {
                     case LizKinProfileData.ProfileAppliesToMode.Basic:
@@ -913,7 +918,7 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 {
                     case LizKinProfileData.ProfileAppliesToMode.Basic:
                         profileData.appliesToSelector = LizKinProfileData.ProfileAppliesToSelector.Character;
-                        appliesToSelectorSelector.value = LizKinProfileData.ProfileAppliesToSelector.Character.ToString();
+                        appliesToSelectorSelector._newvalue = LizKinProfileData.ProfileAppliesToSelector.Character.ToString();
                         appliesToSelectorSelector.Hide();
                         appliesTo0Label.text = "Survivor";
                         appliesTo1Label.text = "Monk";
@@ -1346,6 +1351,14 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                 }
             }
 
+            public string _newvalue
+            {
+                set
+                {
+                    _value = value;
+                }
+            }
+
             public event OnFrozenUpdateHandler OnFrozenUpdate;
             public override void Update(float dt)
             {
@@ -1375,6 +1388,14 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                     bool change = value != _value;
                     base.value = value;
                     if (change) OnValueChangedEvent?.Invoke();
+                }
+            }
+
+            public string _newvalue
+            {
+                set
+                {
+                    _value = value;
                 }
             }
         }
@@ -1431,6 +1452,14 @@ You can pick Cosmetics of several types, edit their settings and configure rando
                     bool change = value != _value;
                     base.value = value;
                     if (change) OnValueChangedEvent?.Invoke();
+                }
+            }
+
+            public string _newvalue
+            {
+                set
+                {
+                    _value = value;
                 }
             }
         }
