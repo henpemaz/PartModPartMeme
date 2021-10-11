@@ -12,7 +12,7 @@ using System.Text;
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 [module: UnverifiableCode]
 
-public static class CustomAtlasLoader
+internal static class CustomAtlasLoader
 {
     public static KeyValuePair<string, string> MetaEntryToKeyVal(string input)
     {

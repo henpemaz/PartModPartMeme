@@ -491,10 +491,10 @@ namespace UwUMod
             if (fowdew == "Illustrations" && embeddedFiwes.Contains(iwwust.fileName))
             {
                 Debug.Log("UWU loaded " + iwwust.fileName + " from UwUMod");
-                if (Futile.atlasManager.GetAtlasWithName(iwwust.fileName) != null)
-                {
-                    return;
-                }
+                //if (Futile.atlasManager.GetAtlasWithName(iwwust.fileName) != null)
+                //{
+                //    return;
+                //}
                 iwwust.texture = new Texture2D(1, 1, TextureFormat.ARGB32, false);
                 iwwust.texture.wrapMode = TextureWrapMode.Clamp;
                 if (iwwust.crispPixels)
