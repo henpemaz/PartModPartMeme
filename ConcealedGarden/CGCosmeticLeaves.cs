@@ -189,6 +189,7 @@ namespace ConcealedGarden
                     //no more pointy tip if (i == relpos.Length - 2) continue;
                     trimesh.vertices[i * 4 + 3] = (Vector2)b - per * this.thicknesses[i + 1] - camPos;
                 }
+                trimesh.Refresh();
             }
         }
 
@@ -278,6 +279,7 @@ namespace ConcealedGarden
 
                 //fSprite.SetPosition((Vector2)attachedPoint - camPos);
                 fSprite.alpha = 1f - (Mathf.Clamp(attachedPoint.z, 0f, 30f) / 30f);
+                trimesh.Refresh();
             }
         }
 
