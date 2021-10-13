@@ -42,7 +42,7 @@ namespace ConcealedGarden
             this.room.abstractRoom.shelterIndex = -1;
             this.roomRain = new RoomRain(room.game.globalRain, room);
             this.room.abstractRoom.shelterIndex = shelterIndex;
-            this.room.roomRain = this.roomRain;
+            this.room.roomRain = this.roomRain; // Could have some extra checks here to avoid conflic with BSH ?
             this.roomRain.room = this.room;
         }
 

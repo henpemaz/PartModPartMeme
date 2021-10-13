@@ -55,10 +55,12 @@ namespace ConcealedGarden
 
         internal class CGSongSFXTriggerData : PlacedObjectsManager.ManagedData
         {
+#pragma warning disable 0649
 			[PlacedObjectsManager.StringField("1name", "songname", "Name")]
 			public string name;
 			[PlacedObjectsManager.FloatField("2intensity", 0f, 1f, 0.1f, 0.01f, displayName: "Intensity")]
 			public float intensity;
+#pragma warning restore 0649
 			public CGSongSFXTriggerData(PlacedObject owner) : base(owner, null) { }
 			public CGSongSFXTriggerData(PlacedObject owner, PlacedObjectsManager.ManagedField[] fields) : base(owner, fields) { }
 		}
@@ -143,6 +145,7 @@ namespace ConcealedGarden
     {
         internal class CGSongSFXGradientData : CGSongSFXTrigger.CGSongSFXTriggerData
         {
+#pragma warning disable 0649
 			[PlacedObjectsManager.FloatField("3intensityb", 0f, 1f, 0.1f, 0.01f, displayName: "Intensity B")]
 			public float intensityB;
 			[PlacedObjectsManager.FloatField("4expo", 0.01f, 10f, 1f, 0.01f, displayName: "Exponent")]
@@ -153,6 +156,7 @@ namespace ConcealedGarden
 			   };
 			[BackedByField("5ev")]
 			public Vector2 handle;
+#pragma warning restore 0649
 			public CGSongSFXGradientData(PlacedObject owner) : base(owner, customFields) { }
 			public CGSongSFXGradientData(PlacedObject owner, PlacedObjectsManager.ManagedField[] fields) : base(owner, customFields.ToList().Concat(fields.ToList()).ToArray()) { }
 		}

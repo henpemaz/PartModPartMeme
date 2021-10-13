@@ -37,6 +37,18 @@ namespace ConcealedGarden
         private static void RainWorld_Start(On.RainWorld.orig_Start orig, RainWorld self)
         {
             orig(self);
+
+            try
+            {
+                TryLoad();
+            }
+            catch (Exception)
+            {
+                Debug.Log("CG: Failed to load cgbkr_parts; CGBunkerShelterFlap won't be usable");
+            }
+        }
+        private static void TryLoad()
+        {
             CustomAtlasLoader.ReadAndLoadCustomAtlas("cgbkr_parts", CustomRegions.Mod.CustomWorldMod.resourcePath + CustomRegions.Mod.CustomWorldMod.activatedPacks["Concealed Garden"] + Path.DirectorySeparatorChar + "Assets" + Path.DirectorySeparatorChar + "Futile" + Path.DirectorySeparatorChar + "Resources" + Path.DirectorySeparatorChar + "Atlases");
         }
 

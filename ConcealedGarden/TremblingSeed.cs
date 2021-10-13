@@ -473,12 +473,14 @@ namespace ConcealedGarden
 
         internal class SeedConsData : ManagedData
         {
+#pragma warning disable 0649
             [IntegerField("minC", 1, 40, 3, ManagedFieldWithPanel.ControlType.slider, "min cooldown")]
             public int minC;
             [IntegerField("maxC", 1, 40, 3, ManagedFieldWithPanel.ControlType.slider, "max cooldown")]
             public int maxC;
             [Vector2Field("basePoint", 30f, 30f)]
             public Vector2 stalkBase;
+#pragma warning restore 0649
             public SeedConsData(PlacedObject owner) : base(owner, null) { }
         }
         public static class SeedHooks

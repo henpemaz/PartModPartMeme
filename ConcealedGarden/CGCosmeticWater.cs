@@ -120,9 +120,10 @@ namespace ConcealedGarden
                         Mathf.Max(this.owner.pos.y, this.owner.pos.y + this.handlePos.y));
                 }
             }
-
+#pragma warning disable 0649
             [BackedByField("handle")]
             public Vector2 handlePos;
+#pragma warning restore 0649
             public CGCosmeticWaterData(PlacedObject owner) : base(owner, new PlacedObjectsManager.ManagedField[] {
                     new PlacedObjectsManager.Vector2Field("handle", new Vector2(100,100), PlacedObjectsManager.Vector2Field.VectorReprType.rect)})
             {

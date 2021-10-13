@@ -21,6 +21,7 @@ namespace ConcealedGarden
 
     internal class CGAchievementManager : MainLoopProcess
     {
+        // Todo make this a framework of the sorts
         internal static void Apply()
         {
             On.ProcessManager.ctor += ProcessManager_ctor;

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ConcealedGarden
 {
-    public class CGCameraZoomEffect
+    public static class CGCameraZoomEffect
     {
         public static class EnumExt_CameraZoomEffect
         {
@@ -15,7 +15,29 @@ namespace ConcealedGarden
         internal static void Apply()
         {
             On.RoomCamera.DrawUpdate += RoomCamera_DrawUpdate;
+            On.RoomCamera.ChangeRoom += RoomCamera_ChangeRoom;
         }
+
+        private static void RoomCamera_ChangeRoom(On.RoomCamera.orig_ChangeRoom orig, RoomCamera self, Room newRoom, int cameraPosition)
+        {
+			if (camLastZoomed[self])
+			{
+				// unzoom camera on room changes
+				for (int i = 0; i < 11; i++) // 11 useful layers the rest is hud
+				{
+					self.SpriteLayers[i].scale = 1f;
+					self.SpriteLayers[i].SetPosition(Vector2.zero);
+
+					//self.SpriteLayers[i].SetPosition(-offset);
+				}
+				self.offset = new Vector2((float)self.cameraNumber * 6000f, 0f);
+				camLastZoomed[self] = false;
+			}
+			orig(self, newRoom, cameraPosition);
+
+        }
+
+        static AttachedField<RoomCamera, bool> camLastZoomed = new AttachedField<RoomCamera, bool>();
 
         private static void RoomCamera_DrawUpdate(On.RoomCamera.orig_DrawUpdate orig, RoomCamera self, float timeStacker, float timeSpeed)
         {
@@ -41,30 +63,51 @@ namespace ConcealedGarden
 							value = vector.Value;
 						}
 					}
-					offset = (value - (self.pos + self.sSize/2f));
+					offset = new Vector2((float)self.cameraNumber * 6000f, 0f) + (value - (self.pos + self.sSize/2f));
 				}
 
 			}
-			for (int i = 0; i < 11; i++)
-			{
-				self.SpriteLayers[i].scale = 1f;
-				self.SpriteLayers[i].SetPosition(Vector2.zero);
-				if(zoomed)
-					self.SpriteLayers[i].ScaleAroundPointRelative(self.sSize/2f, zoom, zoom);
-				
-				//self.SpriteLayers[i].SetPosition(-offset);
-			}
-			self.offset = offset;
-			//self.levelGraphic.scale = zoom;
-			int theseed = 0; ;
 			if (zoomed)
 			{
+				for (int i = 0; i < 11; i++) // 11 useful layers the rest if hud
+				{
+					self.SpriteLayers[i].scale = 1f;
+					self.SpriteLayers[i].SetPosition(Vector2.zero);
+					self.SpriteLayers[i].ScaleAroundPointRelative(self.sSize / 2f, zoom, zoom);
+
+					//self.SpriteLayers[i].SetPosition(-offset);
+				}
+				self.offset = offset;
+				camLastZoomed[self] = true;
+			}
+			else if (camLastZoomed[self])
+			{
+				// unzoom camera on effect slider to 0 or maybe if changeroom didnt call
+				for (int i = 0; i < 11; i++) // 11 useful layers the rest is hud
+				{
+					self.SpriteLayers[i].scale = 1f;
+					self.SpriteLayers[i].SetPosition(Vector2.zero);
+
+					//self.SpriteLayers[i].SetPosition(-offset);
+				}
+				self.offset = new Vector2((float)self.cameraNumber * 6000f, 0f);
+				camLastZoomed[self] = false;
+			}
+
+			//self.levelGraphic.scale = zoom;
+			int theseed = 0;
+			if (zoomed)
+			{
+				// deterministic random shake
 				theseed = UnityEngine.Random.seed;
 				UnityEngine.Random.seed = theseed;
 			}
 			orig(self, timeStacker, timeSpeed);
             if (zoomed)
             {
+				// calculate stupid shake again
+				// an aternative to this would to spawn a spriteleaser and have it store its drawposition
+
 				UnityEngine.Random.seed = theseed;
 				// coppypasta I just need the same exact viewport
 				Vector2 vector = Vector2.Lerp(self.lastPos, self.pos, timeStacker);
@@ -84,6 +127,8 @@ namespace ConcealedGarden
                 vector = new Vector2(Mathf.Floor(vector.x), Mathf.Floor(vector.y));
                 vector.x -= 0.02f;
                 vector.y -= 0.02f;
+
+				// Magic offsets and magic shader rectangles
 				// THIS CRAP BUGS OUT ON SCREEN TRANSITIONS AND i DON'T UNDESTAND WHYYYYYY
                 Vector2 magicOffset = self.CamPos(self.currentCameraPosition) - vector;
 				//Debug.LogError("magic offset is " + magicOffset);
@@ -114,8 +159,6 @@ namespace ConcealedGarden
 					self.sSize.x / self.room.PixelWidth - zooming.x, self.sSize.y / self.room.PixelHeight - zooming.y));
 				Shader.SetGlobalVector("_screenSize", self.sSize);
 			}
-
 		}
-
 	}
 }

@@ -24,12 +24,12 @@ namespace ConcealedGarden
             }
             catch (Exception)
             {
+                Debug.Log("CG: Failed to load cgbasketsprt; CGSkyLine won't be usable");
             }
         }
         private static void TryLoad()
         {
-            if (CustomRegions.Mod.CustomWorldMod.activatedPacks.ContainsKey("Concealed Garden"))
-                CustomAtlasLoader.ReadAndLoadCustomAtlas("cgbasketsprt", CustomRegions.Mod.CustomWorldMod.resourcePath + CustomRegions.Mod.CustomWorldMod.activatedPacks["Concealed Garden"] + Path.DirectorySeparatorChar + "Assets" + Path.DirectorySeparatorChar + "Futile" + Path.DirectorySeparatorChar + "Resources" + Path.DirectorySeparatorChar + "Atlases");
+            CustomAtlasLoader.ReadAndLoadCustomAtlas("cgbasketsprt", CustomRegions.Mod.CustomWorldMod.resourcePath + CustomRegions.Mod.CustomWorldMod.activatedPacks["Concealed Garden"] + Path.DirectorySeparatorChar + "Assets" + Path.DirectorySeparatorChar + "Futile" + Path.DirectorySeparatorChar + "Resources" + Path.DirectorySeparatorChar + "Atlases");
         }
 
         private static void RoomCamera_DrawUpdate(On.RoomCamera.orig_DrawUpdate orig, RoomCamera self, float timeStacker, float timeSpeed)
@@ -107,12 +107,13 @@ namespace ConcealedGarden
 
         private class CGSkyLineData : PlacedObjectsManager.ManagedData
         {
+#pragma warning disable 0649
             [PlacedObjectsManager.ManagedData.BackedByField("mv")]
             public Vector2 movement;
 
             [PlacedObjectsManager.FloatField("ts",0,1,0)]
             public float test;
-            
+#pragma warning restore 0649
             public CGSkyLineData(PlacedObject owner) : base(owner, new PlacedObjectsManager.ManagedField[] { new PlacedObjectsManager.Vector2Field("mv", new Vector2(-100,0), label:"Mv")})
             {
 

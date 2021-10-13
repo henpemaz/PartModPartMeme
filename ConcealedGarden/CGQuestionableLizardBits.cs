@@ -21,7 +21,7 @@ namespace ConcealedGarden
 		public static void Apply()
 		{
             // You're not gonna like it
-            string str = "Disclaimer: only applies if NudeMod is ON ;o";
+            string str = "Disclaimer: only applies if NudeMod is ON, plus secret file ;o";
             string str2 = "They know what they're in for";
 			string str3 = str + "\n" + str2;
             On.RainWorld.Start += RainWorld_Start;
@@ -45,7 +45,20 @@ namespace ConcealedGarden
                     {
                         found = true;
                         UnityEngine.Debug.Log("NudeMod FOUND");
-                        InternalApply();
+                        
+						bool consent = File.Exists(Path.Combine(RWCustom.Custom.RootFolderDirectory(), "lizardbits.txt"));
+                        if (consent)
+                        {
+							UnityEngine.Debug.Log("lizardbits.txt FOUND");
+							InternalApply();
+							UnityEngine.Debug.Log("lizard modification applied");
+                        }
+                        else
+                        {
+							//UnityEngine.Debug.Log("consent.txt NOT FOUND");
+							UnityEngine.Debug.Log("lizard modification not applied");
+						}
+
                         break;
                     }
                 }

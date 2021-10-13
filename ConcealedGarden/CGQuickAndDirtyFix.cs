@@ -20,12 +20,13 @@ namespace ConcealedGarden
 
         private static void Player_MovementUpdate(On.Player.orig_MovementUpdate orig, Player self, bool eu)
         {
+            // auto-climb coming out of crawlspace into rope
             Player.BodyModeIndex prevMode = self.bodyMode;
             orig(self, eu);
             if (prevMode == Player.BodyModeIndex.CorridorClimb && self.bodyMode == Player.BodyModeIndex.Default && self.room.climbableVines != null)
             {
                 ClimbableVinesSystem.VinePosition vinePosition2 = self.room.climbableVines.VineOverlap(self.mainBodyChunk.pos, self.mainBodyChunk.rad);
-                if (vinePosition2 != null)
+                if (vinePosition2 != null && vinePosition2.vine < self.room.climbableVines.vines.Count && self.room.climbableVines.vines[vinePosition2.vine] is Climbables.ClimbableRope)
                 {
                     self.wantToGrab = 1; // let grab naturally next frame
                 }

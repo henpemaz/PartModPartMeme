@@ -68,7 +68,7 @@ namespace ConcealedGarden
 
             internal bool ShouldActivate(int playerChar)
             {
-                Debug.Log($"filter has slug:{slugcat} exc:{exclude} playernum:{playerChar} playername:{ConcealedGardenProgression.GetSlugcatName(playerChar)} ; should activate = {(!exclude) == (slugcat == ConcealedGardenProgression.GetSlugcatName(playerChar))}");
+                //Debug.Log($"filter has slug:{slugcat} exc:{exclude} playernum:{playerChar} playername:{ConcealedGardenProgression.GetSlugcatName(playerChar)} ; should activate = {(!exclude) == (slugcat == ConcealedGardenProgression.GetSlugcatName(playerChar))}");
                 return (!exclude) == (slugcat == ConcealedGardenProgression.GetSlugcatName(playerChar));
             }
         }

@@ -38,7 +38,9 @@ namespace ConcealedGarden
 
         static private void PersistentData_ctor(On.PersistentData.orig_ctor orig, PersistentData self, RainWorld rainWorld)
         {
-            self.cameraTextures = new Texture2D[2, 2];
+            orig(self, rainWorld);
+            int ntex = self.cameraTextures.GetLength(0);
+            self.cameraTextures = new Texture2D[ntex, 2];
             for (int i = 0; i < 2; i++)
             {
                 for (int j = 0; j < 2; j++)
@@ -51,9 +53,16 @@ namespace ConcealedGarden
                     // In the normal game, this had no effect, but if it remained, the background
                     // Would always be a copy of the foreground
                     if (j == 0)
+                    {
+                        Futile.atlasManager.UnloadAtlas("LevelTexture" + ((i != 0) ? i.ToString() : string.Empty));
                         Futile.atlasManager.LoadAtlasFromTexture("LevelTexture" + ((i != 0) ? i.ToString() : string.Empty), self.cameraTextures[i, j]);
+                    }
+                        
                     else
+                    {
+                        Futile.atlasManager.UnloadAtlas("BackgroundTexture" + ((i != 0) ? i.ToString() : string.Empty));
                         Futile.atlasManager.LoadAtlasFromTexture("BackgroundTexture" + ((i != 0) ? i.ToString() : string.Empty), self.cameraTextures[i, j]);
+                    }
                 }
             }
         }

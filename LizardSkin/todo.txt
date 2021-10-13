@@ -1,4 +1,5 @@
 ﻿Version bump to 1.0 ?
+	done
 
 -configmachine ui
 	done
