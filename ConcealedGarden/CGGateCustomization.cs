@@ -42,6 +42,8 @@ namespace ConcealedGarden
                 room.regionGate.doors[2].closeSpeed = 0f;
                 this.rightDoor = room.regionGate.graphics.doorGraphs[2];
             }
+
+
         }
 
         internal static void Register()
@@ -51,6 +53,7 @@ namespace ConcealedGarden
                 new PlacedObjectsManager.BooleanField("noleft", false, displayName:"No Left Door"),
                 new PlacedObjectsManager.BooleanField("noright", false, displayName:"No Right Door"),
                 new PlacedObjectsManager.BooleanField("nowater", false, displayName:"No Water"),
+                new PlacedObjectsManager.BooleanField("zdontstop", false, displayName:"Dont cut song"),
             }, typeof(CGGateCustomization), "CGGateCustomization");
         }
 
@@ -68,6 +71,16 @@ namespace ConcealedGarden
             {
                 rightDoor.lastClosedFac = room.regionGate.doors[2].closedFac;
                 room.regionGate.goalDoorPositions[2] = room.regionGate.doors[2].closedFac;
+            }
+            if (data.GetValue<bool>("zdontstop"))
+            {
+                if(room.regionGate.startCounter == 60)
+                {
+                    if (this.room.game.manager.musicPlayer != null && this.room.game.manager.musicPlayer.song is Music.GhostSong ghostSong)
+                    {
+                        ghostSong.stopAtGate = false;
+                    }
+                }
             }
         }
 

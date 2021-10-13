@@ -55,7 +55,7 @@ namespace ConcealedGarden
                         }
                         else
                         {
-							//UnityEngine.Debug.Log("consent.txt NOT FOUND");
+							//UnityEngine.Debug.Log("lizardbits.txt NOT FOUND");
 							UnityEngine.Debug.Log("lizard modification not applied");
 						}
 
