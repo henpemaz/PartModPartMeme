@@ -1,4 +1,21 @@
-﻿sound stuff
+﻿1.1
+	figure out bad load progression issue
+		1. sava pers with no savestate causes bad seed
+			dream into sleep + new passage showing up = progr reverted and tried to save pers
+			progr code line 133
+		2. slugbase not calling orig on several progression methods
+	hunter hermit deadend
+		make stash
+	hunter root shelter softlock when echo freezes time
+		make door opener smh
+	hunter sleepscreen no transparency
+	
+	lizards/squids fix in LRU
+	
+	friend can become agressive after transfo, shouldn`t
+	
+
+sound stuff
 	extra song for tree area
 	progression filter for song
 		so not running into songfx while song playing ?
@@ -38,6 +55,7 @@ world stuff
 		
 	Re-reneder map. Drainage gate got adjusted in CG side
 		wainting on Thrones
+		done
 		
 
 Code stuff

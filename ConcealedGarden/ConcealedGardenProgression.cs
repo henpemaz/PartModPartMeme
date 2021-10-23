@@ -45,12 +45,14 @@ namespace ConcealedGarden
         // this way, the game's current state is always avaiable for mods to read.
         private static void RainWorld_Start(On.RainWorld.orig_Start orig, RainWorld self)
         {
+            Debug.Log("CG Progression: Start hook");
             rw = self;
             foreach (System.Reflection.Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
             {
                 if (asm.GetName().Name == "SlugBase")
                 {
                     SlugBaseExists = true;
+                    Debug.Log("CG Progression: Found slugbase");
                 }
             }
 
@@ -60,6 +62,7 @@ namespace ConcealedGarden
         // Called trying to load a file
         internal static void PlayerProgression_LoadProgression(On.PlayerProgression.orig_LoadProgression orig, PlayerProgression self)
         {
+            Debug.Log("CG Progression: LoadProgression hook");
             orig(self);
             LoadOIsProgression();
         }
@@ -67,12 +70,15 @@ namespace ConcealedGarden
         // Called when there's no file to load
         internal static void PlayerProgression_InitiateProgression(On.PlayerProgression.orig_InitiateProgression orig, PlayerProgression self)
         {
+            Debug.Log("CG Progression: InitiateProgression hook");
             orig(self);
             InitiateOIsProgression();
         }
 
         internal static void PlayerProgression_WipeAll(On.PlayerProgression.orig_WipeAll orig, PlayerProgression self)
         {
+
+            Debug.Log("CG Progression: WipeAll hook");
             WipeOIsProgression(-1);
             orig(self);
         }
@@ -81,6 +87,7 @@ namespace ConcealedGarden
         // Called with saveAsDeathOrQuit=true from StoryGameSession; =false from loading Red's statistics
         internal static SaveState PlayerProgression_GetOrInitiateSaveState(On.PlayerProgression.orig_GetOrInitiateSaveState orig, PlayerProgression self, int saveStateNumber, RainWorldGame game, ProcessManager.MenuSetup setup, bool saveAsDeathOrQuit)
         {
+            Debug.Log("CG Progression: GetOrInitiateSaveState hook");
             bool loadedFromStarve = self.currentSaveState == null && self.starvedSaveState != null && self.starvedSaveState.saveStateNumber == saveStateNumber;
             bool loadedFromMemory = loadedFromStarve || (self.currentSaveState != null && self.currentSaveState.saveStateNumber == saveStateNumber);
 
@@ -95,6 +102,7 @@ namespace ConcealedGarden
 
         internal static void SlugcatSelectMenu_StartGame(On.Menu.SlugcatSelectMenu.orig_StartGame orig, Menu.SlugcatSelectMenu self, int storyGameCharacter)
         {
+            Debug.Log("CG Progression: StartGame hook");
             orig(self, storyGameCharacter);
             // Bugfix to prevent crazy inconsistency that could happen if played restarted a save they just starved on
             // (vanilla would call 'Wipe' and still load the starve which is clearly a bug)
@@ -105,44 +113,50 @@ namespace ConcealedGarden
 
         internal static void PlayerProgression_WipeSaveState(On.PlayerProgression.orig_WipeSaveState orig, PlayerProgression self, int saveStateNumber)
         {
+            Debug.Log("CG Progression: WipeSaveState hook");
             WipeOIsProgression(saveStateNumber);
             orig(self, saveStateNumber);
         }
 
         internal static void PlayerProgression_SaveToDisk(On.PlayerProgression.orig_SaveToDisk orig, PlayerProgression self, bool saveCurrentState, bool saveMaps, bool saveMiscProg)
         {
+            Debug.Log("CG Progression: SaveToDisk hook");
             orig(self, saveCurrentState, saveMaps, saveMiscProg);
             SaveOIsProgression(saveCurrentState, saveCurrentState, saveMiscProg);
         }
 
         internal static void PlayerProgression_SaveDeathPersistentDataOfCurrentState(On.PlayerProgression.orig_SaveDeathPersistentDataOfCurrentState orig, PlayerProgression self, bool saveAsIfPlayerDied, bool saveAsIfPlayerQuit)
         {
+            Debug.Log("CG Progression: SaveDeathPersistentDataOfCurrentState hook");
             orig(self, saveAsIfPlayerDied, saveAsIfPlayerQuit);
             if (getOrInitSavePersLock) return;
-            SaveOIsPers(saveAsIfPlayerDied, saveAsIfPlayerQuit);
+            if(self.currentSaveState != null) SaveOIsPers(saveAsIfPlayerDied, saveAsIfPlayerQuit);
         }
 
         #endregion HOOKS
 
         internal static void RunPreSave()
         {
+            Debug.Log("CG Progression: RunPreSave");
             progression.ProgressionPreSave();
         }
 
         internal static void RunPostLoaded()
         {
+            Debug.Log("CG Progression: RunPostLoaded");
             progression.ProgressionLoaded();
         }
 
         internal static void LoadOIsProgression()
         {
+            Debug.Log("CG Progression: LoadOIsProgression");
             progression.LoadProgression();
             RunPostLoaded();
         }
 
         internal static void InitiateOIsProgression()
         {
-
+            Debug.Log("CG Progression: InitiateOIsProgression");
             RunPreSave();
             progression.InitProgression();
             RunPostLoaded();
@@ -151,6 +165,7 @@ namespace ConcealedGarden
 
         internal static void WipeOIsProgression(int saveStateNumber)
         {
+            Debug.Log("CG Progression: WipeOIsProgression");
             RunPreSave();
             progression.WipeProgression(saveStateNumber); // Todo add a chance to clear/keep misc data ?
             RunPostLoaded();
@@ -158,6 +173,7 @@ namespace ConcealedGarden
 
         internal static void LoadOIsSave(SaveState saveState, bool loadedFromMemory, bool loadedFromStarve)
         {
+            Debug.Log("CG Progression: LoadOIsSave");
             if (loadedFromMemory) return; // We're good ? Not too sure when this happens
             progression.LoadSaveState();
             RunPostLoaded();
@@ -165,12 +181,14 @@ namespace ConcealedGarden
 
         internal static void SaveOIsProgression(bool saveState, bool savePers, bool saveMisc)
         {
+            Debug.Log("CG Progression: SaveOIsProgression");
             RunPreSave();
             progression.SaveProgression(saveState, savePers, saveMisc);
         }
 
         internal static void SaveOIsPers(bool saveAsIfPlayerDied, bool saveAsIfPlayerQuit)
         {
+            Debug.Log("CG Progression: SaveOIsPers");
             if (!(saveAsIfPlayerDied || saveAsIfPlayerQuit))
             {
                 RunPreSave();
@@ -189,6 +207,7 @@ namespace ConcealedGarden
 
         public ConcealedGardenProgression(Dictionary<string, object> saveDict = null, Dictionary<string, object> persDict = null, Dictionary<string, object> miscDict = null, Dictionary<string, object> globalDict = null)
         {
+            Debug.Log("CG Progression: ConcealedGardenProgression");
             this.saveDict = saveDict ?? new Dictionary<string, object>();
             this.persDict = persDict ?? new Dictionary<string, object>();
             this.miscDict = miscDict ?? new Dictionary<string, object>();
@@ -227,6 +246,7 @@ namespace ConcealedGarden
 
         internal void LoadProgressionDicts()
         {
+            Debug.Log("CG Progression: LoadProgressionDicts");
             LoadGlobalData();
             Debug.Log("CG Progression loading with:");
             Debug.Log($"saveData :{saveData}");
@@ -242,6 +262,7 @@ namespace ConcealedGarden
         }
         internal void SaveProgressionDicts()
         {
+            Debug.Log("CG Progression: SaveProgressionDicts");
             SaveGlobalData();
             saveData = Json.Serialize(progression.saveDict);
             persData = Json.Serialize(progression.persDict);
@@ -255,19 +276,21 @@ namespace ConcealedGarden
 
         internal void SaveGlobalData()
         {
+            Debug.Log("CG Progression: SaveGlobalData");
             data = Json.Serialize(globalDict);
             SaveData();
         }
 
         internal void LoadGlobalData()
         {
+            Debug.Log("CG Progression: LoadGlobalData");
             LoadData();
             globalDict = ((!string.IsNullOrEmpty(data) && Json.Deserialize(data) is Dictionary<string, object> storedData) ? storedData : new Dictionary<string, object>());
         }
 
         protected void ProgressionLoaded()
         {
-            Debug.Log("CG ProgressionLoaded");
+            Debug.Log("CG Progression: ProgressionLoaded");
             LoadProgressionDicts();
             LizardSkin.LizardSkin.SetCGEverBeaten(progression.everBeaten);
             LizardSkin.LizardSkin.SetCGStoryProgression(progression.transfurred ? 1 : 0);
@@ -275,7 +298,7 @@ namespace ConcealedGarden
 
         protected void ProgressionPreSave()
         {
-            Debug.Log("CG ProgressionPreSave");
+            Debug.Log("CG Progression: ProgressionPreSave");
             SaveProgressionDicts();
         }
 
@@ -319,31 +342,37 @@ namespace ConcealedGarden
         /// </summary>
         public virtual void LoadData()
         {
+            Debug.Log("CG Progression: LoadData");
             _data = defaultData;
-            if (!directory.Exists) { DataOnChange(); return; }
+            if (!directory.Exists) { Debug.Log("CG Progression: directory didn't exist, using defaultData"); DataOnChange(); return; }
             try
             {
+                Debug.Log("CG Progression: scanning for data file");
                 string data = string.Empty;
                 foreach (FileInfo file in directory.GetFiles())
                 {
                     if (file.Name != "data.txt") { continue; }
-
+                    Debug.Log("CG Progression: data found, reading...");
                     //LoadData:
                     data = File.ReadAllText(file.FullName, System.Text.Encoding.UTF8);
+                    Debug.Log("CG Progression: got raw :" + data);
                     string key = data.Substring(0, 32);
                     data = data.Substring(32, data.Length - 32);
                     if (Custom.Md5Sum(data) != key)
                     {
-                        Debug.Log($"CompletelyOptional) ConcealedGarden data file has been tinkered!");
+                        Debug.Log("CG Progression: data tinkered");
                         dataTinkered = true;
                     }
-                    else { dataTinkered = false; }
+                    else { Debug.Log("CG Progression: key match"); dataTinkered = false; }
+                    Debug.Log("CG Progression: decrypt using :" + CryptoDataKey);
                     _data = CompletelyOptional.Crypto.DecryptString(data, CryptoDataKey);
+                    Debug.Log("CG Progression: got decrypted :"+ _data);
                     DataOnChange();
                     return;
                 }
             }
-            catch (Exception ex) { Debug.LogException(ex); }
+            catch (Exception ex) { Debug.Log("CG Progression: something bad happened :" + ex.ToString()); Debug.LogException(ex); }
+            Debug.Log("CG Progression: data not found, using defaultData");
             DataOnChange();
         }
 
@@ -360,23 +389,32 @@ namespace ConcealedGarden
         /// <returns>Whether it succeed or not</returns>
         public virtual bool SaveData()
         {
-            if (!directory.Exists) { directory.Create(); }
+            Debug.Log("CG Progression: SaveData");
+            if (!directory.Exists) { Debug.Log("CG Progression: directory didn't exist, creating"); directory.Create(); }
 
             try
             {
+                Debug.Log("CG Progression: data is :" + _data);
                 string path = string.Concat(new object[] {
                 directory.FullName,
                 "data.txt"
                 });
+                Debug.Log("CG Progression: saving to :" + path);
+                Debug.Log("CG Progression: encrypting with :"+ CryptoDataKey);
                 string enc = CompletelyOptional.Crypto.EncryptString(_data ?? "", CryptoDataKey);
+                Debug.Log("CG Progression: encrypted content :" + enc);
                 string key = Custom.Md5Sum(enc);
+                Debug.Log("CG Progression: hash key :"+key);
 
+                Debug.Log("CG Progression: saving :" + (key+enc));
                 File.WriteAllText(path, key + enc);
 
+                Debug.Log("CG Progression: saved");
                 return true;
             }
-            catch (Exception ex) { Debug.LogException(ex); }
+            catch (Exception ex) { Debug.Log("CG Progression: something bad happened :"+ex.ToString()); Debug.LogException(ex); }
 
+            Debug.Log("CG Progression: couldn't save data");
             return false;
         }
 
@@ -428,7 +466,7 @@ namespace ConcealedGarden
             set
             {
                 //if (!hasProgData) throw new NoProgDataException(this);
-                if (_saveData != value) { _saveData = value; }
+                if (_saveData != value) { _saveData = value; Debug.Log("CG Progression: _saveData set with :" + _saveData); }
             }
         }
 
@@ -447,7 +485,7 @@ namespace ConcealedGarden
             set
             {
                 //if (!hasProgData) throw new NoProgDataException(this);
-                if (_persData != value) { _persData = value; }
+                if (_persData != value) { _persData = value; Debug.Log("CG Progression: _persData set with :" + _persData); }
             }
         }
 
@@ -466,7 +504,7 @@ namespace ConcealedGarden
             set
             {
                 //if (!hasProgData) throw new NoProgDataException(this);
-                if (_miscData != value) { _miscData = value; }
+                if (_miscData != value) { _miscData = value; Debug.Log("CG Progression: _miscData set with :" + _miscData); }
             }
         }
 
@@ -499,17 +537,20 @@ namespace ConcealedGarden
         // CRUD//ILSW
         internal void InitSave()
         {
+            Debug.Log("CG Progression: InitSave");
             saveData = defaultSaveData;
         }
 
         internal void LoadSave(int slugNumber)
         {
+            Debug.Log("CG Progression: LoadSave");
             if (slugNumber < 0) throw new InvalidSlugcatException();
             saveData = ReadProgressionFile("save", slugNumber, seed, defaultSaveData);
         }
 
         internal void SaveSave(int slugNumber)
         {
+            Debug.Log("CG Progression: SaveSave");
             if (slugNumber < 0) throw new InvalidSlugcatException();
             if (saveData != defaultSaveData)
                 WriteProgressionFile("save", slugNumber, seed, saveData);
@@ -518,6 +559,7 @@ namespace ConcealedGarden
 
         internal void WipeSave(int slugNumber)
         {
+            Debug.Log("CG Progression: WipeSave");
             if (slugNumber == -1) DeleteAllProgressionFiles("save");
             else DeleteProgressionFile("save", slugNumber);
             if (slugNumber == slugcat) InitSave();
@@ -525,17 +567,20 @@ namespace ConcealedGarden
 
         internal void InitPers()
         {
+            Debug.Log("CG Progression: InitPers");
             persData = defaultPersData;
         }
 
         internal void LoadPers(int slugNumber)
         {
+            Debug.Log("CG Progression: LoadPers");
             if (slugNumber < 0) throw new InvalidSlugcatException();
             persData = ReadProgressionFile("pers", slugNumber, seed, defaultPersData);
         }
 
         internal void SavePers(int slugNumber)
         {
+            Debug.Log("CG Progression: SavePers");
             if (slugNumber < 0) throw new InvalidSlugcatException();
             if (persData != defaultPersData)
                 WriteProgressionFile("pers", slugNumber, seed, persData);
@@ -543,6 +588,7 @@ namespace ConcealedGarden
 
         internal void WipePers(int slugNumber)
         {
+            Debug.Log("CG Progression: WipePers");
             if (slugNumber == -1) DeleteAllProgressionFiles("pers");
             else DeleteProgressionFile("pers", slugNumber);
             if (slugNumber == slugcat) InitPers();
@@ -550,22 +596,26 @@ namespace ConcealedGarden
 
         internal void InitMisc()
         {
+            Debug.Log("CG Progression: InitMisc");
             miscData = defaultMiscData;
         }
 
         internal void LoadMisc()
         {
+            Debug.Log("CG Progression: LoadMisc");
             miscData = ReadProgressionFile("misc", -1, -1, defaultMiscData);
         }
 
         internal void SaveMisc()
         {
+            Debug.Log("CG Progression: SaveMisc");
             if (miscData != defaultMiscData)
                 WriteProgressionFile("misc", -1, -1, miscData);
         }
 
         internal void WipeMisc()
         {
+            Debug.Log("CG Progression: WipeMisc");
             DeleteProgressionFile("misc", -1);
             InitMisc();
         }
@@ -584,50 +634,74 @@ namespace ConcealedGarden
 
         private string ReadProgressionFile(string file, int slugNumber, int validSeed, string defaultData)
         {
+            Debug.Log("CG Progression: ReadProgressionFile");
             // some locals here have the same name as class stuff and caused me a headache at some point
-            if (!directory.Exists) return defaultData;
+            if (!directory.Exists) { Debug.Log("CG Progression: directory doesnt exist, returning defaultData"); return defaultData; }
 
             string slugName = GetSlugcatName(slugNumber);
+            Debug.Log("CG Progression: got slugName :" + slugName);
             string targetFile = GetTargetFilename(file, slugName);
+            Debug.Log("CG Progression: reading from :" + targetFile);
 
-            if (!File.Exists(targetFile)) return defaultData;
+            if (!File.Exists(targetFile)) { Debug.Log("CG Progression: file didn't exist, returning defaultData"); return defaultData; }
 
             string data = File.ReadAllText(targetFile, System.Text.Encoding.UTF8);
+            Debug.Log("CG Progression: got raw contents :" + data);
             string key = data.Substring(0, 32);
+            Debug.Log("CG Progression: got key :" + key);
             data = data.Substring(32, data.Length - 32);
+            Debug.Log("CG Progression: got raw data :" + data);
             if (Custom.Md5Sum(data) != key)
             {
-                Debug.Log($"ConcealedGarden progData file has been tinkered!");
+                Debug.Log("CG Progression: progression file has been tinkered with");
                 progDataTinkered = true;
             }
             else
             {
+                Debug.Log("CG Progression: decrypting with :" + CryptoProgDataKey(slugName));
                 data = CompletelyOptional.Crypto.DecryptString(data, CryptoProgDataKey(slugName));
+                Debug.Log("CG Progression: got decrypted :" + data);
                 string[] seedsplit = Regex.Split(data, "<Seed>"); // expected: <Seed>####<Seed>data
                 if (seedsplit.Length >= 3)
                 {
+                    Debug.Log("CG Progression: expected format");
                     if (int.TryParse(seedsplit[1], out int seed) && seed == validSeed)
+                    {
+                        Debug.Log("CG Progression: got valid seed, returning data :" + seedsplit[2]); 
                         return seedsplit[2];
+                    }
+                    Debug.Log("CG Progression: got invalid seed " + seed + ", expected " + validSeed);
                 }
+                Debug.Log("CG Progression: unexpected format");
             }
+            Debug.Log("CG Progression: couldn't read data, returning defaultData");
             return defaultData;
         }
 
         private void WriteProgressionFile(string file, int slugNumber, int validSeed, string data)
         {
-            if (!directory.Exists) { directory.Create(); }
+            Debug.Log("CG Progression: WriteProgressionFile");
+            if (!directory.Exists) { Debug.Log("CG Progression: directory missing, create"); directory.Create(); }
             string slugName = GetSlugcatName(slugNumber);
+            Debug.Log("CG Progression: got slugName :"+slugName);
             string targetFile = GetTargetFilename(file, slugName);
+            Debug.Log("CG Progression: writing to path :"+targetFile);
+            Debug.Log("CG Progression: seed to write :" + validSeed);
             data = $"<Seed>{validSeed}<Seed>{data}";
-
+            Debug.Log("CG Progression: resulting data to write :"+data);
+            Debug.Log("CG Progression: using key :" + CryptoProgDataKey(slugName));
             string enc = CompletelyOptional.Crypto.EncryptString(data, CryptoProgDataKey(slugName));
+            Debug.Log("CG Progression: encrypted data :" + enc);
             string key = Custom.Md5Sum(enc);
-
+            Debug.Log("CG Progression: key :"+key);
+            Debug.Log("CG Progression: writing :"+(key+enc));
             File.WriteAllText(targetFile, key + enc);
+            Debug.Log("CG Progression: wrote");
         }
 
         private void DeleteProgressionFile(string file, int slugNumber)
         {
+            Debug.Log("CG Progression: DeleteProgressionFile");
             if (!directory.Exists) return;
             string slugName = GetSlugcatName(slugNumber);
             string targetFile = GetTargetFilename(file, slugName);
@@ -638,6 +712,7 @@ namespace ConcealedGarden
 
         private void DeleteAllProgressionFiles(string file)
         {
+            Debug.Log("CG Progression: DeleteAllProgressionFiles");
             if (!directory.Exists) return;
             foreach (var f in directory.GetFiles($"prog{file}{slot}_*.txt"))
             {
@@ -675,6 +750,7 @@ namespace ConcealedGarden
         /// </summary>
         internal protected virtual void SaveDeath(bool saveAsIfPlayerDied, bool saveAsIfPlayerQuit)
         {
+            Debug.Log("CG Progression: SaveDeath");
             SavePers(slugcat);
         }
 
@@ -682,6 +758,7 @@ namespace ConcealedGarden
         // HOOKPOINTS
         internal void InitProgression() // Called when the slot file isn't found on the game's side.
         {
+            Debug.Log("CG Progression: InitProgression");
             // To match the game having a fresh start, wipe all ?
             WipeSave(-1);
             WipePers(-1);
@@ -690,6 +767,10 @@ namespace ConcealedGarden
 
         internal void LoadProgression() // Called on load, slot-switch or post-wipe
         {
+            Debug.Log("CG Progression: LoadProgression");
+            Debug.Log("CG Progression: slot is :"+slot);
+            Debug.Log("CG Progression: slug is :"+ slugcat);
+            Debug.Log("CG Progression: seed is :" + seed);
             InitSave();
             InitPers();
             LoadMisc();
@@ -697,6 +778,10 @@ namespace ConcealedGarden
 
         internal void SaveProgression(bool saveState, bool savePers, bool saveMisc)
         {
+            Debug.Log("CG Progression: SaveProgression");
+            Debug.Log("CG Progression: slot is :" + slot);
+            Debug.Log("CG Progression: slug is :" + slugcat);
+            Debug.Log("CG Progression: seed is :" + seed);
             if (saveState) SaveSave(slugcat);
             if (savePers) SavePers(slugcat);
             if (saveMisc) SaveMisc();
@@ -704,6 +789,7 @@ namespace ConcealedGarden
 
         internal void WipeProgression(int saveStateNumber)
         {
+            Debug.Log("CG Progression: WipeProgression");
             WipeSave(saveStateNumber);
             WipePers(saveStateNumber);
             if (saveStateNumber == -1)
@@ -712,6 +798,7 @@ namespace ConcealedGarden
 
         internal void LoadSaveState()
         {
+            Debug.Log("CG Progression: LoadSaveState");
             LoadSave(slugcat);
             LoadPers(slugcat);
         }
@@ -719,18 +806,18 @@ namespace ConcealedGarden
         /// <summary>
         /// Currently selected saveslot
         /// </summary>
-        public int slot => rw.options.saveSlot;
+        public int slot => rw?.options?.saveSlot ?? -1;
 
         /// <summary>
         /// Currently selected slugcat
         /// </summary>
-        public int slugcat => rw.progression.PlayingAsSlugcat;
+        public int slugcat => rw?.progression?.PlayingAsSlugcat ?? -1;
 
         /// <summary>
         /// Seed of currently loaded savestate
         /// Used for validating loaded progression
         /// </summary>
-        public int seed => rw.progression.currentSaveState != null ? rw.progression.currentSaveState.seed : -1;
+        public int seed => rw?.progression?.currentSaveState?.seed ?? -1;
 
 
         /// <summary>
