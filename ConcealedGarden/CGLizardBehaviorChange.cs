@@ -24,7 +24,7 @@ namespace ConcealedGarden
         private static float LizardAI_LikeOfPlayer(On.LizardAI.orig_LikeOfPlayer orig, LizardAI self, Tracker.CreatureRepresentation player)
         {
             float val = orig(self, player);
-            if (ConcealedGarden.progression?.transfurred ?? false && val < 0.6f)
+            if (ConcealedGarden.progression?.transfurred ?? false && val < 0.6f && !(self.friendTracker.friend != null && player.representedCreature != null && self.friendTracker.friend == player.representedCreature.realizedCreature))
             {
                 val = Mathf.Clamp(Mathf.Lerp(val, 0.6f, 0.25f + self.lizard.abstractCreature.personality.sympathy / 2f), -1f, 1f);
                 val = Mathf.Clamp(Mathf.Lerp(val, val - 0.4f, self.lizard.abstractCreature.personality.dominance), -1f, 1f);

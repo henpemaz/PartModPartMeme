@@ -139,6 +139,8 @@ Garrakx & Topicular - Makers of the awesome mods that help people make more mods
 
             CGDrySpot.Register();
 
+            CGRootShelterGhostFix.Register();
+
             // Screaming into the void
             Debug.Log("CG Fully Loaded");
         }

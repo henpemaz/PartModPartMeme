@@ -2,18 +2,27 @@
 	figure out bad load progression issue
 		1. sava pers with no savestate causes bad seed
 			dream into sleep + new passage showing up = progr reverted and tried to save pers
-			progr code line 133
+				done
+			
 		2. slugbase not calling orig on several progression methods
+			done
+		3. "Fuck it, I just save Ima load an empty file"
+			????
+			
 	hunter hermit deadend
 		make stash
+			done
 	hunter root shelter softlock when echo freezes time
 		make door opener smh
+			done
 	hunter sleepscreen no transparency
+		done
 	
 	lizards/squids fix in LRU
+		not today
 	
 	friend can become agressive after transfo, shouldn`t
-	
+		doesnt affect friend now
 
 sound stuff
 	extra song for tree area

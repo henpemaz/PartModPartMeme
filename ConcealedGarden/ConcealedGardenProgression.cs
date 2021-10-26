@@ -21,7 +21,7 @@ namespace ConcealedGarden
             On.PlayerProgression.InitiateProgression += PlayerProgression_InitiateProgression;
 
             // Savestate instantiation/fetch
-            On.PlayerProgression.GetOrInitiateSaveState += PlayerProgression_GetOrInitiateSaveState;
+            //On.PlayerProgression.GetOrInitiateSaveState += PlayerProgression_GetOrInitiateSaveState; // Slugbase doesn't call orig on this, moved to start
             On.Menu.SlugcatSelectMenu.StartGame += SlugcatSelectMenu_StartGame; // lil bugfix
 
             // Reverts and clears
@@ -30,8 +30,8 @@ namespace ConcealedGarden
             // On.PlayerProgression.Revert += // reverts temp map data, not sure if relevant since it's not saving it and it'll be loading things from disk again
 
             // Saving
-            On.PlayerProgression.SaveDeathPersistentDataOfCurrentState += PlayerProgression_SaveDeathPersistentDataOfCurrentState;
-            On.PlayerProgression.SaveToDisk += PlayerProgression_SaveToDisk;
+            //On.PlayerProgression.SaveDeathPersistentDataOfCurrentState += PlayerProgression_SaveDeathPersistentDataOfCurrentState; // Slugbase doesn't call orig on this, moved to start
+            //On.PlayerProgression.SaveToDisk += PlayerProgression_SaveToDisk; // Slugbase doesn't call orig on this, moved to start
 
             // First call to progression ctor happens before we hook our hooks. OI initialization must call LoadOIsMisc();
             progression = new ConcealedGardenProgression();
@@ -47,6 +47,10 @@ namespace ConcealedGarden
         {
             Debug.Log("CG Progression: Start hook");
             rw = self;
+            On.PlayerProgression.GetOrInitiateSaveState += PlayerProgression_GetOrInitiateSaveState; // Slugbase doesn't call orig on this, moved to start
+            On.PlayerProgression.SaveDeathPersistentDataOfCurrentState += PlayerProgression_SaveDeathPersistentDataOfCurrentState; // Slugbase doesn't call orig on this, moved to start
+            On.PlayerProgression.SaveToDisk += PlayerProgression_SaveToDisk; // Slugbase doesn't call orig on this, moved to start
+
             foreach (System.Reflection.Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
             {
                 if (asm.GetName().Name == "SlugBase")
@@ -129,8 +133,8 @@ namespace ConcealedGarden
         {
             Debug.Log("CG Progression: SaveDeathPersistentDataOfCurrentState hook");
             orig(self, saveAsIfPlayerDied, saveAsIfPlayerQuit);
-            if (getOrInitSavePersLock) return;
-            if(self.currentSaveState != null) SaveOIsPers(saveAsIfPlayerDied, saveAsIfPlayerQuit);
+            if (getOrInitSavePersLock) { Debug.Log("CG Progression: locked from running twice"); return; }
+            SaveOIsPers(saveAsIfPlayerDied, saveAsIfPlayerQuit);
         }
 
         #endregion HOOKS
@@ -174,7 +178,7 @@ namespace ConcealedGarden
         internal static void LoadOIsSave(SaveState saveState, bool loadedFromMemory, bool loadedFromStarve)
         {
             Debug.Log("CG Progression: LoadOIsSave");
-            if (loadedFromMemory) return; // We're good ? Not too sure when this happens
+            if (loadedFromMemory) { Debug.Log("CG Progression: LoadOIsSave loadedFromMemory"); return; } // We're good ? Not too sure when this happens
             progression.LoadSaveState();
             RunPostLoaded();
         }
@@ -189,6 +193,7 @@ namespace ConcealedGarden
         internal static void SaveOIsPers(bool saveAsIfPlayerDied, bool saveAsIfPlayerQuit)
         {
             Debug.Log("CG Progression: SaveOIsPers");
+            if (rw.progression.currentSaveState == null) { Debug.Log("CG Progression: No progression to save"); return; }
             if (!(saveAsIfPlayerDied || saveAsIfPlayerQuit))
             {
                 RunPreSave();
@@ -347,15 +352,15 @@ namespace ConcealedGarden
             if (!directory.Exists) { Debug.Log("CG Progression: directory didn't exist, using defaultData"); DataOnChange(); return; }
             try
             {
-                Debug.Log("CG Progression: scanning for data file");
+                //Debug.Log("CG Progression: scanning for data file");
                 string data = string.Empty;
                 foreach (FileInfo file in directory.GetFiles())
                 {
                     if (file.Name != "data.txt") { continue; }
-                    Debug.Log("CG Progression: data found, reading...");
+                    //Debug.Log("CG Progression: data found, reading...");
                     //LoadData:
                     data = File.ReadAllText(file.FullName, System.Text.Encoding.UTF8);
-                    Debug.Log("CG Progression: got raw :" + data);
+                    //Debug.Log("CG Progression: got raw :" + data);
                     string key = data.Substring(0, 32);
                     data = data.Substring(32, data.Length - 32);
                     if (Custom.Md5Sum(data) != key)
@@ -363,10 +368,10 @@ namespace ConcealedGarden
                         Debug.Log("CG Progression: data tinkered");
                         dataTinkered = true;
                     }
-                    else { Debug.Log("CG Progression: key match"); dataTinkered = false; }
-                    Debug.Log("CG Progression: decrypt using :" + CryptoDataKey);
+                    else { /*Debug.Log("CG Progression: key match");*/ dataTinkered = false; }
+                    //Debug.Log("CG Progression: decrypt using :" + CryptoDataKey);
                     _data = CompletelyOptional.Crypto.DecryptString(data, CryptoDataKey);
-                    Debug.Log("CG Progression: got decrypted :"+ _data);
+                    //Debug.Log("CG Progression: got decrypted :"+ _data);
                     DataOnChange();
                     return;
                 }
@@ -394,22 +399,22 @@ namespace ConcealedGarden
 
             try
             {
-                Debug.Log("CG Progression: data is :" + _data);
+                //Debug.Log("CG Progression: data is :" + _data);
                 string path = string.Concat(new object[] {
                 directory.FullName,
                 "data.txt"
                 });
-                Debug.Log("CG Progression: saving to :" + path);
-                Debug.Log("CG Progression: encrypting with :"+ CryptoDataKey);
+                //Debug.Log("CG Progression: saving to :" + path);
+                //Debug.Log("CG Progression: encrypting with :"+ CryptoDataKey);
                 string enc = CompletelyOptional.Crypto.EncryptString(_data ?? "", CryptoDataKey);
-                Debug.Log("CG Progression: encrypted content :" + enc);
+                //Debug.Log("CG Progression: encrypted content :" + enc);
                 string key = Custom.Md5Sum(enc);
-                Debug.Log("CG Progression: hash key :"+key);
+                //Debug.Log("CG Progression: hash key :"+key);
 
-                Debug.Log("CG Progression: saving :" + (key+enc));
+                //Debug.Log("CG Progression: saving :" + (key+enc));
                 File.WriteAllText(path, key + enc);
 
-                Debug.Log("CG Progression: saved");
+                Debug.Log("CG Progression: saved data");
                 return true;
             }
             catch (Exception ex) { Debug.Log("CG Progression: something bad happened :"+ex.ToString()); Debug.LogException(ex); }
@@ -431,7 +436,7 @@ namespace ConcealedGarden
 
         private class InvalidSlugcatException : ArgumentException
         {
-            public InvalidSlugcatException() : base($"OptionInterface ConcealedGarden tried to use an invalid Slugcat number") { }
+            public InvalidSlugcatException() : base($"ConcealedGarden tried to use an invalid Slugcat number") { }
         }
 
         /// <summary>
@@ -639,18 +644,18 @@ namespace ConcealedGarden
             if (!directory.Exists) { Debug.Log("CG Progression: directory doesnt exist, returning defaultData"); return defaultData; }
 
             string slugName = GetSlugcatName(slugNumber);
-            Debug.Log("CG Progression: got slugName :" + slugName);
+            //Debug.Log("CG Progression: got slugName :" + slugName);
             string targetFile = GetTargetFilename(file, slugName);
             Debug.Log("CG Progression: reading from :" + targetFile);
 
             if (!File.Exists(targetFile)) { Debug.Log("CG Progression: file didn't exist, returning defaultData"); return defaultData; }
 
             string data = File.ReadAllText(targetFile, System.Text.Encoding.UTF8);
-            Debug.Log("CG Progression: got raw contents :" + data);
+            //Debug.Log("CG Progression: got raw contents :" + data);
             string key = data.Substring(0, 32);
-            Debug.Log("CG Progression: got key :" + key);
+            //Debug.Log("CG Progression: got key :" + key);
             data = data.Substring(32, data.Length - 32);
-            Debug.Log("CG Progression: got raw data :" + data);
+            //Debug.Log("CG Progression: got raw data :" + data);
             if (Custom.Md5Sum(data) != key)
             {
                 Debug.Log("CG Progression: progression file has been tinkered with");
@@ -658,21 +663,21 @@ namespace ConcealedGarden
             }
             else
             {
-                Debug.Log("CG Progression: decrypting with :" + CryptoProgDataKey(slugName));
+                //Debug.Log("CG Progression: decrypting with :" + CryptoProgDataKey(slugName));
                 data = CompletelyOptional.Crypto.DecryptString(data, CryptoProgDataKey(slugName));
-                Debug.Log("CG Progression: got decrypted :" + data);
+                //Debug.Log("CG Progression: got decrypted :" + data);
                 string[] seedsplit = Regex.Split(data, "<Seed>"); // expected: <Seed>####<Seed>data
                 if (seedsplit.Length >= 3)
                 {
-                    Debug.Log("CG Progression: expected format");
+                    //Debug.Log("CG Progression: expected format");
                     if (int.TryParse(seedsplit[1], out int seed) && seed == validSeed)
                     {
-                        Debug.Log("CG Progression: got valid seed, returning data :" + seedsplit[2]); 
+                        // Debug.Log("CG Progression: got valid seed, returning data :" + seedsplit[2]); 
                         return seedsplit[2];
                     }
-                    Debug.Log("CG Progression: got invalid seed " + seed + ", expected " + validSeed);
+                    else Debug.Log("CG Progression: got invalid seed " + seed + ", expected " + validSeed);
                 }
-                Debug.Log("CG Progression: unexpected format");
+                else Debug.Log("CG Progression: unexpected format when looking for seed");
             }
             Debug.Log("CG Progression: couldn't read data, returning defaultData");
             return defaultData;
@@ -683,20 +688,20 @@ namespace ConcealedGarden
             Debug.Log("CG Progression: WriteProgressionFile");
             if (!directory.Exists) { Debug.Log("CG Progression: directory missing, create"); directory.Create(); }
             string slugName = GetSlugcatName(slugNumber);
-            Debug.Log("CG Progression: got slugName :"+slugName);
+            //Debug.Log("CG Progression: got slugName :"+slugName);
             string targetFile = GetTargetFilename(file, slugName);
-            Debug.Log("CG Progression: writing to path :"+targetFile);
-            Debug.Log("CG Progression: seed to write :" + validSeed);
+            Debug.Log("CG Progression: writing to :"+targetFile);
+            //Debug.Log("CG Progression: seed to write :" + validSeed);
             data = $"<Seed>{validSeed}<Seed>{data}";
-            Debug.Log("CG Progression: resulting data to write :"+data);
-            Debug.Log("CG Progression: using key :" + CryptoProgDataKey(slugName));
+            //Debug.Log("CG Progression: resulting data to write :"+data);
+            //Debug.Log("CG Progression: using key :" + CryptoProgDataKey(slugName));
             string enc = CompletelyOptional.Crypto.EncryptString(data, CryptoProgDataKey(slugName));
-            Debug.Log("CG Progression: encrypted data :" + enc);
+            //Debug.Log("CG Progression: encrypted data :" + enc);
             string key = Custom.Md5Sum(enc);
-            Debug.Log("CG Progression: key :"+key);
-            Debug.Log("CG Progression: writing :"+(key+enc));
+            //Debug.Log("CG Progression: key :"+key);
+            //Debug.Log("CG Progression: writing :"+(key+enc));
             File.WriteAllText(targetFile, key + enc);
-            Debug.Log("CG Progression: wrote");
+            //Debug.Log("CG Progression: wrote");
         }
 
         private void DeleteProgressionFile(string file, int slugNumber)
@@ -768,8 +773,8 @@ namespace ConcealedGarden
         internal void LoadProgression() // Called on load, slot-switch or post-wipe
         {
             Debug.Log("CG Progression: LoadProgression");
-            Debug.Log("CG Progression: slot is :"+slot);
-            Debug.Log("CG Progression: slug is :"+ slugcat);
+            Debug.Log("CG Progression: slot is :" + slot);
+            Debug.Log("CG Progression: slug is :" + slugcat);
             Debug.Log("CG Progression: seed is :" + seed);
             InitSave();
             InitPers();
@@ -799,6 +804,9 @@ namespace ConcealedGarden
         internal void LoadSaveState()
         {
             Debug.Log("CG Progression: LoadSaveState");
+            Debug.Log("CG Progression: slot is :" + slot);
+            Debug.Log("CG Progression: slug is :" + slugcat);
+            Debug.Log("CG Progression: seed is :" + seed);
             LoadSave(slugcat);
             LoadPers(slugcat);
         }
