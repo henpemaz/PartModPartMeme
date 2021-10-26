@@ -19,7 +19,7 @@ namespace ConcealedGarden
         public ConcealedGarden()
         {
             this.ModID = "Concealed Garden";
-            this.Version = "1.0";
+            this.Version = "1.1";
             this.author = "Henpemaz";
 
             instance = this;

@@ -133,7 +133,7 @@ namespace ConcealedGarden
         {
             Debug.Log("CG Progression: SaveDeathPersistentDataOfCurrentState hook");
             orig(self, saveAsIfPlayerDied, saveAsIfPlayerQuit);
-            if (getOrInitSavePersLock) { Debug.Log("CG Progression: locked from running twice"); return; }
+            if (getOrInitSavePersLock) { /*Debug.Log("CG Progression: locked from running twice");*/ return; }
             SaveOIsPers(saveAsIfPlayerDied, saveAsIfPlayerQuit);
         }
 
@@ -633,8 +633,7 @@ namespace ConcealedGarden
 
         private string GetTargetFilename(string file, string slugName)
         {
-            return directory.FullName + Path.DirectorySeparatorChar +
-                $"prog{file}{slot}{(string.IsNullOrEmpty(slugName) ? string.Empty : "_" + slugName)}.txt";
+            return directory.FullName + $"prog{file}{slot}{(string.IsNullOrEmpty(slugName) ? string.Empty : "_" + slugName)}.txt";
         }
 
         private string ReadProgressionFile(string file, int slugNumber, int validSeed, string defaultData)

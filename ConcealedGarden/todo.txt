@@ -22,7 +22,7 @@
 		not today
 	
 	friend can become agressive after transfo, shouldn`t
-		doesnt affect friend now
+		already shouldn't be the case, but doesnt affect friend now :/
 
 sound stuff
 	extra song for tree area
