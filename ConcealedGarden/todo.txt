@@ -22,7 +22,8 @@
 		not today
 	
 	friend can become agressive after transfo, shouldn`t
-		already shouldn't be the case, but doesnt affect friend now :/
+		already shouldn't be the case
+		ok its definitely no longer the case lmao
 
 sound stuff
 	extra song for tree area

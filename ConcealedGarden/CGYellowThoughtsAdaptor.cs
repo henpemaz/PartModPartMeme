@@ -38,6 +38,11 @@ namespace ConcealedGarden
         //    orig(self, packMember, rep);
         //}
 
+        public CGYellowThoughtsAdaptor()
+        {
+            this.noTalk = Random.Range(-20, 20);
+        }
+
         class MessagePool
         {
             private string[] messages;
@@ -54,7 +59,8 @@ namespace ConcealedGarden
                 get
                 {
                     int roll;
-                    while ((roll = Random.Range(0, messages.Length)) == lastIndex) ; // Keep rolling
+                    int count = 0;
+                    while ((roll = Random.Range(0, messages.Length)) == lastIndex && count < 100) count++; // Keep rolling
                     lastIndex = roll;
                     return messages[roll];
                 }
