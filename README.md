@@ -4,7 +4,7 @@ My Rain World modding projects
 Some have to-dos, some even have comments! Feel free to reach me over on discord if you want to contribute or make derivative works.
 
 Special thanks to:
-- Talber - Lots of contributions in ConcealedGarden and Lizardskin and ShelterBehaviors code :purple_heart:
+- Thalber - Lots of contributions in ConcealedGarden and Lizardskin and ShelterBehaviors code :purple_heart:
 - SlimeCubed - General advice while I was working on several of these, also the creator of Slugbase (framework for programmercat) and AttachedFields.cs
 - Casheww - Contributed a proper string input method into ManagedPlacedObjects, tysm
 
