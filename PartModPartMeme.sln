@@ -76,6 +76,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModdingDatingSim", "Modding
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SavePreparator", "SavePreparator\SavePreparator.csproj", "{2A1664D1-3F0D-44CC-A823-70E7B09E9CAC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapExporter", "MapExporter\MapExporter.csproj", "{B77EFD1D-F354-4F6E-8448-B104A6ED45DA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -218,6 +220,10 @@ Global
 		{2A1664D1-3F0D-44CC-A823-70E7B09E9CAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2A1664D1-3F0D-44CC-A823-70E7B09E9CAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2A1664D1-3F0D-44CC-A823-70E7B09E9CAC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B77EFD1D-F354-4F6E-8448-B104A6ED45DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B77EFD1D-F354-4F6E-8448-B104A6ED45DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B77EFD1D-F354-4F6E-8448-B104A6ED45DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B77EFD1D-F354-4F6E-8448-B104A6ED45DA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
