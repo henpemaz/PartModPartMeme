@@ -679,6 +679,7 @@ namespace ShelterBehaviors
                 this.room = room;
                 placedObject = pObj;
                 placedObjectIndex = room.roomSettings.placedObjects.IndexOf(pObj);
+                if(room.game.Players.Count == 0) this.Destroy();
                 // player loaded in room
                 foreach (var p in room.game.Players)
                 {
