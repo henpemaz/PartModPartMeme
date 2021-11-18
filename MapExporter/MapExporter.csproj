@@ -35,6 +35,9 @@
       <HintPath>..\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="CustomRegions">
+      <HintPath>..\References\CustomRegions.dll</HintPath>
+    </Reference>
     <Reference Include="HOOKS-Assembly-CSharp">
       <HintPath>..\References\HOOKS-Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
@@ -63,8 +66,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MapContent.cs" />
     <Compile Include="MapExporter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LizardSkin\LizardSkin.csproj">
+      <Project>{61cc62be-031e-475e-b30c-0e0ac08ae4f2}</Project>
+      <Name>LizardSkin</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
