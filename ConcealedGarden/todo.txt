@@ -1,4 +1,12 @@
-﻿1.1
+﻿for 1.2:
+	fix tamed scav, follow me properly damn it
+	tamed spider shouldn't die in shelter
+	kill hostiles in door-less shelter
+	creatures zero-G fix
+	directoryinfo refresh fix
+	
+
+1.1
 	figure out bad load progression issue
 		1. sava pers with no savestate causes bad seed
 			dream into sleep + new passage showing up = progr reverted and tried to save pers
