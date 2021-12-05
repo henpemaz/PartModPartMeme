@@ -15,6 +15,12 @@ namespace MapExporter
 {
     public partial class MapExporter : PartialityMod
     {
+        // config
+        string skipTo = null;//"SU";//
+        bool oneRegion = false;
+        bool exportScreenshots = false;
+        string exportName = "ExportModded";
+
         public MapExporter()
         {
             this.ModID = "MapExporter";
@@ -148,6 +154,15 @@ namespace MapExporter
             for (int i = self.roomSettings.effects.Count - 1; i >= 0; i--)
             {
                 if (self.roomSettings.effects[i].type == RoomSettings.RoomEffect.Type.VoidSea) self.roomSettings.effects.RemoveAt(i); // breaks with no player
+                else if (self.roomSettings.effects[i].type.ToString() == "CGCameraZoom") self.roomSettings.effects.RemoveAt(i); // bad for screenies
+                else if(((int)self.roomSettings.effects[i].type) >= 27 && ((int)self.roomSettings.effects[i].type) <= 36) self.roomSettings.effects.RemoveAt(i); // insects bad for screenies
+            }
+            foreach (var item in self.roomSettings.placedObjects)
+            {
+                if (item.type == PlacedObject.Type.InsectGroup) item.active = false;
+                if (item.type == PlacedObject.Type.FlyLure
+                    || item.type == PlacedObject.Type.JellyFish) self.waitToEnterAfterFullyLoaded = UnityEngine.Mathf.Max(self.waitToEnterAfterFullyLoaded, 20);
+
             }
             orig(self);
         }
@@ -204,7 +219,7 @@ namespace MapExporter
 
         string PathOfRegion(string region)
         {
-            string path = Custom.RootFolderDirectory() + "Export" + Path.DirectorySeparatorChar + region + Path.DirectorySeparatorChar;
+            string path = Custom.RootFolderDirectory() + exportName + Path.DirectorySeparatorChar + region + Path.DirectorySeparatorChar;
             Directory.CreateDirectory(path);
             return path;
         }
@@ -219,11 +234,6 @@ namespace MapExporter
             return PathOfRoom(region, roomname) + "_" + num.ToString() + ".png";
         }
 
-        // config
-        string skipTo = null;
-        bool oneRegion = false;
-        bool exportScreenshots = true;
-
         // Runs half-synchronously to the game loop, bless iters
         System.Collections.IEnumerator captureTask;
         private System.Collections.IEnumerator CaptureTask(RainWorldGame game)
@@ -235,6 +245,7 @@ namespace MapExporter
             while (game.cameras[0].room == null || !game.cameras[0].room.ReadyForPlayer) yield return null;
             for (int i = 0; i < 40; i++) yield return null;
             // ok game loaded I suppose
+            game.cameras[0].room.abstractRoom.Abstractize();
 
             // Iterate over each region
             bool skipped = skipTo == null;
@@ -270,22 +281,17 @@ namespace MapExporter
                     if(game.overWorld.activeWorld.loadingRooms.Count > 0 && game.overWorld.activeWorld.loadingRooms[0].room == room.realizedRoom)
                     {
                         RoomPreparer loading = game.overWorld.activeWorld.loadingRooms[0];
-                        yield return null;
-                        // not too sure how each of these states work so just uuuh bruteforce
-                        while (!room.realizedRoom.ReadyForPlayer)
+                        while (!loading.done)
                         {
-                            if (!loading.done)
-                                for (int i = 0; i < 1000; i++)
-                                {
-                                    loading.Update();
-                                    if (loading.done) break;
-                                }
-                            if (!room.realizedRoom.ReadyForPlayer)
-                                Debug.Log("capture task still loading... ");
-                            yield return null;
+                            loading.Update();
                         }
                     }
-
+                    yield return null;
+                    while (!(room.realizedRoom.loadingProgress >= 3 && room.realizedRoom.waitToEnterAfterFullyLoaded < 1))
+                    {
+                        room.realizedRoom.Update();
+                    }
+                    yield return null;
                     // go to room
                     game.cameras[0].MoveCamera(room.realizedRoom, 0);
                     game.cameras[0].virtualMicrophone.AllQuiet();
@@ -297,14 +303,15 @@ namespace MapExporter
                     // on each camera
                     for (int i = 0; i < room.realizedRoom.cameraPositions.Length; i++)
                     {
-                        Debug.Log("capture task camera " + i);
-                        Debug.Log("capture task camera has " + room.realizedRoom.cameraPositions.Length + " positions");
+                        //Debug.Log("capture task camera " + i);
+                        //Debug.Log("capture task camera has " + room.realizedRoom.cameraPositions.Length + " positions");
                         // load screen
                         game.cameras[0].MoveCamera(i);
                         while(game.cameras[0].www != null) yield return null;
+                        yield return null;
                         yield return null; // one extra frame please
                         // fire!
-                        if(exportScreenshots) UnityEngine.Application.CaptureScreenshot(PathOfScreenshot(regionstr, room.name, i));
+                        if (exportScreenshots) UnityEngine.Application.CaptureScreenshot(PathOfScreenshot(regionstr, room.name, i));
 
                         // palette and colors
                         mapContent.LogPalette(game.cameras[0].currentPalette);

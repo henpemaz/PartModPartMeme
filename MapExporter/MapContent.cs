@@ -19,6 +19,11 @@ namespace MapExporter
         private readonly string name;
         private readonly string acronym;
 
+        List<Color> fgcolors;
+        List<Color> bgcolors;
+        List<Color> sccolors;
+        private HashSet<string> worldSpawns;
+
         public MapContent(World world)
         {
             acronym = world.name;
@@ -29,6 +34,9 @@ namespace MapExporter
 
             fgcolors = new List<Color>();
             bgcolors = new List<Color>();
+            sccolors = new List<Color>();
+
+            worldSpawns = new HashSet<string>();
 
             DevInterface.DevUI fakeDevUi = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(DevInterface.DevUI)) as DevInterface.DevUI;
             DevInterface.MapPage fakeMapPage = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(DevInterface.MapPage)) as DevInterface.MapPage;
@@ -63,10 +71,66 @@ namespace MapExporter
             {
                 if(!room.Value.everParsed) { Debug.Log("Room " + room.Key + " doesn't have map data"); Debug.LogError("Room " + room.Key + " doesn't have map data"); }
             }
+
+            LoadSpawns(world);
+        }
+
+        private void LoadSpawns(World world)
+        {
+            string vanillaPath = string.Concat(new object[]
+            {
+                Custom.RootFolderDirectory(),
+                Path.DirectorySeparatorChar,
+                "World",
+                Path.DirectorySeparatorChar,
+                "Regions",
+                Path.DirectorySeparatorChar,
+                world.name,
+                Path.DirectorySeparatorChar,
+                "world_",
+                world.name,
+                ".txt"
+            });
+
+            if (File.Exists(vanillaPath))
+            {
+                var raw = File.ReadAllLines(vanillaPath);
+                AssimilateCreatures(raw);
+            }
+
+            foreach (KeyValuePair<string, string> keyValues in CustomRegions.Mod.CustomWorldMod.activatedPacks)
+            {
+
+                string worldXXFile = CustomRegions.Mod.CRExtras.BuildPath(keyValues.Value, CustomRegions.Mod.CRExtras.CustomFolder.RegionID, regionID: world.name,
+                    file: "world_" + world.name + ".txt");
+
+                if (!File.Exists(worldXXFile))
+                {
+                    continue;
+                }
+                AssimilateCreatures(File.ReadAllLines(worldXXFile));
+            }
+        }
+
+        private void AssimilateCreatures(IEnumerable<string> raw)
+        {
+            bool insideofcreatures = false;
+            foreach (var item in raw)
+            {
+                if (item == "CREATURES") insideofcreatures = true;
+                else if (item == "END CREATURES") insideofcreatures = false;
+                else if (insideofcreatures)
+                {
+                    if (string.IsNullOrEmpty(item) || item.StartsWith("//")) continue;
+                    this.worldSpawns.Add(item);
+                }
+            }
         }
 
         static float[] vec2arr(Vector2 vec) => new float[] { vec.x, vec.y };
         static float[] vec2arr(Vector3 vec) => new float[] { vec.x, vec.y, vec.z };
+        static int[] intvec2arr(RWCustom.IntVector2 vec) => new int[] { vec.x, vec.y};
+
 
         public void UpdateRoom(Room room)
         {
@@ -105,27 +169,44 @@ namespace MapExporter
             // from room
             public Vector2[] cameras;
             private int[] size;
+            private int[,][] tiles;
+            private IntVector2[] nodes;
 
             public void UpdateEntry(Room room)
             {
                 cameras = room.cameraPositions;
 
                 this.size = new int[] { room.Width, room.Height };
+
+                this.tiles = new int[room.Width, room.Height][];
+                for (int k = 0; k < room.Width; k++)
+                {
+                    for (int l = 0; l < room.Height; l++)
+                    {
+                        // Dont like either available formats ?
+                        // Invent a new format
+                        this.tiles[k, l] = new int[] { (int)room.Tiles[k, l].Terrain, (room.Tiles[k, l].verticalBeam ? 2:0) + (room.Tiles[k, l].horizontalBeam ? 1:0), (int)room.Tiles[k, l].shortCut};
+                        //terain, vb+hb, sc
+                    }
+                }
+                this.nodes = room.exitAndDenIndex;
             }
 
             // wish there was a better way to do this
             public Dictionary<string, object> ToJson()
             {
                 return new Dictionary<string, object>()
-                    {
-                        { "roomName", roomName },
-                        { "canPos", vec2arr(canPos) },
-                        { "canLayer", canLayer },
-                        { "devPos", vec2arr(devPos) },
-                        { "subregion", subregion },
-                        { "cameras", cameras != null ? (from c in cameras select vec2arr(c)).ToArray() : null},
-                    { "size", size}
-                    };
+                {
+                    { "roomName", roomName },
+                    { "canPos", vec2arr(canPos) },
+                    { "canLayer", canLayer },
+                    { "devPos", vec2arr(devPos) },
+                    { "subregion", subregion },
+                    { "cameras", cameras != null ? (from c in cameras select vec2arr(c)).ToArray() : null},
+                    { "nodes", nodes != null ? (from n in nodes select intvec2arr(n)).ToArray() : null},
+                    { "size", size},
+                    { "tiles", tiles},
+                };
             }
         }
 
@@ -156,8 +237,8 @@ namespace MapExporter
                 {
                     { "roomA", roomA },
                     { "roomB", roomB },
-                    { "posA", posA },
-                    { "posB", posB },
+                    { "posA", intvec2arr(posA) },
+                    { "posB", intvec2arr(posB) },
                     { "dirA", dirA },
                     { "dirB", dirB },
                 };
@@ -275,6 +356,8 @@ namespace MapExporter
                 { "connections", connections },
                 { "fgcolors" , (from s in fgcolors select  vec2arr((Vector3)(Vector4)s)).ToList()},
                 { "bgcolors" , (from s in bgcolors select  vec2arr((Vector3)(Vector4)s)).ToList()},
+                { "sccolors" , (from s in sccolors select  vec2arr((Vector3)(Vector4)s)).ToList()},
+                { "spawns", worldSpawns.ToArray()},
             };
         }
 
@@ -283,11 +366,11 @@ namespace MapExporter
             // get sky color and fg color (px 00 and 07)
             Color fg = currentPalette.texture.GetPixel(0, 0);
             Color bg = currentPalette.texture.GetPixel(0, 7);
+            Color sc = currentPalette.shortCutSymbol;
             this.fgcolors.Add(fg);
             this.bgcolors.Add(bg);
-        }
+            this.sccolors.Add(sc);
 
-        List<Color> fgcolors;
-        List<Color> bgcolors;
+        }
     }
 }
