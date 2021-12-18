@@ -80,6 +80,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapExporter", "MapExporter\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestMod", "TestMod\TestMod.csproj", "{703744CF-CCBE-4EDE-A9F2-E184B18C0C3E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapWarp", "MapWarp\MapWarp.csproj", "{23B78C7B-82D1-4307-9693-D2C9A40045BA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -230,6 +232,10 @@ Global
 		{703744CF-CCBE-4EDE-A9F2-E184B18C0C3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{703744CF-CCBE-4EDE-A9F2-E184B18C0C3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{703744CF-CCBE-4EDE-A9F2-E184B18C0C3E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{23B78C7B-82D1-4307-9693-D2C9A40045BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23B78C7B-82D1-4307-9693-D2C9A40045BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23B78C7B-82D1-4307-9693-D2C9A40045BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23B78C7B-82D1-4307-9693-D2C9A40045BA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
