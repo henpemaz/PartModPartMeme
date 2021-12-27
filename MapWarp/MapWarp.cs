@@ -38,6 +38,7 @@ namespace MapWarp
             On.DevInterface.MapPage.NewMode += MapPage_NewMode;
             On.DevInterface.MapPage.Signal += MapPage_Signal;
 
+            // Bugfixxes
             On.VirtualMicrophone.NewRoom += VirtualMicrophone_NewRoom;
 
         }
@@ -111,11 +112,13 @@ namespace MapWarp
             newWorld.rainCycle.cycleLength = oldWorld.rainCycle.cycleLength;
             newWorld.rainCycle.timer = oldWorld.rainCycle.timer;
 
-
-            MovePlayers(newWorld.abstractRooms[0], 0, true);
+            MovePlayers(newWorld.offScreenDen, 0, true); // newWorld.abstractRooms[0]
 
             self.owner.ClearSprites();
             self.owner.game.devUI = null;
+
+            self.owner.game.shortcuts.Update(); // tick and place players maybe
+
             // dirty fix
             newWorld.game.cameras[0].room.abstractRoom = newWorld.abstractRooms[1];
             self.owner.game.devUI = new DevInterface.DevUI(self.owner.game);
@@ -142,6 +145,17 @@ namespace MapWarp
                     self.modeSpecificNodes.Add(new DevInterface.Button(self.owner, "region_"+region, self, curpos, 40f, region));
                     self.subNodes.Add(self.modeSpecificNodes[self.modeSpecificNodes.Count - 1]);
                     curpos.y -= 20;
+                }
+
+                // Hold C on dev page ? reload all textures
+                if (Input.GetKey("c"))
+                {
+                    foreach(var r in self.map.roomReps)
+                    {
+                        r.mapTex = null;
+                        r.texture = null;
+                        HeavyTexturesCacheExtensions.ClearAtlas("MapTex_" + r.room.name);
+                    }
                 }
             }
         }
@@ -204,6 +218,12 @@ namespace MapWarp
                     MovePlayers(room, nodeclicked, false);
                 }
             }
+            if (self.MouseOver && Input.GetMouseButton(1) && self.miniMap.roomRep.mapTex != null) // right-clicked : reload ?
+            {
+                self.miniMap.roomRep.mapTex = null;
+                self.miniMap.roomRep.texture = null;
+                HeavyTexturesCacheExtensions.ClearAtlas("MapTex_" + self.miniMap.roomRep.room.name);
+            }
         }
 
         private void MovePlayers(AbstractRoom room, int nodeIndex, bool betweenWorlds)
@@ -262,12 +282,60 @@ namespace MapWarp
                     {
                         p.Move(dest); // nullrefs on rooms between worlds...
                     }
-                    else
+                    else // manual patchup lol
                     {
+                        AbstractRoom src = p.Room;
+                        if (p.Room == room) continue;
                         // todo
+                        foreach(var s in p.stuckObjects)
+                        {
+                            for(int i = 0; i < 2; i++)
+                            {
+                                var obj = (i == 0) ? s.A : s.B;
+                                if (obj.world == room.world) continue;
+                                if (obj is AbstractCreature cA) // creature
+                                {
+                                    if (cA.Quantify && !cA.slatedForDeletion) // speschiul
+                                    {
+                                        src.RemoveEntity(obj);
+                                        cA.Destroy();
+                                        room.AddQuantifiedCreature(dest.abstractNode, cA.creatureTemplate.type);
+                                    }
+                                    else // regular
+                                    {
+                                        src.RemoveEntity(obj);
+                                        room.AddEntity(obj);
+                                        obj.pos = dest;
+                                        obj.timeSpentHere = 0;
+                                        if (cA.abstractAI != null)
+                                        {
+                                            cA.abstractAI.lastRoom = src.index;
+                                            cA.abstractAI.Moved();
+                                        }
+                                    }
+                                }
+                                else // physob
+                                {
+                                    src.RemoveEntity(obj);
+                                    room.AddEntity(obj);
+                                    obj.pos = dest;
+                                    obj.timeSpentHere = 0;
+                                }
+                                obj.world = room.world;
+                            }
+                        }
                     }
                 }
             }
+        }
+    }
+
+    public static class HeavyTexturesCacheExtensions
+    {
+        public static void ClearAtlas(string atlas)
+        {
+            HeavyTexturesCache.futileAtlasListings.Remove(atlas);
+            Futile.atlasManager.UnloadAtlas(atlas);
         }
     }
 }
