@@ -26,39 +26,103 @@ namespace MapWarp
         {
             base.OnEnable();
             // Hooking code goose hre
-
-            // Click
-            On.DevInterface.RoomPanel.Update += RoomPanel_Update;
-
-            // Teleportation!
-            On.ShortcutHandler.TeleportingCreatureArrivedInRealizedRoom += ShortcutHandler_TeleportingCreatureArrivedInRealizedRoom;
-            On.AbstractCreature.Realize += AbstractCreature_Realize;
-
+            
             // Region browsing
             On.DevInterface.MapPage.NewMode += MapPage_NewMode;
             On.DevInterface.MapPage.Signal += MapPage_Signal;
 
-            // Bugfixxes
-            On.VirtualMicrophone.NewRoom += VirtualMicrophone_NewRoom;
+            On.DevInterface.MapObject.Update += MapObject_Update;
 
+            // Click
+            On.DevInterface.RoomPanel.Update += RoomPanel_Update;
+
+            // Teleportation enabler!
+            On.ShortcutHandler.TeleportingCreatureArrivedInRealizedRoom += ShortcutHandler_TeleportingCreatureArrivedInRealizedRoom;
+            On.World.GetAbstractRoom_1 += World_GetAbstractRoom_1; // fixup for being able to teleport between two worlds
+
+            // Bugfixxes
+            // On.AbstractCreature.Realize += AbstractCreature_Realize;
+            On.VirtualMicrophone.NewRoom += VirtualMicrophone_NewRoom;
         }
 
-        /// <summary>
-        /// Fix gate noises following the player through rooms
-        /// copied over from ExtendedGates
-        /// </summary>
-        private void VirtualMicrophone_NewRoom(On.VirtualMicrophone.orig_NewRoom orig, VirtualMicrophone self, Room room)
+        private void MapObject_Update(On.DevInterface.MapObject.orig_Update orig, DevInterface.MapObject self)
         {
-            orig(self, room);
-            for (int i = self.soundObjects.Count - 1; i >= 0; i--)
+            if (self.roomLoaderIndex < self.world.NumberOfRooms - 1)
             {
-                if (self.soundObjects[i] is VirtualMicrophone.PositionedSound) // Doesn't make sense that this carries over
+                if (self.roomReps[self.roomLoaderIndex].mapTex != null) //texture found
                 {
-                    // I was going to do somehtin supercomplicated like test if controller as loop was in the same room but screw it
-                    //VirtualMicrophone.ObjectSound obj = (self.soundObjects[i] as VirtualMicrophone.ObjectSound);
-                    //if (obj.controller != null && )
-                    self.soundObjects[i].Destroy();
-                    self.soundObjects.RemoveAt(i);
+                    //bool shorcutsPlaced = false;
+                    //if (self.roomReps[self.roomLoaderIndex].nodePositions.Length == 0) shorcutsPlaced = true;
+                    //else
+                    //{
+                    //    for(int i = 0; i < self.roomReps[self.roomLoaderIndex].nodePositions.Length; i++)
+                    //    {
+                    //        if(self.roomReps[self.roomLoaderIndex].nodePositions[i].x != 0 || self.roomReps[self.roomLoaderIndex].nodePositions[i].y != 0)
+                    //        {
+                    //            shorcutsPlaced = true;
+                    //        }
+                    //    }
+                    //}
+                    self.roomReps[self.roomLoaderIndex].mapTex = null;
+                    self.roomReps[self.roomLoaderIndex].texture = null;
+                    foreach (var node in (self.world.game.devUI.activePage as DevInterface.MapPage).modeSpecificNodes)
+                    {
+                        if (node is DevInterface.RoomPanel panel && panel.roomRep == self.roomReps[self.roomLoaderIndex])
+                        {
+                            panel.fSprites[0].element = Futile.atlasManager.GetElementWithName("pixel");
+                        }
+                    }
+                    
+                    //self.miniMap.fSprites[0].element = Futile.atlasManager.GetElementWithName("pixel");
+                    HeavyTexturesCacheExtensions.ClearAtlas("MapTex_" + self.roomReps[self.roomLoaderIndex].room.name);
+                    //self.Refresh();
+                }
+            }
+            orig(self);
+        }
+
+        World oldWorld;
+        private AbstractRoom World_GetAbstractRoom_1(On.World.orig_GetAbstractRoom_1 orig, World self, int room)
+        {
+            AbstractRoom val = orig(self, room);
+            if (oldWorld != null && val == null)
+            {
+                val = orig(oldWorld, room);
+            }
+            return val;
+        }
+
+        // Create ui in Dev view
+        private void MapPage_NewMode(On.DevInterface.MapPage.orig_NewMode orig, DevInterface.MapPage self)
+        {
+            orig(self);
+
+            if (!self.canonView)
+            {
+                var regions = Menu.FastTravelScreen.GetRegionOrder();
+                Vector2 curpos = new Vector2(120f, 560f);
+                self.modeSpecificNodes.Add(new DevInterface.DevUILabel(self.owner, "regions", self, curpos, 60f, "Regions:"));
+                self.subNodes.Add(self.modeSpecificNodes[self.modeSpecificNodes.Count - 1]);
+                curpos.x += 20;
+                curpos.y -= 30;
+
+                for (int i = 0; i < regions.Count; i++)
+                {
+                    string region = regions[i];
+                    self.modeSpecificNodes.Add(new DevInterface.Button(self.owner, "region_" + region, self, curpos, 40f, region));
+                    self.subNodes.Add(self.modeSpecificNodes[self.modeSpecificNodes.Count - 1]);
+                    curpos.y -= 20;
+                }
+
+                // Hold C on dev page ? reload all textures
+                if (Input.GetKey("c"))
+                {
+                    foreach (var r in self.map.roomReps)
+                    {
+                        r.mapTex = null;
+                        r.texture = null;
+                        HeavyTexturesCacheExtensions.ClearAtlas("MapTex_" + r.room.name);
+                    }
                 }
             }
         }
@@ -78,10 +142,11 @@ namespace MapWarp
                 return;
             }
             Debug.Log("MapWarp: switching map to " + target);
-            var oldWorld = self.owner.game.world;
+            oldWorld = self.owner.game.world;
+
             self.owner.game.overWorld.LoadWorld(target, self.owner.game.overWorld.PlayerCharacterNumber, false);
             var newWorld = self.owner.game.world;
-            
+
             // from gate switching Overworld.worldloaded
             if (self.owner.game.roomRealizer != null)
             {
@@ -107,71 +172,113 @@ namespace MapWarp
                     newWorld.game.cameras[num].hud.textPrompt.subregionTracker.lastShownRegion = 0;
                 }
             }
+
             oldWorld.regionState.AdaptRegionStateToWorld(-1, -1);
             oldWorld.regionState.world = null;
             newWorld.rainCycle.cycleLength = oldWorld.rainCycle.cycleLength;
             newWorld.rainCycle.timer = oldWorld.rainCycle.timer;
 
-            MovePlayers(newWorld.offScreenDen, 0, true); // newWorld.abstractRooms[0]
-
+            foreach (var p in newWorld.game.Players)
+            {
+                p.world = newWorld;
+                if (p.abstractAI != null)
+                {
+                    p.abstractAI.lastRoom = newWorld.offScreenDen.index;
+                    p.abstractAI.NewWorld(newWorld);
+                }
+                foreach (var s in p.stuckObjects)
+                {
+                    for (int i = 0; i < 2; i++)
+                    {
+                        var obj = (i == 0) ? s.A : s.B;
+                        if (obj.world == newWorld) continue; // already moved
+                        obj.world = newWorld;
+                        if (obj is AbstractCreature cA) // creature
+                        {
+                            if (cA.abstractAI != null)
+                            {
+                                cA.abstractAI.lastRoom = newWorld.firstRoomIndex;
+                                cA.abstractAI.NewWorld(newWorld);
+                                if (cA.creatureTemplate.AI) cA.InitiateAI();
+                            }
+                        }
+                    }
+                }
+            }
+            
+            MovePlayers(newWorld.abstractRooms[0], 0);
+            while (newWorld.loadingRooms.Count > 0 && !newWorld.loadingRooms[0].done) newWorld.loadingRooms[0].Update();
+            newWorld.game.shortcuts.Update(); // tick and place
+            oldWorld = null;
+            
+            // keeping the map up nullrefs
             self.owner.ClearSprites();
             self.owner.game.devUI = null;
-
-            self.owner.game.shortcuts.Update(); // tick and place players maybe
-
             // dirty fix
             newWorld.game.cameras[0].room.abstractRoom = newWorld.abstractRooms[1];
             self.owner.game.devUI = new DevInterface.DevUI(self.owner.game);
             self.owner.game.devUI.SwitchPage(3);
         }
 
-        // Create ui in Dev view
-        private void MapPage_NewMode(On.DevInterface.MapPage.orig_NewMode orig, DevInterface.MapPage self)
+        private void RoomPanel_Update(On.DevInterface.RoomPanel.orig_Update orig, DevInterface.RoomPanel self)
         {
             orig(self);
 
-            if (!self.canonView)
+            if (self.miniMap != null && !self.CanonView && self.owner.mouseClick && self.MouseOver)
             {
-                var regions = Menu.FastTravelScreen.GetRegionOrder();
-                Vector2 curpos = new Vector2(120f, 560f);
-                self.modeSpecificNodes.Add(new DevInterface.DevUILabel(self.owner, "regions", self, curpos, 60f, "Regions:"));
-                self.subNodes.Add(self.modeSpecificNodes[self.modeSpecificNodes.Count - 1]);
-                curpos.x += 20;
-                curpos.y -= 30;
-
-                for (int i = 0; i < regions.Count; i++)
+                Debug.Log("MapWarp clicked on room " + self.miniMap.roomRep.room.name);
+                int nodeclicked = -1;
+                Vector2 mousePos = self.owner.mousePos - self.miniMap.absPos;
+                for (int i = 0; i < self.miniMap.nodeSquarePositions.Length; i++)
                 {
-                    string region = regions[i];
-                    self.modeSpecificNodes.Add(new DevInterface.Button(self.owner, "region_"+region, self, curpos, 40f, region));
-                    self.subNodes.Add(self.modeSpecificNodes[self.modeSpecificNodes.Count - 1]);
-                    curpos.y -= 20;
-                }
-
-                // Hold C on dev page ? reload all textures
-                if (Input.GetKey("c"))
-                {
-                    foreach(var r in self.map.roomReps)
+                    Vector2 delta = mousePos - self.miniMap.nodeSquarePositions[i];
+                    if (delta.x > -8 && delta.x < 8 && delta.y > -8 && delta.y < 8)
                     {
-                        r.mapTex = null;
-                        r.texture = null;
-                        HeavyTexturesCacheExtensions.ClearAtlas("MapTex_" + r.room.name);
+                        nodeclicked = i;
+                    }
+                }
+                if (nodeclicked > -1)
+                {
+                    Debug.Log("MapWarp clicked on node " + nodeclicked);
+                    MovePlayers(self.miniMap.roomRep.room, nodeclicked);
+                }
+                else
+                {
+                    if (self.miniMap.MouseOver)
+                    {
+                        Debug.Log("MapWarp clicked on geometry at " + mousePos);
+                        MovePlayers(self.miniMap.roomRep.room, new WorldCoordinate(self.miniMap.roomRep.room.index, Mathf.FloorToInt(mousePos.x/2), Mathf.FloorToInt(mousePos.y/2), 0));
                     }
                 }
             }
+            //if (self.MouseOver && self.miniMap.roomRep.mapTex != null && Input.GetMouseButton(1)) // right-clicked : reload ?
+            //{
+            //    self.miniMap.roomRep.mapTex = null;
+            //    self.miniMap.roomRep.texture = null;
+            //    self.miniMap.fSprites[0].element = Futile.atlasManager.GetElementWithName("pixel");
+            //    HeavyTexturesCacheExtensions.ClearAtlas("MapTex_" + self.miniMap.roomRep.room.name);
+            //    self.Refresh();
+            //    (self.Page as DevInterface.MapPage).map.roomLoaderIndex = 0;
+            //}
         }
 
-        // Fix camera not following player on realize (after warping to offscreen den lol)
-        private void AbstractCreature_Realize(On.AbstractCreature.orig_Realize orig, AbstractCreature self)
+        private void VirtualMicrophone_NewRoom(On.VirtualMicrophone.orig_NewRoom orig, VirtualMicrophone self, Room room)
         {
-            bool alreadyRealized = self.realizedCreature != null;
-            orig(self);
-            if (!alreadyRealized && self.realizedCreature != null && self.realizedCreature.room != null && self.FollowedByCamera(0) && self.world.game.cameras[0].room != self.realizedCreature.room)
+            /// <summary>
+            /// Fix gate noises following the player through rooms
+            /// copied over from ExtendedGates
+            /// </summary>
+            orig(self, room);
+            for (int i = self.soundObjects.Count - 1; i >= 0; i--)
             {
-                if (self.pos.TileDefined)
+                if (self.soundObjects[i] is VirtualMicrophone.PositionedSound) // Doesn't make sense that this carries over
                 {
-                    self.world.game.cameras[0].MoveCamera(self.realizedCreature.room, self.realizedCreature.room.CameraViewingPoint(self.realizedCreature.room.MiddleOfTile(self.pos.Tile)));
+                    // I was going to do somehtin supercomplicated like test if controller as loop was in the same room but screw it
+                    //VirtualMicrophone.ObjectSound obj = (self.soundObjects[i] as VirtualMicrophone.ObjectSound);
+                    //if (obj.controller != null && )
+                    self.soundObjects[i].Destroy();
+                    self.soundObjects.RemoveAt(i);
                 }
-                else self.world.game.cameras[0].MoveCamera(self.realizedCreature.room, self.realizedCreature.room.abstractRoom.nodes[self.pos.abstractNode].viewedByCamera);
             }
         }
 
@@ -185,48 +292,67 @@ namespace MapWarp
             {
                 if (!(tVessel.creature is ITeleportingCreature))
                 {
-                    WorldCoordinate arrival = tVessel.room.realizedRoom.LocalCoordinateOfNode(tVessel.entranceNode);
-                    arrival.abstractNode = tVessel.entranceNode; // silly isnt it
+                    WorldCoordinate arrival = tVessel.destination;
+                    if (!arrival.TileDefined)
+                    {
+                        arrival = tVessel.room.realizedRoom.LocalCoordinateOfNode(tVessel.entranceNode);
+                        arrival.abstractNode = tVessel.entranceNode;
+                    }
+
                     tVessel.creature.abstractCreature.pos = arrival;
                     tVessel.creature.SpitOutOfShortCut(arrival.Tile, tVessel.room.realizedRoom, true);
-                    //tVessel.creature.PlaceInRoom(tVessel.room.realizedRoom);
                 }
             }
         }
 
-        private void RoomPanel_Update(On.DevInterface.RoomPanel.orig_Update orig, DevInterface.RoomPanel self)
+        private ShortcutHandler.Vessel RemoveFromVessels(ShortcutHandler sch, Creature crit)
         {
-            orig(self);
-
-            if (self.miniMap != null && !self.CanonView && self.owner.mouseClick && self.MouseOver)
+            ShortcutHandler.Vessel vessel = null;
+            for (int i = 0; i < sch.transportVessels.Count; i++)
             {
-                Debug.Log("MapWarp clicked on room " + self.miniMap.roomRep.room.name);
-                int nodeclicked = -1;
-                Vector2 mousePos = self.owner.mousePos;
-                for (int i = 0; i < self.miniMap.nodeSquarePositions.Length; i++)
+                List<AbstractPhysicalObject> allConnectedObjects = sch.transportVessels[i].creature.abstractCreature.GetAllConnectedObjects();
+                for (int j = 0; j < allConnectedObjects.Count; j++)
                 {
-                    Vector2 delta = mousePos - (self.miniMap.absPos + self.miniMap.nodeSquarePositions[i]);
-                    if (delta.x > -8 && delta.x < 8 && delta.y > -8 && delta.y < 8)
+                    if (allConnectedObjects[j].realizedObject != null && allConnectedObjects[j].realizedObject == crit)
                     {
-                        nodeclicked = i;
+                        vessel = sch.transportVessels[i];
+                        sch.transportVessels.RemoveAt(i);
+                        return vessel;
+                    }
+                    Debug.Log("E");
+                }
+            }
+            for (int i = 0; i < sch.borderTravelVessels.Count; i++)
+            {
+                List<AbstractPhysicalObject> allConnectedObjects = sch.borderTravelVessels[i].creature.abstractCreature.GetAllConnectedObjects();
+                for (int j = 0; j < allConnectedObjects.Count; j++)
+                {
+                    if (allConnectedObjects[j].realizedObject != null && allConnectedObjects[j].realizedObject == crit)
+                    {
+                        vessel = sch.borderTravelVessels[i];
+                        sch.borderTravelVessels.RemoveAt(i);
+                        return vessel;
                     }
                 }
-                if(nodeclicked > -1)
+            }
+            for (int i = 0; i < sch.betweenRoomsWaitingLobby.Count; i++)
+            {
+                List<AbstractPhysicalObject> allConnectedObjects = sch.betweenRoomsWaitingLobby[i].creature.abstractCreature.GetAllConnectedObjects();
+                for (int j = 0; j < allConnectedObjects.Count; j++)
                 {
-                    Debug.Log("MapWarp clicked on node " + nodeclicked);
-                    AbstractRoom room = self.miniMap.roomRep.room;
-                    MovePlayers(room, nodeclicked, false);
+                    if (allConnectedObjects[j].realizedObject != null && allConnectedObjects[j].realizedObject == crit)
+                    {
+                        vessel = sch.betweenRoomsWaitingLobby[i];
+                        sch.betweenRoomsWaitingLobby.RemoveAt(i);
+                        return vessel;
+                    }
                 }
             }
-            if (self.MouseOver && Input.GetMouseButton(1) && self.miniMap.roomRep.mapTex != null) // right-clicked : reload ?
-            {
-                self.miniMap.roomRep.mapTex = null;
-                self.miniMap.roomRep.texture = null;
-                HeavyTexturesCacheExtensions.ClearAtlas("MapTex_" + self.miniMap.roomRep.room.name);
-            }
+            return null;
         }
 
-        private void MovePlayers(AbstractRoom room, int nodeIndex, bool betweenWorlds)
+        // In-region moving
+        private void MovePlayers(AbstractRoom room, int nodeIndex)
         {
             WorldCoordinate dest = new WorldCoordinate(room.index, -1, -1, nodeIndex);
             if (room.realizedRoom != null)
@@ -234,17 +360,23 @@ namespace MapWarp
                 dest = room.realizedRoom.LocalCoordinateOfNode(nodeIndex);
                 dest.abstractNode = nodeIndex; // silly isnt it
             }
-
-            if (betweenWorlds)
-            {
-
-            }
-
+            MovePlayers(room, dest);
+        }
+        
+        private void MovePlayers(AbstractRoom room, WorldCoordinate dest)
+        {
+            if (room.offScreenDen) return; // no can do, player shouldnt ever never abstractize or they lose their tummy contents
+            if (room.realizedRoom == null) room.world.ActivateRoom(room); // prevent non-camera-followed players from abstractizing
             foreach (var p in room.world.game.Players)
             {
-                if (p.realizedCreature != null && p.realizedCreature.room != null)
+                if (p.realizedCreature != null)
                 {
-                    if (!p.realizedCreature.inShortcut || betweenWorlds)
+                    if (p.realizedCreature.inShortcut) // remove from pipe, aalready removed from room.
+                    {
+                        var vessel = RemoveFromVessels(room.world.game.shortcuts, p.realizedCreature);
+                        room.world.game.shortcuts.CreatureTeleportOutOfRoom(p.realizedCreature, new WorldCoordinate() { room=vessel.room.index, abstractNode=vessel.entranceNode }, dest);
+                    }
+                    else if (p.realizedCreature.room != null)
                     {
                         // from: Creature.SuckedIntoShortCut
                         // cleans out connected objects *and self* from room.
@@ -262,68 +394,8 @@ namespace MapWarp
                                 realizedRoom.RemoveObject(allConnectedObjects[i].realizedObject);
                                 realizedRoom.CleanOutObjectNotInThisRoom(allConnectedObjects[i].realizedObject);
                             }
-                            if (betweenWorlds)
-                            {
-                                allConnectedObjects[i].world = room.world;
-                                allConnectedObjects[i].pos = dest;
-                                if (allConnectedObjects[i] is AbstractCreature abscre && abscre.creatureTemplate.AI)
-                                {
-                                    abscre.abstractAI.NewWorld(room.world);
-                                    abscre.InitiateAI();
-                                }
-                            }
                         }
                         room.world.game.shortcuts.CreatureTeleportOutOfRoom(p.realizedCreature, origin, dest);
-                    }
-                }
-                else // move abstract creetchere
-                {
-                    if (!betweenWorlds)
-                    {
-                        p.Move(dest); // nullrefs on rooms between worlds...
-                    }
-                    else // manual patchup lol
-                    {
-                        AbstractRoom src = p.Room;
-                        if (p.Room == room) continue;
-                        // todo
-                        foreach(var s in p.stuckObjects)
-                        {
-                            for(int i = 0; i < 2; i++)
-                            {
-                                var obj = (i == 0) ? s.A : s.B;
-                                if (obj.world == room.world) continue;
-                                if (obj is AbstractCreature cA) // creature
-                                {
-                                    if (cA.Quantify && !cA.slatedForDeletion) // speschiul
-                                    {
-                                        src.RemoveEntity(obj);
-                                        cA.Destroy();
-                                        room.AddQuantifiedCreature(dest.abstractNode, cA.creatureTemplate.type);
-                                    }
-                                    else // regular
-                                    {
-                                        src.RemoveEntity(obj);
-                                        room.AddEntity(obj);
-                                        obj.pos = dest;
-                                        obj.timeSpentHere = 0;
-                                        if (cA.abstractAI != null)
-                                        {
-                                            cA.abstractAI.lastRoom = src.index;
-                                            cA.abstractAI.Moved();
-                                        }
-                                    }
-                                }
-                                else // physob
-                                {
-                                    src.RemoveEntity(obj);
-                                    room.AddEntity(obj);
-                                    obj.pos = dest;
-                                    obj.timeSpentHere = 0;
-                                }
-                                obj.world = room.world;
-                            }
-                        }
                     }
                 }
             }
