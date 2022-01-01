@@ -704,6 +704,7 @@ namespace ShelterBehaviors
             {
                 base.Update(eu);
                 if (base.slatedForDeletetion) return;
+                if (this.room.game.session.Players.Count < 1 || this.room.game.cameras.Length < 1) return;
                 if (!room.BeingViewed) message = 0;
                 else if (this.room.game.session.Players[0].realizedCreature != null && this.room.game.cameras[0].hud != null && this.room.game.cameras[0].hud.textPrompt != null && this.room.game.cameras[0].hud.textPrompt.messages.Count < 1)
                 {

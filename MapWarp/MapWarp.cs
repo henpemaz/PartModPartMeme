@@ -47,49 +47,25 @@ namespace MapWarp
 
         private void MapObject_Update(On.DevInterface.MapObject.orig_Update orig, DevInterface.MapObject self)
         {
-            if (self.roomLoaderIndex < self.world.NumberOfRooms - 1)
+            if (self.roomPrep == null && self.roomLoaderIndex < self.world.NumberOfRooms - 1)
             {
                 if (self.roomReps[self.roomLoaderIndex].mapTex != null) //texture found
                 {
-                    //bool shorcutsPlaced = false;
-                    //if (self.roomReps[self.roomLoaderIndex].nodePositions.Length == 0) shorcutsPlaced = true;
-                    //else
-                    //{
-                    //    for(int i = 0; i < self.roomReps[self.roomLoaderIndex].nodePositions.Length; i++)
-                    //    {
-                    //        if(self.roomReps[self.roomLoaderIndex].nodePositions[i].x != 0 || self.roomReps[self.roomLoaderIndex].nodePositions[i].y != 0)
-                    //        {
-                    //            shorcutsPlaced = true;
-                    //        }
-                    //    }
-                    //}
                     self.roomReps[self.roomLoaderIndex].mapTex = null;
                     self.roomReps[self.roomLoaderIndex].texture = null;
-                    foreach (var node in (self.world.game.devUI.activePage as DevInterface.MapPage).modeSpecificNodes)
+                    foreach (var node in (self.world.game.devUI.activePage as DevInterface.MapPage).subNodes)
                     {
                         if (node is DevInterface.RoomPanel panel && panel.roomRep == self.roomReps[self.roomLoaderIndex])
                         {
-                            panel.fSprites[0].element = Futile.atlasManager.GetElementWithName("pixel");
+                            panel.miniMap.fSprites[0].element = Futile.atlasManager.GetElementWithName("pixel");
+                            //panel.Refresh();
+                            break;
                         }
                     }
-                    
-                    //self.miniMap.fSprites[0].element = Futile.atlasManager.GetElementWithName("pixel");
                     HeavyTexturesCacheExtensions.ClearAtlas("MapTex_" + self.roomReps[self.roomLoaderIndex].room.name);
-                    //self.Refresh();
                 }
             }
             orig(self);
-        }
-
-        World oldWorld;
-        private AbstractRoom World_GetAbstractRoom_1(On.World.orig_GetAbstractRoom_1 orig, World self, int room)
-        {
-            AbstractRoom val = orig(self, room);
-            if (oldWorld != null && val == null)
-            {
-                val = orig(oldWorld, room);
-            }
-            return val;
         }
 
         // Create ui in Dev view
@@ -127,6 +103,24 @@ namespace MapWarp
             }
         }
 
+        // Allow moving to a new world
+        World oldWorld;
+        World newWorld;
+        private AbstractRoom World_GetAbstractRoom_1(On.World.orig_GetAbstractRoom_1 orig, World self, int room)
+        {
+            AbstractRoom val = orig(self, room);
+            if (oldWorld != null && val == null)
+            {
+                val = orig(oldWorld, room);
+                if (newWorld != null && val == null)
+                {
+                    val = orig(newWorld, room);
+                }
+            }
+            
+            return val;
+        }
+
         private void MapPage_Signal(On.DevInterface.MapPage.orig_Signal orig, DevInterface.MapPage self, DevInterface.DevUISignalType type, DevInterface.DevUINode sender, string message)
         {
             orig(self, type, sender, message);
@@ -142,10 +136,10 @@ namespace MapWarp
                 return;
             }
             Debug.Log("MapWarp: switching map to " + target);
-            oldWorld = self.owner.game.world;
 
+            oldWorld = self.owner.game.world;
             self.owner.game.overWorld.LoadWorld(target, self.owner.game.overWorld.PlayerCharacterNumber, false);
-            var newWorld = self.owner.game.world;
+            newWorld = self.owner.game.world;
 
             // from gate switching Overworld.worldloaded
             if (self.owner.game.roomRealizer != null)
@@ -177,14 +171,20 @@ namespace MapWarp
             oldWorld.regionState.world = null;
             newWorld.rainCycle.cycleLength = oldWorld.rainCycle.cycleLength;
             newWorld.rainCycle.timer = oldWorld.rainCycle.timer;
+            
+            MovePlayers(newWorld.abstractRooms[0], 0);
+            while (newWorld.loadingRooms.Count > 0 && !newWorld.loadingRooms[0].done) newWorld.loadingRooms[0].Update();
+            newWorld.game.shortcuts.Update(); // tick and place
 
             foreach (var p in newWorld.game.Players)
             {
                 p.world = newWorld;
-                if (p.abstractAI != null)
+                if (p.creatureTemplate.AI || p.abstractAI != null)
                 {
-                    p.abstractAI.lastRoom = newWorld.offScreenDen.index;
+                    p.abstractAI.lastRoom = newWorld.firstRoomIndex;
                     p.abstractAI.NewWorld(newWorld);
+                    p.InitiateAI();
+                    p.abstractAI.RealAI?.NewRoom(newWorld.abstractRooms[0].realizedRoom);
                 }
                 foreach (var s in p.stuckObjects)
                 {
@@ -195,22 +195,20 @@ namespace MapWarp
                         obj.world = newWorld;
                         if (obj is AbstractCreature cA) // creature
                         {
-                            if (cA.abstractAI != null)
+                            if (cA.creatureTemplate.AI)
                             {
                                 cA.abstractAI.lastRoom = newWorld.firstRoomIndex;
                                 cA.abstractAI.NewWorld(newWorld);
-                                if (cA.creatureTemplate.AI) cA.InitiateAI();
+                                cA.InitiateAI();
+                                cA.abstractAI.RealAI?.NewRoom(newWorld.abstractRooms[0].realizedRoom);
                             }
                         }
                     }
                 }
             }
+
             
-            MovePlayers(newWorld.abstractRooms[0], 0);
-            while (newWorld.loadingRooms.Count > 0 && !newWorld.loadingRooms[0].done) newWorld.loadingRooms[0].Update();
-            newWorld.game.shortcuts.Update(); // tick and place
-            oldWorld = null;
-            
+
             // keeping the map up nullrefs
             self.owner.ClearSprites();
             self.owner.game.devUI = null;
@@ -218,6 +216,9 @@ namespace MapWarp
             newWorld.game.cameras[0].room.abstractRoom = newWorld.abstractRooms[1];
             self.owner.game.devUI = new DevInterface.DevUI(self.owner.game);
             self.owner.game.devUI.SwitchPage(3);
+
+            oldWorld = null;
+            newWorld = null;
         }
 
         private void RoomPanel_Update(On.DevInterface.RoomPanel.orig_Update orig, DevInterface.RoomPanel self)
@@ -251,15 +252,6 @@ namespace MapWarp
                     }
                 }
             }
-            //if (self.MouseOver && self.miniMap.roomRep.mapTex != null && Input.GetMouseButton(1)) // right-clicked : reload ?
-            //{
-            //    self.miniMap.roomRep.mapTex = null;
-            //    self.miniMap.roomRep.texture = null;
-            //    self.miniMap.fSprites[0].element = Futile.atlasManager.GetElementWithName("pixel");
-            //    HeavyTexturesCacheExtensions.ClearAtlas("MapTex_" + self.miniMap.roomRep.room.name);
-            //    self.Refresh();
-            //    (self.Page as DevInterface.MapPage).map.roomLoaderIndex = 0;
-            //}
         }
 
         private void VirtualMicrophone_NewRoom(On.VirtualMicrophone.orig_NewRoom orig, VirtualMicrophone self, Room room)
@@ -319,7 +311,6 @@ namespace MapWarp
                         sch.transportVessels.RemoveAt(i);
                         return vessel;
                     }
-                    Debug.Log("E");
                 }
             }
             for (int i = 0; i < sch.borderTravelVessels.Count; i++)
@@ -373,11 +364,14 @@ namespace MapWarp
                 {
                     if (p.realizedCreature.inShortcut) // remove from pipe, aalready removed from room.
                     {
+                        Debug.Log("MapWarp: player in shortcuts");
                         var vessel = RemoveFromVessels(room.world.game.shortcuts, p.realizedCreature);
-                        room.world.game.shortcuts.CreatureTeleportOutOfRoom(p.realizedCreature, new WorldCoordinate() { room=vessel.room.index, abstractNode=vessel.entranceNode }, dest);
+                        if(vessel == null) room.world.game.shortcuts.CreatureTeleportOutOfRoom(p.realizedCreature, new WorldCoordinate(), dest);// vessels removed during region-switching, start position lost
+                        else room.world.game.shortcuts.CreatureTeleportOutOfRoom(p.realizedCreature, new WorldCoordinate() { room=vessel.room.index, abstractNode=vessel.entranceNode }, dest);
                     }
                     else if (p.realizedCreature.room != null)
                     {
+                        Debug.Log("MapWarp: player in room");
                         // from: Creature.SuckedIntoShortCut
                         // cleans out connected objects *and self* from room.
                         Room realizedRoom = p.realizedCreature.room;
@@ -396,6 +390,10 @@ namespace MapWarp
                             }
                         }
                         room.world.game.shortcuts.CreatureTeleportOutOfRoom(p.realizedCreature, origin, dest);
+                    }
+                    else
+                    {
+                        Debug.Log("MapWarp: player not in shortcuts nor in room!");
                     }
                 }
             }

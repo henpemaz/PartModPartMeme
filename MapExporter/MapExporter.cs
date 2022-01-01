@@ -8,18 +8,26 @@ using System.IO;
 using RWCustom;
 using UnityEngine;
 using MonoMod.RuntimeDetour;
+using System.Collections.Generic;
 
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 namespace MapExporter
 {
-    public partial class MapExporter : PartialityMod
+    public class MapExporter : PartialityMod
     {
         // config
         string skipTo = null;//"SU";//
         bool oneRegion = false;
-        bool exportScreenshots = false;
-        string exportName = "ExportModded";
+        bool exportScreenshots = true;
+        string exportName = "Export";
+
+        Dictionary<string, int[]> blacklistedCams = new Dictionary<string, int[]>()
+        {
+            { "SU_B13", new int[]{2} }, // one indexed
+            { "GW_S08", new int[]{2} }, // in vanilla only
+            { "SL_C01", new int[]{4,5} }, // crescent order or will break
+        };
 
         public MapExporter()
         {
@@ -42,6 +50,7 @@ namespace MapExporter
         private void RainWorld_Start(On.RainWorld.orig_Start orig, RainWorld self)
         {
             On.RainWorld.LoadSetupValues += RainWorld_LoadSetupValues;
+            On.RainWorld.Update += RainWorld_Update;
             On.World.SpawnGhost += World_SpawnGhost;
             On.RainWorldGame.ctor += RainWorldGame_ctor;
             On.RainWorldGame.Update += RainWorldGame_Update;
@@ -57,6 +66,13 @@ namespace MapExporter
             On.VoidSpawnGraphics.DrawSprites += VoidSpawnGraphics_DrawSprites;
             On.AntiGravity.BrokenAntiGravity.ctor += BrokenAntiGravity_ctor;
 
+            orig(self);
+        }
+
+        // Consistent RNG ?
+        private void RainWorld_Update(On.RainWorld.orig_Update orig, RainWorld self)
+        {
+            UnityEngine.Random.seed = 0;
             orig(self);
         }
         #region fixes
@@ -220,7 +236,6 @@ namespace MapExporter
         string PathOfRegion(string region)
         {
             string path = Custom.RootFolderDirectory() + exportName + Path.DirectorySeparatorChar + region + Path.DirectorySeparatorChar;
-            Directory.CreateDirectory(path);
             return path;
         }
 
@@ -240,6 +255,8 @@ namespace MapExporter
         {
             // Task start
             Debug.Log("capture task start");
+            UnityEngine.Random.seed = 0;
+
             // 1st camera transition is a bit whack ? give it a sec to load
             //while (game.cameras[0].www != null) yield return null;
             while (game.cameras[0].room == null || !game.cameras[0].room.ReadyForPlayer) yield return null;
@@ -262,9 +279,12 @@ namespace MapExporter
                 if (game.overWorld.activeWorld == null || game.overWorld.activeWorld.region.name != regionstr)
                 {
                     Debug.Log("capture task loading " + regionstr);
+                    UnityEngine.Random.seed = 0;
                     game.overWorld.LoadWorld(regionstr, game.overWorld.PlayerCharacterNumber, false);
                     Debug.Log("capture task loaded " + regionstr);
                 }
+
+                Directory.CreateDirectory(PathOfRegion(regionstr));
 
                 MapContent mapContent = new MapContent(game.world);
                 
@@ -276,6 +296,7 @@ namespace MapExporter
                     Debug.Log("capture task room " + room.name);
                     // load room
                     game.overWorld.activeWorld.loadingRooms.Clear();
+                    UnityEngine.Random.seed = 0;
                     game.overWorld.activeWorld.ActivateRoom(room);
                     // load room until it is loaded
                     if(game.overWorld.activeWorld.loadingRooms.Count > 0 && game.overWorld.activeWorld.loadingRooms[0].room == room.realizedRoom)
@@ -286,18 +307,28 @@ namespace MapExporter
                             loading.Update();
                         }
                     }
-                    yield return null;
                     while (!(room.realizedRoom.loadingProgress >= 3 && room.realizedRoom.waitToEnterAfterFullyLoaded < 1))
                     {
                         room.realizedRoom.Update();
                     }
+
+                    if(blacklistedCams.TryGetValue(room.name, out int[] cams)) {
+                        var newpos = room.realizedRoom.cameraPositions.ToList();
+                        for (int i = cams.Length - 1; i >= 0; i--)
+                        {
+                            newpos.RemoveAt(cams[i] - 1);
+                        }
+                        room.realizedRoom.cameraPositions = newpos.ToArray();
+                    }
+
                     yield return null;
+                    UnityEngine.Random.seed = 0;
                     // go to room
                     game.cameras[0].MoveCamera(room.realizedRoom, 0);
                     game.cameras[0].virtualMicrophone.AllQuiet();
                     // get to room
                     while(game.cameras[0].loadingRoom != null) yield return null;
-
+                    UnityEngine.Random.seed = 0;
                     mapContent.UpdateRoom(room.realizedRoom);
 
                     // on each camera
@@ -306,16 +337,19 @@ namespace MapExporter
                         //Debug.Log("capture task camera " + i);
                         //Debug.Log("capture task camera has " + room.realizedRoom.cameraPositions.Length + " positions");
                         // load screen
+                        UnityEngine.Random.seed = 0;
                         game.cameras[0].MoveCamera(i);
                         while(game.cameras[0].www != null) yield return null;
                         yield return null;
-                        yield return null; // one extra frame please
+                        yield return null; // one extra frame maybe
                         // fire!
                         if (exportScreenshots) UnityEngine.Application.CaptureScreenshot(PathOfScreenshot(regionstr, room.name, i));
 
                         // palette and colors
                         mapContent.LogPalette(game.cameras[0].currentPalette);
+                        yield return null; // one extra frame after ??
                     }
+                    UnityEngine.Random.seed = 0;
                     room.Abstractize();
                     yield return null;
                 }
