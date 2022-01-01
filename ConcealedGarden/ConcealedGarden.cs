@@ -19,7 +19,7 @@ namespace ConcealedGarden
         public ConcealedGarden()
         {
             this.ModID = "Concealed Garden";
-            this.Version = "1.1";
+            this.Version = "1.2";
             this.author = "Henpemaz";
 
             instance = this;
@@ -92,8 +92,6 @@ Garrakx & Topicular - Makers of the awesome mods that help people make more mods
             CGSlipperySlope.Register();
 
             CGBunkerShelterParts.Register();
-
-            CGQuestionableLizardBits.Apply();
 
             CGSpawnCustomizations.Apply();
 

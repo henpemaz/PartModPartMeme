@@ -395,7 +395,7 @@ namespace ConcealedGarden
         public virtual bool SaveData()
         {
             Debug.Log("CG Progression: SaveData");
-            if (!directory.Exists) { Debug.Log("CG Progression: directory didn't exist, creating"); directory.Create(); }
+            if (!directory.Exists) { Debug.Log("CG Progression: directory didn't exist, creating"); directory.Create(); directory.Refresh(); }
 
             try
             {
@@ -685,7 +685,7 @@ namespace ConcealedGarden
         private void WriteProgressionFile(string file, int slugNumber, int validSeed, string data)
         {
             Debug.Log("CG Progression: WriteProgressionFile");
-            if (!directory.Exists) { Debug.Log("CG Progression: directory missing, create"); directory.Create(); }
+            if (!directory.Exists) { Debug.Log("CG Progression: directory missing, create"); directory.Create(); directory.Refresh(); }
             string slugName = GetSlugcatName(slugNumber);
             //Debug.Log("CG Progression: got slugName :"+slugName);
             string targetFile = GetTargetFilename(file, slugName);
