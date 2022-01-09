@@ -115,7 +115,8 @@ namespace ExtendedGates
             "10reinforced",
             "forbidden",
             "comsmark",
-            "uwu"
+            "uwu",
+            "glow"
         };
 
         private int ParseOrWarn(string req)
@@ -174,6 +175,9 @@ namespace ExtendedGates
                         break;
                     case 104: // uwu
                         self.symbolSprite.element = Futile.atlasManager.GetElementWithName("smallKarmaUwu"); // Custom
+                        break;
+                    case 105: // glow
+                        self.symbolSprite.element = Futile.atlasManager.GetElementWithName("smallKarmaGlow"); // Custom
                         break;
 
                     default: // Alt art gates
@@ -440,6 +444,10 @@ namespace ExtendedGates
                     if (uwu != null || self.unlocked)
                         return true;
                     break;
+                case 105: // glow
+                    if (self.room.game.GetStorySession.saveState.theGlow || self.unlocked)
+                        return true;
+                    break;
                 default: // default karma gate handled by the game
                     break;
             }
@@ -474,6 +482,9 @@ namespace ExtendedGates
                             break;
                         case 104: // uwu
                             sLeaser.sprites[1].element = Futile.atlasManager.GetElementWithName("gateSymbolUwu"); // Custom
+                            break;
+                        case 105: // glow
+                            sLeaser.sprites[1].element = Futile.atlasManager.GetElementWithName("gateSymbolGlow"); // Custom
                             break;
 
                         default:
