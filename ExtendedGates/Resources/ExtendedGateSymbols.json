@@ -335,6 +335,22 @@
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":45,"h":45},
 	"sourceSize": {"w":45,"h":45}
+},
+"smallKarmaGlow.png":
+{
+	"frame": {"x":821,"y":298,"w":45,"h":45},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":45,"h":45},
+	"sourceSize": {"w":45,"h":45}
+},
+"gateSymbolGlow.png":
+{
+	"frame": {"x":0,"y":447,"w":62,"h":149},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":62,"h":149},
+	"sourceSize": {"w":62,"h":149}
 }},
 "meta": {
 	"app": "https://www.codeandweb.com/texturepacker",
