@@ -6,7 +6,7 @@ Sprites for special requirements gates and missing minimap sprites by LB Gamer
 Sprites for Alternate Art spriteset by Thalber
 X Karma gate sprite by Mehri'Kairothep
 
-ExtendedGates adds new gate possibilities to the game for use in Custom Regions! It lets you use karma levels above 5 for gate requiments, as well as 5 other special requirements, and an alternate art option. It also lets you use gates within a region to control progression and lets you specify that gates can be used more than once on the same cycle.
+ExtendedGates adds new gate possibilities to the game for use in Custom Regions! It lets you use karma levels above 5 for gate requiments, as well as 6 other special requirements, and an alternate art option. It also lets you use gates within a region to control progression and lets you specify that gates can be used more than once on the same cycle.
 Requires CustomRegionSupport mod by Garrakx.
 
 How-to:
@@ -20,6 +20,7 @@ The special requirements you can use are as follows (case-insensitive):
 "forbidden", does not open from this side :)
 "comsmark", requires the player to have the Mark of Communication on their playerprogression
 "uwu", uwu
+"glow", requires the player to have the Neuron Glow on their playerprogression
 
 To specify a gate as reusable, include " : Multi" (case-insensitive) at the end of the entry for that gate. This gives the gate enough fuel to be used some 20 times in a single cycle, and its refreshed if the room unloads and loads again. Electric gates' batteries turn green if you enable this. The water level for water gates stays high.
 
@@ -39,3 +40,4 @@ GATE_HI_CC : 2alt : forbidden
 CHANGELOG:
 1.0 initial release
 1.1 13/06/2021 bugfix 6 karma at 5 cap; fix showing open side over karma for inregion minimap
+1.2 09/01/2022 new feature glow gate; added a new special requirement for gates that requires the neuron glow to open
