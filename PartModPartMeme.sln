@@ -84,6 +84,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapWarp", "MapWarp\MapWarp.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HurricaneModPort", "HurricaneModPort\HurricaneModPort.csproj", "{96E12380-E89F-4472-B83A-245CE1E20F34}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZandrasCharacterPackPort", "ZandrasCharacterPackPort\ZandrasCharacterPackPort.csproj", "{FAABCC21-DD51-4DD0-B811-18E4C2FB9B0E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -242,6 +244,10 @@ Global
 		{96E12380-E89F-4472-B83A-245CE1E20F34}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{96E12380-E89F-4472-B83A-245CE1E20F34}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{96E12380-E89F-4472-B83A-245CE1E20F34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FAABCC21-DD51-4DD0-B811-18E4C2FB9B0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FAABCC21-DD51-4DD0-B811-18E4C2FB9B0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FAABCC21-DD51-4DD0-B811-18E4C2FB9B0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FAABCC21-DD51-4DD0-B811-18E4C2FB9B0E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

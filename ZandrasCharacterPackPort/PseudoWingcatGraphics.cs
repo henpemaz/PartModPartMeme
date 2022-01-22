@@ -19,30 +19,32 @@ namespace ZandrasCharacterPackPort
 
 		public override void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
 		{
+			this.initLock = true;
+			base.InitiateSprites(sLeaser, rCam);
 			foreach (PseudoWingcatGraphics.WingPart wingPart in this.wingParts)
 			{
 				wingPart.InitiateSprites(sLeaser, rCam);
 			}
-			base.InitiateSprites(sLeaser, rCam);
+			AddToContainerImpl(sLeaser, rCam, null);
+			this.initLock = false;
 		}
 
 		public override void AddToContainer(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
 		{
+			base.AddToContainer(sLeaser, rCam, newContatiner);
+			if (!this.initLock) AddToContainerImpl(sLeaser, rCam, newContatiner);
+		}
+
+		public void AddToContainerImpl(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
+        {
 			foreach (PseudoWingcatGraphics.WingPart wingPart in this.wingParts)
 			{
 				wingPart.AddToContainer(sLeaser, rCam, newContatiner);
 			}
-			base.AddToContainer(sLeaser, rCam, newContatiner);
 		}
 
 		public override void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
 		{
-			foreach (SlugcatHand slugcatHand in this.hands)
-			{
-				slugcatHand.mode = Limb.Mode.Retracted;
-				slugcatHand.retractCounter = 0;
-			}
-			base.DrawSprites(sLeaser, rCam, timeStacker, camPos);
 			for (int j = 0; j < this.wingParts.Count; j++)
 			{
 				this.wingParts[j].DrawSprites(sLeaser, rCam, timeStacker, camPos, j);
@@ -51,13 +53,38 @@ namespace ZandrasCharacterPackPort
 			{
 				sLeaser.sprites[7 + k].isVisible = false;
 			}
+			base.DrawSprites(sLeaser, rCam, timeStacker, camPos); // base last because its responsible for removing stuff
 		}
 
-		public int wingPartCount = 3;
+        public override void Update()
+        {
+            base.Update();
+			foreach (SlugcatHand slugcatHand in this.hands)
+			{
+				slugcatHand.mode = Limb.Mode.Retracted;
+				slugcatHand.retractCounter = 0;
+			}
+			for (int j = 0; j < this.wingParts.Count; j++)
+			{
+				this.wingParts[j].Update(j);
+			}
+		}
+
+        public override void Reset()
+        {
+            base.Reset();
+			for (int j = 0; j < this.wingParts.Count; j++)
+			{
+				this.wingParts[j].Reset();
+			}
+		}
+
+        public int wingPartCount = 3;
 
 		public List<PseudoWingcatGraphics.WingPart> wingParts;
+        private bool initLock;
 
-		public class WingPart
+        public class WingPart
 		{
 			public WingPart(PseudoWingcatGraphics owner, bool isLarge = false)
 			{
@@ -70,14 +97,34 @@ namespace ZandrasCharacterPackPort
 				}
 				this.length = 15f;
 				this.width = 2f;
+
+				Reset();
+			}
+
+			public void Update(int index)
+			{
+				float num = (float)((index % 2 == 0) ? 1 : -1);
+				float t = (float)(index / 2) / (float)(this.owner.wingPartCount / 2);
+				Vector2 b = Vector2.Lerp(this.owner.owner.bodyChunks[0].pos, this.owner.owner.bodyChunks[1].pos, 0.5f - Mathf.Lerp(0f, 0.3f, t));
+				float num2 = Custom.VecToDeg(this.owner.owner.bodyChunks[0].pos - b);
+				num2 += (float)(index / 2) * 25f * num;
+				Vector2 to = this.owner.head.pos + Custom.DegToVec(num2 + 80f * num) * 10f;
+				Vector2 to2 = this.owner.head.pos + Custom.DegToVec(num2 + 80f * num) * (10f + this.length);
+				targetFarLastPos = targetFarPos;
+				targetCloseLastPos = targetClosePos;
+				targetClosePos = Vector2.Lerp(this.targetClosePos, to, Mathf.Lerp(0.7f, 0.4f, t));
+				targetFarPos = Vector2.Lerp(this.targetFarPos, to2, Mathf.Lerp(0.7f, 0.4f, t));
+			}
+			public void Reset()
+			{
+				targetFarPos = this.owner.owner.bodyChunks[0].pos;
+				targetClosePos = this.owner.owner.bodyChunks[0].pos;
+				targetFarLastPos = targetFarPos;
+				targetCloseLastPos = targetClosePos;
 			}
 
 			public void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
 			{
-				if (this.mesh != null)
-				{
-					this.mesh.RemoveFromContainer();
-				}
 				TriangleMesh.Triangle[] tris = new TriangleMesh.Triangle[]
 				{
 					new TriangleMesh.Triangle(0, 1, 2),
@@ -87,12 +134,10 @@ namespace ZandrasCharacterPackPort
 					new TriangleMesh.Triangle(4, 5, 6),
 					new TriangleMesh.Triangle(5, 6, 7)
 				};
-				if (this.blankSprite != null)
-				{
-					this.blankSprite.RemoveFromContainer();
-				}
-				this.blankSprite = new FSprite("Futile_White", true);
-				this.mesh = new TriangleMesh("Futile_White", tris, true, false);
+				int l = sLeaser.sprites.Length;
+				Array.Resize(ref sLeaser.sprites, l + 1);
+				this.mesh = l;
+				sLeaser.sprites[l] = new TriangleMesh("Futile_White", tris, true, false);
 			}
 
 			public void AddToContainer(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
@@ -101,48 +146,36 @@ namespace ZandrasCharacterPackPort
 				{
 					newContatiner = rCam.ReturnFContainer("Midground");
 				}
-				this.mesh.RemoveFromContainer();
-				newContatiner.AddChild(this.mesh);
-				this.blankSprite.RemoveFromContainer();
-				newContatiner.AddChild(this.blankSprite);
+				//this.mesh.RemoveFromContainer();
+				newContatiner.AddChild(sLeaser.sprites[mesh]);
 			}
 
 			public void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos, int index)
 			{
-				float num = (float)((index % 2 == 0) ? 1 : -1);
-				float t = (float)(index / 2) / (float)(this.owner.wingPartCount / 2);
-				BodyChunk bodyChunk = this.owner.owner.bodyChunks[0];
-				BodyChunk bodyChunk2 = this.owner.owner.bodyChunks[1];
-				Vector2 b = Vector2.Lerp(Vector2.Lerp(bodyChunk.lastPos, bodyChunk.pos, timeStacker), Vector2.Lerp(bodyChunk2.lastPos, bodyChunk2.pos, timeStacker), 0.5f - Mathf.Lerp(0f, 0.3f, t));
-				float num2 = Custom.VecToDeg(Vector2.Lerp(bodyChunk.lastPos, bodyChunk.pos, timeStacker) - b);
-				num2 += (float)(index / 2) * 25f * num;
-				Vector2 to = Vector2.Lerp(this.owner.head.lastPos, this.owner.head.pos, timeStacker) + Custom.DegToVec(num2 + 80f * num) * 10f;
-				Vector2 to2 = Vector2.Lerp(this.owner.head.lastPos, this.owner.head.pos, timeStacker) + Custom.DegToVec(num2 + 80f * num) * (10f + this.length);
-				this.targetClosePos = Vector2.Lerp(this.targetClosePos, to, Mathf.Lerp(0.7f, 0.4f, t));
-				this.targetFarPos = Vector2.Lerp(this.targetFarPos, to2, Mathf.Lerp(0.7f, 0.4f, t));
-				Vector2 a = Custom.PerpendicularVector(this.targetClosePos, this.targetFarPos);
+				Vector2 tcp = Vector2.Lerp(targetCloseLastPos, targetClosePos, timeStacker);
+				Vector2 tfp = Vector2.Lerp(targetFarLastPos, targetFarPos, timeStacker);
+				Vector2 a = Custom.PerpendicularVector(tcp, tfp);
 				for (int i = 0; i < 3; i++)
 				{
-					this.mesh.MoveVertice(i * 2 + 1, Vector2.Lerp(this.targetClosePos, this.targetFarPos, ((float)i + 1f) / 4f) + a * this.width - camPos);
-					this.mesh.MoveVertice(i * 2 + 2, Vector2.Lerp(this.targetClosePos, this.targetFarPos, ((float)i + 1f) / 4f) - a * this.width - camPos);
+					(sLeaser.sprites[mesh] as TriangleMesh).MoveVertice(i * 2 + 1, Vector2.Lerp(tcp, tfp, ((float)i + 1f) / 4f) + a * this.width - camPos);
+					(sLeaser.sprites[mesh] as TriangleMesh).MoveVertice(i * 2 + 2, Vector2.Lerp(tcp, tfp, ((float)i + 1f) / 4f) - a * this.width - camPos);
 				}
-				this.mesh.MoveVertice(0, this.targetClosePos - camPos);
-				this.mesh.MoveVertice(7, this.targetFarPos - camPos);
+				(sLeaser.sprites[mesh] as TriangleMesh).MoveVertice(0, tcp - camPos);
+				(sLeaser.sprites[mesh] as TriangleMesh).MoveVertice(7, tfp - camPos);
 			}
 
-			public TriangleMesh mesh;
 
-			private FSprite blankSprite;
+			public int mesh;
 
 			public PseudoWingcatGraphics owner;
 
 			public float length;
 
 			public float width;
-
-			public Vector2 targetFarPos;
-
+            public Vector2 targetFarPos;
 			public Vector2 targetClosePos;
-		}
+            private Vector2 targetFarLastPos;
+            private Vector2 targetCloseLastPos;
+        }
 	}
 }

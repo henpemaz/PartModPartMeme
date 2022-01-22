@@ -1,5 +1,4 @@
-﻿using Partiality.Modloader;
-using System;
+﻿using System;
 using System.Linq;
 using System.Text;
 using System.Security;
@@ -9,26 +8,21 @@ using UnityEngine;
 using Menu;
 using SlugBase;
 
+[assembly: AssemblyTrademark("Zandra & Henpemaz")]
+
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 namespace ZandrasCharacterPackPort
 {
-    public class ZandrasCharacterPackPort : PartialityMod
+    [BepInEx.BepInPlugin("henpemaz.zandrascharacterpackport", "ZandrasCharacterPack", "1.1")]
+    public class ZandrasCharacterPackPort : BepInEx.BaseUnityPlugin
     {
-        public ZandrasCharacterPackPort()
-        {
-            this.ModID = "Zandra's Character Pack Port";
-            this.Version = "1.1";
-            this.author = "Zandra & Henpemaz";
+        public string author = "Zandra, Henpemaz";
+        static ZandrasCharacterPackPort instance;
 
+        public void OnEnable()
+        {
             instance = this;
-        }
-
-        public static ZandrasCharacterPackPort instance;
-
-        public override void OnEnable()
-        {
-            base.OnEnable();
             PlayerManager.RegisterCharacter(new Kineticat());
             PlayerManager.RegisterCharacter(new Aquaria());
             PlayerManager.RegisterCharacter(new VultCat());
