@@ -10,7 +10,8 @@ namespace ZandrasCharacterPackPort
 	{
 		public Kineticat() : base("zcpkineticat", FormatVersion.V1, 0, true) { }
 		public override string DisplayName => "The Psychic";
-		public override string Description => @"Not for the weak of mind. In fact, only few can handle such power and not be overwhelmed by it.";
+		public override string Description => @"Not for the weak of mind.
+In fact, only few can handle such power and not be overwhelmed by it.";
 
 		protected override void Disable()
 		{

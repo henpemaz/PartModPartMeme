@@ -9,7 +9,8 @@ namespace ZandrasCharacterPackPort
 	{
 		public Aquaria() : base("zcpaquaria", FormatVersion.V1, 0, true) { }
 		public override string DisplayName => "Aquaria";
-		public override string Description => @"Swim freely. Farewell, creatures of the surface.";
+		public override string Description => @"Swim freely.
+Farewell, creatures of the surface.";
 
 		protected override void Disable()
 		{

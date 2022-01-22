@@ -13,10 +13,68 @@ namespace ZandrasCharacterPackPort
 
 		public override string DisplayName => "The Spirit";
 		public override string Description => @"Ephemeral, fading.
-Without attunement, this slugcat might one day disappear from this plane.";
+Without attunement, this slugcat might disappear from this plane.";
 
-		// fix  assumptions
-		private void KarmaLadderScreen_GetDataFromGame(On.Menu.KarmaLadderScreen.orig_GetDataFromGame orig, Menu.KarmaLadderScreen self, Menu.KarmaLadderScreen.SleepDeathScreenDataPackage package)
+        public override bool HasGuideOverseer => false;
+        public override string StartRoom => "SI_C09";
+        public override void StartNewGame(Room room)
+        {
+            if(room.abstractRoom.name == StartRoom)
+            {
+				if (room.game.Players.Count > 0)
+				{
+					var p = room.game.Players[0];
+					p.pos = new WorldCoordinate(room.abstractRoom.index, 1, 27, -1);
+				}
+				if (room.game.Players.Count > 1)
+				{
+					var p = room.game.Players[1];
+					p.pos = new WorldCoordinate(room.abstractRoom.index, 13, 11, -1);
+				}
+				if (room.game.Players.Count > 2)
+				{
+					var p = room.game.Players[2];
+					p.pos = new WorldCoordinate(room.abstractRoom.index, 24, 18, -1);
+				}
+				if (room.game.Players.Count > 3)
+				{
+					var p = room.game.Players[3];
+					p.pos = new WorldCoordinate(room.abstractRoom.index, 34, 18, -1);
+				}
+			}
+            if (room.game.IsStorySession)
+            {
+				room.AddObject(new Messenger());
+				room.game.rainWorld.progression.miscProgressionData.SaveDiscoveredShelter("SI_S04");
+
+				// saveState.deathPersistentSaveData.karma = saveState.deathPersistentSaveData.karmaCap;
+
+				var survivor = room.game.GetStorySession.saveState.deathPersistentSaveData.winState.GetTracker(WinState.EndgameID.Survivor, true) as WinState.IntegerTracker;
+				survivor.SetProgress(survivor.max);
+				survivor.lastShownProgress = survivor.progress;
+			}
+        }
+
+		private class Messenger : UpdatableAndDeletable
+        {
+            public override void Update(bool eu)
+            {
+                base.Update(eu);
+				if (this.slatedForDeletetion || this.room == null) return;
+
+				if (room.game.Players.Count > 0 && room.game.Players[0].realizedCreature != null)
+                {
+					if (room.game.cameras[0].hud == null) room.game.cameras[0].FireUpSinglePlayerHUD(room.game.Players[0].realizedCreature as Player);
+					room.game.cameras[0].hud.textPrompt.AddMessage(room.game.manager.rainWorld.inGameTranslator.Translate(
+						"You feel your energy fading after a long journey. Be quick!"), 120, 320, false, true);
+					this.Destroy();
+				}
+			}
+        }
+
+
+        // fix  assumptions
+        private void KarmaLadderScreen_GetDataFromGame(On.Menu.KarmaLadderScreen.orig_GetDataFromGame orig, Menu.KarmaLadderScreen self, Menu.KarmaLadderScreen.SleepDeathScreenDataPackage package)
 		{
 			orig(self, package);
 
@@ -25,7 +83,7 @@ Without attunement, this slugcat might one day disappear from this plane.";
 				// would display the wrong karma because it assumed it was increased, but it was insead decreased
 				if (self.karmaLadder != null && self.ID == ProcessManager.ProcessID.SleepScreen)
 				{
-					self.karma.x = RWCustom.Custom.IntClamp(package.karma.x + 1, 0, package.karma.y);
+					self.karma.x = RWCustom.Custom.IntClamp(package.karma.x + (package.saveState.deathPersistentSaveData.reinforcedKarma ? 0 : 1), 0, package.karma.y);
 					self.karmaLadder.displayKarma = self.karma;
 					self.karmaLadder.moveToKarma = self.karma.x;
 					self.karmaLadder.scroll = (float)self.karma.x;
@@ -79,14 +137,14 @@ Without attunement, this slugcat might one day disappear from this plane.";
 		// boo
         private bool GhostWorldPresence_SpawnGhost(On.GhostWorldPresence.orig_SpawnGhost orig, GhostWorldPresence.GhostID ghostID, int karma, int karmaCap, int ghostPreviouslyEncountered, bool playingAsRed)
         {
-			if (ghostly) return true;
+			if (ghostly && ghostPreviouslyEncountered == 0) return true;
 			return orig(ghostID, karma, karmaCap, ghostPreviouslyEncountered, playingAsRed);
         }
 
-		// ghostly inclined little slugcat
+		// ghost-inclined little slugcat
         private void World_SpawnGhost(On.World.orig_SpawnGhost orig, World self)
         {
-			if (self.game.IsStorySession && IsMe((self.game.session as StoryGameSession).saveState)) ghostly = true;
+			if (self.game.session is StoryGameSession ss && IsMe(ss.saveState) && ss.saveState.cycleNumber != 0) ghostly = true;
 			orig(self);
 			ghostly = false;
         }
@@ -96,30 +154,26 @@ Without attunement, this slugcat might one day disappear from this plane.";
         {
             if (IsMe(self) && survived)
             {
-				self.deathPersistentSaveData.karma-=2; // k goes down by 2 then up by 1
+				self.deathPersistentSaveData.karma -= self.deathPersistentSaveData.reinforcedKarma ? 1 : 2; // k goes down by 2 then up by 1
             }
 			orig(self, game, survived, newMalnourished);
         }
 
-		// On first cycle set up karma and Survivor
+		// On first cycle set up longer timer
         private void Player_ctor(On.Player.orig_ctor orig, Player self, AbstractCreature abstractCreature, World world)
         {
 			orig(self, abstractCreature, world);
 			if (!IsMe(self)) return;
+			life[self] = world.game.IsStorySession ? maxlife : 2 * maxlife;
 
-            if (world.game.IsStorySession)
+			if (world.game.IsStorySession)
             {
 				var saveState = world.game.GetStorySession.saveState;
 				if (saveState.cycleNumber == 0)
 				{
-					saveState.deathPersistentSaveData.karma = saveState.deathPersistentSaveData.karmaCap;
-					var survivor = (saveState.deathPersistentSaveData.winState.GetTracker(WinState.EndgameID.Survivor, true) as WinState.IntegerTracker);
-					survivor.SetProgress(survivor.max);
-					survivor.lastShownProgress = survivor.progress;
+					life[self] = (int)(1.5f * maxlife);
 				}
 			}
-
-			life[self] = world.game.IsStorySession ? maxlife : 2 * maxlife;
 		}
 
 		// if out of karma, slowly die
@@ -131,7 +185,7 @@ Without attunement, this slugcat might one day disappear from this plane.";
 
 			if (self.Consious && (
 				!self.room.game.IsStorySession || (
-					self.room.game.GetStorySession.saveState.deathPersistentSaveData.karma <= 0)))
+					 self.room.game.AllowRainCounterToTick() && self.room.game.GetStorySession.saveState.deathPersistentSaveData.karma <= 0)))
 			{
 				life[self]--;
 
@@ -210,7 +264,7 @@ Without attunement, this slugcat might one day disappear from this plane.";
 		}
 
 		public static AttachedField<Player, int> life = new AttachedField<Player, int>();
-		public static int maxlife = 2400;
+		public static int maxlife = 4800; // two minutes
 		public static WeakReference playerBeingUpdated = new WeakReference(null);
         private bool ghostly;
         private RoomPalette? currPalette;
