@@ -104,6 +104,7 @@
     <Compile Include="PseudoWingcat.cs" />
     <Compile Include="PseudoWingcatGraphics.cs" />
     <Compile Include="Skittlecat.cs" />
+    <Compile Include="tacgulS.cs" />
     <Compile Include="VultCat.cs" />
     <Compile Include="VVVVVCat.cs" />
     <Compile Include="ZandrasCharacterPackPort.cs" />
