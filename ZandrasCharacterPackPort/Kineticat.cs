@@ -8,7 +8,9 @@ namespace ZandrasCharacterPackPort
 {
 	public class Kineticat : SlugBaseCharacter
 	{
-		public Kineticat() : base("zcpkineticat", FormatVersion.V1, 0, true) { }
+		public Kineticat() : base("zcpkineticat", FormatVersion.V1, 0, true) {
+			On.Player.ctor += Player_ctor;
+		}
 		public override string DisplayName => "The Psychic";
 		public override string Description => @"Not for the weak of mind.
 In fact, only few can handle such power and not be overwhelmed by it.";
@@ -61,13 +63,15 @@ In fact, only few can handle such power and not be overwhelmed by it.";
 
 		protected override void Disable()
 		{
-			On.Player.ctor -= Player_ctor;
+			// On.Player.ctor -= Player_ctor; // moved
 			On.Player.Update -= Player_Update;
+
+			On.Creature.TerrainImpact -= Creature_TerrainImpact;
 		}
 
 		protected override void Enable()
 		{
-			On.Player.ctor += Player_ctor;
+			//On.Player.ctor += Player_ctor; // moved
 			On.Player.Update += Player_Update;
 
             On.Creature.TerrainImpact += Creature_TerrainImpact;

@@ -11,7 +11,8 @@ namespace ZandrasCharacterPackPort
             On.Menu.KarmaLadderScreen.GetDataFromGame += KarmaLadderScreen_GetDataFromGame;
             On.Menu.SleepAndDeathScreen.FoodCountDownDone += SleepAndDeathScreen_FoodCountDownDone;
             On.Menu.KarmaLadderScreen.AddBkgIllustration += KarmaLadderScreen_AddBkgIllustration;
-			
+
+			On.Player.ctor += Player_ctor;
 		}
 
         public override string DisplayName => "The Spirit";
@@ -108,7 +109,7 @@ Without attunement, this slugcat might disappear from this plane.";
 		protected override void Disable()
 		{
 			On.Player.Update -= Player_Update;
-			On.Player.ctor -= Player_ctor;
+			//On.Player.ctor -= Player_ctor; // moved
 			On.PlayerGraphics.ApplyPalette -= PlayerGraphics_ApplyPalette;
             On.PlayerGraphics.DrawSprites -= PlayerGraphics_DrawSprites;
 			On.Player.ShortCutColor -= Player_ShortCutColor;
@@ -125,7 +126,7 @@ Without attunement, this slugcat might disappear from this plane.";
         protected override void Enable()
 		{
             On.Player.Update += Player_Update;
-            On.Player.ctor += Player_ctor; ;
+            //On.Player.ctor += Player_ctor; // moved
 			On.PlayerGraphics.ApplyPalette += PlayerGraphics_ApplyPalette;
 			On.PlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites;
 			On.Player.ShortCutColor += Player_ShortCutColor;

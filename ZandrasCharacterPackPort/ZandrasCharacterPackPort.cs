@@ -19,7 +19,7 @@ namespace ZandrasCharacterPackPort
     public class ZandrasCharacterPackPort : BepInEx.BaseUnityPlugin
     {
         public string author = "Zandra, Henpemaz";
-        static ZandrasCharacterPackPort instance;
+        public static ZandrasCharacterPackPort instance;
 
         public void OnEnable()
         {
@@ -31,9 +31,7 @@ namespace ZandrasCharacterPackPort
             PlayerManager.RegisterCharacter(new Skittlecat());
             PlayerManager.RegisterCharacter(new VVVVVCat());
             PlayerManager.RegisterCharacter(new PseudoWingcat());
-
             PlayerManager.RegisterCharacter(new tacgulS());
-
         }
     }
 

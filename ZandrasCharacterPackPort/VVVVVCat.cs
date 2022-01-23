@@ -12,18 +12,20 @@ namespace ZandrasCharacterPackPort
 	internal class VVVVVCat : SlugBaseCharacter
 	{
 		public VVVVVCat() : base("zcpVVVVVcat", FormatVersion.V1, 0, true) {
-			
+			On.Player.ctor += Player_ctor;
 		}
 		public override string DisplayName => "The VVVVV";
-		public override string Description => @"An unstable prototype, created for reaching places no other slugcat ever reached.";
+		public override string Description => @"An unstable prototype.
+Created for reaching places no other slugcat ever reached.";
 
 		private Hook chunkDetour;
 		// this was a lot more complicated than it should have been.
 		protected override void Disable()
 		{
-			On.Player.ctor -= Player_ctor;
+			// On.Player.ctor -= Player_ctor; //moved
 			On.Player.Update -= Player_Update;
             On.Player.GraphicsModuleUpdated -= Player_GraphicsModuleUpdated;
+			On.Creature.SuckedIntoShortCut -= Creature_SuckedIntoShortCut;
 			On.PlayerGraphics.Update -= PlayerGraphics_Update;
 			On.PlayerGraphics.InitiateSprites -= PlayerGraphics_InitiateSprites;
 			On.PlayerGraphics.DrawSprites -= PlayerGraphics_DrawSprites;
@@ -38,9 +40,10 @@ namespace ZandrasCharacterPackPort
 
         protected override void Enable()
 		{
-			On.Player.ctor += Player_ctor;
+			//On.Player.ctor += Player_ctor; // moved
 			On.Player.Update += Player_Update;
 			On.Player.GraphicsModuleUpdated += Player_GraphicsModuleUpdated;
+            On.Creature.SuckedIntoShortCut += Creature_SuckedIntoShortCut;
 			On.PlayerGraphics.Update += PlayerGraphics_Update;
             On.PlayerGraphics.InitiateSprites += PlayerGraphics_InitiateSprites;
 			On.PlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites;
@@ -52,6 +55,26 @@ namespace ZandrasCharacterPackPort
 			chunkDetour = new Hook(typeof(BodyChunk).GetProperty("submersion").GetGetMethod(), typeof(VVVVVCat).GetMethod("Flipped_submersion"), this);
 			chunkDetour.Undo();
 		}
+
+		// fix wrong tile data during room activation
+        private void Creature_SuckedIntoShortCut(On.Creature.orig_SuckedIntoShortCut orig, Creature self, RWCustom.IntVector2 entrancePos, bool carriedByOther)
+        {
+            if (self is Player p && IsMe(p) && reverseGravity[p] && alreadyReversedPlayer[p])
+            {
+				Room room = p.room;
+				DeversePlayer(p, room);
+				try
+				{
+					orig(self, p.enteringShortCut.Value, carriedByOther);
+				}
+				catch (Exception e) { Debug.LogException(e); }
+				ReversePlayer(p, room);
+			}
+            else
+            {
+				orig(self, entrancePos, carriedByOther);
+            }
+        }
 
         private void PlayerGraphics_InitiateSprites(On.PlayerGraphics.orig_InitiateSprites orig, PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
         {

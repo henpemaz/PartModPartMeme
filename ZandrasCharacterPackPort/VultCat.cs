@@ -6,14 +6,17 @@ namespace ZandrasCharacterPackPort
 {
 	internal class VultCat : SlugBaseCharacter
 	{
-		public VultCat() : base("zcpvultcat", FormatVersion.V1, 0, true) { }
+		public VultCat() : base("zcpvultcat", FormatVersion.V1, 0, true) {
+			On.Player.ctor += Player_ctor;
+		}
 		public override string DisplayName => "Vult";
-		public override string Description => @"Child of Vultures. The one who hides their face both is feared and fears.";
+		public override string Description => @"Child of Vultures.
+The one who hides their face both is feared and fears.";
 
 		protected override void Disable()
 		{
 			On.Player.Update -= Player_Update;
-			On.Player.ctor -= Player_ctor;
+			//On.Player.ctor -= Player_ctor; // moved
 			On.PlayerGraphics.ApplyPalette -= PlayerGraphics_ApplyPalette;
 			On.SaveState.SessionEnded -= SaveState_SessionEnded;
 			On.Player.ShortCutColor -= Player_ShortCutColor;
@@ -22,10 +25,12 @@ namespace ZandrasCharacterPackPort
 		protected override void Enable()
 		{
 			On.Player.Update += Player_Update;
-            On.Player.ctor += Player_ctor;
+            //On.Player.ctor += Player_ctor; // moved
 			On.PlayerGraphics.ApplyPalette += PlayerGraphics_ApplyPalette;
 			On.SaveState.SessionEnded += SaveState_SessionEnded;
             On.Player.ShortCutColor += Player_ShortCutColor;
+
+			
 		}
 
         private Color Player_ShortCutColor(On.Player.orig_ShortCutColor orig, Player self)
