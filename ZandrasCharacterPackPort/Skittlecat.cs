@@ -12,7 +12,7 @@ namespace ZandrasCharacterPackPort
         private static Func<object, object> getPlayer;
 
         public Skittlecat() : base("zcpskittlecat", FormatVersion.V1, 0, true) {
-            try
+            try // totally unecessary prettyfication that will probably break soon
             {
 				var playerLabelType = typeof(SlugBase.ArenaAdditions).GetNestedType("PlayerSelector", any).GetNestedType("PlayerLabel", any);
 

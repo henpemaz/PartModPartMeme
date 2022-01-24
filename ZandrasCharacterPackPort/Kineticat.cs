@@ -19,45 +19,14 @@ In fact, only few can handle such power and not be overwhelmed by it.";
 		public override string StartRoom => "SB_J04";
 		public override void StartNewGame(Room room)
 		{
-			if (room.abstractRoom.name == StartRoom)
-			{
-				if (room.game.Players.Count > 0)
-				{
-					var p = room.game.Players[0];
-					p.pos = new WorldCoordinate(room.abstractRoom.index, 165, 31, -1);
-				}
-				if (room.game.Players.Count > 1)
-				{
-					var p = room.game.Players[1];
-					p.pos = new WorldCoordinate(room.abstractRoom.index, 172, 24, -1);
-				}
-				if (room.game.Players.Count > 2)
-				{
-					var p = room.game.Players[2];
-					p.pos = new WorldCoordinate(room.abstractRoom.index, 165, 24, -1);
-				}
-				if (room.game.Players.Count > 3)
-				{
-					var p = room.game.Players[3];
-					p.pos = new WorldCoordinate(room.abstractRoom.index, 159, 24, -1);
-				}
-			}
 			if (room.game.IsStorySession)
 			{
-                //room.AddObject(new Messenger());
-                if (room.game.Players.Count > 0)
-                {
-					room.game.cameras[0].followAbstractCreature = null;
-					room.AddObject(new CameraMan(8));
+				if (room.abstractRoom.name == StartRoom)
+				{
+					Utils.PlacePlayers(room, new int[,] { { 165, 31 }, { 172, 24 }, { 165, 24 }, { 159, 24 } });
+					room.AddObject(new Utils.CameraMan(8));
 				}
-
-				room.game.rainWorld.progression.miscProgressionData.SaveDiscoveredShelter("SB_S01");
-
-				// saveState.deathPersistentSaveData.karma = saveState.deathPersistentSaveData.karmaCap;
-
-				var survivor = room.game.GetStorySession.saveState.deathPersistentSaveData.winState.GetTracker(WinState.EndgameID.Survivor, true) as WinState.IntegerTracker;
-				survivor.SetProgress(survivor.max);
-				survivor.lastShownProgress = survivor.progress;
+				Utils.GiveSurvivor(room.game, "SB_S01");
 			}
 		}
 
@@ -85,7 +54,6 @@ In fact, only few can handle such power and not be overwhelmed by it.";
             {
 				if (p.realizedCreature is Player pp && isGrabbing[pp] && grabbedObject[pp].Target == self)
                 {
-					//if (self is Player) speed *= 0.5f;
 					self.Violence(null, null, self.bodyChunks[chunk], null, Creature.DamageType.Blunt, speed * impactDamage, 0f);
 					isGrabbing[pp] = false;
 					grabbedObject[pp].Target = null;
@@ -120,16 +88,12 @@ In fact, only few can handle such power and not be overwhelmed by it.";
 		{
 			orig(self, eu);
 			if (!IsMe(self)) return;
-			//Debug.Log("a");
 			if (self.room?.game?.cameras is null) return; // into shortcut that frame.
-			//Debug.Log("b");
 
 			if (grabbingCooldown[self] > 0) grabbingCooldown[self]--;
-			//Debug.Log("c");
 
 			Vector2 a = Vector2.Lerp(lastMousePos[self], (Vector2)Input.mousePosition + self.room.game.cameras[0].pos, 0.3f);
 			lastMousePos[self] = a;
-			//Debug.Log("d");
 			if (!self.dead && self.Consious && grabbingCooldown[self] <= 0 && Input.GetMouseButton(0))
 			{
 				if (isGrabbing[self] && grabbedObject[self].Target != null)
@@ -219,10 +183,7 @@ In fact, only few can handle such power and not be overwhelmed by it.";
 			{
 				grabbedTimer[self] = Mathf.MoveTowards(grabbedTimer[self], 0f, 0.033333335f);
 				isGrabbing[self] = false;
-			//Debug.Log("e");
-				//if(grabbedObject[self] is null) Debug.Log("wtf");
 				grabbedObject[self].Target = null;
-				//Debug.Log("f");
 			}
 		}
 

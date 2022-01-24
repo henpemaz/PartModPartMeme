@@ -93,10 +93,11 @@ Created for reaching places no other slugcat ever reached.";
 				return;
 			}
 			// switched behavior
-			if (reverseGravity[self] && self.room != null && !alreadyReversedPlayer[self])
+			if (reverseGravity[self] && self.room != null)// && !alreadyReversedPlayer[self])
 			{
 				Room room = self.room;
-				ReversePlayer(self, room);
+				// actuallyViewed == graphics updated so already reversed.
+				if ( !actuallyViewed) ReversePlayer(self, room);
 				try
 				{
 					orig(self, actuallyViewed, eu);
@@ -143,16 +144,18 @@ Created for reaching places no other slugcat ever reached.";
 				return;
 			}
 			// switched behavior
-			if (reverseGravity[self.player] && self.owner.room != null && !alreadyReversedPlayer[self.player])
+			if (reverseGravity[self.player] && self.owner.room != null)// && !alreadyReversedPlayer[self.player])
 			{
-				Room room = self.owner.room;
-				ReversePlayer(self.player, room);
+				//Room room = self.owner.room;
+				// already reversed by player.update
+				//ReversePlayer(self.player, room);
 				try
 				{
 					orig(self);
 				}
 				catch (Exception e) { Debug.LogException(e); }
-				DeversePlayer(self.player, room);
+				//GraphicsModuleUpdated deverses it
+				//DeversePlayer(self.player, room);
 			}
 			else
 			{
@@ -264,7 +267,10 @@ Created for reaching places no other slugcat ever reached.";
 					orig(self, eu);
 				}
 				catch (Exception e){ Debug.LogException(e); }
-				DeversePlayer(self, room);
+				if (self.slatedForDeletetion || self.room != room || self.graphicsModule == null)
+					DeversePlayer(self, room);
+				// else un-needed because graphics will be updated.
+
 			}
 			else
 			{
@@ -323,7 +329,23 @@ Created for reaching places no other slugcat ever reached.";
 					objs.Add(g.grabbed);
 				}
             }
-            if (self.enteringShortCut != null) self.enteringShortCut = new RWCustom.IntVector2(self.enteringShortCut.Value.x, room.Height - 1 - self.enteringShortCut.Value.y);
+            if (room.fliesRoomAi != null) // player colies with flies on update gotta flip them all
+            {
+				foreach (Fly fly in room.fliesRoomAi.flies)
+				{
+					if (fly.PlayerAutoGrabable && fly.grabbedBy.Count == 0)
+					{
+						var c = fly.bodyChunks[0];
+						c.pos = new Vector2(c.pos.x, pheight - c.pos.y);
+						c.lastPos = new Vector2(c.lastPos.x, pheight - c.lastPos.y);
+						c.lastLastPos = new Vector2(c.lastLastPos.x, pheight - c.lastLastPos.y);
+						c.contactPoint.y *= -1;
+						if (c.setPos != null) c.setPos = new Vector2(c.setPos.Value.x, pheight - c.setPos.Value.y);
+						objs.Add(fly);
+					}
+				}
+			}
+			if (self.enteringShortCut != null) self.enteringShortCut = new RWCustom.IntVector2(self.enteringShortCut.Value.x, room.Height - 1 - self.enteringShortCut.Value.y);
 			alreadyReversedPlayer[self] = true;
 		}
 

@@ -8,54 +8,34 @@ namespace ZandrasCharacterPackPort
 	internal class KarmaCat : SlugBaseCharacter
 	{
 		public KarmaCat() : base("zcpkarmacat", FormatVersion.V1, 0, true) {
-            On.Menu.KarmaLadderScreen.GetDataFromGame += KarmaLadderScreen_GetDataFromGame;
-            On.Menu.SleepAndDeathScreen.FoodCountDownDone += SleepAndDeathScreen_FoodCountDownDone;
-            On.Menu.KarmaLadderScreen.AddBkgIllustration += KarmaLadderScreen_AddBkgIllustration;
+			On.Menu.KarmaLadderScreen.GetDataFromGame += KarmaLadderScreen_GetDataFromGame;
+			On.Menu.SleepAndDeathScreen.FoodCountDownDone += SleepAndDeathScreen_FoodCountDownDone;
+			On.Menu.KarmaLadderScreen.AddBkgIllustration += KarmaLadderScreen_AddBkgIllustration;
 
 			On.Player.ctor += Player_ctor;
+
+			pebblesBehavior = new Utils.PebblesKarmaOnce(this);
 		}
 
-        public override string DisplayName => "The Spirit";
+		public override string DisplayName => "The Spirit";
 		public override string Description => @"Ephemeral, fading.
 Without attunement, this slugcat might disappear from this plane.";
 
-        public override bool HasGuideOverseer => false;
-        public override string StartRoom => "SI_C09";
+		public override bool HasGuideOverseer => false;
+		public override string StartRoom => "SI_C09";
+
         public override void StartNewGame(Room room)
         {
-            if(room.abstractRoom.name == StartRoom)
-            {
-				if (room.game.Players.Count > 0)
-				{
-					var p = room.game.Players[0];
-					p.pos = new WorldCoordinate(room.abstractRoom.index, 1, 27, -1);
-				}
-				if (room.game.Players.Count > 1)
-				{
-					var p = room.game.Players[1];
-					p.pos = new WorldCoordinate(room.abstractRoom.index, 13, 11, -1);
-				}
-				if (room.game.Players.Count > 2)
-				{
-					var p = room.game.Players[2];
-					p.pos = new WorldCoordinate(room.abstractRoom.index, 24, 18, -1);
-				}
-				if (room.game.Players.Count > 3)
-				{
-					var p = room.game.Players[3];
-					p.pos = new WorldCoordinate(room.abstractRoom.index, 34, 18, -1);
-				}
-			}
             if (room.game.IsStorySession)
             {
-				room.AddObject(new Messenger("You feel your energy fading after a long journey. Be quick!", 120, 320, false, true));
-				room.game.rainWorld.progression.miscProgressionData.SaveDiscoveredShelter("SI_S04");
+				if (room.abstractRoom.name == StartRoom)
+				{
+					Utils.PlacePlayers(room, new int[,] { { 1, 27 }, { 13, 11 }, { 24, 18 }, { 34, 18 } });
+					room.AddObject(new Utils.CameraMan(2));
+				}
 
-				// saveState.deathPersistentSaveData.karma = saveState.deathPersistentSaveData.karmaCap;
-
-				var survivor = room.game.GetStorySession.saveState.deathPersistentSaveData.winState.GetTracker(WinState.EndgameID.Survivor, true) as WinState.IntegerTracker;
-				survivor.SetProgress(survivor.max);
-				survivor.lastShownProgress = survivor.progress;
+				room.AddObject(new Utils.Messenger("You feel your energy fading after a long journey. Be quick!", 120, 320, false, true));
+				Utils.GiveSurvivor(room.game, "SI_S04");
 			}
         }
 
@@ -119,8 +99,9 @@ Without attunement, this slugcat might disappear from this plane.";
 			On.World.SpawnGhost -= World_SpawnGhost;
 			On.GhostWorldPresence.SpawnGhost -= GhostWorldPresence_SpawnGhost;
 
-			On.SSOracleBehavior.Update -= SSOracleBehavior_Update;
 			On.SaveState.IncreaseKarmaCapOneStep -= SaveState_IncreaseKarmaCapOneStep;
+
+			pebblesBehavior.Disable();
 		}
 
         protected override void Enable()
@@ -136,67 +117,24 @@ Without attunement, this slugcat might disappear from this plane.";
             On.World.SpawnGhost += World_SpawnGhost;
             On.GhostWorldPresence.SpawnGhost += GhostWorldPresence_SpawnGhost;
 
-            On.SSOracleBehavior.Update += SSOracleBehavior_Update;
             On.SaveState.IncreaseKarmaCapOneStep += SaveState_IncreaseKarmaCapOneStep;
+
+			pebblesBehavior.Enable();
 		}
 
         private void SaveState_IncreaseKarmaCapOneStep(On.SaveState.orig_IncreaseKarmaCapOneStep orig, SaveState self)
         {
 			orig(self);
-			if (IsMe(self) && self.deathPersistentSaveData.karmaCap >= 9) self.deathPersistentSaveData.ascended = true;
-        }
-
-        private void SSOracleBehavior_Update(On.SSOracleBehavior.orig_Update orig, SSOracleBehavior self, bool eu)
-        {
-			orig(self, eu);
-
-			if (!IsMe(self.oracle.room.game.GetStorySession.saveState)) return;
-
-			if (!self.oracle.Consious)
-			{
-				return;
-			}
-
-			if(self.action == SSOracleBehavior.Action.General_GiveMark)
+			if (IsMe(self) && self.deathPersistentSaveData.karmaCap >= 9)
             {
-				if(self.inActionCounter == 299)
+				self.deathPersistentSaveData.ascended = true;
+				if(self.progression.rainWorld.processManager.upcomingProcess == null && self.progression.rainWorld.processManager.currentMainLoop is RainWorldGame)
                 {
-					if (!self.oracle.room.game.GetStorySession.saveState.deathPersistentSaveData.pebblesHasIncreasedRedsKarmaCap)
-					{
-						self.player.mainBodyChunk.vel += RWCustom.Custom.RNV() * 10f;
-						self.player.bodyChunks[1].vel += RWCustom.Custom.RNV() * 10f;
-						self.player.Stun(40);
-						(self.oracle.room.game.session as StoryGameSession).saveState.deathPersistentSaveData.theMark = true;
-						bool under9 = self.oracle.room.game.GetStorySession.saveState.deathPersistentSaveData.karmaCap < 9;
-						self.oracle.room.game.GetStorySession.saveState.IncreaseKarmaCapOneStep();
-						self.oracle.room.game.GetStorySession.saveState.deathPersistentSaveData.pebblesHasIncreasedRedsKarmaCap = true;
-						//self.oracle.room.game.rainWorld.progression.SaveProgressionAndDeathPersistentDataOfCurrentState(false, false);
-						// karmacat ascends
-						if (under9 && self.oracle.room.game.GetStorySession.saveState.deathPersistentSaveData.karmaCap >= 9)
-						{
-							//self.oracle.room.game.GhostShutDown(GhostWorldPresence.GhostID.NoGhost);
-							self.oracle.room.game.rainWorld.progression.SaveProgressionAndDeathPersistentDataOfCurrentState(false, false);
-							self.oracle.room.game.manager.RequestMainProcessSwitch(ProcessManager.ProcessID.KarmaToMaxScreen, 2f);
-						}
-					}
-
-					(self.oracle.room.game.session as StoryGameSession).saveState.deathPersistentSaveData.karma = (self.oracle.room.game.session as StoryGameSession).saveState.deathPersistentSaveData.karmaCap;
-					for (int l = 0; l < self.oracle.room.game.cameras.Length; l++)
-					{
-						if (self.oracle.room.game.cameras[l].hud.karmaMeter != null)
-						{
-							self.oracle.room.game.cameras[l].hud.karmaMeter.UpdateGraphic();
-						}
-					}
-					for (int m = 0; m < 20; m++)
-					{
-						self.oracle.room.AddObject(new Spark(self.player.mainBodyChunk.pos, RWCustom.Custom.RNV() * UnityEngine.Random.value * 40f, new Color(1f, 1f, 1f), null, 30, 120));
-					}
-					self.oracle.room.PlaySound(SoundID.SS_AI_Give_The_Mark_Boom, 0f, 1f, 1f);
-					self.inActionCounter++; // skip default
+					self.progression.SaveProgressionAndDeathPersistentDataOfCurrentState(false, false);
+					self.progression.rainWorld.processManager.RequestMainProcessSwitch(ProcessManager.ProcessID.KarmaToMaxScreen, 2f);
 				}
-            }
-		}
+			}
+        }
 
         // boo
         private bool GhostWorldPresence_SpawnGhost(On.GhostWorldPresence.orig_SpawnGhost orig, GhostWorldPresence.GhostID ghostID, int karma, int karmaCap, int ghostPreviouslyEncountered, bool playingAsRed)
@@ -332,5 +270,6 @@ Without attunement, this slugcat might disappear from this plane.";
 		public static WeakReference playerBeingUpdated = new WeakReference(null);
         private bool ghostly;
         private RoomPalette? currPalette;
+        private Utils.PebblesKarmaOnce pebblesBehavior;
     }
 }

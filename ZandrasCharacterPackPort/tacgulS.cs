@@ -16,25 +16,11 @@ namespace ZandrasCharacterPackPort
                 typeof(tacgulS).GetMethod("RectangularMenuObject_MouseOver"), this);
 
             // moved here because unable to hit this hook in arena mode
+            // stores a weakreference to the game and uses that.
             On.RoomCamera.ctor += RoomCamera_ctor;
 
             new Hook(typeof(UnityEngine.Shader).GetMethod("SetGlobalVector", new System.Type[] { typeof(string), typeof(Vector4) }),
                 typeof(tacgulS).GetMethod("SetGlobalVector"), this);
-        }
-
-
-        public delegate bool orig_MouseOver(Menu.RectangularMenuObject self);
-        public bool RectangularMenuObject_MouseOver(orig_MouseOver orig, Menu.RectangularMenuObject self)
-        {
-            var p = self.menu.manager.rainWorld.progression;
-            if ((IsMe(p.currentSaveState) || (p.currentSaveState == null && IsMe(p.starvedSaveState))) 
-                || (self.menu is Menu.KarmaLadderScreen k && IsMe(k.saveState)) 
-                || (self.menu is Menu.DreamScreen d && IsMe(d.fromGameDataPackage?.saveState)))
-            {
-                Vector2 screenPos = new Vector2(Futile.screen.pixelWidth - self.ScreenPos.x, self.ScreenPos.y);
-                return self.menu.mousePosition.x < screenPos.x && self.menu.mousePosition.y > screenPos.y && self.menu.mousePosition.x > screenPos.x - self.size.x && self.menu.mousePosition.y < screenPos.y + self.size.y;
-            }
-            return orig(self);
         }
 
         public override string DisplayName => "tacgulS";
@@ -42,7 +28,6 @@ namespace ZandrasCharacterPackPort
 .secneuqesnoc eht wonk t'nod llits ew tub ,daeh sti tih evah ot smees yug elttil sihT";
 
         public override bool HasDreams => true;
-
 
         // flips menus around based on current playthrough
         private void Menu_ctor(On.Menu.Menu.orig_ctor orig, Menu.Menu self, ProcessManager manager, ProcessManager.ProcessID ID)
@@ -77,19 +62,25 @@ namespace ZandrasCharacterPackPort
             }
         }
 
-  //      protected override void Disable()
-		//{
-		//	On.RoomCamera.ctor -= RoomCamera_ctor;
+        // Fixup for mouse and flipped menus
+        public delegate bool orig_MouseOver(Menu.RectangularMenuObject self);
+        public bool RectangularMenuObject_MouseOver(orig_MouseOver orig, Menu.RectangularMenuObject self)
+        {
+            var p = self.menu.manager.rainWorld.progression;
+            if ((IsMe(p.currentSaveState) || (p.currentSaveState == null && IsMe(p.starvedSaveState)))
+                || (self.menu is Menu.KarmaLadderScreen k && IsMe(k.saveState))
+                || (self.menu is Menu.DreamScreen d && IsMe(d.fromGameDataPackage?.saveState)))
+            {
+                Vector2 screenPos = new Vector2(Futile.screen.pixelWidth - self.ScreenPos.x, self.ScreenPos.y);
+                return self.menu.mousePosition.x < screenPos.x && self.menu.mousePosition.y > screenPos.y && self.menu.mousePosition.x > screenPos.x - self.size.x && self.menu.mousePosition.y < screenPos.y + self.size.y;
+            }
+            return orig(self);
+        }
 
-  //          h.Undo();
-  //          h.Free();
-  //          h = null;
-  //      }
+        // moved to perma hooks and gameref
+        //      protected override void Disable()
+        //protected override void Enable()
 
-		//protected override void Enable()
-		//{
-            
-		//}
 
         public delegate void orig_SetGlobalVector(string a, Vector4 b);
         public void SetGlobalVector(orig_SetGlobalVector orig, string name, Vector4 vals)
