@@ -22,6 +22,7 @@ namespace ZandrasCharacterPackPort
 Without attunement, this slugcat might disappear from this plane.";
 
 		public override bool HasGuideOverseer => false;
+
 		public override string StartRoom => "SI_C09";
 
         public override void StartNewGame(Room room)
@@ -158,6 +159,7 @@ Without attunement, this slugcat might disappear from this plane.";
             {
 				self.deathPersistentSaveData.karma -= self.deathPersistentSaveData.reinforcedKarma ? 1 : 2; // k goes down by 2 then up by 1
             }
+			self.deathPersistentSaveData.reinforcedKarma = false;
 			orig(self, game, survived, newMalnourished);
         }
 

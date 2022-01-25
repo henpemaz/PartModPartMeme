@@ -8,6 +8,8 @@ using UnityEngine;
 using Menu;
 using SlugBase;
 using System.Collections.Generic;
+using MonoMod.Cil;
+using Mono.Cecil.Cil;
 
 [assembly: AssemblyTrademark("Zandra & Henpemaz")]
 
@@ -40,6 +42,20 @@ namespace ZandrasCharacterPackPort
     internal static class Utils
     {
         public static T Target<T>(this WeakReference self) { return (T)self?.Target; }
+
+        public static bool Matches(this ILCursor c, params Predicate<Instruction>[] predicates)
+        {
+            if (c.Index + predicates.Length > c.Instrs.Count) return false;
+            var current = c.Next;
+            foreach (var predicate in predicates)
+            {
+                if (predicate?.Invoke(current) ?? true)
+                    current = current.Next;
+                else
+                    return false;
+            }
+            return true;
+        }
 
         // Start of game utils
 
