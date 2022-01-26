@@ -1,4 +1,6 @@
 ﻿for 1.3:
+	hunter + entering LRU = crash, apparently
+
 	add flat-mode scenes
 	fix tamed scav, follow me properly damn it
 	tamed spider shouldn't die in shelter
