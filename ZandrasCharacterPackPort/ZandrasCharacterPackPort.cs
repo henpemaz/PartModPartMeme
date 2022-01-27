@@ -34,6 +34,7 @@ namespace ZandrasCharacterPackPort
             PlayerManager.RegisterCharacter(new VVVVVCat());
             PlayerManager.RegisterCharacter(new PseudoWingcat());
             PlayerManager.RegisterCharacter(new tacgulS());
+            PlayerManager.RegisterCharacter(new Upcat());
         }
     }
 

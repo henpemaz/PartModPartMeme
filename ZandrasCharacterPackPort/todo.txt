@@ -1,0 +1,109 @@
+﻿Zandra Charpack
+All:
+	Selectmenu art
+	sleep art
+	starting areas
+	win conditions
+	dreams that hint to win conditions
+
+VVVVV
+	start/winconditions:
+		default
+	ceiling pipes issue
+		solved
+	water stuff
+		solved ??
+	is the game beatable ?
+		mehri did shoreline
+			
+	grabbing stuff = cursed
+		batfly collision fixed (bats grabbed from playerupdate)
+		theoretically other things are still problem ??
+			solved
+	jetfish while inverted = cursed
+		grab of heavy things solved. chunk vel wasnt being mirrored
+		
+	little splashes in the wrong place.
+		solved.
+
+tacgluS
+	start/winconditions:
+		default
+	menu buttons dont respont to mouse because theyre in the wrong places
+		done
+		
+Wingcat
+	??? how to make this interestint ?
+	reset graphics on pipe spitout
+		done
+	... a mechanical change ? effects ?
+		hands ?
+			
+	
+Psychic
+	start/winconditions:
+		starts in Sub
+			done
+		win at ????
+			????
+				
+	drag self causes stacking stun, stun too high causes failed drag
+	movement impairement of the sorts ?
+	spawn in depths
+		done
+	lethal impact damage to self and others ?
+		done
+		
+	item usage restrictions or rework ? disable grab ?
+		controls are a bit weird rn with directionals + zxc + mouse
+			should either get rid of directionals or grab/jump/throw
+		
+	win condition: altar in top of FP
+		need dream to hint to win condition
+		needs place
+Vult
+	boring af rn 
+	what do
+		
+	tameable vultures
+		
+	spawns in East CC
+		
+	hunter difficulty ?
+		
+	play around the fact that he needs to eat meat but everything runs away from him so the player has to be smart about it
+		
+	pounce attack ? replaces grab/throw
+		
+	when looking away, mask has no effect ?
+		
+	win condition: tamed a King in sky islands
+		
+Aquaria
+	hydration/wetness system
+		blue pips, no custom data = lazy way out
+		custom save thing with slugbased ?
+	dipping on water or catching rain wets you up
+	wetness lasts severa cycles
+	dies if unwet ?
+	starvation mode if unwet ?
+	
+Skittlecat
+	making this rainbow quest thing will be work but seems worth it, go
+	spawns in GW or HI or DS ?
+	win condition: has seen all the rainbows
+		save tracking + counter on sleepscreen or smth
+		maybe make it fast to certain rare rainbows cant be missed
+		100% chance rainbows
+		region by region tracking ? wanderer pip involved ? dream of rainbows ?
+			
+			
+Karmacat
+	start: west of Sky Islands
+	Win at 10 karma
+		done
+	pebs doesnt help as much
+		done
+	custom karma-to-10 screen
+		done half-assed loads white gost
+		could do custom art

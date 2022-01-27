@@ -105,10 +105,14 @@
     <Compile Include="PseudoWingcatGraphics.cs" />
     <Compile Include="Skittlecat.cs" />
     <Compile Include="tacgulS.cs" />
+    <Compile Include="Upcat.cs" />
     <Compile Include="VultCat.cs" />
     <Compile Include="VVVVVCat.cs" />
     <Compile Include="ZandrasCharacterPackPort.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="todo.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

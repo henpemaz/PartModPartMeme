@@ -11,7 +11,11 @@ namespace ZandrasCharacterPackPort
 {
 	internal class VVVVVCat : SlugBaseCharacter
 	{
-		public VVVVVCat() : base("zcpVVVVVcat", FormatVersion.V1, 0, true) {
+		public VVVVVCat() : this("zcpVVVVVcat") {
+			
+		}
+		protected VVVVVCat(string name) : base(name, FormatVersion.V1, 0, true)
+        {
 			// Initialize variables
 			On.Player.ctor += Player_ctor;
 		}
@@ -19,13 +23,14 @@ namespace ZandrasCharacterPackPort
 		public override string Description => @"An unstable prototype.
 Created for reaching places no other slugcat ever reached.";
 
-		private Hook chunkDetour;
+		protected Hook chunkDetour;
 		// this was a lot more complicated than it should have been.
 		protected override void Disable()
 		{
 			// Basic swithched behavior
 			On.Player.Update -= Player_Update;
 			On.Player.Jump -= Player_Jump;
+			On.Player.UpdateAnimation -= Player_UpdateAnimation1;
 			On.Player.WallJump -= Player_WallJump;
 			On.PlayerGraphics.Update -= PlayerGraphics_Update;
 			On.Player.GraphicsModuleUpdated -= Player_GraphicsModuleUpdated;
@@ -50,6 +55,8 @@ Created for reaching places no other slugcat ever reached.";
 
 			chunkDetour.Free();
 			chunkDetour = null;
+			
+			// If you change these, don't forget to update Upcat too, uses the same hooks minus jumps
 		}
 
         protected override void Enable()
@@ -101,9 +108,8 @@ Created for reaching places no other slugcat ever reached.";
 			chunkDetour.Undo();
 		}
 
-
         // Initialize variables
-        private void Player_ctor(On.Player.orig_ctor orig, Player self, AbstractCreature abstractCreature, World world)
+        protected virtual void Player_ctor(On.Player.orig_ctor orig, Player self, AbstractCreature abstractCreature, World world)
 		{
 			orig(self, abstractCreature, world);
 			if (!IsMe(self)) return;
@@ -113,11 +119,10 @@ Created for reaching places no other slugcat ever reached.";
 			forceStanding[self] = 0;
 		}
 
-
 		// Basic swithched behavior ============================================
 
 		// flip player's perspective of room.
-		private void ReversePlayer(Player self, Room room)
+		protected void ReversePlayer(Player self, Room room)
 		{
 			if (!reverseGravity[self] || reversedPlayer[self]) throw new Exception();
 			List<PhysicalObject> objs;
@@ -172,7 +177,7 @@ Created for reaching places no other slugcat ever reached.";
 		}
 
 		// ReversePlayer undo
-		private void DeversePlayer(Player self, Room room)
+		protected void DeversePlayer(Player self, Room room)
 		{
 			if (!reverseGravity[self] || !reversedPlayer[self]) throw new Exception();
 			List<PhysicalObject> objs = reversedObjects[self];
@@ -226,7 +231,7 @@ Created for reaching places no other slugcat ever reached.";
 		}
 
 		// Switch behavior, start inverted processing
-		private void Player_Update(On.Player.orig_Update orig, Player self, bool eu)
+		protected void Player_Update(On.Player.orig_Update orig, Player self, bool eu)
 		{
 			if (!IsMe(self))
 			{
@@ -279,7 +284,7 @@ Created for reaching places no other slugcat ever reached.";
 		}
 
 		// player jump replaced by gravity switch.
-		private void Player_Jump(On.Player.orig_Jump orig, Player self)
+		protected void Player_Jump(On.Player.orig_Jump orig, Player self)
         {
 			if (!IsMe(self))
 			{
@@ -313,6 +318,9 @@ Created for reaching places no other slugcat ever reached.";
 						switch (self.animation)
 						{
 							case Player.AnimationIndex.LedgeGrab:
+								prevent = false;
+								flip = false;
+								// climb?
 								break;
 
 							case Player.AnimationIndex.ClimbOnBeam:
@@ -347,7 +355,6 @@ Created for reaching places no other slugcat ever reached.";
 											prevent = false;
 											flip = true;
 										}
-											
 									}
 								}
 								else
@@ -440,7 +447,6 @@ Created for reaching places no other slugcat ever reached.";
 
 								if (self.standing)
 								{
-
 									if (self.slideCounter > 0 && self.slideCounter < 10)
 									{
 										// Backflip
@@ -503,9 +509,8 @@ Created for reaching places no other slugcat ever reached.";
 			// no orig;
 		}
 
-
 		// Some jump behavior changes
-		private void Player_UpdateAnimation1(On.Player.orig_UpdateAnimation orig, Player self)
+		protected void Player_UpdateAnimation1(On.Player.orig_UpdateAnimation orig, Player self)
 		{
 
 			if (!IsMe(self))
@@ -527,7 +532,7 @@ Created for reaching places no other slugcat ever reached.";
 		}
 
 		// No op for regular walljumps, but allow jump-up-against-wall jumps
-		private void Player_WallJump(On.Player.orig_WallJump orig, Player self, int direction)
+		protected void Player_WallJump(On.Player.orig_WallJump orig, Player self, int direction)
 		{
 			if (!IsMe(self))
 			{
@@ -543,7 +548,7 @@ Created for reaching places no other slugcat ever reached.";
 		}
 
 		// used to reverse, now just catch exceptions to avoid invalid state
-		private void PlayerGraphics_Update(On.PlayerGraphics.orig_Update orig, PlayerGraphics self)
+		protected void PlayerGraphics_Update(On.PlayerGraphics.orig_Update orig, PlayerGraphics self)
 		{
 			if (!IsMe(self.player))
 			{
@@ -571,7 +576,7 @@ Created for reaching places no other slugcat ever reached.";
 		}
 
 		// end of reversed update cycle
-		private void Player_GraphicsModuleUpdated(On.Player.orig_GraphicsModuleUpdated orig, Player self, bool actuallyViewed, bool eu)
+		protected void Player_GraphicsModuleUpdated(On.Player.orig_GraphicsModuleUpdated orig, Player self, bool actuallyViewed, bool eu)
 		{
 			if (!IsMe(self))
 			{
@@ -600,7 +605,7 @@ Created for reaching places no other slugcat ever reached.";
 		// Inverted drawing ====================================================
 
 		// reset previousDraw coordinates
-		private void PlayerGraphics_InitiateSprites(On.PlayerGraphics.orig_InitiateSprites orig, PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
+		protected void PlayerGraphics_InitiateSprites(On.PlayerGraphics.orig_InitiateSprites orig, PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
 		{
 			if (IsMe(self.player))
 			{
@@ -612,7 +617,7 @@ Created for reaching places no other slugcat ever reached.";
 		// not initialized per instance, tryget,
 		public static AttachedField<PlayerGraphics, Vector2> previousDraw = new AttachedField<PlayerGraphics, Vector2>();
 		// draw things in the mirrored room!!!
-		private void PlayerGraphics_DrawSprites(On.PlayerGraphics.orig_DrawSprites orig, PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+		protected void PlayerGraphics_DrawSprites(On.PlayerGraphics.orig_DrawSprites orig, PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
 		{
 			if (!self.owner.slatedForDeletetion && IsMe(self.player))
 			{
@@ -682,7 +687,7 @@ Created for reaching places no other slugcat ever reached.";
 		// Edge cases ===========================================================
 
 		// reset called from outside of update, apply reversed coordinates if needed
-		private void PlayerGraphics_Reset(On.PlayerGraphics.orig_Reset orig, PlayerGraphics self)
+		protected void PlayerGraphics_Reset(On.PlayerGraphics.orig_Reset orig, PlayerGraphics self)
 		{
 			if (!IsMe(self.player))
 			{
@@ -709,7 +714,7 @@ Created for reaching places no other slugcat ever reached.";
 		}
 
 		// fix wrong tile data during room activation from player entering shortcut
-		private void Creature_SuckedIntoShortCut(On.Creature.orig_SuckedIntoShortCut orig, Creature self, RWCustom.IntVector2 entrancePos, bool carriedByOther)
+		protected void Creature_SuckedIntoShortCut(On.Creature.orig_SuckedIntoShortCut orig, Creature self, RWCustom.IntVector2 entrancePos, bool carriedByOther)
 		{
 			if (self is Player p && IsMe(p) && reversedPlayer[p] && p.room != null)
 			{
@@ -732,7 +737,7 @@ Created for reaching places no other slugcat ever reached.";
 		// Items ================================================================
 
 		// player picks up things considering its real position
-		private PhysicalObject Player_PickupCandidate(On.Player.orig_PickupCandidate orig, Player self, float favorSpears)
+		protected PhysicalObject Player_PickupCandidate(On.Player.orig_PickupCandidate orig, Player self, float favorSpears)
 		{
 
 			PhysicalObject retval = null;
@@ -757,7 +762,7 @@ Created for reaching places no other slugcat ever reached.";
 
 		// player colides with flies considering its real position
 		// player lines 1000 through 1012 envelopped in flipping player y
-		private void Player_Update1(ILContext il)
+		protected void Player_Update1(ILContext il)
 		{
 			var c = new ILCursor(il);
 
@@ -809,7 +814,7 @@ Created for reaching places no other slugcat ever reached.";
 		}
 
 		// tubeworm tongue goes up, silly
-		private Vector2 Tongue_ProperAutoAim(On.TubeWorm.Tongue.orig_ProperAutoAim orig, TubeWorm.Tongue self, Vector2 originalDir)
+		protected Vector2 Tongue_ProperAutoAim(On.TubeWorm.Tongue.orig_ProperAutoAim orig, TubeWorm.Tongue self, Vector2 originalDir)
         {
 			if (self.worm.grabbedBy.Count > 0 && self.worm.grabbedBy[0].grabber is Player p && IsMe(p) && reverseGravity[p])
 			{
@@ -822,7 +827,7 @@ Created for reaching places no other slugcat ever reached.";
 		// Water fixes ===========================================================
 		// fix clinging to surface of water while surfaceswim
 		// player line 2429
-		private void Player_UpdateAnimation(ILContext il)
+		protected void Player_UpdateAnimation(ILContext il)
 		{
 			var c = new ILCursor(il);
 			float mulfac = 0f;
@@ -872,7 +877,7 @@ Created for reaching places no other slugcat ever reached.";
 
 		// Determine deep-swim vs surface swim
 		// player line 5453 patched in 2 spots
-		private void Player_MovementUpdate(ILContext il)
+		protected void Player_MovementUpdate(ILContext il)
 		{
 			var c = new ILCursor(il);
 			ILLabel dest1 = null;
@@ -972,7 +977,7 @@ Created for reaching places no other slugcat ever reached.";
 
 		// Bodychunk float when submerged logic
 		// BodyChunk line 104
-		private void BodyChunk_Update(ILContext il)
+		protected void BodyChunk_Update(ILContext il)
 		{
 			var c = new ILCursor(il);
 			ILLabel dest1 = null;
@@ -1031,23 +1036,23 @@ Created for reaching places no other slugcat ever reached.";
 			return 1f - orig(self);
 		}
 
-		private float Flipped_FloatWaterLevel(On.Room.orig_FloatWaterLevel orig, Room self, float horizontalPos)
+		protected float Flipped_FloatWaterLevel(On.Room.orig_FloatWaterLevel orig, Room self, float horizontalPos)
 		{
 			return self.PixelHeight - orig(self, horizontalPos);
 		}
 
-		private ShortcutData Flipped_shortcutData(On.Room.orig_shortcutData_IntVector2 orig, Room self, RWCustom.IntVector2 pos)
+		protected ShortcutData Flipped_shortcutData(On.Room.orig_shortcutData_IntVector2 orig, Room self, RWCustom.IntVector2 pos)
         {
 			return orig(self, new RWCustom.IntVector2(pos.x, self.Height - 1 - pos.y));
 		}
 
-        private Room.Tile Flipped_GetTile(On.Room.orig_GetTile_int_int orig, Room self, int x, int y)
+        protected Room.Tile Flipped_GetTile(On.Room.orig_GetTile_int_int orig, Room self, int x, int y)
         {
 			return orig(self, x, self.Tiles.GetLength(1) - 1 - y);
         }
 
 		// Patchup objects placed by player
-		private void Room_AddObject(On.Room.orig_AddObject orig, Room self, UpdatableAndDeletable obj)
+		protected void Room_AddObject(On.Room.orig_AddObject orig, Room self, UpdatableAndDeletable obj)
 		{
 			if (obj is CosmeticSprite cs)
 			{

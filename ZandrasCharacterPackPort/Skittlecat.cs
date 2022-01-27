@@ -7,37 +7,9 @@ namespace ZandrasCharacterPackPort
 {
 	public class Skittlecat : SlugBaseCharacter
 	{
-		const System.Reflection.BindingFlags any = System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic;
-        private static Func<object, object> getIcon;
-        private static Func<object, object> getPlayer;
-
-        public Skittlecat() : base("zcpskittlecat", FormatVersion.V1, 0, true) {
-            try // totally unecessary prettyfication that will probably break soon
-            {
-				var playerLabelType = typeof(SlugBase.ArenaAdditions).GetNestedType("PlayerSelector", any).GetNestedType("PlayerLabel", any);
-
-				getIcon = playerLabelType.GetField("icon", any | System.Reflection.BindingFlags.Instance).GetValue;
-				getPlayer = playerLabelType.GetField("player", any | System.Reflection.BindingFlags.Instance).GetValue;
-
-				new MonoMod.RuntimeDetour.Hook(playerLabelType.GetMethod("Update", any | System.Reflection.BindingFlags.Instance),
-                typeof(Skittlecat).GetMethod("PlayerLabel_Update", any | System.Reflection.BindingFlags.Static));
-            }
-            catch { }
-        }
+        public Skittlecat() : base("zcpskittlecat", FormatVersion.V1, 0, true) { }
 		public override string DisplayName => "The Refractor";
 		public override string Description => @"Shiny. Too shiny. Advert your eyes.";
-
-        public static void PlayerLabel_Update(Action<object> orig, object self)
-        {
-            orig(self);
-            try
-            {
-				var p = (getPlayer(self) as ArenaAdditions.PlayerDescriptor);
-				if (p.player != null && p.player.Name == "zcpskittlecat")
-					(getIcon(self) as CreatureSymbol).myColor = p.Color;
-            }
-            catch { }
-        }
 
         protected override void Disable()
 		{
@@ -47,8 +19,12 @@ namespace ZandrasCharacterPackPort
 
 		protected override void Enable()
 		{
+			// self coloring
             On.PlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites;
             On.PlayerGraphics.ApplyPalette += PlayerGraphics_ApplyPalette;
+
+			// Rainbow quest
+
 		}
 
         private void PlayerGraphics_ApplyPalette(On.PlayerGraphics.orig_ApplyPalette orig, PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
