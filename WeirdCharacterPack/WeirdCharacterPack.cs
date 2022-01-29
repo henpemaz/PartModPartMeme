@@ -13,31 +13,26 @@ using MonoMod.RuntimeDetour;
 using Mono.Cecil.Cil;
 using MonoMod.RuntimeDetour.HookGen;
 
-[assembly: AssemblyTrademark("Zandra & Henpemaz")]
+
+[assembly: AssemblyTrademark("Henpemaz")]
 
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
-namespace ZandrasCharacterPackPort
+namespace WeirdCharacterPack
 {
-    [BepInEx.BepInPlugin("henpemaz.zandrascharacterpackport", "ZandrasCharacterPack", "1.1")]
-    public class ZandrasCharacterPackPort : BepInEx.BaseUnityPlugin
+    public class WeirdCharacterPack : BepInEx.BaseUnityPlugin
     {
-        public string author = "Zandra, Henpemaz";
-        public static ZandrasCharacterPackPort instance;
+        public string author = "Henpemaz";
+        public static WeirdCharacterPack instance;
 
         public void OnEnable()
         {
             instance = this;
-            PlayerManager.RegisterCharacter(new Kineticat());
-            PlayerManager.RegisterCharacter(new Aquaria());
-            PlayerManager.RegisterCharacter(new VultCat());
-            PlayerManager.RegisterCharacter(new KarmaCat());
-            PlayerManager.RegisterCharacter(new Skittlecat());
-            PlayerManager.RegisterCharacter(new PseudoWingcat());
+            PlayerManager.RegisterCharacter(new VVVVVCat());
+            PlayerManager.RegisterCharacter(new tacgulS());
+            PlayerManager.RegisterCharacter(new Upcat());
         }
     }
-
-    // Utils
 
     internal static class Utils
     {
@@ -64,7 +59,7 @@ namespace ZandrasCharacterPackPort
             var survivor = game.GetStorySession.saveState.deathPersistentSaveData.winState.GetTracker(WinState.EndgameID.Survivor, true) as WinState.IntegerTracker;
             survivor.SetProgress(survivor.max);
             survivor.lastShownProgress = survivor.progress;
-            foreach(var s in shelters)
+            foreach (var s in shelters)
             {
                 game.rainWorld.progression.miscProgressionData.SaveDiscoveredShelter(s);
             }
@@ -304,4 +299,3 @@ namespace ZandrasCharacterPackPort
         }
     }
 }
-

@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{FAABCC21-DD51-4DD0-B811-18E4C2FB9B0E}</ProjectGuid>
+    <ProjectGuid>{3EBFF5E6-42A6-420A-BC2C-F482BB7FCA15}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ZandrasCharacterPackPort</RootNamespace>
-    <AssemblyName>ZandrasCharacterPackPort</AssemblyName>
+    <RootNamespace>WeirdCharacterPack</RootNamespace>
+    <AssemblyName>WeirdCharacterPack</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -35,17 +35,15 @@
       <HintPath>..\References\bepinex\0Harmony.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Assembly-CSharp - publicitystuntd">
-      <HintPath>..\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\References\Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="BepInEx">
-      <HintPath>..\References\BepInEx.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\References\bepinex\BepInEx.dll</HintPath>
     </Reference>
     <Reference Include="BepInEx.Preloader">
-      <HintPath>..\References\BepInEx.Preloader.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\References\bepinex\BepInEx.Preloader.dll</HintPath>
     </Reference>
     <Reference Include="HOOKS-Assembly-CSharp">
       <HintPath>..\References\bepinex\HOOKS-Assembly-CSharp.dll</HintPath>
@@ -95,21 +93,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Aquaria.cs" />
-    <Compile Include="CustomVultMask.cs" />
-    <Compile Include="KarmaCat.cs" />
-    <Compile Include="Kineticat.cs" />
-    <Compile Include="KineticatHalo.cs" />
-    <Compile Include="LightningBolt.cs" />
-    <Compile Include="PseudoWingcat.cs" />
-    <Compile Include="PseudoWingcatGraphics.cs" />
-    <Compile Include="Skittlecat.cs" />
-    <Compile Include="VultCat.cs" />
-    <Compile Include="ZandrasCharacterPackPort.cs" />
+    <Compile Include="WeirdCharacterPack.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="todo.txt" />
+    <Compile Include="tacgulS.cs" />
+    <Compile Include="Upcat.cs" />
+    <Compile Include="VVVVVCat.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

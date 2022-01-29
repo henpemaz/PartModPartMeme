@@ -84,6 +84,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HurricaneModPort", "Hurrica
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZandrasCharacterPackPort", "ZandrasCharacterPackPort\ZandrasCharacterPackPort.csproj", "{FAABCC21-DD51-4DD0-B811-18E4C2FB9B0E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeirdCharacterPack", "WeirdCharacterPack\WeirdCharacterPack.csproj", "{3EBFF5E6-42A6-420A-BC2C-F482BB7FCA15}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -242,6 +244,10 @@ Global
 		{FAABCC21-DD51-4DD0-B811-18E4C2FB9B0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FAABCC21-DD51-4DD0-B811-18E4C2FB9B0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FAABCC21-DD51-4DD0-B811-18E4C2FB9B0E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3EBFF5E6-42A6-420A-BC2C-F482BB7FCA15}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3EBFF5E6-42A6-420A-BC2C-F482BB7FCA15}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3EBFF5E6-42A6-420A-BC2C-F482BB7FCA15}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3EBFF5E6-42A6-420A-BC2C-F482BB7FCA15}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
