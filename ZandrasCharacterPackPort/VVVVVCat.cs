@@ -12,9 +12,29 @@ namespace ZandrasCharacterPackPort
 	internal class VVVVVCat : SlugBaseCharacter
 	{
 		public VVVVVCat() : this("zcpVVVVVcat") {
-			
+            On.Menu.SlugcatSelectMenu.SlugcatPage.Update += SlugcatPage_Update;
 		}
-		protected VVVVVCat(string name) : base(name, FormatVersion.V1, 0, true)
+
+        private void SlugcatPage_Update(On.Menu.SlugcatSelectMenu.SlugcatPage.orig_Update orig, Menu.SlugcatSelectMenu.SlugcatPage self)
+        {
+			orig(self);
+
+			if (self.slugcatNumber == this.SlugcatIndex)
+			{
+				if (self.menu.holdButton && self.menu.holdButton != self.menu.lastHoldButton)
+				{
+					foreach (var item in self.slugcatImage.depthIllustrations)
+					{
+						item.sprite.ScaleAroundPointRelative(UnityEngine.Vector2.zero, 1f, -1f);
+						item.pos.y = self.menu.manager.rainWorld.screenSize.y - item.pos.y;
+						item.lastPos.y = self.menu.manager.rainWorld.screenSize.y - item.lastPos.y;
+					}
+				}
+			}
+		}
+
+        // for upcat reusage
+        protected VVVVVCat(string name) : base(name, FormatVersion.V1, 0, true)
         {
 			// Initialize variables
 			On.Player.ctor += Player_ctor;
@@ -33,11 +53,14 @@ Created for reaching places no other slugcat ever reached.";
 			On.Player.UpdateAnimation -= Player_UpdateAnimation1;
 			On.Player.WallJump -= Player_WallJump;
 			On.PlayerGraphics.Update -= PlayerGraphics_Update;
+			Utils.FancyPlayerGraphics.Update -= PlayerGraphics_Update;
 			On.Player.GraphicsModuleUpdated -= Player_GraphicsModuleUpdated;
 
 			// Inverted drawing
 			On.PlayerGraphics.InitiateSprites -= PlayerGraphics_InitiateSprites;
+			Utils.FancyPlayerGraphics.InitiateSprites -= PlayerGraphics_InitiateSprites;
 			On.PlayerGraphics.DrawSprites -= PlayerGraphics_DrawSprites;
+			Utils.FancyPlayerGraphics.DrawSprites -= PlayerGraphics_DrawSprites;
 
 			// Edge cases
 			On.PlayerGraphics.Reset -= PlayerGraphics_Reset;
@@ -45,6 +68,7 @@ Created for reaching places no other slugcat ever reached.";
 
 			// Items
 			On.Player.PickupCandidate -= Player_PickupCandidate;
+			On.Player.SlugcatGrab -= Player_SlugcatGrab;
 			IL.Player.Update -= Player_Update1;
 			On.TubeWorm.Tongue.ProperAutoAim -= Tongue_ProperAutoAim;
 
@@ -72,14 +96,17 @@ Created for reaching places no other slugcat ever reached.";
             On.Player.WallJump += Player_WallJump;
 			// used to reverse, now just catch exceptions to avoid invalid state
 			On.PlayerGraphics.Update += PlayerGraphics_Update;
+			Utils.FancyPlayerGraphics.Update += PlayerGraphics_Update;
 			// end of inverted processing
 			On.Player.GraphicsModuleUpdated += Player_GraphicsModuleUpdated;
 
 			// Inverted drawing
 			// reset previousDraw coordinates
 			On.PlayerGraphics.InitiateSprites += PlayerGraphics_InitiateSprites;
+			Utils.FancyPlayerGraphics.InitiateSprites += PlayerGraphics_InitiateSprites;
 			// draw things in the mirrored room!!!
 			On.PlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites;
+			Utils.FancyPlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites;
 
 			// Edge cases
 			// reset called from outside of update, apply reversed coordinates
@@ -90,6 +117,8 @@ Created for reaching places no other slugcat ever reached.";
 			// Items
 			// player picks up things considering its real position
 			On.Player.PickupCandidate += Player_PickupCandidate;
+            // Picked up things move to inverted space
+            On.Player.SlugcatGrab += Player_SlugcatGrab;
 			// player colides with flies considering its real position
 			IL.Player.Update += Player_Update1;
 			// fix grapple dir
@@ -106,6 +135,28 @@ Created for reaching places no other slugcat ever reached.";
 			// Chunk 'submerged' inverted (water on top), hook applied during player update, reflection done here.
 			chunkDetour = new Hook(typeof(BodyChunk).GetProperty("submersion").GetGetMethod(), typeof(VVVVVCat).GetMethod("Flipped_submersion"), this);
 			chunkDetour.Undo();
+		}
+
+        protected void Player_SlugcatGrab(On.Player.orig_SlugcatGrab orig, Player self, PhysicalObject obj, int graspUsed)
+        {
+            if (IsMe(self) && self.room != null)
+            {
+				var objs = reversedObjects[self];
+				if (objs.Contains(obj)) goto bad_ending;
+				var pheight = self.room.PixelHeight;
+				foreach (var c in obj.bodyChunks)
+				{
+					c.pos = new Vector2(c.pos.x, pheight - c.pos.y);
+					c.lastPos = new Vector2(c.lastPos.x, pheight - c.lastPos.y);
+					c.lastLastPos = new Vector2(c.lastLastPos.x, pheight - c.lastLastPos.y);
+					c.contactPoint.y *= -1;
+					c.vel.y *= -1;
+					if (c.setPos != null) c.setPos = new Vector2(c.setPos.Value.x, pheight - c.setPos.Value.y);
+				}
+				objs.Add(obj);
+			}
+			bad_ending:
+			orig(self, obj, graspUsed);
 		}
 
         // Initialize variables

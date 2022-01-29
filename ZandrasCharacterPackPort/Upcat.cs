@@ -11,15 +11,15 @@ namespace ZandrasCharacterPackPort
 
         private void SlugcatPage_AddImage(On.Menu.SlugcatSelectMenu.SlugcatPage.orig_AddImage orig, Menu.SlugcatSelectMenu.SlugcatPage self, bool ascended)
         {
-
 			orig(self, ascended);
 
 			if (PlayerManager.GetCustomPlayer(self.slugcatNumber) == this)
 			{
                 foreach (var item in self.slugcatImage.depthIllustrations)
                 {
-					item.sprite.ScaleAroundPointRelative(self.slugcatImage.Container.GlobalToLocal(new UnityEngine.Vector2(0, 100f) + self.menu.manager.rainWorld.screenSize / 2), 1f, -1f/ item.sprite.scaleY);
-
+					item.sprite.ScaleAroundPointRelative(UnityEngine.Vector2.zero, 1f, -1f);
+					item.pos.y = self.menu.manager.rainWorld.screenSize.y - item.pos.y;
+					item.lastPos.y = self.menu.manager.rainWorld.screenSize.y - item.lastPos.y;
 				}
 			}
 		}
@@ -47,11 +47,14 @@ ps. this mode probaby isn't beatable, but good luck trying!";
 			//On.Player.UpdateAnimation -= Player_UpdateAnimation1;
 			//On.Player.WallJump -= Player_WallJump;
 			On.PlayerGraphics.Update -= PlayerGraphics_Update;
+			Utils.FancyPlayerGraphics.Update -= PlayerGraphics_Update;
 			On.Player.GraphicsModuleUpdated -= Player_GraphicsModuleUpdated;
 
 			// Inverted drawing
 			On.PlayerGraphics.InitiateSprites -= PlayerGraphics_InitiateSprites;
+			Utils.FancyPlayerGraphics.InitiateSprites -= PlayerGraphics_InitiateSprites;
 			On.PlayerGraphics.DrawSprites -= PlayerGraphics_DrawSprites;
+			Utils.FancyPlayerGraphics.DrawSprites -= PlayerGraphics_DrawSprites;
 
 			// Edge cases
 			On.PlayerGraphics.Reset -= PlayerGraphics_Reset;
@@ -59,6 +62,7 @@ ps. this mode probaby isn't beatable, but good luck trying!";
 
 			// Items
 			On.Player.PickupCandidate -= Player_PickupCandidate;
+			On.Player.SlugcatGrab -= Player_SlugcatGrab;
 			IL.Player.Update -= Player_Update1;
 			On.TubeWorm.Tongue.ProperAutoAim -= Tongue_ProperAutoAim;
 
@@ -86,14 +90,17 @@ ps. this mode probaby isn't beatable, but good luck trying!";
 			//On.Player.WallJump += Player_WallJump;
 			// used to reverse, now just catch exceptions to avoid invalid state
 			On.PlayerGraphics.Update += PlayerGraphics_Update;
+			Utils.FancyPlayerGraphics.Update += PlayerGraphics_Update;
 			// end of inverted processing
 			On.Player.GraphicsModuleUpdated += Player_GraphicsModuleUpdated;
 
 			// Inverted drawing
 			// reset previousDraw coordinates
 			On.PlayerGraphics.InitiateSprites += PlayerGraphics_InitiateSprites;
+			Utils.FancyPlayerGraphics.InitiateSprites += PlayerGraphics_InitiateSprites;
 			// draw things in the mirrored room!!!
 			On.PlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites;
+			Utils.FancyPlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites;
 
 			// Edge cases
 			// reset called from outside of update, apply reversed coordinates
@@ -104,6 +111,8 @@ ps. this mode probaby isn't beatable, but good luck trying!";
 			// Items
 			// player picks up things considering its real position
 			On.Player.PickupCandidate += Player_PickupCandidate;
+			// Picked up things move to inverted space
+			On.Player.SlugcatGrab += Player_SlugcatGrab;
 			// player colides with flies considering its real position
 			IL.Player.Update += Player_Update1;
 			// fix grapple dir

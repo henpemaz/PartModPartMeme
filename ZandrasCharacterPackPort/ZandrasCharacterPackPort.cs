@@ -9,7 +9,9 @@ using Menu;
 using SlugBase;
 using System.Collections.Generic;
 using MonoMod.Cil;
+using MonoMod.RuntimeDetour;
 using Mono.Cecil.Cil;
+using MonoMod.RuntimeDetour.HookGen;
 
 [assembly: AssemblyTrademark("Zandra & Henpemaz")]
 
@@ -31,8 +33,8 @@ namespace ZandrasCharacterPackPort
             PlayerManager.RegisterCharacter(new VultCat());
             PlayerManager.RegisterCharacter(new KarmaCat());
             PlayerManager.RegisterCharacter(new Skittlecat());
-            PlayerManager.RegisterCharacter(new VVVVVCat());
             PlayerManager.RegisterCharacter(new PseudoWingcat());
+            PlayerManager.RegisterCharacter(new VVVVVCat());
             PlayerManager.RegisterCharacter(new tacgulS());
             PlayerManager.RegisterCharacter(new Upcat());
         }
@@ -155,15 +157,9 @@ namespace ZandrasCharacterPackPort
 
             public SlugbaseBehavior(SlugBaseCharacter slugChar) { this.slugChar = slugChar; }
 
-            /// <summary>
-            /// Defaults to no op.
-            /// </summary>
-            public virtual void Enable() { }
+            public abstract void Enable();
 
-            /// <summary>
-            /// Defaults to no op.
-            /// </summary>
-            public virtual void Disable() { }
+            public abstract void Disable();
 
             ~SlugbaseBehavior() { slugChar = null; }
         }
@@ -174,13 +170,11 @@ namespace ZandrasCharacterPackPort
 
             public override void Enable()
             {
-                //base.Enable();
                 On.SSOracleBehavior.Update += SSOracleBehavior_Update;
             }
 
             public override void Disable()
             {
-                //base.Disable();
                 On.SSOracleBehavior.Update -= SSOracleBehavior_Update;
             }
 
@@ -188,7 +182,7 @@ namespace ZandrasCharacterPackPort
             {
                 orig(self, eu);
 
-                if (!slugChar.MultiInstance || !slugChar.IsMe(self.oracle.room.game)) return;
+                if (!slugChar.MultiInstance || !slugChar.IsMe(self.oracle.abstractPhysicalObject.Room.world.game)) return;
 
                 if (!self.oracle.Consious)
                 {
@@ -205,7 +199,6 @@ namespace ZandrasCharacterPackPort
                             self.player.bodyChunks[1].vel += RWCustom.Custom.RNV() * 10f;
                             self.player.Stun(40);
                             (self.oracle.room.game.session as StoryGameSession).saveState.deathPersistentSaveData.theMark = true;
-                            bool under9 = self.oracle.room.game.GetStorySession.saveState.deathPersistentSaveData.karmaCap < 9;
                             self.oracle.room.game.GetStorySession.saveState.IncreaseKarmaCapOneStep();
                             self.oracle.room.game.GetStorySession.saveState.deathPersistentSaveData.pebblesHasIncreasedRedsKarmaCap = true;
                         }
@@ -225,6 +218,90 @@ namespace ZandrasCharacterPackPort
                         self.oracle.room.PlaySound(SoundID.SS_AI_Give_The_Mark_Boom, 0f, 1f, 1f);
                         self.inActionCounter++; // skip default
                     }
+                }
+            }
+        }
+
+        public static class FancyPlayerGraphics
+        {
+            private static BindingFlags any = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+            public static event On.PlayerGraphics.hook_ctor ctor
+            {
+                add
+                {
+                    if (Type.GetType("FancySlugcats.FancyPlayerGraphics, FancySlugcats") is Type fpg && fpg.GetConstructors()[0] is ConstructorInfo c)
+                        HookEndpointManager.Add<On.PlayerGraphics.hook_ctor>(MethodBase.GetMethodFromHandle(c.MethodHandle), value);
+                }
+                remove
+                {
+                    if (Type.GetType("FancySlugcats.FancyPlayerGraphics, FancySlugcats") is Type fpg && fpg.GetConstructors()[0] is ConstructorInfo c)
+                        HookEndpointManager.Remove<On.PlayerGraphics.hook_ctor>(MethodBase.GetMethodFromHandle(c.MethodHandle), value);
+                }
+            }
+
+            public static event On.PlayerGraphics.hook_InitiateSprites InitiateSprites
+            {
+                add
+                {
+                    if (Type.GetType("FancySlugcats.FancyPlayerGraphics, FancySlugcats") is Type fpg && fpg.GetMethod("InitiateSprites", any) is MethodInfo m)
+                        HookEndpointManager.Add<On.PlayerGraphics.hook_InitiateSprites>(MethodBase.GetMethodFromHandle(m.MethodHandle), value);
+                }
+                remove
+                {
+                    if (Type.GetType("FancySlugcats.FancyPlayerGraphics, FancySlugcats") is Type fpg && fpg.GetMethod("InitiateSprites", any) is MethodInfo m)
+                        HookEndpointManager.Remove<On.PlayerGraphics.hook_InitiateSprites>(MethodBase.GetMethodFromHandle(m.MethodHandle), value);
+                }
+            }
+            public static event On.PlayerGraphics.hook_AddToContainer AddToContainer
+            {
+                add
+                {
+                    if (Type.GetType("FancySlugcats.FancyPlayerGraphics, FancySlugcats") is Type fpg && fpg.GetMethod("AddToContainer", any) is MethodInfo m)
+                        HookEndpointManager.Add<On.PlayerGraphics.hook_AddToContainer>(MethodBase.GetMethodFromHandle(m.MethodHandle), value);
+                }
+                remove
+                {
+                    if (Type.GetType("FancySlugcats.FancyPlayerGraphics, FancySlugcats") is Type fpg && fpg.GetMethod("AddToContainer", any) is MethodInfo m)
+                        HookEndpointManager.Remove<On.PlayerGraphics.hook_AddToContainer>(MethodBase.GetMethodFromHandle(m.MethodHandle), value);
+                }
+            }
+            public static event On.PlayerGraphics.hook_ApplyPalette ApplyPalette
+            {
+                add
+                {
+                    if (Type.GetType("FancySlugcats.FancyPlayerGraphics, FancySlugcats") is Type fpg && fpg.GetMethod("ApplyPalette", any) is MethodInfo m)
+                        HookEndpointManager.Add<On.PlayerGraphics.hook_ApplyPalette>(MethodBase.GetMethodFromHandle(m.MethodHandle), value);
+                }
+                remove
+                {
+                    if (Type.GetType("FancySlugcats.FancyPlayerGraphics, FancySlugcats") is Type fpg && fpg.GetMethod("ApplyPalette", any) is MethodInfo m)
+                        HookEndpointManager.Remove<On.PlayerGraphics.hook_ApplyPalette>(MethodBase.GetMethodFromHandle(m.MethodHandle), value);
+                }
+            }
+            public static event On.PlayerGraphics.hook_DrawSprites DrawSprites
+            {
+                add
+                {
+                    if (Type.GetType("FancySlugcats.FancyPlayerGraphics, FancySlugcats") is Type fpg && fpg.GetMethod("DrawSprites", any) is MethodInfo m)
+                        HookEndpointManager.Add<On.PlayerGraphics.hook_DrawSprites>(MethodBase.GetMethodFromHandle(m.MethodHandle), value);
+                }
+                remove
+                {
+                    if (Type.GetType("FancySlugcats.FancyPlayerGraphics, FancySlugcats") is Type fpg && fpg.GetMethod("DrawSprites", any) is MethodInfo m)
+                        HookEndpointManager.Remove<On.PlayerGraphics.hook_DrawSprites>(MethodBase.GetMethodFromHandle(m.MethodHandle), value);
+                }
+            }
+            public static event On.PlayerGraphics.hook_Update Update
+            {
+                add
+                {
+                    if (Type.GetType("FancySlugcats.FancyPlayerGraphics, FancySlugcats") is Type fpg && fpg.GetMethod("Update", any) is MethodInfo m)
+                        HookEndpointManager.Add<On.PlayerGraphics.hook_Update>(MethodBase.GetMethodFromHandle(m.MethodHandle), value);
+                }
+                remove
+                {
+                    if (Type.GetType("FancySlugcats.FancyPlayerGraphics, FancySlugcats") is Type fpg && fpg.GetMethod("Update", any) is MethodInfo m)
+                        HookEndpointManager.Remove<On.PlayerGraphics.hook_Update>(MethodBase.GetMethodFromHandle(m.MethodHandle), value);
                 }
             }
         }
