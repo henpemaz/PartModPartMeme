@@ -9,8 +9,8 @@ namespace WeirdCharacterPack
 	{
         public tacgulS() : base("zcptacguls", FormatVersion.V1, 0, true) {
             On.Menu.Menu.ctor += Menu_ctor;
-            On.Menu.DreamScreen.GetDataFromGame += DreamScreen_GetDataFromGame;
-            On.Menu.SleepAndDeathScreen.GetDataFromGame += SleepAndDeathScreen_GetDataFromGame;
+            On.HUD.Map.ctor += Map_ctor;
+            On.Menu.SlugcatSelectMenu.SlugcatPage.AddImage += SlugcatPage_AddImage;
 
             new Hook(typeof(Menu.RectangularMenuObject).GetProperty("MouseOver").GetGetMethod(),
                 typeof(tacgulS).GetMethod("RectangularMenuObject_MouseOver"), this);
@@ -21,7 +21,29 @@ namespace WeirdCharacterPack
 
             new Hook(typeof(UnityEngine.Shader).GetMethod("SetGlobalVector", new System.Type[] { typeof(string), typeof(Vector4) }),
                 typeof(tacgulS).GetMethod("SetGlobalVector"), this);
-            On.Menu.SlugcatSelectMenu.SlugcatPage.AddImage += SlugcatPage_AddImage; ;
+        }
+
+        //// Debug
+        //public override void StartNewGame(Room room)
+        //{
+        //    base.StartNewGame(room);
+        //    Utils.GiveSurvivor(room.game);
+        //}
+
+        private void Map_ctor(On.HUD.Map.orig_ctor orig, HUD.Map self, HUD.HUD hud, HUD.Map.MapData mapData)
+        {
+            orig(self, hud, mapData);
+            MainLoopProcess ml = hud.rainWorld.processManager.currentMainLoop;
+            if ((ml is RainWorldGame g && IsMe(g))
+                || hud.rainWorld.progression.miscProgressionData.currentlySelectedSinglePlayerSlugcat == this.SlugcatIndex
+                    && ( ml is Menu.SleepAndDeathScreen
+                        || (ml is Menu.FastTravelScreen f && f.IsFastTravelScreen)
+                    )
+                )
+            {
+                self.inFrontContainer.scaleX = -1;
+                self.inFrontContainer.x = hud.rainWorld.screenSize.x;
+            }
         }
 
         private void SlugcatPage_AddImage(On.Menu.SlugcatSelectMenu.SlugcatPage.orig_AddImage orig, Menu.SlugcatSelectMenu.SlugcatPage self, bool ascended)
@@ -44,36 +66,29 @@ namespace WeirdCharacterPack
 
         public override bool HasDreams => true;
 
+        private bool isMeInMenus(Menu.Menu self)
+        {
+            var p = self.manager.rainWorld.progression;
+            return IsMe(p.currentSaveState)
+                    || (p.currentSaveState == null && IsMe(p.starvedSaveState))
+                    || (p.miscProgressionData.currentlySelectedSinglePlayerSlugcat == this.SlugcatIndex && (
+                        self is Menu.SleepAndDeathScreen // if dream before, no progr available
+                        || self is Menu.DreamScreen // no progr available
+                        || self is Menu.CustomEndGameScreen // no progr available
+                        || (self is Menu.FastTravelScreen f && f.IsFastTravelScreen) // no progr available
+                        || self is Menu.SlideShow // no progr available
+                        || self is Menu.EndCredits // no progr available
+                        )
+                    );
+        }
+
         // flips menus around based on current playthrough
         private void Menu_ctor(On.Menu.Menu.orig_ctor orig, Menu.Menu self, ProcessManager manager, ProcessManager.ProcessID ID)
         {
             orig(self, manager, ID);
-            var p = manager.rainWorld.progression;
-            if (IsMe(p.currentSaveState) || (p.currentSaveState == null && IsMe(p.starvedSaveState)))
+            if (isMeInMenus(self))
             {
                 self.container.ScaleAroundPointRelative(manager.rainWorld.screenSize / 2f, -1, 1);
-            }
-        }
-
-        // bugfix for dream -> sleep because progression.currentsavestate is reset
-        private void SleepAndDeathScreen_GetDataFromGame(On.Menu.SleepAndDeathScreen.orig_GetDataFromGame orig, Menu.SleepAndDeathScreen self, Menu.KarmaLadderScreen.SleepDeathScreenDataPackage package)
-        {
-            orig(self, package);
-            var p = self.manager.rainWorld.progression;
-            if (!(IsMe(p.currentSaveState) || (p.currentSaveState == null && IsMe(p.starvedSaveState))) && IsMe(package?.saveState))
-            {
-                self.container.ScaleAroundPointRelative(self.manager.rainWorld.screenSize / 2f, -1, 1);
-            }
-        }
-
-        // bugfix for dream because progression.currentsavestate is reset
-        private void DreamScreen_GetDataFromGame(On.Menu.DreamScreen.orig_GetDataFromGame orig, Menu.DreamScreen self, DreamsState.DreamID dreamID, Menu.KarmaLadderScreen.SleepDeathScreenDataPackage package)
-        {
-            orig(self, dreamID, package);
-            var p = self.manager.rainWorld.progression;
-            if (!(IsMe(p.currentSaveState) || (p.currentSaveState == null && IsMe(p.starvedSaveState))) && IsMe(package?.saveState))
-            {
-                self.container.ScaleAroundPointRelative(self.manager.rainWorld.screenSize / 2f, -1, 1);
             }
         }
 
@@ -81,10 +96,7 @@ namespace WeirdCharacterPack
         public delegate bool orig_MouseOver(Menu.RectangularMenuObject self);
         public bool RectangularMenuObject_MouseOver(orig_MouseOver orig, Menu.RectangularMenuObject self)
         {
-            var p = self.menu.manager.rainWorld.progression;
-            if ((IsMe(p.currentSaveState) || (p.currentSaveState == null && IsMe(p.starvedSaveState)))
-                || (self.menu is Menu.KarmaLadderScreen k && IsMe(k.saveState))
-                || (self.menu is Menu.DreamScreen d && IsMe(d.fromGameDataPackage?.saveState)))
+            if (isMeInMenus(self.menu))
             {
                 Vector2 screenPos = new Vector2(Futile.screen.pixelWidth - self.ScreenPos.x, self.ScreenPos.y);
                 return self.menu.mousePosition.x < screenPos.x && self.menu.mousePosition.y > screenPos.y && self.menu.mousePosition.x > screenPos.x - self.size.x && self.menu.mousePosition.y < screenPos.y + self.size.y;
@@ -98,7 +110,7 @@ namespace WeirdCharacterPack
             On.Player.checkInput -= Player_checkInput;
             On.Water.DrawSprites -= Water_DrawSprites;
             On.RoomCamera.DrawUpdate -= RoomCamera_DrawUpdate;
-            On.HUD.Map.ctor -= Map_ctor;
+            //On.HUD.Map.ctor -= Map_ctor;
         }
 
         protected override void Enable()
@@ -106,18 +118,7 @@ namespace WeirdCharacterPack
             On.Player.checkInput += Player_checkInput;
             On.Water.DrawSprites += Water_DrawSprites;
             On.RoomCamera.DrawUpdate += RoomCamera_DrawUpdate;
-            On.HUD.Map.ctor += Map_ctor;
-        }
-
-        private void Map_ctor(On.HUD.Map.orig_ctor orig, HUD.Map self, HUD.HUD hud, HUD.Map.MapData mapData)
-        {
-            orig(self, hud, mapData);
-
-            if (hud.rainWorld.processManager.currentMainLoop is RainWorldGame g && IsMe(g) && self.inFrontContainer != null)
-            {
-                self.inFrontContainer.scaleX = -1;
-                self.inFrontContainer.x = hud.rainWorld.screenSize.x;
-            }
+            //On.HUD.Map.ctor += Map_ctor;
         }
 
         private void RoomCamera_DrawUpdate(On.RoomCamera.orig_DrawUpdate orig, RoomCamera self, float timeStacker, float timeSpeed)

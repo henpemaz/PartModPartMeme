@@ -20,6 +20,7 @@ using MonoMod.RuntimeDetour.HookGen;
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 namespace WeirdCharacterPack
 {
+    [BepInEx.BepInPlugin("henpemaz.weirdcharpack", "WeirdCharacterPack", "1.0")]
     public class WeirdCharacterPack : BepInEx.BaseUnityPlugin
     {
         public string author = "Henpemaz";

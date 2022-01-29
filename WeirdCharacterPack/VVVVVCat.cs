@@ -13,6 +13,25 @@ namespace WeirdCharacterPack
 	{
 		public VVVVVCat() : this("zcpVVVVVcat") {
             On.Menu.SlugcatSelectMenu.SlugcatPage.Update += SlugcatPage_Update;
+            On.Menu.SleepAndDeathScreen.Update += SleepAndDeathScreen_Update;
+		}
+
+        private void SleepAndDeathScreen_Update(On.Menu.SleepAndDeathScreen.orig_Update orig, Menu.SleepAndDeathScreen self)
+        {
+			orig(self);
+
+			if (self.manager.rainWorld.progression.miscProgressionData.currentlySelectedSinglePlayerSlugcat == this.SlugcatIndex)
+			{
+				if (self.holdButton && self.holdButton != self.lastHoldButton)
+				{
+					foreach (var item in self.scene.depthIllustrations)
+					{
+						item.sprite.ScaleAroundPointRelative(UnityEngine.Vector2.zero, 1f, -1f);
+						item.pos.y = self.manager.rainWorld.screenSize.y - item.pos.y;
+						item.lastPos.y = self.manager.rainWorld.screenSize.y - item.lastPos.y;
+					}
+				}
+			}
 		}
 
         private void SlugcatPage_Update(On.Menu.SlugcatSelectMenu.SlugcatPage.orig_Update orig, Menu.SlugcatSelectMenu.SlugcatPage self)
@@ -165,7 +184,6 @@ Created for reaching places no other slugcat ever reached.";
 		{
 			orig(self, abstractCreature, world);
 			if (!IsMe(self)) return;
-
 			reverseGravity[self] = false;
 			reversedPlayer[self] = false;
 			forceStanding[self] = 0;
@@ -283,7 +301,7 @@ Created for reaching places no other slugcat ever reached.";
 		}
 
 		// Switch behavior, start inverted processing
-		protected void Player_Update(On.Player.orig_Update orig, Player self, bool eu)
+		protected virtual void Player_Update(On.Player.orig_Update orig, Player self, bool eu)
 		{
 			if (!IsMe(self))
 			{

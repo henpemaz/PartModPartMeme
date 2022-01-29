@@ -1,13 +1,30 @@
 ﻿using MonoMod.RuntimeDetour;
 using SlugBase;
+using System;
+using UnityEngine;
 
 namespace WeirdCharacterPack
 {
     internal class Upcat : VVVVVCat
     {
         public Upcat() : base ("zpcupcat") {
-            On.Menu.SlugcatSelectMenu.SlugcatPage.AddImage += SlugcatPage_AddImage; ;
+            On.Menu.SlugcatSelectMenu.SlugcatPage.AddImage += SlugcatPage_AddImage;
+            On.Menu.SleepAndDeathScreen.AddBkgIllustration += SleepAndDeathScreen_AddBkgIllustration;
 		}
+
+        private void SleepAndDeathScreen_AddBkgIllustration(On.Menu.SleepAndDeathScreen.orig_AddBkgIllustration orig, Menu.SleepAndDeathScreen self)
+        {
+			orig(self);
+			if(self.manager.rainWorld.progression.miscProgressionData.currentlySelectedSinglePlayerSlugcat == this.SlugcatIndex)
+            {
+				foreach (var item in self.scene.depthIllustrations)
+				{
+					item.sprite.ScaleAroundPointRelative(UnityEngine.Vector2.zero, 1f, -1f);
+					item.pos.y = self.manager.rainWorld.screenSize.y - item.pos.y;
+					item.lastPos.y = self.manager.rainWorld.screenSize.y - item.lastPos.y;
+				}
+			}
+        }
 
         private void SlugcatPage_AddImage(On.Menu.SlugcatSelectMenu.SlugcatPage.orig_AddImage orig, Menu.SlugcatSelectMenu.SlugcatPage self, bool ascended)
         {
@@ -30,14 +47,6 @@ ps. this mode probaby isn't beatable, but good luck trying!";
 
 		// Todo maaaaaybe just maybe make it easier to get into ceiling pipes
 		// that and spawn a grapple or two in outskirts
-
-        protected override void Player_ctor(On.Player.orig_ctor orig, Player self, AbstractCreature abstractCreature, World world)
-        {
-            base.Player_ctor(orig, self, abstractCreature, world);
-			if (!IsMe(self)) return;
-
-			reverseGravity[self] = true; //permanently
-		}
 
         protected override void Disable()
 		{
@@ -130,5 +139,11 @@ ps. this mode probaby isn't beatable, but good luck trying!";
 			chunkDetour = new Hook(typeof(BodyChunk).GetProperty("submersion").GetGetMethod(), typeof(VVVVVCat).GetMethod("Flipped_submersion"), this);
 			chunkDetour.Undo();
 		}
-	}
+
+        protected override void Player_Update(On.Player.orig_Update orig, Player self, bool eu)
+        {
+			if(IsMe(self)) reverseGravity[self] = true; //permanently
+			base.Player_Update(orig, self, eu);
+        }
+    }
 }
