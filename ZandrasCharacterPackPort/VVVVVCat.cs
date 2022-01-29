@@ -139,23 +139,24 @@ Created for reaching places no other slugcat ever reached.";
 
         protected void Player_SlugcatGrab(On.Player.orig_SlugcatGrab orig, Player self, PhysicalObject obj, int graspUsed)
         {
-            if (IsMe(self) && self.room != null)
+            if (IsMe(self) && self.room != null && reverseGravity[self] && reversedPlayer[self])
             {
 				var objs = reversedObjects[self];
-				if (objs.Contains(obj)) goto bad_ending;
-				var pheight = self.room.PixelHeight;
-				foreach (var c in obj.bodyChunks)
-				{
-					c.pos = new Vector2(c.pos.x, pheight - c.pos.y);
-					c.lastPos = new Vector2(c.lastPos.x, pheight - c.lastPos.y);
-					c.lastLastPos = new Vector2(c.lastLastPos.x, pheight - c.lastLastPos.y);
-					c.contactPoint.y *= -1;
-					c.vel.y *= -1;
-					if (c.setPos != null) c.setPos = new Vector2(c.setPos.Value.x, pheight - c.setPos.Value.y);
+				if (!objs.Contains(obj))
+                {
+					var pheight = self.room.PixelHeight;
+					foreach (var c in obj.bodyChunks)
+					{
+						c.pos = new Vector2(c.pos.x, pheight - c.pos.y);
+						c.lastPos = new Vector2(c.lastPos.x, pheight - c.lastPos.y);
+						c.lastLastPos = new Vector2(c.lastLastPos.x, pheight - c.lastLastPos.y);
+						c.contactPoint.y *= -1;
+						c.vel.y *= -1;
+						if (c.setPos != null) c.setPos = new Vector2(c.setPos.Value.x, pheight - c.setPos.Value.y);
+					}
+					objs.Add(obj);
 				}
-				objs.Add(obj);
 			}
-			bad_ending:
 			orig(self, obj, graspUsed);
 		}
 
