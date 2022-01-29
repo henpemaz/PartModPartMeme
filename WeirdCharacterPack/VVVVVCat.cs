@@ -7,7 +7,7 @@ using MonoMod.RuntimeDetour;
 using SlugBase;
 using UnityEngine;
 
-namespace ZandrasCharacterPackPort
+namespace WeirdCharacterPack
 {
 	internal class VVVVVCat : SlugBaseCharacter
 	{

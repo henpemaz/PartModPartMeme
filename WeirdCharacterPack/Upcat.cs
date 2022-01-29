@@ -1,7 +1,7 @@
 ﻿using MonoMod.RuntimeDetour;
 using SlugBase;
 
-namespace ZandrasCharacterPackPort
+namespace WeirdCharacterPack
 {
     internal class Upcat : VVVVVCat
     {

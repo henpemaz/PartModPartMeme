@@ -3,7 +3,7 @@ using SlugBase;
 using System;
 using UnityEngine;
 
-namespace ZandrasCharacterPackPort
+namespace WeirdCharacterPack
 {
     internal class tacgulS : SlugBaseCharacter
 	{
