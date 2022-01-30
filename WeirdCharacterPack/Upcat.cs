@@ -68,6 +68,8 @@ ps. this mode probaby isn't beatable, but good luck trying!";
 			// Edge cases
 			On.PlayerGraphics.Reset -= PlayerGraphics_Reset;
 			On.Creature.SuckedIntoShortCut -= Creature_SuckedIntoShortCut;
+			lookerDetour.Dispose();
+			lookerDetour = null;
 
 			// Items
 			On.Player.PickupCandidate -= Player_PickupCandidate;
@@ -116,6 +118,9 @@ ps. this mode probaby isn't beatable, but good luck trying!";
 			On.PlayerGraphics.Reset += PlayerGraphics_Reset;
 			// deverse on room leave mid-update, fix wrong tile data during room activation
 			On.Creature.SuckedIntoShortCut += Creature_SuckedIntoShortCut;
+			// look slugcat over there
+			lookerDetour = new Hook(typeof(PlayerGraphics.PlayerObjectLooker).GetProperty("mostInterestingLookPoint").GetGetMethod(),
+				typeof(VVVVVCat).GetMethod("LookPoint_Fix"), this);
 
 			// Items
 			// player picks up things considering its real position
@@ -142,8 +147,40 @@ ps. this mode probaby isn't beatable, but good luck trying!";
 
         protected override void Player_Update(On.Player.orig_Update orig, Player self, bool eu)
         {
-			if(IsMe(self)) reverseGravity[self] = true; //permanently
-			base.Player_Update(orig, self, eu);
-        }
+			if (!IsMe(self))
+			{
+				orig(self, eu);
+				return;
+			}
+
+			// trying to se this before ctors was giving me all sorts of headache with the tail sprote
+			reverseGravity[self] = true; //permanently switched behavior
+			if (reverseGravity[self] && self.room != null)
+			{
+				Room room = self.room;
+				ReversePlayer(self, room);
+				try
+				{
+					orig(self, eu);
+				}
+				catch (Exception e) { Debug.LogException(e); }
+				// die if too far oob upwards too
+				// normally rooms with water would ignore this check (water bottom) but we still need to
+				// coordinates still reversed here
+				if (self.room != null && (self.bodyChunks[0].pos.y < -self.bodyChunks[0].restrictInRoomRange + 1f || self.bodyChunks[1].pos.y < -self.bodyChunks[1].restrictInRoomRange + 1f))
+				{
+					self.Die();
+					self.Destroy();
+				}
+
+				if (self.slatedForDeletetion || self.room != room)
+					DeversePlayer(self, room);
+				// else un-needed because graphics will be updated and deverse happens on graphicsupdated
+			}
+			else
+			{
+				orig(self, eu);
+			}
+		}
     }
 }

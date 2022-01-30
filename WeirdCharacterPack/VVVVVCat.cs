@@ -62,7 +62,15 @@ namespace WeirdCharacterPack
 		public override string Description => @"An unstable prototype.
 Created for reaching places no other slugcat ever reached.";
 
+		// Fields =================================================================
+
+		public static AttachedField<Player, bool> reverseGravity = new AttachedField<Player, bool>();
+		public static AttachedField<Player, bool> reversedPlayer = new AttachedField<Player, bool>();
+		public static AttachedField<Player, int> forceStanding = new AttachedField<Player, int>();
+		public static AttachedField<Player, List<PhysicalObject>> reversedObjects = new AttachedField<Player, List<PhysicalObject>>();
+		protected Hook lookerDetour;
 		protected Hook chunkDetour;
+
 		// this was a lot more complicated than it should have been.
 		protected override void Disable()
 		{
@@ -84,6 +92,8 @@ Created for reaching places no other slugcat ever reached.";
 			// Edge cases
 			On.PlayerGraphics.Reset -= PlayerGraphics_Reset;
 			On.Creature.SuckedIntoShortCut -= Creature_SuckedIntoShortCut;
+			lookerDetour.Dispose();
+			lookerDetour = null;
 
 			// Items
 			On.Player.PickupCandidate -= Player_PickupCandidate;
@@ -132,6 +142,9 @@ Created for reaching places no other slugcat ever reached.";
 			On.PlayerGraphics.Reset += PlayerGraphics_Reset;
 			// deverse on room leave mid-update, fix wrong tile data during room activation
 			On.Creature.SuckedIntoShortCut += Creature_SuckedIntoShortCut;
+			// look slugcat over there
+			lookerDetour = new Hook(typeof(PlayerGraphics.PlayerObjectLooker).GetProperty("mostInterestingLookPoint").GetGetMethod(),
+				typeof(VVVVVCat).GetMethod("LookPoint_Fix"), this);
 
 			// Items
 			// player picks up things considering its real position
@@ -156,29 +169,7 @@ Created for reaching places no other slugcat ever reached.";
 			chunkDetour.Undo();
 		}
 
-        protected void Player_SlugcatGrab(On.Player.orig_SlugcatGrab orig, Player self, PhysicalObject obj, int graspUsed)
-        {
-            if (IsMe(self) && self.room != null && reverseGravity[self] && reversedPlayer[self])
-            {
-				var objs = reversedObjects[self];
-				if (!objs.Contains(obj))
-                {
-					var pheight = self.room.PixelHeight;
-					foreach (var c in obj.bodyChunks)
-					{
-						c.pos = new Vector2(c.pos.x, pheight - c.pos.y);
-						c.lastPos = new Vector2(c.lastPos.x, pheight - c.lastPos.y);
-						c.lastLastPos = new Vector2(c.lastLastPos.x, pheight - c.lastLastPos.y);
-						c.contactPoint.y *= -1;
-						c.vel.y *= -1;
-						if (c.setPos != null) c.setPos = new Vector2(c.setPos.Value.x, pheight - c.setPos.Value.y);
-					}
-					objs.Add(obj);
-				}
-			}
-			orig(self, obj, graspUsed);
-		}
-
+		
         // Initialize variables
         protected virtual void Player_ctor(On.Player.orig_ctor orig, Player self, AbstractCreature abstractCreature, World world)
 		{
@@ -202,6 +193,7 @@ Created for reaching places no other slugcat ever reached.";
 			On.Room.shortcutData_IntVector2 += Flipped_shortcutData;
 			On.Room.FloatWaterLevel += Flipped_FloatWaterLevel;
 			On.Room.AddObject += Room_AddObject;
+            On.AImap.getAItile_int_int += AImap_getAItile_int_int;
 			chunkDetour.Apply();
 			room.defaultWaterLevel = room.Height - 1 - room.defaultWaterLevel;
 			//room.floatWaterLevel = room.PixelHeight - room.floatWaterLevel; // redundant and bad
@@ -246,8 +238,8 @@ Created for reaching places no other slugcat ever reached.";
 			reversedPlayer[self] = true;
 		}
 
-		// ReversePlayer undo
-		protected void DeversePlayer(Player self, Room room)
+        // ReversePlayer undo
+        protected void DeversePlayer(Player self, Room room)
 		{
 			if (!reverseGravity[self] || !reversedPlayer[self]) throw new Exception();
 			List<PhysicalObject> objs = reversedObjects[self];
@@ -274,6 +266,14 @@ Created for reaching places no other slugcat ever reached.";
 					if (c.setPos != null) c.setPos = new Vector2(c.setPos.Value.x, pheight - c.setPos.Value.y);
 				}
 				//o.gravity *= -1f;
+				// thrown weapon
+				if (o is Weapon w && w.mode == Weapon.Mode.Thrown)
+				{
+					w.thrownPos.y = pheight - w.thrownPos.y;
+					w.throwDir.y *= -1;
+					if (w.firstFrameTraceFromPos != null) w.firstFrameTraceFromPos = new Vector2(w.firstFrameTraceFromPos.Value.x, pheight - w.firstFrameTraceFromPos.Value.y);
+					if (w.setRotation != null) w.setRotation = new Vector2(w.setRotation.Value.x, - w.setRotation.Value.y);
+				}
 			}
 
 			if (self.graphicsModule is PlayerGraphics pg)
@@ -291,6 +291,7 @@ Created for reaching places no other slugcat ever reached.";
 			On.Room.shortcutData_IntVector2 -= Flipped_shortcutData;
 			On.Room.FloatWaterLevel -= Flipped_FloatWaterLevel;
 			On.Room.AddObject -= Room_AddObject;
+			On.AImap.getAItile_int_int -= AImap_getAItile_int_int;
 			chunkDetour.Undo();
 			room.defaultWaterLevel = room.Height - 1 - room.defaultWaterLevel;
 			//room.floatWaterLevel = room.PixelHeight - room.floatWaterLevel;
@@ -328,7 +329,7 @@ Created for reaching places no other slugcat ever reached.";
 				// die if too far oob upwards too
 				// normally rooms with water would ignore this check (water bottom) but we still need to
 				// coordinates still reversed here
-				if (self.room != null && self.bodyChunks[0].pos.y < -self.bodyChunks[0].restrictInRoomRange + 1f)
+				if (self.room != null && (self.bodyChunks[0].pos.y < -self.bodyChunks[0].restrictInRoomRange + 1f || self.bodyChunks[1].pos.y < -self.bodyChunks[1].restrictInRoomRange + 1f))
 				{
 					self.Die();
 					self.Destroy();
@@ -349,8 +350,6 @@ Created for reaching places no other slugcat ever reached.";
 				self.standing = true;
 				forceStanding[self]--;
 			}
-
-
 		}
 
 		// player jump replaced by gravity switch.
@@ -804,6 +803,23 @@ Created for reaching places no other slugcat ever reached.";
 		}
 
 
+		public delegate Vector2 LookPoint_orig(PlayerGraphics.PlayerObjectLooker self);
+		public Vector2 LookPoint_Fix(LookPoint_orig orig, PlayerGraphics.PlayerObjectLooker self)
+		{
+			var retval = orig(self);
+
+			if (reversedPlayer[self.owner.player])
+			{
+				if (self.lookAtPoint != null || self.currentMostInteresting != null)
+				{
+					retval.y = self.owner.player.room.PixelHeight - retval.y;
+				}
+			}
+
+			return retval;
+		}
+
+
 		// Items ================================================================
 
 		// player picks up things considering its real position
@@ -829,6 +845,31 @@ Created for reaching places no other slugcat ever reached.";
 			}
 			return retval;
 		}
+
+		// grabbed goes into reverse space
+		protected void Player_SlugcatGrab(On.Player.orig_SlugcatGrab orig, Player self, PhysicalObject obj, int graspUsed)
+		{
+			if (IsMe(self) && self.room != null && reverseGravity[self] && reversedPlayer[self])
+			{
+				var objs = reversedObjects[self];
+				if (!objs.Contains(obj))
+				{
+					var pheight = self.room.PixelHeight;
+					foreach (var c in obj.bodyChunks)
+					{
+						c.pos = new Vector2(c.pos.x, pheight - c.pos.y);
+						c.lastPos = new Vector2(c.lastPos.x, pheight - c.lastPos.y);
+						c.lastLastPos = new Vector2(c.lastLastPos.x, pheight - c.lastLastPos.y);
+						c.contactPoint.y *= -1;
+						c.vel.y *= -1;
+						if (c.setPos != null) c.setPos = new Vector2(c.setPos.Value.x, pheight - c.setPos.Value.y);
+					}
+					objs.Add(obj);
+				}
+			}
+			orig(self, obj, graspUsed);
+		}
+
 
 		// player colides with flies considering its real position
 		// player lines 1000 through 1012 envelopped in flipping player y
@@ -1097,6 +1138,7 @@ Created for reaching places no other slugcat ever reached.";
 		// Mid-update things ======================================================
 		// enabled in reverse/deverse
 		// could be optimized I guess
+		// have a flag for "in reversed player mode"
 
 		public delegate float Orig_BodyChunk_submersion(BodyChunk b);
 		// Chunk 'submerged' inverted (water on top)
@@ -1118,7 +1160,7 @@ Created for reaching places no other slugcat ever reached.";
 
         protected Room.Tile Flipped_GetTile(On.Room.orig_GetTile_int_int orig, Room self, int x, int y)
         {
-			return orig(self, x, self.Tiles.GetLength(1) - 1 - y);
+			return orig(self, x, self.Height - 1 - y);
         }
 
 		// Patchup objects placed by player
@@ -1141,12 +1183,9 @@ Created for reaching places no other slugcat ever reached.";
 			orig(self, obj);
 		}
 
-
-		// Fields =================================================================
-
-		public static AttachedField<Player, bool> reverseGravity = new AttachedField<Player, bool>();
-        public static AttachedField<Player, bool> reversedPlayer = new AttachedField<Player, bool>();
-        public static AttachedField<Player, int> forceStanding = new AttachedField<Player, int>();
-		public static AttachedField<Player, List<PhysicalObject>> reversedObjects = new AttachedField<Player, List<PhysicalObject>>();
-    }
+		protected AItile AImap_getAItile_int_int(On.AImap.orig_getAItile_int_int orig, AImap self, int x, int y)
+		{
+			return orig(self, x, self.height - 1 - y);
+		}
+	}
 }
