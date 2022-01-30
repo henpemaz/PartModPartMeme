@@ -65,11 +65,22 @@ ps. this mode probaby isn't beatable, but good luck trying!";
 			On.PlayerGraphics.DrawSprites -= PlayerGraphics_DrawSprites;
 			Utils.FancyPlayerGraphics.DrawSprites -= PlayerGraphics_DrawSprites;
 
+			// Inverted processing
+			On.Room.GetTile_int_int -= Flipped_GetTile;
+			On.Room.shortcutData_IntVector2 -= Flipped_shortcutData;
+			On.Room.FloatWaterLevel -= Flipped_FloatWaterLevel;
+			On.Room.AddObject -= Room_AddObject;
+			On.AImap.getAItile_int_int -= AImap_getAItile_int_int;
+
 			// Edge cases
 			On.PlayerGraphics.Reset -= PlayerGraphics_Reset;
 			On.Creature.SuckedIntoShortCut -= Creature_SuckedIntoShortCut;
 			lookerDetour.Dispose();
 			lookerDetour = null;
+			On.ClimbableVinesSystem.VineOverlap -= ClimbableVinesSystem_VineOverlap;
+			On.ClimbableVinesSystem.OnVinePos -= ClimbableVinesSystem_OnVinePos;
+			On.ClimbableVinesSystem.VineSwitch -= ClimbableVinesSystem_VineSwitch;
+			On.ClimbableVinesSystem.ConnectChunkToVine -= ClimbableVinesSystem_ConnectChunkToVine;
 
 			// Items
 			On.Player.PickupCandidate -= Player_PickupCandidate;
@@ -82,7 +93,7 @@ ps. this mode probaby isn't beatable, but good luck trying!";
 			IL.Player.MovementUpdate -= Player_MovementUpdate;
 			IL.BodyChunk.Update -= BodyChunk_Update;
 
-			chunkDetour.Free();
+			chunkDetour.Dispose();
 			chunkDetour = null;
 
 			// If you change these, don't forget to update Upcat too, uses the same hooks minus jumps
@@ -113,6 +124,13 @@ ps. this mode probaby isn't beatable, but good luck trying!";
 			On.PlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites;
 			Utils.FancyPlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites;
 
+			// Inverted processing
+			On.Room.GetTile_int_int += Flipped_GetTile;
+			On.Room.shortcutData_IntVector2 += Flipped_shortcutData;
+			On.Room.FloatWaterLevel += Flipped_FloatWaterLevel;
+			On.Room.AddObject += Room_AddObject;
+			On.AImap.getAItile_int_int += AImap_getAItile_int_int;
+
 			// Edge cases
 			// reset called from outside of update, apply reversed coordinates
 			On.PlayerGraphics.Reset += PlayerGraphics_Reset;
@@ -121,6 +139,10 @@ ps. this mode probaby isn't beatable, but good luck trying!";
 			// look slugcat over there
 			lookerDetour = new Hook(typeof(PlayerGraphics.PlayerObjectLooker).GetProperty("mostInterestingLookPoint").GetGetMethod(),
 				typeof(VVVVVCat).GetMethod("LookPoint_Fix"), this);
+			On.ClimbableVinesSystem.VineOverlap += ClimbableVinesSystem_VineOverlap;
+			On.ClimbableVinesSystem.OnVinePos += ClimbableVinesSystem_OnVinePos;
+			On.ClimbableVinesSystem.VineSwitch += ClimbableVinesSystem_VineSwitch;
+			On.ClimbableVinesSystem.ConnectChunkToVine += ClimbableVinesSystem_ConnectChunkToVine;
 
 			// Items
 			// player picks up things considering its real position
@@ -142,7 +164,6 @@ ps. this mode probaby isn't beatable, but good luck trying!";
 
 			// Chunk 'submerged' inverted (water on top), hook applied during player update, reflection done here.
 			chunkDetour = new Hook(typeof(BodyChunk).GetProperty("submersion").GetGetMethod(), typeof(VVVVVCat).GetMethod("Flipped_submersion"), this);
-			chunkDetour.Undo();
 		}
 
         protected override void Player_Update(On.Player.orig_Update orig, Player self, bool eu)

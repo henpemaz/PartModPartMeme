@@ -64,10 +64,10 @@ Created for reaching places no other slugcat ever reached.";
 
 		// Fields =================================================================
 
-		public static AttachedField<Player, bool> reverseGravity = new AttachedField<Player, bool>();
-		public static AttachedField<Player, bool> reversedPlayer = new AttachedField<Player, bool>();
-		public static AttachedField<Player, int> forceStanding = new AttachedField<Player, int>();
-		public static AttachedField<Player, List<PhysicalObject>> reversedObjects = new AttachedField<Player, List<PhysicalObject>>();
+		public AttachedField<Player, bool> reverseGravity = new AttachedField<Player, bool>();
+		public bool reversedProcessing = false;
+		public AttachedField<Player, int> forceStanding = new AttachedField<Player, int>();
+		public AttachedField<Player, List<PhysicalObject>> reversedObjects = new AttachedField<Player, List<PhysicalObject>>();
 		protected Hook lookerDetour;
 		protected Hook chunkDetour;
 
@@ -89,11 +89,22 @@ Created for reaching places no other slugcat ever reached.";
 			On.PlayerGraphics.DrawSprites -= PlayerGraphics_DrawSprites;
 			Utils.FancyPlayerGraphics.DrawSprites -= PlayerGraphics_DrawSprites;
 
+			// Inverted processing
+			On.Room.GetTile_int_int -= Flipped_GetTile;
+			On.Room.shortcutData_IntVector2 -= Flipped_shortcutData;
+			On.Room.FloatWaterLevel -= Flipped_FloatWaterLevel;
+			On.Room.AddObject -= Room_AddObject;
+			On.AImap.getAItile_int_int -= AImap_getAItile_int_int;
+
 			// Edge cases
 			On.PlayerGraphics.Reset -= PlayerGraphics_Reset;
 			On.Creature.SuckedIntoShortCut -= Creature_SuckedIntoShortCut;
 			lookerDetour.Dispose();
 			lookerDetour = null;
+            On.ClimbableVinesSystem.VineOverlap -= ClimbableVinesSystem_VineOverlap;
+            On.ClimbableVinesSystem.OnVinePos -= ClimbableVinesSystem_OnVinePos;
+            On.ClimbableVinesSystem.VineSwitch -= ClimbableVinesSystem_VineSwitch;
+            On.ClimbableVinesSystem.ConnectChunkToVine -= ClimbableVinesSystem_ConnectChunkToVine;
 
 			// Items
 			On.Player.PickupCandidate -= Player_PickupCandidate;
@@ -106,13 +117,13 @@ Created for reaching places no other slugcat ever reached.";
 			IL.Player.MovementUpdate -= Player_MovementUpdate;
 			IL.BodyChunk.Update -= BodyChunk_Update;
 
-			chunkDetour.Free();
+			chunkDetour.Dispose();
 			chunkDetour = null;
 			
 			// If you change these, don't forget to update Upcat too, uses the same hooks minus jumps
 		}
 
-        protected override void Enable()
+		protected override void Enable()
 		{
 			// Basic swithched behavior
 			// Switch behavior, start inverted processing
@@ -137,6 +148,13 @@ Created for reaching places no other slugcat ever reached.";
 			On.PlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites;
 			Utils.FancyPlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites;
 
+			// Inverted processing
+			On.Room.GetTile_int_int += Flipped_GetTile;
+			On.Room.shortcutData_IntVector2 += Flipped_shortcutData;
+			On.Room.FloatWaterLevel += Flipped_FloatWaterLevel;
+			On.Room.AddObject += Room_AddObject;
+			On.AImap.getAItile_int_int += AImap_getAItile_int_int;
+
 			// Edge cases
 			// reset called from outside of update, apply reversed coordinates
 			On.PlayerGraphics.Reset += PlayerGraphics_Reset;
@@ -145,6 +163,11 @@ Created for reaching places no other slugcat ever reached.";
 			// look slugcat over there
 			lookerDetour = new Hook(typeof(PlayerGraphics.PlayerObjectLooker).GetProperty("mostInterestingLookPoint").GetGetMethod(),
 				typeof(VVVVVCat).GetMethod("LookPoint_Fix"), this);
+			On.ClimbableVinesSystem.VineOverlap += ClimbableVinesSystem_VineOverlap;
+			On.ClimbableVinesSystem.OnVinePos += ClimbableVinesSystem_OnVinePos;
+			On.ClimbableVinesSystem.VineSwitch += ClimbableVinesSystem_VineSwitch;
+			On.ClimbableVinesSystem.ConnectChunkToVine += ClimbableVinesSystem_ConnectChunkToVine;
+
 
 			// Items
 			// player picks up things considering its real position
@@ -166,7 +189,6 @@ Created for reaching places no other slugcat ever reached.";
 
 			// Chunk 'submerged' inverted (water on top), hook applied during player update, reflection done here.
 			chunkDetour = new Hook(typeof(BodyChunk).GetProperty("submersion").GetGetMethod(), typeof(VVVVVCat).GetMethod("Flipped_submersion"), this);
-			chunkDetour.Undo();
 		}
 
 		
@@ -176,7 +198,6 @@ Created for reaching places no other slugcat ever reached.";
 			orig(self, abstractCreature, world);
 			if (!IsMe(self)) return;
 			reverseGravity[self] = false;
-			reversedPlayer[self] = false;
 			forceStanding[self] = 0;
 		}
 
@@ -185,20 +206,11 @@ Created for reaching places no other slugcat ever reached.";
 		// flip player's perspective of room.
 		protected void ReversePlayer(Player self, Room room)
 		{
-			if (!reverseGravity[self] || reversedPlayer[self]) throw new Exception();
+			if (!reverseGravity[self] || reversedProcessing) throw new Exception();
 			List<PhysicalObject> objs;
 			reversedObjects[self] = objs = new List<PhysicalObject>();
 			float pheight = room.PixelHeight;
-			On.Room.GetTile_int_int += Flipped_GetTile;
-			On.Room.shortcutData_IntVector2 += Flipped_shortcutData;
-			On.Room.FloatWaterLevel += Flipped_FloatWaterLevel;
-			On.Room.AddObject += Room_AddObject;
-            On.AImap.getAItile_int_int += AImap_getAItile_int_int;
-			chunkDetour.Apply();
 			room.defaultWaterLevel = room.Height - 1 - room.defaultWaterLevel;
-			//room.floatWaterLevel = room.PixelHeight - room.floatWaterLevel; // redundant and bad
-
-			//self.buoyancy *= -1f;
 			foreach (var c in self.bodyChunks)
 			{
 				c.pos = new Vector2(c.pos.x, pheight - c.pos.y);
@@ -206,6 +218,7 @@ Created for reaching places no other slugcat ever reached.";
 				c.lastLastPos = new Vector2(c.lastLastPos.x, pheight - c.lastLastPos.y);
 				c.contactPoint.y *= -1;
 				c.vel.y *= -1;
+				if (c.setPos != null) c.setPos = new Vector2(c.setPos.Value.x, pheight - c.setPos.Value.y);
 			}
 			foreach (var g in self.grasps)
 			{
@@ -220,7 +233,6 @@ Created for reaching places no other slugcat ever reached.";
 						c.vel.y *= -1;
 						if (c.setPos != null) c.setPos = new Vector2(c.setPos.Value.x, pheight - c.setPos.Value.y);
 					}
-					//g.grabbed.gravity *= -1f;
 					objs.Add(g.grabbed);
 				}
 			}
@@ -235,17 +247,15 @@ Created for reaching places no other slugcat ever reached.";
 			}
 
 			if (self.enteringShortCut != null) self.enteringShortCut = new RWCustom.IntVector2(self.enteringShortCut.Value.x, room.Height - 1 - self.enteringShortCut.Value.y);
-			reversedPlayer[self] = true;
+			reversedProcessing = true;
 		}
 
         // ReversePlayer undo
         protected void DeversePlayer(Player self, Room room)
 		{
-			if (!reverseGravity[self] || !reversedPlayer[self]) throw new Exception();
+			if (!reverseGravity[self] || !reversedProcessing) throw new Exception();
 			List<PhysicalObject> objs = reversedObjects[self];
 			float pheight = room.PixelHeight;
-
-			//self.buoyancy *= -1f;
 			foreach (var c in self.bodyChunks)
 			{
 				c.pos = new Vector2(c.pos.x, pheight - c.pos.y);
@@ -253,6 +263,7 @@ Created for reaching places no other slugcat ever reached.";
 				c.lastLastPos = new Vector2(c.lastLastPos.x, pheight - c.lastLastPos.y);
 				c.contactPoint.y *= -1;
 				c.vel.y *= -1;
+				if (c.setPos != null) c.setPos = new Vector2(c.setPos.Value.x, pheight - c.setPos.Value.y);
 			}
 			foreach (var o in objs)
 			{
@@ -265,7 +276,6 @@ Created for reaching places no other slugcat ever reached.";
 					c.vel.y *= -1;
 					if (c.setPos != null) c.setPos = new Vector2(c.setPos.Value.x, pheight - c.setPos.Value.y);
 				}
-				//o.gravity *= -1f;
 				// thrown weapon
 				if (o is Weapon w && w.mode == Weapon.Mode.Thrown)
 				{
@@ -287,18 +297,11 @@ Created for reaching places no other slugcat ever reached.";
 			}
 
 			if (self.enteringShortCut != null) self.enteringShortCut = new RWCustom.IntVector2(self.enteringShortCut.Value.x, room.Height - 1 - self.enteringShortCut.Value.y);
-			On.Room.GetTile_int_int -= Flipped_GetTile;
-			On.Room.shortcutData_IntVector2 -= Flipped_shortcutData;
-			On.Room.FloatWaterLevel -= Flipped_FloatWaterLevel;
-			On.Room.AddObject -= Room_AddObject;
-			On.AImap.getAItile_int_int -= AImap_getAItile_int_int;
-			chunkDetour.Undo();
 			room.defaultWaterLevel = room.Height - 1 - room.defaultWaterLevel;
-			//room.floatWaterLevel = room.PixelHeight - room.floatWaterLevel;
 
 			objs.Clear();
 			reversedObjects[self] = null;
-			reversedPlayer[self] = false;
+			reversedProcessing = false;
 		}
 
 		// Switch behavior, start inverted processing
@@ -653,7 +656,7 @@ Created for reaching places no other slugcat ever reached.";
 				return;
 			}
 			// switched behavior
-			if (reversedPlayer[self] && self.room != null)
+			if (reversedProcessing && self.room != null)
 			{
 				Room room = self.room;
 				//ReversePlayer(self, room);
@@ -765,7 +768,7 @@ Created for reaching places no other slugcat ever reached.";
 			}
 			// switched behavior
 			// reset on not reversed player that should be reversed!
-			if (reverseGravity[self.player] && self.owner.room != null && !reversedPlayer[self.player])
+			if (reverseGravity[self.player] && self.owner.room != null && !reversedProcessing)
 			{
 				Room room = self.owner.room;
 				ReversePlayer(self.player, room);
@@ -785,7 +788,7 @@ Created for reaching places no other slugcat ever reached.";
 		// fix wrong tile data during room activation from player entering shortcut
 		protected void Creature_SuckedIntoShortCut(On.Creature.orig_SuckedIntoShortCut orig, Creature self, RWCustom.IntVector2 entrancePos, bool carriedByOther)
 		{
-			if (self is Player p && IsMe(p) && reversedPlayer[p] && p.room != null)
+			if (self is Player p && IsMe(p) && reversedProcessing && p.room != null)
 			{
 				Room room = p.room;
 				DeversePlayer(p, room);
@@ -808,7 +811,7 @@ Created for reaching places no other slugcat ever reached.";
 		{
 			var retval = orig(self);
 
-			if (reversedPlayer[self.owner.player])
+			if (reversedProcessing)
 			{
 				if (self.lookAtPoint != null || self.currentMostInteresting != null)
 				{
@@ -819,6 +822,40 @@ Created for reaching places no other slugcat ever reached.";
 			return retval;
 		}
 
+		protected ClimbableVinesSystem.VinePosition ClimbableVinesSystem_VineOverlap(On.ClimbableVinesSystem.orig_VineOverlap orig, ClimbableVinesSystem self, Vector2 pos, float rad)
+		{
+			if (reversedProcessing) pos.y = self.room.PixelHeight - pos.y;
+			return orig(self, pos, rad);
+		}
+
+		protected Vector2 ClimbableVinesSystem_OnVinePos(On.ClimbableVinesSystem.orig_OnVinePos orig, ClimbableVinesSystem self, ClimbableVinesSystem.VinePosition vPos)
+		{
+			var retval = orig(self, vPos);
+			if (reversedProcessing) retval.y = self.room.PixelHeight - retval.y;
+			return retval;
+		}
+
+		protected ClimbableVinesSystem.VinePosition ClimbableVinesSystem_VineSwitch(On.ClimbableVinesSystem.orig_VineSwitch orig, ClimbableVinesSystem self, ClimbableVinesSystem.VinePosition vPos, Vector2 goalPos, float rad)
+		{
+			if (reversedProcessing) goalPos.y = self.room.PixelHeight - goalPos.y;
+			return orig(self, vPos, goalPos, rad);
+		}
+
+		protected void ClimbableVinesSystem_ConnectChunkToVine(On.ClimbableVinesSystem.orig_ConnectChunkToVine orig, ClimbableVinesSystem self, BodyChunk chunk, ClimbableVinesSystem.VinePosition vPos, float conRad)
+		{
+			if (reversedProcessing)
+			{
+				chunk.pos.y = self.room.PixelHeight - chunk.pos.y;
+				chunk.vel.y *= -1;
+			}
+			orig(self, chunk, vPos, conRad);
+			if (reversedProcessing)
+			{
+				chunk.pos.y = self.room.PixelHeight - chunk.pos.y;
+				chunk.vel.y *= -1;
+			}
+		}
+
 
 		// Items ================================================================
 
@@ -827,7 +864,7 @@ Created for reaching places no other slugcat ever reached.";
 		{
 
 			PhysicalObject retval = null;
-			if (IsMe(self) && reversedPlayer[self] && self.room != null)
+			if (IsMe(self) && reversedProcessing && self.room != null)
 			{
 				Room room = self.room;
 				// simpler switch
@@ -849,7 +886,7 @@ Created for reaching places no other slugcat ever reached.";
 		// grabbed goes into reverse space
 		protected void Player_SlugcatGrab(On.Player.orig_SlugcatGrab orig, Player self, PhysicalObject obj, int graspUsed)
 		{
-			if (IsMe(self) && self.room != null && reverseGravity[self] && reversedPlayer[self])
+			if (IsMe(self) && self.room != null && reverseGravity[self] && reversedProcessing)
 			{
 				var objs = reversedObjects[self];
 				if (!objs.Contains(obj))
@@ -902,7 +939,7 @@ Created for reaching places no other slugcat ever reached.";
 				c.Emit(OpCodes.Ldarg_0);
 				c.EmitDelegate<Action<Player>>((p) =>
 				{
-					if (reversedPlayer[p])
+					if (reversedProcessing)
 					{
 						p.bodyChunks[0].pos.y = p.room.PixelHeight - p.bodyChunks[0].pos.y; // upsidown
 					}
@@ -915,7 +952,7 @@ Created for reaching places no other slugcat ever reached.";
 				c.Emit(OpCodes.Ldarg_0);
 				c.EmitDelegate<Action<Player>>((p) =>
 				{
-					if (reversedPlayer[p])
+					if (reversedProcessing)
 					{
 						p.bodyChunks[0].pos.y = p.room.PixelHeight - p.bodyChunks[0].pos.y; // upsidown
 					}
@@ -1120,7 +1157,7 @@ Created for reaching places no other slugcat ever reached.";
 				c.Emit(OpCodes.Ldarg_0);
 				c.EmitDelegate<Func<float, float, float, BodyChunk, bool>>((y, r, l, b) => // Test wether should NOT float up (shortcircuit out logic)
 				{
-					if (b.owner is Player p && reversedPlayer[p])
+					if (b.owner is Player p && reversedProcessing)
 					{
 						return (y + r) <= l; // upsidown
 					}
@@ -1137,54 +1174,59 @@ Created for reaching places no other slugcat ever reached.";
 
 		// Mid-update things ======================================================
 		// enabled in reverse/deverse
-		// could be optimized I guess
-		// have a flag for "in reversed player mode"
 
 		public delegate float Orig_BodyChunk_submersion(BodyChunk b);
 		// Chunk 'submerged' inverted (water on top)
 		// reflected over in ctor hook
 		public float Flipped_submersion(Orig_BodyChunk_submersion orig, BodyChunk self)
 		{
+			if (!reversedProcessing) return orig(self);
 			return 1f - orig(self);
 		}
 
 		protected float Flipped_FloatWaterLevel(On.Room.orig_FloatWaterLevel orig, Room self, float horizontalPos)
 		{
+			if (!reversedProcessing) return orig(self, horizontalPos);
 			return self.PixelHeight - orig(self, horizontalPos);
 		}
 
 		protected ShortcutData Flipped_shortcutData(On.Room.orig_shortcutData_IntVector2 orig, Room self, RWCustom.IntVector2 pos)
         {
+			if (!reversedProcessing) return orig(self, pos);
 			return orig(self, new RWCustom.IntVector2(pos.x, self.Height - 1 - pos.y));
 		}
 
         protected Room.Tile Flipped_GetTile(On.Room.orig_GetTile_int_int orig, Room self, int x, int y)
         {
+			if (!reversedProcessing) return orig(self, x, y);
 			return orig(self, x, self.Height - 1 - y);
         }
 
 		// Patchup objects placed by player
 		protected void Room_AddObject(On.Room.orig_AddObject orig, Room self, UpdatableAndDeletable obj)
 		{
-			if (obj is CosmeticSprite cs)
-			{
-				var ph = self.PixelHeight;
-				cs.pos.y = ph - cs.pos.y;
-				cs.lastPos.y = ph - cs.lastPos.y;
-				cs.vel.y *= -1f;
+			if (reversedProcessing)
+            {
+				if (obj is CosmeticSprite cs)
+				{
+					var ph = self.PixelHeight;
+					cs.pos.y = ph - cs.pos.y;
+					cs.lastPos.y = ph - cs.lastPos.y;
+					cs.vel.y *= -1f;
 
-				if(cs is WaterDrip wd)
-                {
-					wd.lastLastPos = wd.pos;
-					wd.lastLastLastPos = wd.pos;
+					if (cs is WaterDrip wd)
+					{
+						wd.lastLastPos = wd.pos;
+						wd.lastLastLastPos = wd.pos;
+					}
 				}
 			}
-
 			orig(self, obj);
 		}
 
 		protected AItile AImap_getAItile_int_int(On.AImap.orig_getAItile_int_int orig, AImap self, int x, int y)
 		{
+			if (!reversedProcessing) return orig(self, x, y);
 			return orig(self, x, self.height - 1 - y);
 		}
 	}
