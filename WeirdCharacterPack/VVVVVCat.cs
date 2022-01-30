@@ -910,6 +910,8 @@ Created for reaching places no other slugcat ever reached.";
 
 		// player colides with flies considering its real position
 		// player lines 1000 through 1012 envelopped in flipping player y
+		// player triggers shelter based on distance from room shortcuts entrance
+		// player line 1042 changed
 		protected void Player_Update1(ILContext il)
 		{
 			var c = new ILCursor(il);
@@ -959,6 +961,41 @@ Created for reaching places no other slugcat ever reached.";
 				});
 			}
 			else Debug.LogException(new Exception("Couldn't IL-hook Player_Update from VVVVVV cat")); // deffendisve progrmanig
+
+
+			// shelter pos fix
+			if (c.TryGotoNext(MoveType.Before,
+				i => i.MatchLdarg(0),
+				i => i.MatchCall<Creature>("get_abstractCreature"),
+				i => i.MatchLdflda<AbstractWorldEntity>("pos"),
+				i => i.MatchCall<WorldCoordinate>("get_Tile"),
+
+				i => i.MatchLdarg(0),
+				i => i.MatchLdfld<UpdatableAndDeletable>("room"),
+				i => i.MatchLdfld<Room>("shortcuts"),
+				i => i.MatchLdcI4(0),
+				i => i.MatchLdelema<ShortcutData>(),
+				i => i.MatchCall<ShortcutData>("get_StartTile"),
+
+				i => i.MatchCall(typeof(RWCustom.Custom).GetMethod("ManhattanDistance", new Type[] { typeof(RWCustom.IntVector2), typeof(RWCustom.IntVector2) }))
+				))
+			{
+
+				c.Index+=4;
+				c.MoveAfterLabels();
+				c.Emit(OpCodes.Ldarg_0);
+				c.EmitDelegate<Func<RWCustom.IntVector2, Player,RWCustom.IntVector2>>((v, p) =>
+				{
+					if (reversedProcessing)
+					{
+						v.y = p.room.Height - 1 - v.y;
+					}
+					return v;
+				});
+			}
+			else Debug.LogException(new Exception("Couldn't IL-hook Player_Update from VVVVVV cat 2")); // deffendisve progrmanig
+
+
 		}
 
 		// tubeworm tongue goes up, silly
