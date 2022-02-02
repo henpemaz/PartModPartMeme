@@ -6,31 +6,6 @@ All:
 	win conditions
 	dreams that hint to win conditions
 
-VVVVV
-	start/winconditions:
-		default
-	is the game beatable ?
-		mehri did shoreline
-		the game is beatable without jumping, anything else is skill issue
-	ceiling pipes issue
-	water stuff
-	grabbing stuff = cursed
-	jetfish while inverted = cursed
-	little splashes in the wrong place.
-		solved
-Upcat
-	VVVVV derivative, stuck in perma ceiling mode
-	impossible to beat
-	maybe give the player a grappleworm ?
-		in the tutorial rooms, where the pros dont go anyways
-
-tacgluS
-	start/winconditions:
-		default
-	menu buttons dont respont to mouse because theyre in the wrong places
-		done
-	dream -> sleep broke for mehri once ? nonreproduceable
-		
 Wingcat
 	??? how to make this interestint ?
 		mehri had some ideas for a long-range pounce
@@ -81,6 +56,10 @@ Vult
 	what do
 	
 	tameable vultures
+
+	vulture nest rooms ?
+
+	its a vulture baby trying to escape its mom and the mom keeps bringing it back to the nest
 		
 	spawns in East CC
 		

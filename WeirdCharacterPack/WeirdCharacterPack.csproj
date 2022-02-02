@@ -99,5 +99,8 @@
     <Compile Include="Upcat.cs" />
     <Compile Include="VVVVVCat.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="todo.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

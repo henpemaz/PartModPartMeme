@@ -1,0 +1,20 @@
+﻿Weirdcharpack
+	Upcat
+		needs a grapple really
+			drainage unreachable, industrial requires insane wallclimbing
+		Or could we reverse squidcadas ?
+		
+		cicadas dont seem to tire
+			they do if you run around
+			doesnt help much though
+		
+		devtools V messed up
+			annoying
+			
+		shelter manhatan thinghie distance bugged line 1042
+		spiders do wtf
+		graphicsmodule touches nearest creature wrong
+		spear embeds uses wrong distance
+		bitten = buggy
+		climbablevines might be bugged
+			solved
