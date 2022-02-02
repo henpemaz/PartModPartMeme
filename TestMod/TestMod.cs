@@ -31,24 +31,81 @@ namespace TestMod
             base.OnEnable();
             // Hooking code goose hre
 
-            managedfruitpom.PlacedObjectsManager.RegisterManagedObject(new ManagedFruit());
+            On.RainWorld.Start += RainWorld_Start;
+            On.RoomCamera.Update += RoomCamera_Update;
         }
 
-        public class ManagedFruit : managedfruitpom.PlacedObjectsManager.ManagedObjectType
+        private void RoomCamera_Update(On.RoomCamera.orig_Update orig, RoomCamera self)
         {
-            public ManagedFruit() : base("froot", null, typeof(PlacedObject.ConsumableObjectData), typeof(DevInterface.ConsumableRepresentation)){}
-
-            public override UpdatableAndDeletable MakeObject(PlacedObject placedObject, Room room)
+            orig(self);
+            if (UnityEngine.Input.GetKeyDown("k"))
             {
-                int m = room.roomSettings.placedObjects.IndexOf(placedObject);
-                if (!(room.game.session is StoryGameSession) || !(room.game.session as StoryGameSession).saveState.ItemConsumed(room.world, false, room.abstractRoom.index, m))
-                {
-                    AbstractPhysicalObject abstractPhysicalObject = new AbstractConsumable(room.world, AbstractPhysicalObject.AbstractObjectType.DangleFruit, null, room.GetWorldCoordinate(room.roomSettings.placedObjects[m].pos), room.game.GetNewID(), room.abstractRoom.index, m, room.roomSettings.placedObjects[m].data as PlacedObject.ConsumableObjectData);
-                    (abstractPhysicalObject as AbstractConsumable).isConsumed = false;
-                    room.abstractRoom.entities.Add(abstractPhysicalObject);
-                }
-                return null;
+                UnityEngine.Debug.LogError(self.currentPalette);
+                UnityEngine.Debug.LogError(self.currentPalette.darkness);
+                UnityEngine.Debug.LogError(self.currentPalette.blackColor);
+
             }
+        }
+
+        private void RainWorld_Start(On.RainWorld.orig_Start orig, RainWorld self)
+        {
+            
+            orig(self);
+
+            UnityEngine.Debug.LogError("start search");
+            var targetHead = IntColor(23, 26, 20);
+            var targetBody = IntColor(120, 38, 21);
+
+            var refDark = 0.4196078f;
+            var refBlack = new UnityEngine.Color(0.086f, 0.075f, 0.110f);
+
+            var tolerance = 1/255f;
+
+            for (int i = 1000; i < 100000; i++)
+            {
+                var sg = MakeAScav(i);
+
+                //  from palette
+                sg.darkness = refDark;
+                sg.blackColor = refBlack;
+
+                var gotHead = sg.BlendedHeadColor;
+                var gotBody = sg.BlendedBodyColor;
+
+                if(ColorsClose(gotHead, targetHead, tolerance) && ColorsClose(gotBody, targetBody, tolerance))
+                {
+                    UnityEngine.Debug.LogError("scac id " + i);
+                }
+            }
+
+            UnityEngine.Debug.LogError("end search");
+        }
+
+        private UnityEngine.Color IntColor(int r, int g, int b)
+        {
+            return new UnityEngine.Color(r / 255f, g / 255f, b / 255f);
+        }
+
+        private bool ColorsClose(UnityEngine.Color a, UnityEngine.Color b, float tol)
+        {
+            return (UnityEngine.Mathf.Abs(a.r - b.r) < tol && UnityEngine.Mathf.Abs(a.g - b.g) < tol && UnityEngine.Mathf.Abs(a.b - b.b) < tol);
+        }
+
+        static ScavengerGraphics MakeAScav(int seed)
+        {
+            var ID = new EntityID(-1, seed);
+            var absscac = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(AbstractCreature)) as AbstractCreature;
+            absscac.ID = ID;
+            absscac.personality = new AbstractCreature.Personality(ID);
+            var realscac = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(Scavenger)) as Scavenger;
+            realscac.abstractPhysicalObject = absscac;
+            var scacgraphics = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(ScavengerGraphics)) as ScavengerGraphics;
+            scacgraphics.scavenger = realscac;
+
+            UnityEngine.Random.seed = ID.RandomSeed;
+            scacgraphics.iVars = new ScavengerGraphics.IndividualVariations(realscac);
+            scacgraphics.GenerateColors();
+            return scacgraphics;
         }
     }
 }
