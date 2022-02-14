@@ -43,7 +43,18 @@ namespace MapWarp
             // Bugfixxes
             // On.AbstractCreature.Realize += AbstractCreature_Realize;
             On.VirtualMicrophone.NewRoom += VirtualMicrophone_NewRoom;
+
+
+            // debug
+
+            //On.Creature.NewRoom += Creature_NewRoom;
         }
+
+        //private void Creature_NewRoom(On.Creature.orig_NewRoom orig, Creature self, Room newRoom)
+        //{
+        //    Debug.Log(self.ToString() + " NewRoom at " + newRoom.abstractRoom.name);
+        //    orig(self, newRoom);
+        //}
 
         private void MapObject_Update(On.DevInterface.MapObject.orig_Update orig, DevInterface.MapObject self)
         {
@@ -172,42 +183,36 @@ namespace MapWarp
             newWorld.rainCycle.cycleLength = oldWorld.rainCycle.cycleLength;
             newWorld.rainCycle.timer = oldWorld.rainCycle.timer;
             
+            Debug.Log("MapWarp: moving players to new world");
             MovePlayers(newWorld.abstractRooms[0], 0);
+            Debug.Log("MapWarp: loading room in new world");
             while (newWorld.loadingRooms.Count > 0 && !newWorld.loadingRooms[0].done) newWorld.loadingRooms[0].Update();
+            Debug.Log("MapWarp: room in new world realized ? " + (newWorld.abstractRooms[0].realizedRoom != null));
+            Debug.Log("MapWarp: ticking shortcuts. count is " + self.owner.game.shortcuts.betweenRoomsWaitingLobby.Count);
             newWorld.game.shortcuts.Update(); // tick and place
+            Debug.Log("MapWarp: shortcuts ticked. count is " + self.owner.game.shortcuts.betweenRoomsWaitingLobby.Count);
 
             foreach (var p in newWorld.game.Players)
             {
-                p.world = newWorld;
-                if (p.creatureTemplate.AI || p.abstractAI != null)
+
+                List<AbstractPhysicalObject> allConnectedObjects = p.GetAllConnectedObjects(); // The catch: includes self
+                for (int i = 0; i < allConnectedObjects.Count; i++)
                 {
-                    p.abstractAI.lastRoom = newWorld.firstRoomIndex;
-                    p.abstractAI.NewWorld(newWorld);
-                    p.InitiateAI();
-                    p.abstractAI.RealAI?.NewRoom(newWorld.abstractRooms[0].realizedRoom);
-                }
-                foreach (var s in p.stuckObjects)
-                {
-                    for (int i = 0; i < 2; i++)
+                    var obj = allConnectedObjects[i];
+                    if (obj.world == newWorld) continue; // already moved
+                    obj.world = newWorld;
+                    if (obj is AbstractCreature cA) // creature
                     {
-                        var obj = (i == 0) ? s.A : s.B;
-                        if (obj.world == newWorld) continue; // already moved
-                        obj.world = newWorld;
-                        if (obj is AbstractCreature cA) // creature
+                        if (cA.creatureTemplate.AI)
                         {
-                            if (cA.creatureTemplate.AI)
-                            {
-                                cA.abstractAI.lastRoom = newWorld.firstRoomIndex;
-                                cA.abstractAI.NewWorld(newWorld);
-                                cA.InitiateAI();
-                                cA.abstractAI.RealAI?.NewRoom(newWorld.abstractRooms[0].realizedRoom);
-                            }
+                            cA.abstractAI.lastRoom = newWorld.firstRoomIndex;
+                            cA.abstractAI.NewWorld(newWorld);
+                            cA.InitiateAI();
+                            cA.abstractAI.RealAI?.NewRoom(newWorld.abstractRooms[0].realizedRoom);
                         }
                     }
                 }
             }
-
-            
 
             // keeping the map up nullrefs
             self.owner.ClearSprites();
