@@ -18,3 +18,5 @@
 		bitten = buggy
 		climbablevines might be bugged
 			solved
+			
+	In the weird character pack (mainly Upcat, and probably VVVVV?) jetfish controls don't flip when gravity is flipped. This makes it impossible to enter vertical underwater crawl holes, as either slugcat or the jetfish will be trying to move away from the crawl hole entrance. There are other issues with jetfish vertical controls being normal while slugcat's are flipped, though I don't know if it's necessary that I list them all. In general, it's very janky, and it feels unintentional.
