@@ -1,0 +1,41 @@
+﻿Squiddy
+	Exist
+		Done
+
+	Dash
+	Scoot
+	Move
+		Done
+
+	Grab
+		needs to be able to hunt down batflies
+
+	Eat, or stash ?
+	Shelters or Dens ?
+		maybe:
+			"eats" in Den on a short timer
+			needs to be able to enter those
+			watch out for rain thing stuck
+	Make shelters work
+
+	Five pebbles
+		Wait how did you get in
+		Stupid creature get out get out
+		Hold still
+		BAM
+		wait that's the wrong thing
+		just be gone with you before I turn you into a blue goop
+
+	Moon
+		Little creature
+		you seem so familiar
+		no, really, very very familiar
+
+	Patch up Swimming so control isn't lost
+		patch up void sea so the game is beatable lol
+	Validate Multiplayer
+		simplified act if held ?
+
+	Sleep Screen
+	Dream Replacements
+	Intro/Outro
