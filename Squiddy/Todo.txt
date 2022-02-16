@@ -16,7 +16,16 @@
 			"eats" in Den on a short timer
 			needs to be able to enter those
 			watch out for rain thing stuck
+
+			visual indicator of den?
+
 	Make shelters work
+
+	Player dies when you die
+		done
+
+	Ui and map
+		works now it seems
 
 	Five pebbles
 		Wait how did you get in
@@ -32,9 +41,13 @@
 		no, really, very very familiar
 
 	Patch up Swimming so control isn't lost
+		done ?
 		patch up void sea so the game is beatable lol
+
 	Validate Multiplayer
 		simplified act if held ?
+		
+		colors ok
 
 	Sleep Screen
 	Dream Replacements
