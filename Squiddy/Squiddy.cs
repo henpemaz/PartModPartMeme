@@ -13,7 +13,7 @@ using MonoMod.RuntimeDetour;
 using Mono.Cecil.Cil;
 using MonoMod.RuntimeDetour.HookGen;
 
-[assembly: AssemblyTrademark("Zandra & Henpemaz")]
+[assembly: AssemblyTrademark("Henpemaz")]
 
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]

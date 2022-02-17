@@ -88,6 +88,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeirdCharacterPack", "Weird
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Squiddy", "Squiddy\Squiddy.csproj", "{81EEFF10-6E37-4388-B127-E1EBD3572D7B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpawnMenu", "SpawnMenu\SpawnMenu.csproj", "{DA65E69A-E777-4F19-8A49-8225ADF9CEED}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -254,6 +256,10 @@ Global
 		{81EEFF10-6E37-4388-B127-E1EBD3572D7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{81EEFF10-6E37-4388-B127-E1EBD3572D7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{81EEFF10-6E37-4388-B127-E1EBD3572D7B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA65E69A-E777-4F19-8A49-8225ADF9CEED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA65E69A-E777-4F19-8A49-8225ADF9CEED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA65E69A-E777-4F19-8A49-8225ADF9CEED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA65E69A-E777-4F19-8A49-8225ADF9CEED}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
