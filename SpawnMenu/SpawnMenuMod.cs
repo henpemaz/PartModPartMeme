@@ -12,6 +12,7 @@ using MonoMod.RuntimeDetour;
 using Mono.Cecil.Cil;
 using MonoMod.RuntimeDetour.HookGen;
 using RWCustom;
+using System.Collections;
 
 [assembly: AssemblyTrademark("Henpemaz")]
 
@@ -25,6 +26,7 @@ namespace SpawnMenu
     {
         public string author = "Henpemaz";
         public static SpawnMenuMod instance;
+        private int currentRoomIndex;
 
         public void OnEnable()
         {
@@ -36,6 +38,53 @@ namespace SpawnMenu
             On.Menu.PauseMenu.ShutDownProcess += PauseMenu_ShutDownProcess;
 
             new Hook(typeof(ArenaBehaviors.ArenaGameBehavior).GetProperty("room").GetGetMethod(), typeof(SpawnMenuMod).GetMethod("get_room"), this);
+
+            On.ArenaBehaviors.SandboxEditor.LoadConfig += SandboxEditor_LoadConfig;
+            On.ArenaBehaviors.SandboxEditor.AddIcon_IconSymbolData_Vector2_EntityID_bool_bool += SandboxEditor_AddIcon_IconSymbolData_Vector2_EntityID_bool_bool;
+        }
+
+        private void SandboxEditor_LoadConfig(On.ArenaBehaviors.SandboxEditor.orig_LoadConfig orig, ArenaBehaviors.SandboxEditor self)
+        {
+            if (self.sandboxSession.game.IsStorySession)
+            {
+                self.ClearAll();
+                // dont attempt to load
+                return;
+            }
+            orig(self);
+        }
+
+        public class SpawnExtra
+        {
+            public bool dead;
+            public bool like;
+            public int? seed;
+        }
+
+        public AttachedField<ArenaBehaviors.SandboxEditor.PlacedIcon, SpawnExtra> spawnExtras = new AttachedField<ArenaBehaviors.SandboxEditor.PlacedIcon, SpawnExtra>();
+        private bool doDetour;
+
+        private ArenaBehaviors.SandboxEditor.PlacedIcon SandboxEditor_AddIcon_IconSymbolData_Vector2_EntityID_bool_bool(On.ArenaBehaviors.SandboxEditor.orig_AddIcon_IconSymbolData_Vector2_EntityID_bool_bool orig, ArenaBehaviors.SandboxEditor self, IconSymbol.IconSymbolData iconData, Vector2 pos, EntityID ID, bool fadeCircle, bool updatePerfEstimate)
+        {
+            var ico = orig(self, iconData, pos, ID, fadeCircle, updatePerfEstimate);
+            if (self.sandboxSession.game.IsStorySession)
+            {
+                spawnExtras[ico] = new SpawnExtra();
+                if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                {
+                    spawnExtras[ico].like = true;
+                }
+                if (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt) || Input.GetKey(KeyCode.AltGr))
+                {
+                    spawnExtras[ico].dead = true;
+                }
+                if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
+                {
+                    self.room.AddObject(new SeedPicker(self.room, ico, this));
+                }
+            }
+
+            return ico;
         }
 
         private void PauseMenu_ctor(On.Menu.PauseMenu.orig_ctor orig, PauseMenu self, ProcessManager manager, RainWorldGame game)
@@ -55,6 +104,7 @@ namespace SpawnMenu
 
                 SandboxGameSession sb = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(SandboxGameSession)) as SandboxGameSession;
                 sb.arenaSitting = new ArenaSitting(manager.arenaSetup.GetOrInitiateGameTypeSetup(ArenaSetup.GameTypeID.Sandbox), new MultiplayerUnlocks(manager.rainWorld.progression, new List<string>()));
+                sb.arenaSitting.gameTypeSetup.saveCreatures = true;
                 sb.game = game;
 
                 var os = new AbstractCreature(game.world, StaticWorld.GetCreatureTemplate(CreatureTemplate.Type.Overseer), null, game.Players[0].pos, new EntityID());
@@ -127,7 +177,10 @@ namespace SpawnMenu
             room.updateList.First(o => o is ArenaBehaviors.SandboxEditor.EditCursor).Update(false);
             foreach(var uad in room.updateList)
             {
-                if(uad is ArenaBehaviors.SandboxEditor.PlacedIcon ico) ico.Update(false);
+                if(uad is ArenaBehaviors.SandboxEditor.PlacedIcon 
+                    || uad is SeedPicker
+                    ) 
+                    uad.Update(false);
             }
             self.game.pauseMenu = self; // done here
 
@@ -170,9 +223,6 @@ namespace SpawnMenu
         {
             orig(self, timeStacker);
             if (!self.game.IsStorySession || self.game.pauseMenu == null) return;
-            //var room = self.game.cameras[0].room;
-            //var overlayowner = room.updateList.First(o => o is SandboxOverlayOwner) as SandboxOverlayOwner;
-            //overlayowner?.overlay.GrafUpdate(timeStacker);
             self.game.cameras[0].DrawUpdate(0f, 1f); // so icons and cursor also update otherwise this would get quite verbose in here
             // timespeed 1 so audio doesnt glitch out
         }
@@ -188,35 +238,61 @@ namespace SpawnMenu
                     var overlayowner = room.updateList.First(o => o is SandboxOverlayOwner) as SandboxOverlayOwner;
                     var editor = overlayowner.gameSession.editor;
                     overlayowner.gameSession.PlayMode = true;
+
+                    // buncha fixes
                     On.World.GetAbstractRoom_int += World_GetAbstractRoom_int;
-                    On.AbstractWorldEntity.ctor += AbstractWorldEntity_ctor;
-                    room.world.singleRoomWorld = true; // deer ai checks this, miros probs too
+                    doDetour = false;
+                    On.WorldCoordinate.ctor += WorldCoordinate_ctor;
+                    currentRoomIndex = room.abstractRoom.index;
+                    //On.PathFinder.ctor += PathFinder_ctor;
+                    
+
                     foreach (var ico in editor.icons)
                     {
                         if(ico is ArenaBehaviors.SandboxEditor.CreatureOrItemIcon coii)
                         {
                             var data = new ArenaBehaviors.SandboxEditor.PlacedIconData(coii.pos, coii.iconData, coii.ID);
+                            var extras = spawnExtras[ico];
+                            if (extras != null && extras.seed != null) data.ID.number = extras.seed.Value;
                             //Debug.Log("SpawnMenu spawning " + coii.iconData.itemType + " " + coii.iconData.critType);
+
+                            doDetour = true;
+                            room.world.singleRoomWorld = true; // deer ai checks this, miros too
                             overlayowner.gameSession.SpawnEntity(data);
+                            room.world.singleRoomWorld = false; //
+                            doDetour = false;
+
                             if (room.abstractRoom.entities.Last() is AbstractPhysicalObject apo)
                             {
-                                //apo.pos.room = room.abstractRoom.index;
-                                //Debug.Log("spawning apo of type " + apo.type);
-                                //Debug.Log("apo tostr " + apo);
-                                //Debug.Log("apo type tostr " + apo.GetType());
-                                //if (apo.type == AbstractPhysicalObject.AbstractObjectType.Creature) Debug.Log("spawning creature type " + (apo as AbstractCreature).creatureTemplate.type);
+                                if (extras != null && apo is AbstractCreature ac)
+                                {
+                                    if (extras.like && ac.state is CreatureState cs && cs.socialMemory != null)
+                                    {
+                                        foreach (var p in self.game.Players)
+                                        {
+                                            var rel = cs.socialMemory.GetOrInitiateRelationship(p.ID);
+                                            rel.InfluenceLike(1000f);
+                                            rel.InfluenceTempLike(1000f);
+                                            rel.InfluenceKnow(1000f);
+                                        }
+                                    }
+                                }
+
                                 apo.RealizeInRoom();
-                                //Debug.Log("realized is null ? " + (apo.realizedObject == null));
-                                //if(apo.realizedObject != null) Debug.Log("realized is at " + apo.realizedObject.bodyChunks[0].pos);
+
+                                if (extras != null && apo is AbstractCreature ac2)
+                                {
+                                    if (extras.dead && ac2.realizedCreature != null)
+                                    {
+                                        ac2.realizedCreature.Die();
+                                    }
+                                }
                             }
                         }
                         ico.Fade();
                     }
-                    room.world.singleRoomWorld = false;
-                    On.World.GetAbstractRoom_int -= World_GetAbstractRoom_int;
-                    On.AbstractWorldEntity.ctor -= AbstractWorldEntity_ctor;
+
                     overlayowner.Destroy();
-                    //room.RemoveObject(overlayowner);
                     overlayowner.overlay.ShutDownProcess();
 
                     var editCursor = room.updateList.First(o => o is ArenaBehaviors.SandboxEditor.EditCursor) as ArenaBehaviors.SandboxEditor.EditCursor;
@@ -225,21 +301,37 @@ namespace SpawnMenu
             }
             finally
             {
+                self.game.world.singleRoomWorld = false;
+                On.WorldCoordinate.ctor -= WorldCoordinate_ctor;
                 On.World.GetAbstractRoom_int -= World_GetAbstractRoom_int;
-                On.AbstractWorldEntity.ctor -= AbstractWorldEntity_ctor;
+                //On.PathFinder.ctor -= PathFinder_ctor;
+                doDetour = false;
+
                 orig(self);
             }
         }
 
-        private void AbstractWorldEntity_ctor(On.AbstractWorldEntity.orig_ctor orig, AbstractWorldEntity self, World world, WorldCoordinate pos, EntityID ID)
-        {
-            pos.room = world.game.cameras[0].room.abstractRoom.index;
-            orig(self, world, pos, ID);
-        }
+        //private void PathFinder_ctor(On.PathFinder.orig_ctor orig, PathFinder self, ArtificialIntelligence AI, World world, AbstractCreature creature)
+        //{
+        //    world.singleRoomWorld = world.abstractRooms.Length == 1;
+        //    orig(self, AI, world, creature);
+        //    world.singleRoomWorld = true;
+        //}
 
+        // temp hooks during spawning
+        private void WorldCoordinate_ctor(On.WorldCoordinate.orig_ctor orig, ref WorldCoordinate self, int room, int x, int y, int abstractNode)
+        {
+            if (doDetour)
+                orig(ref self, currentRoomIndex, x, y, abstractNode);
+            else
+                orig(ref self, room, x, y, abstractNode);
+        }
+        // temp hooks during spawning
         private AbstractRoom World_GetAbstractRoom_int(On.World.orig_GetAbstractRoom_int orig, World self, int room)
         {
-            return self.game.cameras[0].room.abstractRoom;
+            if(doDetour)
+                return self.game.cameras[0].room.abstractRoom;
+            return orig(self, room);
         }
 
         public delegate Room orig_get_room(ArenaBehaviors.ArenaGameBehavior bhv);
@@ -248,6 +340,157 @@ namespace SpawnMenu
             if(self.gameSession.game.IsStorySession)
                 return self.gameSession.game.cameras[0].room;
             return orig(self);
+        }
+
+        internal class SeedPicker : UpdatableAndDeletable, IDrawable
+        {
+            private ArenaBehaviors.SandboxEditor.PlacedIcon ico;
+            private readonly SpawnMenuMod spawnMenuMod;
+            private float lastAlpha;
+            private float alpha;
+            private Vector2 iconOffset;
+            private int counter;
+            private FLabel label;
+            private string text;
+            private bool active;
+
+            public SeedPicker(Room room, ArenaBehaviors.SandboxEditor.PlacedIcon ico, SpawnMenuMod spawnMenuMod)
+            {
+                this.room = room;
+                this.ico = ico;
+                this.spawnMenuMod = spawnMenuMod;
+                this.lastAlpha = 1f;
+                this.alpha = 1f;
+
+                this.text = "";
+
+                this.active = true;
+                foreach (var uad in room.updateList) if (uad is SeedPicker picker) picker.active = false;
+
+                iconOffset = new Vector2(22f, 0f);
+
+                room.game.rainWorld.StartCoroutine(TextUpdater()); // engine update rate inputs
+            }
+
+            public override void Update(bool eu)
+            {
+                base.Update(eu);
+                if (slatedForDeletetion) return;
+
+                this.counter++;
+
+                lastAlpha = alpha;
+                alpha = 0.5f * alpha + 0.5f * (active ? Mathf.Clamp01(Mathf.Pow(UnityEngine.Random.Range(0.5f, 1.4f), 0.75f)) : Mathf.Pow(UnityEngine.Random.Range(0.6f, 0.9f), 0.5f));
+
+                iconOffset = new Vector2(22f, 0f);
+                if (active && alpha < 0.85f) iconOffset += UnityEngine.Random.insideUnitCircle * 1.5f;
+
+                if (int.TryParse(text, out int res)) spawnMenuMod.spawnExtras[ico].seed = res;
+                else spawnMenuMod.spawnExtras[ico].seed = null;
+            }
+
+            public void AddToContainer(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner) { }
+
+            public void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette) { }
+
+            public void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+            {
+                if (slatedForDeletetion || room != rCam.room)
+                {
+                    label = null;
+                    sLeaser.CleanSpritesAndRemove();
+                    return;
+                }
+
+                if(ico.slatedForDeletetion)
+                {
+                    this.Destroy();
+                    return;
+                }
+
+                var blendedalpha = Mathf.Lerp(lastAlpha, alpha, timeStacker);
+                var refPos = -camPos + ico.DrawPos(timeStacker) + iconOffset;
+
+                var backdrop = sLeaser.sprites[0];
+                var cursor = sLeaser.sprites[1];
+                backdrop.SetPosition(refPos);
+                backdrop.alpha = active ? 0.92f : 0.4f;
+
+                cursor.isVisible = active && (counter / 20) % 2 == 0;
+                cursor.SetPosition(refPos + new Vector2(text.Length * 12f, 0));
+                cursor.alpha = blendedalpha;
+
+                label.text = text;
+                label.SetPosition(refPos);
+                label.alpha = blendedalpha;
+            }
+
+            public void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
+            {
+                var hud = rCam.ReturnFContainer("HUD");
+                var cursor = new FSprite("Futile_White")
+                {
+                    scaleX = 2f / 16f,
+                    scaleY = 24f / 16f,
+                    shader = rCam.game.rainWorld.Shaders["Hologram"]
+                };
+                hud.AddChild(cursor);
+                var backdrop = new FSprite("Futile_White")
+                {
+                    color = new Color(0, 0, 0),
+                    alpha = 0.8f,
+                    anchorX = 0.2f,
+                    anchorY = 0.5f,
+                    scaleX = 100f / 16f,
+                    scaleY = 32f / 16f,
+                    shader = rCam.game.rainWorld.Shaders["FlatLight"]
+                };
+                hud.AddChild(backdrop);
+
+                sLeaser.sprites = new FSprite[] { backdrop, cursor };
+                FContainer c;
+                sLeaser.containers = new FContainer[1] { c = new FContainer() };
+                hud.AddChild(c);
+                label  = new FLabel("DisplayFont", "ASDF") { 
+                    shader = rCam.game.rainWorld.Shaders["Hologram"], 
+                    alignment = FLabelAlignment.Left, 
+                    color = Menu.Menu.MenuRGB(Menu.Menu.MenuColors.MediumGrey) };
+                c.AddChild(label);
+            }
+
+            System.Collections.IEnumerator TextUpdater() // runs at engine update rate
+            {
+                yield return null;
+
+                while (!this.slatedForDeletetion && room.game.processActive)
+                {
+                    if (this.active)
+                    {
+                        foreach (char c in Input.inputString)
+                        {
+                            if (c == '\b')
+                            {
+                                if (text.Length != 0)
+                                {
+                                    text = text.Substring(0, text.Length - 1);
+                                }
+                            }
+                            else if (c == '\n' || c == '\r')
+                            {
+                                this.active = false;
+                            }
+                            else
+                            {
+                                if (char.IsDigit(c) || (text.Length == 0 && c == '-'))
+                                {
+                                    text += c;
+                                }
+                            }
+                        }
+                    }
+                    yield return null;
+                }
+            }
         }
     }
 }

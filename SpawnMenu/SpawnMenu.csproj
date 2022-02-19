@@ -91,6 +91,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AttachedField.cs" />
     <Compile Include="SpawnMenuMod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
