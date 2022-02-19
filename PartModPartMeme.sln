@@ -90,6 +90,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Squiddy", "Squiddy\Squiddy.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpawnMenu", "SpawnMenu\SpawnMenu.csproj", "{DA65E69A-E777-4F19-8A49-8225ADF9CEED}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CameraFreeze", "CameraFreeze\CameraFreeze.csproj", "{BDB07E55-7D2F-4325-8B52-2D9BF15ADC43}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -260,6 +262,10 @@ Global
 		{DA65E69A-E777-4F19-8A49-8225ADF9CEED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DA65E69A-E777-4F19-8A49-8225ADF9CEED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DA65E69A-E777-4F19-8A49-8225ADF9CEED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDB07E55-7D2F-4325-8B52-2D9BF15ADC43}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDB07E55-7D2F-4325-8B52-2D9BF15ADC43}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDB07E55-7D2F-4325-8B52-2D9BF15ADC43}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDB07E55-7D2F-4325-8B52-2D9BF15ADC43}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
