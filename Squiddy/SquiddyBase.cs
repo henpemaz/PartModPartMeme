@@ -1,8 +1,10 @@
-﻿using Mono.Cecil.Cil;
+﻿using Mono.Cecil;
+using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using RWCustom;
 using SlugBase;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -28,6 +30,7 @@ namespace Squiddy
 					for (int i = 0; i < room.game.Players.Count; i++)
 					{
 						room.game.Players[i].pos = new WorldCoordinate(room.abstractRoom.index, -1, -1, 3);
+						Debug.Log("Squiddy: Player position set to " + room.game.Players[i].pos);
 					}
 				}
 			}
@@ -47,13 +50,19 @@ namespace Squiddy
 			On.Cicada.Die -= Cicada_Die;
 			On.CicadaAI.Update -= CicadaAI_Update;
 
+			On.AbstractCreatureAI.DoIwantToDropThisItemInDen -= AbstractCreatureAI_DoIwantToDropThisItemInDen;
+
+			// bugfix
+			On.ShortcutHandler.CreatureEnterFromAbstractRoom -= ShortcutHandler_CreatureEnterFromAbstractRoom;
+			IL.ShortcutHelper.Update -= ShortcutHelper_Update;
+
 			// arena colors
-            IL.CicadaGraphics.ApplyPalette -= CicadaGraphics_ApplyPalette;
+			IL.CicadaGraphics.ApplyPalette -= CicadaGraphics_ApplyPalette;
             On.CicadaGraphics.ApplyPalette -= CicadaGraphics_ApplyPalette;
 			On.Cicada.ShortCutColor -= Cicada_ShortCutColor;
 		}
 
-		protected override void Enable()
+        protected override void Enable()
 		{
             On.Cicada.ctor += Cicada_ctor;
 
@@ -65,9 +74,32 @@ namespace Squiddy
             On.Cicada.Die += Cicada_Die;
 			On.CicadaAI.Update += CicadaAI_Update;
 
+			On.AbstractCreatureAI.DoIwantToDropThisItemInDen += AbstractCreatureAI_DoIwantToDropThisItemInDen;
+
+			// silly silly game.
+			On.ShortcutHandler.CreatureEnterFromAbstractRoom += ShortcutHandler_CreatureEnterFromAbstractRoom;
+            IL.ShortcutHelper.Update += ShortcutHelper_Update;
+
 			IL.CicadaGraphics.ApplyPalette += CicadaGraphics_ApplyPalette;
 			On.CicadaGraphics.ApplyPalette += CicadaGraphics_ApplyPalette;
             On.Cicada.ShortCutColor += Cicada_ShortCutColor;
+		}
+
+		// Ties player and squit
+		internal class SquiddyStick : AbstractPhysicalObject.AbstractObjectStick
+		{
+			public SquiddyStick(AbstractPhysicalObject A, AbstractPhysicalObject B) : base(A, B) { }
+		}
+		// Make squiddy
+		private void Player_ctor(On.Player.orig_ctor orig, Player self, AbstractCreature abstractCreature, World world)
+		{
+			orig(self, abstractCreature, world);
+			if (!IsMe(self)) return;
+
+			var abscada = new AbstractCreature(world, StaticWorld.creatureTemplates[((int)CreatureTemplate.Type.CicadaA)], null, abstractCreature.pos, abstractCreature.ID);
+			player[abscada] = self;
+			new SquiddyStick(abscada, abstractCreature);
+			Debug.Log("Squiddy: Abstract Squiddy created and attached");
 		}
 
 		private void Cicada_ctor(On.Cicada.orig_ctor orig, Cicada self, AbstractCreature abstractCreature, World world, bool gender)
@@ -75,9 +107,12 @@ namespace Squiddy
 			orig(self, abstractCreature, world, gender);
 			if (player.TryGet(self.abstractCreature, out var p))
 			{
+				Debug.Log("Squiddy: Realized!");
 				// mycologist would be proud
 				p.bodyChunks = self.bodyChunks.Reverse().ToArray();
 				p.bodyChunkConnections = self.bodyChunkConnections;
+
+				self.flying = false; // shh
 
 				if (world.game.IsArenaSession)
 				{
@@ -98,36 +133,6 @@ namespace Squiddy
 			}
 		}
 
-		// Ties player and squit
-		internal class SquiddyStick : AbstractPhysicalObject.AbstractObjectStick
-		{
-			public SquiddyStick(AbstractPhysicalObject A, AbstractPhysicalObject B) : base(A, B) { }
-		}
-		// Make squiddy
-		private void Player_ctor(On.Player.orig_ctor orig, Player self, AbstractCreature abstractCreature, World world)
-		{
-			orig(self, abstractCreature, world);
-			if (!IsMe(self)) return;
-
-			self.Destroy();
-
-			var abscada = new AbstractCreature(world, StaticWorld.creatureTemplates[((int)CreatureTemplate.Type.CicadaA)], null, abstractCreature.pos, abstractCreature.ID);
-			player[abscada] = self;
-
-			if (world.game.IsStorySession)
-			{
-				// abscada cannot be added to room entities at this point because players are realized while iterating foreach in entities
-				abscada.RealizeInRoom();
-			}
-			else // arena
-			{
-				// real cada cannot be instantiated in arena because room isn't ready for non-ai
-				world.abstractRooms[0].AddEntity(abscada);
-				// player starts in a shortcutvessel with its onw position unset, this teleports squiddy with it
-				new SquiddyStick(abscada, abstractCreature);
-			}
-		}
-
 		// Lock player and squiddy
         private void Cicada_Update(On.Cicada.orig_Update orig, Cicada self, bool eu)
         {
@@ -139,13 +144,21 @@ namespace Squiddy
 				p.abstractCreature.pos = self.abstractCreature.pos;
 				p.abstractCreature.world = self.abstractCreature.world;
 
-				if(p.abstractCreature.stuckObjects.Count == 0) // new cada this gets called after being added to room each time, including pipes
+				if (!p.slatedForDeletetion)
+				{
+					p.Destroy();
+					Debug.Log("Squiddy: Player removed");
+					self.room.abstractRoom.AddEntity(self.abstractCreature); // game just loaded, hadnt been added yet.
+					
+				}
+				if (p.abstractCreature.stuckObjects.Count == 0) // this gets called after being added to room each time, including pipes
                 {
-					Debug.Log("Squiddy: Attached to player");
+					// because removefromroom breaks up sticks
 					new SquiddyStick(self.abstractCreature, p.abstractCreature);
+					Debug.Log("Squiddy: Attached to player");
 				}
 
-				// underwater cam
+				// underwater cam checks these
 				p.airInLungs = self.lungs;
 				p.dead = self.dead;
 
@@ -163,6 +176,7 @@ namespace Squiddy
 				}
 
 				// death grasp
+				// this is from vanilla but could be reworked into a more flexible system.
 				if (p.dangerGrasp == null)
 				{
 					p.dangerGraspTime = 0;
@@ -192,21 +206,22 @@ namespace Squiddy
 			orig(self, eu);
 		}
 
+		// inputs and stuff
         private void Cicada_Act(On.Cicada.orig_Act orig, Cicada self)
         {
 			if(player.TryGet(self.abstractCreature, out var p))
 
 			{
-				var cada = self;
-				var room = cada.room;
-				var chunks = cada.bodyChunks;
+                var room = self.room;
+				var chunks = self.bodyChunks;
 				var nc = chunks.Length;
 
-				if (wantToCharge[self] > 0) wantToCharge[self]--;
+				if (p.wantToJump > 0) p.wantToJump--;
+				if (p.wantToPickUp > 0) p.wantToPickUp--;
 
 				// faster takeoff
-				if (cada.waitToFlyCounter <= 15)
-					cada.waitToFlyCounter = 15;
+				if (self.waitToFlyCounter <= 15)
+                    self.waitToFlyCounter = 15;
 
 				// Input
 				p.checkInput(); // partial update (:
@@ -222,79 +237,94 @@ namespace Squiddy
 
 				bool preventStaminaRegen = false;
 				bool throwPress = (p.input[0].thrw && !p.input[1].thrw);
-				if (throwPress || wantToCharge[self] > 0) // dash charge
+				if (throwPress || p.wantToJump > 0) // dash charge
 				{
-					if (cada.flying && !cada.Charging && cada.chargeCounter == 0 && cada.stamina > 0.2f)
+					if (self.flying && !self.Charging && self.chargeCounter == 0 && self.stamina > 0.2f)
 					{
-						cada.Charge(cada.mainBodyChunk.pos + (inputDir == Vector2.zero ? (chunks[0].pos - chunks[1].pos) : inputDir) * 100f);
-						wantToCharge[self] = 0;
+                        self.Charge(self.mainBodyChunk.pos + (inputDir == Vector2.zero ? (chunks[0].pos - chunks[1].pos) : inputDir) * 100f);
+						p.wantToJump = 0;
 					}
 					else if (throwPress)
 					{
-						wantToCharge[self] = 5;
+						p.wantToJump = 5;
 					}
 				}
 
-				if (cada.chargeCounter > 0) // charge windup or midcharge
+				if (self.chargeCounter > 0) // charge windup or midcharge
 				{
-					cada.stamina -= 0.008f;
+                    self.stamina -= 0.008f;
 					preventStaminaRegen = true;
-					if (cada.chargeCounter < 20)
+					if (self.chargeCounter < 20)
 					{
-						if (cada.stamina <= 0.2f || !p.input[0].thrw) // cancel out if unable to complete
+						if (self.stamina <= 0.2f || !p.input[0].thrw) // cancel out if unable to complete
 						{
-							cada.chargeCounter = 0;
+                            self.chargeCounter = 0;
 						}
 					}
 					else
 					{
-						if (cada.stamina <= 0f) // cancel out mid charge if out of stamina (happens in long bouncy charges)
+						if (self.stamina <= 0f) // cancel out mid charge if out of stamina (happens in long bouncy charges)
 						{
-							cada.chargeCounter = 0;
+                            self.chargeCounter = 0;
 						}
 					}
-
-					cada.chargeDir = (cada.chargeDir
+                    self.chargeDir = (self.chargeDir
 												+ 0.15f * inputDir
-												+ 0.03f * RWCustom.Custom.DirVec(cada.bodyChunks[1].pos, cada.mainBodyChunk.pos)).normalized;
+												+ 0.03f * RWCustom.Custom.DirVec(self.bodyChunks[1].pos, self.mainBodyChunk.pos)).normalized;
 				}
 
 				// scoooot
 				self.AI.swooshToPos = null;
 				if (p.input[0].jmp)
 				{
-					if (cada.room.aimap.getAItile(cada.mainBodyChunk.pos).terrainProximity > 1 && cada.stamina > 0.3f) // cada.flying && 
+					if (self.room.aimap.getAItile(self.mainBodyChunk.pos).terrainProximity > 1 && self.stamina > 0.5f) // cada.flying && 
 					{
-						self.AI.swooshToPos = cada.mainBodyChunk.pos + inputDir * 60f + new Vector2(0, 4f);
+						self.AI.swooshToPos = self.mainBodyChunk.pos + inputDir * 40f + new Vector2(0, 4f);
+						self.flyingPower = Mathf.Lerp(self.flyingPower, 1f, 0.05f);
 						preventStaminaRegen = true;
-						cada.stamina -= cada.stamina * inputDir.magnitude / ((!cada.gender) ? 120f : 190f);
+                        self.stamina -= 0.6f * self.stamina * inputDir.magnitude / ((!self.gender) ? 120f : 190f);
 					}
 					else // easier takeoff
 					{
-						if (cada.waitToFlyCounter < 30) cada.waitToFlyCounter = 30;
+						if (self.waitToFlyCounter < 30) self.waitToFlyCounter = 30;
 					}
 				}
 
 				// move
-				// this seems to have an issue with the pathfinder not keeping up
-				self.AI.pathFinder.AbortCurrentGenerationPathFinding();
-				if (inputDir != Vector2.zero || cada.Charging)
+				var basepos = 0.5f * (self.firstChunk.pos + room.MiddleOfTile(self.abstractCreature.pos.Tile));
+				if (inputDir != Vector2.zero || self.Charging)
 				{
+					self.AI.pathFinder.AbortCurrentGenerationPathFinding(); // ignore previous dest
 					self.AI.behavior = CicadaAI.Behavior.GetUnstuck; // helps with sitting behavior
-					var dest = cada.mainBodyChunk.pos + inputDir * 30f;
-					if (cada.flying) dest.y -= 10f; // nose up goes funny
-					self.abstractCreature.abstractAI.SetDestination(cada.room.GetWorldCoordinate(dest));
+					var dest = basepos + inputDir * 20f;
+					if (self.flying) dest.y -= 12f; // nose up goes funny
+					self.abstractCreature.abstractAI.SetDestination(self.room.GetWorldCoordinate(dest));
 				}
 				else
 				{
 					self.AI.behavior = CicadaAI.Behavior.Idle;
-					if (inputDir == Vector2.zero && inputLastDir != Vector2.zero || UnityEngine.Random.value < 0.004f) // let go, or very rare update
+					if (inputDir == Vector2.zero && inputLastDir != Vector2.zero) // let go
 					{
-						self.abstractCreature.abstractAI.SetDestination(cada.room.GetWorldCoordinate(cada.mainBodyChunk.pos));
+						self.abstractCreature.abstractAI.SetDestination(self.room.GetWorldCoordinate(basepos));
 					}
 				}
 
 				// Grab update
+
+				bool grabPress = (p.input[0].pckp && !p.input[1].pckp);
+				if (grabPress || p.wantToPickUp > 0) // pick up
+				{
+					if (self.AI.preyTracker.MostAttractivePrey?.representedCreature is AbstractCreature ac && ac.realizedCreature != null
+						&& Custom.DistLess(self.mainBodyChunk.pos, ac.realizedCreature.mainBodyChunk.pos, 25f) && self.TryToGrabPrey(ac.realizedCreature))
+					{
+						Debug.Log("Squiddy: grabbed " + ac.realizedCreature);
+						p.wantToPickUp = 0;
+					}
+					else if (grabPress)
+					{
+						p.wantToPickUp = 5;
+					}
+				}
 
 
 
@@ -312,17 +342,24 @@ namespace Squiddy
 				}
 
 				// from player movementupdate code, entering a shortcut
-				if (cada.shortcutDelay < 1)
+				if (self.shortcutDelay < 1)
 				{
 					for (int i = 0; i < nc; i++)
 					{
-						if (cada.enteringShortCut == null && room.GetTile(chunks[i].pos).Terrain == Room.Tile.TerrainType.ShortcutEntrance && room.shortcutData(room.GetTilePosition(chunks[i].pos)).shortCutType != ShortcutData.Type.DeadEnd && room.shortcutData(room.GetTilePosition(chunks[i].pos)).shortCutType != ShortcutData.Type.CreatureHole && room.shortcutData(room.GetTilePosition(chunks[i].pos)).shortCutType != ShortcutData.Type.NPCTransportation)
+						if (self.enteringShortCut == null && room.GetTile(chunks[i].pos).Terrain == Room.Tile.TerrainType.ShortcutEntrance )
 						{
-							IntVector2 intVector = room.ShorcutEntranceHoleDirection(room.GetTilePosition(chunks[i].pos));
-							if (p.input[0].x == -intVector.x && p.input[0].y == -intVector.y)
-							{
-								cada.enteringShortCut = new IntVector2?(room.GetTilePosition(chunks[i].pos));
+							var sctype = room.shortcutData(room.GetTilePosition(chunks[i].pos)).shortCutType;
+							if (sctype != ShortcutData.Type.DeadEnd
+							&& (sctype != ShortcutData.Type.CreatureHole || self.abstractCreature.abstractAI.HavePrey())
+							&& sctype != ShortcutData.Type.NPCTransportation)
+                            {
+								IntVector2 intVector = room.ShorcutEntranceHoleDirection(room.GetTilePosition(chunks[i].pos));
+								if (p.input[0].x == -intVector.x && p.input[0].y == -intVector.y)
+								{
+									self.enteringShortCut = new IntVector2?(room.GetTilePosition(chunks[i].pos));
+								}
 							}
+							
 						}
 					}
 				}
@@ -377,13 +414,12 @@ namespace Squiddy
 
 				if (preventStaminaRegen)
 				{
-					if (cada.grabbedBy.Count == 0 && cada.stickyCling == null)
+					if (self.grabbedBy.Count == 0 && self.stickyCling == null)
 					{
-						cada.stamina -= 0.014285714f;
+                        self.stamina -= 0.014285714f;
 					}
 				}
-
-				cada.stamina = Mathf.Clamp01(cada.stamina);
+                self.stamina = Mathf.Clamp01(self.stamina);
 			}
 
 			orig(self);
@@ -430,10 +466,12 @@ namespace Squiddy
         {
 			if (player.TryGet(self.creature, out var p))
 			{
-				//limited to pathfinding
-				self.pathFinder.stepsPerFrame = 15;
-				self.pathFinder.accessibilityStepsPerFrame = 500; // faster, damn it
-				self.pathFinder.Update();
+				if (self.cicada.room?.Tiles != null && !self.pathFinder.DoneMappingAccessibility)
+					self.pathFinder.accessibilityStepsPerFrame = self.cicada.room.Tiles.Length; // faster, damn it. on entering a new room this needs to complete before it can pathfind
+				else self.pathFinder.accessibilityStepsPerFrame = 10;
+				self.pathFinder.Update(); // basic movement uses this
+				self.tracker.Update(); // creature looker uses this
+				self.preyTracker.Update(); // for grabbing prey
 			}
             else
             {
@@ -441,6 +479,81 @@ namespace Squiddy
 			}
 		}
 
+		private bool AbstractCreatureAI_DoIwantToDropThisItemInDen(On.AbstractCreatureAI.orig_DoIwantToDropThisItemInDen orig, AbstractCreatureAI self, AbstractPhysicalObject item)
+		{
+			if (player.TryGet(self.parent, out var p) && self.parent.InDen)
+			{
+				bool eaten = false;
+				int amount = 0;
+
+				if (item is AbstractCreature ac && ac.creatureTemplate.type == CreatureTemplate.Type.Fly)
+                {
+					eaten = true;
+					amount = 1;
+				}
+
+                if (eaten) { p.AddFood(amount); }
+
+				return orig(self, item) && eaten;
+			}
+			else
+			{
+				return orig(self, item);
+			}
+		}
+
+		// bugfix the gmae
+		// 2 connected creatures leaving den = both added twice to the room.
+		private void ShortcutHandler_CreatureEnterFromAbstractRoom(On.ShortcutHandler.orig_CreatureEnterFromAbstractRoom orig, ShortcutHandler self, Creature creature, AbstractRoom enterRoom, int enterNode)
+		{
+			if (creature is Player p && IsMe(p)) return; // carried by squiddy
+			orig(self, creature, enterRoom, enterNode);
+		}
+
+		// skip me for playerpushbacks please
+		private void ShortcutHelper_Update(ILContext il)
+		{
+			var c = new ILCursor(il);
+			ILLabel innerloop = null;
+			ILLabel afterloop = null;
+			int itercount = 0;
+			MethodReference itemGetCall = null;
+			int playerloc = 0;
+			if (c.TryGotoNext(MoveType.Before,
+				i => i.MatchLdarg(0),
+				i => i.MatchLdfld<ShortcutHelper>("pushers"),
+				i => i.MatchLdloc(out itercount),
+				i => i.MatchCallOrCallvirt(out itemGetCall),
+				i => i.MatchLdflda<ShortcutHelper.ShortcutPusher>("shortcutDir"),
+				i => i.MatchLdfld<RWCustom.IntVector2>("y"),
+				i => i.MatchLdcI4(0),
+				i => i.MatchBle(out innerloop),
+
+				i => i.MatchLdloc(out playerloc),
+				i => i.MatchLdfld<Player>("animation"),
+				i => i.MatchLdcI4(19),
+				i => i.MatchBeq(out afterloop),
+				i => i.MatchLdloc(out _),
+				i => i.MatchLdfld<Player>("animation"),
+				i => i.MatchLdcI4(3),
+				i => i.MatchBeq(out _)
+				))
+			{
+				c.MoveAfterLabels();
+				c.Emit(OpCodes.Ldarg_0);
+				c.Emit(OpCodes.Ldarg_0);
+				c.Emit<ShortcutHelper>(OpCodes.Ldfld, "pushers");
+				c.Emit(OpCodes.Ldloc, itercount);
+				c.Emit(OpCodes.Callvirt, itemGetCall);
+				c.Emit(OpCodes.Ldloc, playerloc);
+				c.EmitDelegate<Func<ShortcutHelper, ShortcutHelper.ShortcutPusher, Player, bool>>((helper, pusher, self) => // bypass me, pushbacks
+				{
+					return IsMe(self) && helper.room.shortcutData(pusher.shortCutPos).shortCutType == ShortcutData.Type.CreatureHole;
+				});
+				c.Emit(OpCodes.Brtrue, afterloop);
+			}
+			else Debug.LogException(new Exception("Couldn't IL-hook ShortcutHelper_Update from squiddy")); // deffendisve progrmanig
+		}
 
 
 		#region arenacolors
@@ -523,9 +636,6 @@ namespace Squiddy
 		}
 		#endregion arenacolors
 
-
-
 		public static AttachedField<AbstractCreature, Player> player = new AttachedField<AbstractCreature, Player>();
-		public static AttachedField<Cicada, int> wantToCharge = new AttachedField<Cicada, int>();
     }
 }
