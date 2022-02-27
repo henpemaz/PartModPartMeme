@@ -7,25 +7,63 @@
 	Move
 		Done
 
+	Update controll mapping description :)
+
 	Grab
 		needs to be able to hunt down batflies
+			uses preytracker actractiveprey
+			should instead go over room physobs
+
+			uses playercode but its a mess and picks self wtf
+			
+		grab most items
+		iplayeredibles -> probably not ok to bite?
+
+		swallow regurgitate, for neurons ?
+
+		if dash with a weapon, on collision throw? connedted chunk hit
+
+		grab tiny insects for eating
+			room.insectcoordinator.allinsects
+			make temp fisobj
+
+		grabbing puffball = bad ):
+
+		should maybe use bittenbyplayer on most stuff when applicable ?
+			turns out just using foodpoints is fine, used for autoeating in shelters too!
+
+	Right now narrow-space movement is super slow
+		on pair with vanilla squids though they do be like that
+		maybe pipe-corner boosting or something like that ?
+
+	Collision damage ?
+	"Annoying" grab ?
 
 	Eat, or stash ?
 	Shelters or Dens ?
 		maybe:
 			"eats" in Den on a short timer
 			needs to be able to enter those
-			watch out for rain thing stuck
+			watch out for rain/damage thing stuck
 
 			visual indicator of den?
+				shortcutgraphics
+				or iggy points towards it ?
+
+			if rain timer going off, can sleep in a den, gains no karma
+			if sleep in shelter gains karma
+
+			grab tiny tiny tiny prey? eat for quarter ?
+				but batflies are so common already >.>
 
 	Make shelters work
-
 	Player dies when you die
+	Ui and map
+	Patch up Swimming so control isn't lost
 		done
 
-	Ui and map
-		works now it seems
+	Karma starts at capped at 1
+		echo in outskirts puts it at 3
 
 	Five pebbles
 		Wait how did you get in
@@ -40,9 +78,7 @@
 		you seem so familiar
 		no, really, very very familiar
 
-	Patch up Swimming so control isn't lost
-		done ?
-		patch up void sea so the game is beatable lol
+	patch up void sea so the game is beatable lol
 
 	Validate Multiplayer
 		simplified act if held ?
