@@ -10,16 +10,14 @@
 	Update controll mapping description :)
 
 	Grab
+		done
 		needs to be able to hunt down batflies
-			uses preytracker actractiveprey
-			should instead go over room physobs
-
-			uses playercode but its a mess and picks self wtf
+			uses playercode
 			
 		grab most items
-		iplayeredibles -> probably not ok to bite?
+		iplayeredibles -> ok to bite
 
-		swallow regurgitate, for neurons ?
+		swallow regurgitate, for neurons
 
 		if dash with a weapon, on collision throw? connedted chunk hit
 
@@ -46,15 +44,20 @@
 			needs to be able to enter those
 			watch out for rain/damage thing stuck
 
-			visual indicator of den?
+			visual indicator of den? <---------------------
 				shortcutgraphics
 				or iggy points towards it ?
+					hologram system seems a mess but could make it work
 
-			if rain timer going off, can sleep in a den, gains no karma
+			if rain timer going off, can sleep in a den, gains no karma <---------------------
 			if sleep in shelter gains karma
 
 			grab tiny tiny tiny prey? eat for quarter ?
 				but batflies are so common already >.>
+
+			WHAT HAPPENS WHEN CARRYING DEN-WORTHY FOOD TO A SHELTER??
+				should consider it in the maths of closing the shelter
+				should eat it properly/
 
 	Make shelters work
 	Player dies when you die

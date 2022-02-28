@@ -15,7 +15,15 @@ namespace Squiddy
 
 		public SquiddyBase() : base("hensquiddy", FormatVersion.V1, 0, true) {
 			On.Player.ctor += Player_ctor;
+            On.RainWorldGame.ShutDownProcess += RainWorldGame_ShutDownProcess;
 		}
+
+        private void RainWorldGame_ShutDownProcess(On.RainWorldGame.orig_ShutDownProcess orig, RainWorldGame self)
+        {
+			orig(self);
+			player.Clear();
+			cicada.Clear();
+        }
 
         public override string DisplayName => "Squiddy";
 		public override string Description => @"Look at 'em go!";
@@ -52,11 +60,14 @@ namespace Squiddy
 
 			On.Cicada.Die -= Cicada_Die;
 			On.CicadaAI.Update -= CicadaAI_Update;
+			On.AbstractCreature.WantToStayInDenUntilEndOfCycle -= AbstractCreature_WantToStayInDenUntilEndOfCycle;
+			On.AbstractCreature.Abstractize -= AbstractCreature_Abstractize;
 
+			On.Player.CanIPickThisUp -= Player_CanIPickThisUp;
+			On.Player.ObjectEaten -= Player_ObjectEaten;
 			On.AbstractCreatureAI.DoIwantToDropThisItemInDen -= AbstractCreatureAI_DoIwantToDropThisItemInDen;
 			On.CicadaGraphics.Update -= CicadaGraphics_Update;
 
-			// bugfix
             On.AbstractCreature.IsExitingDen -= AbstractCreature_IsExitingDen;
 			IL.ShortcutHelper.Update -= ShortcutHelper_Update;
 			On.SuperJumpInstruction.ctor -= SuperJumpInstruction_ctor;
@@ -82,11 +93,14 @@ namespace Squiddy
 
             On.Cicada.Die += Cicada_Die;
 			On.CicadaAI.Update += CicadaAI_Update;
+            On.AbstractCreature.WantToStayInDenUntilEndOfCycle += AbstractCreature_WantToStayInDenUntilEndOfCycle;
+            On.AbstractCreature.Abstractize += AbstractCreature_Abstractize;
 
+            On.Player.CanIPickThisUp += Player_CanIPickThisUp;
+            On.Player.ObjectEaten += Player_ObjectEaten;
 			On.AbstractCreatureAI.DoIwantToDropThisItemInDen += AbstractCreatureAI_DoIwantToDropThisItemInDen;
             On.CicadaGraphics.Update += CicadaGraphics_Update;
 
-			// silly silly game.
 			On.AbstractCreature.IsExitingDen += AbstractCreature_IsExitingDen;
 			IL.ShortcutHelper.Update += ShortcutHelper_Update;
             On.SuperJumpInstruction.ctor += SuperJumpInstruction_ctor;
@@ -96,6 +110,7 @@ namespace Squiddy
 			On.CicadaGraphics.ApplyPalette += CicadaGraphics_ApplyPalette;
             On.Cicada.ShortCutColor += Cicada_ShortCutColor;
 		}
+       
 
         // Ties player and squit
         internal class SquiddyStick : AbstractPhysicalObject.AbstractObjectStick
@@ -109,7 +124,11 @@ namespace Squiddy
 			if (!IsMe(self)) return;
 
 			var abscada = new AbstractCreature(world, StaticWorld.creatureTemplates[((int)CreatureTemplate.Type.CicadaA)], null, abstractCreature.pos, abstractCreature.ID);
+			// no stuck in den random amounts please
+			//self.abstractCreature.remainInDenCounter = 120; // this one caused a funny bug on entering a den with the player for the first time. the player would want out!!
+			abscada.remainInDenCounter = 120;
 			player[abscada] = self;
+
 			new SquiddyStick(abscada, abstractCreature);
 			Debug.Log("Squiddy: Abstract Squiddy created and attached");
 		}
@@ -120,14 +139,13 @@ namespace Squiddy
 			if (player.TryGet(self.abstractCreature, out var p))
 			{
 				Debug.Log("Squiddy: Realized!");
+				cicada[p] = self;
+
 				// mycologist would be proud
 				p.bodyChunks = self.bodyChunks.Reverse().ToArray();
 				p.bodyChunkConnections = self.bodyChunkConnections;
 
 				self.flying = false; // shh
-
-				// no stuck in den randomly
-				self.abstractCreature.remainInDenCounter = 120;
 
 				if (world.game.IsArenaSession)
 				{
@@ -475,7 +493,7 @@ namespace Squiddy
             {
                 Creature.Grasp edible = grasps.FirstOrDefault(g => g != null && (
                     (g.grabbed is IPlayerEdible ipe && ipe.Edible && ipe.FoodPoints == 0) // Edible with no food points (otherwise must carry to den)
-                  || g.grabbed is InsectHolder                                                                      // or ??
+                  || g.grabbed is InsectHolder  
                 ));
 
                 if (edible != null && (holdingGrab || p.eatCounter < 15))
@@ -548,6 +566,8 @@ namespace Squiddy
                             p.SlugcatGrab(grabbed, j);
                             p.SwallowObject(j);
                             p.swallowAndRegurgitateCounter = 0;
+
+							if (grabbed is PuffBall) self.Die();
                             break;
                         }
                     }
@@ -571,8 +591,6 @@ namespace Squiddy
             }
             p.pickUpCandidate = physicalObject;
 
-
-
             if (p.wantToPickUp > 0) // pick up
             {
                 var dropInstead = true; // grasps.Any(g => g != null);
@@ -589,7 +607,7 @@ namespace Squiddy
 							Debug.Log("Squiddy: put item on ground!");
                             p.wantToPickUp = 0;
                             room.PlaySound((!(grasps[i].grabbed is Creature)) ? SoundID.Slugcat_Lay_Down_Object : SoundID.Slugcat_Lay_Down_Creature, grasps[i].grabbedChunk, false, 1f, 1f);
-                            room.socialEventRecognizer.CreaturePutItemOnGround(grasps[i].grabbed, self);
+                            room.socialEventRecognizer.CreaturePutItemOnGround(grasps[i].grabbed, p);
                             if (grasps[i].grabbed is PlayerCarryableItem)
                             {
                                 (grasps[i].grabbed as PlayerCarryableItem).Forbid();
@@ -601,7 +619,28 @@ namespace Squiddy
                 }
                 else if (p.pickUpCandidate != null)
                 {
-                    for (int i = 0; i < grasps.Length; i++)
+					int freehands = 0;
+					for (int i = 0; i < grasps.Length; i++)
+					{
+						if (grasps[i] == null)
+						{
+							freehands++;
+						}
+					}
+
+					if(freehands == 0)// && !(p.pickUpCandidate is InsectHolder)) // let go of tiny bugs if trying to pickup something
+                    {
+						for (int i = 0; i < grasps.Length; i++)
+						{
+							if (grasps[i] != null && grasps[i].grabbed is InsectHolder)
+							{
+								self.ReleaseGrasp(i);
+								break;
+							}
+						}
+					}
+
+					for (int i = 0; i < grasps.Length; i++)
                     {
                         if (grasps[i] == null)
                         {
@@ -633,7 +672,6 @@ namespace Squiddy
             public override string ToString()
             {
 				return "InsectHolder of " + insect.type.ToString();
-
 			}
 
             public override void PickedUp(Creature upPicker)
@@ -727,14 +765,16 @@ namespace Squiddy
 
         private PhysicalObject PickupCandidate(Cicada self, Player p)
         {
-			self.cantPickUpPlayer = p;
-			self.cantPickUpCounter = 5;
-			var candidate = p.PickupCandidate(0f);
+			// initial physicalobject candidate
+			var candidate = p.PickupCandidate(8f);
+
+			// insect contender
 			if (self.room?.insectCoordinator != null)
             {
+
 				CosmeticInsect closestInsect = null;
 				var ownpos = self.firstChunk.pos;
-				float maxdist = candidate == null ? 30f : (ownpos - candidate.firstChunk.pos).magnitude;
+				float maxdist = candidate == null ? 40f : (ownpos - candidate.firstChunk.pos).magnitude;
 				foreach(var insect in self.room.insectCoordinator.allInsects)
                 {
 					if(!insect.slatedForDeletetion && insect.alive && insect.inGround < 1f)
@@ -742,21 +782,27 @@ namespace Squiddy
 						var dist = (ownpos - insect.pos).magnitude;
 						if(dist < maxdist)
                         {
+							foreach(var g in self.grasps)
+                            {
+								if (g != null && g.grabbed is InsectHolder hldr && hldr.insect == insect) goto skipped; // skip already grabbed, can't use a continue here
+                            }
+
 							closestInsect = insect;
 							maxdist = dist;
+						skipped:;
                         }
 					}
                 }
 
 				if(closestInsect != null)
                 {
-					if(p.pickUpCandidate is InsectHolder hldr && hldr.insect == closestInsect)
+					if(p.pickUpCandidate is InsectHolder hldr && hldr.insect == closestInsect) // already tracked!
                     {
 						candidate = hldr;
                     }
                     else
                     {
-						candidate = new InsectHolder(closestInsect, p, self.room);
+						candidate = new InsectHolder(closestInsect, p, self.room); // new holder for tracking
 						self.room.AddObject(candidate);
 					}
                 }
@@ -809,12 +855,14 @@ namespace Squiddy
 				var oldpos = self.mainBodyChunk.pos;
 				var owndir = (self.bodyChunks[0].pos - self.bodyChunks[1].pos).normalized;
 				self.mainBodyChunk.pos += 5f * owndir; 
-				orig(self);
+				orig(self); // this thing drops creatures cada doesn't eat. it's a bit weird but its ok I guess
 				self.mainBodyChunk.pos = oldpos;
 				if (self.grasps[0] != null && self.grasps[0].grabbed is Spear speary)
                 {
 					var hangingdir = (speary.firstChunk.pos - oldpos).normalized;
-					speary.setRotation = (self.chargeCounter > 0) ? owndir.normalized : Custom.PerpendicularVector(owndir);
+					speary.setRotation = Vector2.Lerp(
+						Vector2.Lerp(Custom.PerpendicularVector(owndir), owndir.normalized, ((float)self.chargeCounter) / 20f),
+						speary.rotation, 0.25f);
 					speary.rotationSpeed = 0f;
 				}
 				return;
@@ -875,38 +923,100 @@ namespace Squiddy
 			}
 		}
 
+		private bool AbstractCreature_WantToStayInDenUntilEndOfCycle(On.AbstractCreature.orig_WantToStayInDenUntilEndOfCycle orig, AbstractCreature self)
+		{
+			if (player.TryGet(self, out var p))
+			{
+				return false;
+			}
+			return orig(self);
+		}
+
+		private void AbstractCreature_Abstractize(On.AbstractCreature.orig_Abstractize orig, AbstractCreature self, WorldCoordinate coord)
+		{
+			if (player.TryGet(self, out var p))
+			{
+				return; // do NOT abstractize unless I tell you to
+				// could happen at end of cycle, isenteringden + low rain timer
+			}
+			orig(self, coord);
+		}
+
+
+		private bool Player_CanIPickThisUp(On.Player.orig_CanIPickThisUp orig, Player self, PhysicalObject obj)
+		{
+            if (IsMe(self))
+            {
+				if (obj is InsectHolder) return false;
+				if(cicada.TryGet(self, out var cada))
+                {
+					if (obj == cada) return false;
+					foreach (var g in cada.grasps) if (g != null && g.grabbed == obj) return false;
+					if (obj is Creature c && (
+						cada.AI.StaticRelationship(c.abstractCreature).type == CreatureTemplate.Relationship.Type.Eats
+						|| c.abstractCreature.creatureTemplate.smallCreature
+						)) return true;
+                }
+            }
+			return orig(self, obj);
+		}
+
+		private void Player_ObjectEaten(On.Player.orig_ObjectEaten orig, Player self, IPlayerEdible edible)
+		{
+            if (IsMe(self))
+            {
+				if(!(edible is Creature) && edible.FoodPoints > 0)
+                {
+                    for (int i = 0; i < edible.FoodPoints; i++)
+                    {
+						self.AddQuarterFood();
+                    }
+					return;
+                }
+            }
+			orig(self, edible);
+		}
+
 		// eat the thing you carried to a den
 		private bool AbstractCreatureAI_DoIwantToDropThisItemInDen(On.AbstractCreatureAI.orig_DoIwantToDropThisItemInDen orig, AbstractCreatureAI self, AbstractPhysicalObject item)
 		{
 			if (player.TryGet(self.parent, out var p) && self.parent.InDen)
 			{
-				int amount = 0;
-				int quarters = 0;
 				bool eaten = false;
-				if(item.realizedObject is IPlayerEdible ipe && ipe.Edible && ipe.FoodPoints > 0)
+				if(p.FoodInStomach < p.MaxFoodInStomach)
                 {
-					if (ipe is Creature) amount = ipe.FoodPoints;
-					else quarters = ipe.FoodPoints;
-                }
+					// kind of wish I had a concise rule for both this and the grab one
+					if (item.realizedObject is IPlayerEdible ipe && ipe.FoodPoints > 0)
+					{
+						if (p.SessionRecord != null)
+						{
+							p.SessionRecord.AddEat(item.realizedObject);
+						}
+						p.ObjectEaten(ipe);
+						eaten = true;
+					}
+					else if (item is AbstractCreature ac && self.parent.abstractAI.RealAI.StaticRelationship(ac).type == CreatureTemplate.Relationship.Type.Eats)
+					{
+						if (ac.creatureTemplate.smallCreature)
+						{
+							p.AddFood(1);
+                        }
+                        else
+                        {
+							p.AddFood(ac.state.meatLeft);
+                        }
 
-				// maybe switch to biting the thing until its done??
-				// could break
+						if (p.SessionRecord != null)
+						{
+							p.SessionRecord.AddEat(item.realizedObject);
+						}
+						eaten = true;
+					}
+				}
 
-				if (amount > 0)
-                {
-					p.AddFood(amount);
-					eaten = true;
-					self.parent.remainInDenCounter = Mathf.Min(self.parent.remainInDenCounter, 120 + amount * 80);
-				}
-                if (quarters > 0)
-                {
-					for (int i = 0; i < quarters; i++) p.AddQuarterFood();
-					eaten = true;
-					self.parent.remainInDenCounter = Mathf.Min(self.parent.remainInDenCounter, 60 + quarters * 20);
-				}
                 if (eaten)
                 {
-					Debug.Log("Squiddy: eaten in den " + item + " for " + amount + " + " + quarters);
+					Debug.Log("Squiddy: eaten in den " + item);
 				}
 
 				return orig(self, item) && eaten;
@@ -943,6 +1053,11 @@ namespace Squiddy
 		// 2 connected creatures leaving den = both added twice to the room.
 		private void AbstractCreature_IsExitingDen(On.AbstractCreature.orig_IsExitingDen orig, AbstractCreature self)
 		{
+            if (Input.GetKey("l"))
+            {
+				Debug.Log(Environment.StackTrace);
+            }
+
 			if (player.TryGet(self, out var p) && self.realizedCreature != null) // if its us pulling things out of den, pull them in and prevent other creatures from being added to shortcuts
 			{
 				var room = self.Room;
@@ -1025,7 +1140,6 @@ namespace Squiddy
 					if (abstractRoom.entities[j] is AbstractCreature ac && player.TryGet(ac, out var p))
 					{
 						abstractRoom.RemoveEntity(ac);
-						player.Unset(ac);
 						Debug.Log("Squiddy: removed from save");
 					}
 				}
@@ -1034,7 +1148,6 @@ namespace Squiddy
 					if (abstractRoom.entitiesInDens[j] is AbstractCreature ac && player.TryGet(ac, out var p))
 					{
 						abstractRoom.RemoveEntity(ac);
-						player.Unset(ac);
 						Debug.Log("Squiddy: removed from save");
 					}
 				}
@@ -1125,5 +1238,6 @@ namespace Squiddy
 		#endregion arenacolors
 
 		public static AttachedField<AbstractCreature, Player> player = new AttachedField<AbstractCreature, Player>();
+		public static AttachedField<Player, Cicada> cicada = new AttachedField<Player, Cicada>();
     }
 }
