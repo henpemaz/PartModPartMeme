@@ -46,6 +46,7 @@
 
 			visual indicator of den? <---------------------
 				shortcutgraphics
+					done
 				or iggy points towards it ?
 					hologram system seems a mess but could make it work
 

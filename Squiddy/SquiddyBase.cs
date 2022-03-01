@@ -68,7 +68,12 @@ namespace Squiddy
 			On.AbstractCreatureAI.DoIwantToDropThisItemInDen -= AbstractCreatureAI_DoIwantToDropThisItemInDen;
 			On.CicadaGraphics.Update -= CicadaGraphics_Update;
 
-            On.AbstractCreature.IsExitingDen -= AbstractCreature_IsExitingDen;
+			On.ShortcutGraphics.GenerateSprites -= ShortcutGraphics_GenerateSprites;
+            On.ShortcutGraphics.Draw -= ShortcutGraphics_Draw;
+			On.ShortcutGraphics.Update -= ShortcutGraphics_Update;
+
+
+			On.AbstractCreature.IsExitingDen -= AbstractCreature_IsExitingDen;
 			IL.ShortcutHelper.Update -= ShortcutHelper_Update;
 			On.SuperJumpInstruction.ctor -= SuperJumpInstruction_ctor;
 			On.RegionState.AdaptRegionStateToWorld -= RegionState_AdaptRegionStateToWorld;
@@ -101,6 +106,10 @@ namespace Squiddy
 			On.AbstractCreatureAI.DoIwantToDropThisItemInDen += AbstractCreatureAI_DoIwantToDropThisItemInDen;
             On.CicadaGraphics.Update += CicadaGraphics_Update;
 
+            On.ShortcutGraphics.GenerateSprites += ShortcutGraphics_GenerateSprites;
+			On.ShortcutGraphics.Draw += ShortcutGraphics_Draw;
+            On.ShortcutGraphics.Update += ShortcutGraphics_Update;
+
 			On.AbstractCreature.IsExitingDen += AbstractCreature_IsExitingDen;
 			IL.ShortcutHelper.Update += ShortcutHelper_Update;
             On.SuperJumpInstruction.ctor += SuperJumpInstruction_ctor;
@@ -109,8 +118,9 @@ namespace Squiddy
 			IL.CicadaGraphics.ApplyPalette += CicadaGraphics_ApplyPalette;
 			On.CicadaGraphics.ApplyPalette += CicadaGraphics_ApplyPalette;
             On.Cicada.ShortCutColor += Cicada_ShortCutColor;
+
+			densNeeded = 0f;
 		}
-       
 
         // Ties player and squit
         internal class SquiddyStick : AbstractPhysicalObject.AbstractObjectStick
@@ -454,7 +464,7 @@ namespace Squiddy
                         {
                             var sctype = room.shortcutData(room.GetTilePosition(chunks[i].pos)).shortCutType;
                             if (sctype != ShortcutData.Type.DeadEnd
-                            && (sctype != ShortcutData.Type.CreatureHole || self.abstractCreature.abstractAI.HavePrey())
+                            //&& (sctype != ShortcutData.Type.CreatureHole || self.abstractCreature.abstractAI.HavePrey())
                             && sctype != ShortcutData.Type.NPCTransportation)
                             {
                                 IntVector2 intVector = room.ShorcutEntranceHoleDirection(room.GetTilePosition(chunks[i].pos));
@@ -581,6 +591,23 @@ namespace Squiddy
             // this was in vanilla might as well keep it
             foreach (var grasp in grasps) if (grasp != null && grasp.grabbed.slatedForDeletetion) self.ReleaseGrasp(grasp.graspUsed);
 
+			if(p.FoodInStomach < p.MaxFoodInStomach)
+            {
+				foreach (var grasp in grasps) if (grasp != null)// && squiddyEatsInDen(grasp.grabbed))
+					{
+						if ((grasp.grabbed is IPlayerEdible ipe && ipe.FoodPoints > 0)
+							|| (grasp.grabbed is Creature c && self.abstractCreature.abstractAI.RealAI.StaticRelationship(c.abstractCreature).type == CreatureTemplate.Relationship.Type.Eats))
+						{
+							densNeeded = Custom.LerpAndTick(densNeeded, 1f, 0.015f, 0.03f);
+						}
+						if(grasp.grabbed is SmallNeedleWorm snm && !snm.hasScreamed && self.enteringShortCut != null && room.shortcutData(self.enteringShortCut.Value).shortCutType == ShortcutData.Type.CreatureHole)
+                        {
+							snm.Scream();
+                        }
+					}
+			}
+			
+
             // pickup updage
             if (p.input[0].pckp && !p.input[1].pckp) p.wantToPickUp = 5;
 
@@ -659,8 +686,20 @@ namespace Squiddy
 
         private class InsectHolder : PlayerCarryableItem, IPlayerEdible, IDrawable
         {
-            public InsectHolder(CosmeticInsect insect, Player p, Room room) 
-				: base(new AbstractPhysicalObject(room.world, AbstractPhysicalObject.AbstractObjectType.AttachedBee, null, room.GetWorldCoordinate(insect.pos), room.game.GetNewID())
+			private class AbstractInsectHolder : AbstractPhysicalObject
+			{
+				public AbstractInsectHolder(World world, AbstractObjectType type, PhysicalObject realizedObject, WorldCoordinate pos, EntityID ID) : base(world, type, realizedObject, pos, ID){}
+				public override void IsEnteringDen(WorldCoordinate den)
+				{
+					base.IsEnteringDen(den);
+					if (this.realizedObject is InsectHolder holder)
+					{
+						holder.insect.Destroy();
+					}
+				}
+			}
+			public InsectHolder(CosmeticInsect insect, Player p, Room room) 
+				: base(new AbstractInsectHolder(room.world, AbstractPhysicalObject.AbstractObjectType.AttachedBee, null, room.GetWorldCoordinate(insect.pos), room.game.GetNewID())
 				{ destroyOnAbstraction = true})
             {
                 this.insect = insect;
@@ -673,12 +712,6 @@ namespace Squiddy
             {
 				return "InsectHolder of " + insect.type.ToString();
 			}
-
-            public override void PickedUp(Creature upPicker)
-            {
-                base.PickedUp(upPicker);
-				//insect. ??
-            }
 
             public override void Update(bool eu)
             {
@@ -719,6 +752,7 @@ namespace Squiddy
 				{
 					(grasp.grabber as Player).ObjectEaten(this);
 					grasp.Release();
+					Destroy();
 					insect.Destroy();
 				}
 			}
@@ -1004,7 +1038,8 @@ namespace Squiddy
                         else
                         {
 							p.AddFood(ac.state.meatLeft);
-                        }
+							ac.state.meatLeft = 0;
+						}
 
 						if (p.SessionRecord != null)
 						{
@@ -1047,6 +1082,53 @@ namespace Squiddy
 				}
 			}
 		}
+
+		// for finding dens
+		private void ShortcutGraphics_GenerateSprites(On.ShortcutGraphics.orig_GenerateSprites orig, ShortcutGraphics self)
+		{
+			orig(self);
+			for (int l = 0; l < self.room.shortcuts.Length; l++)
+			{
+				if (self.entranceSprites[l, 0] == null && self.room.shortcuts[l].shortCutType == ShortcutData.Type.CreatureHole)
+				{
+					self.entranceSprites[l, 0] = new FSprite("ShortcutArrow", true);
+					self.entranceSprites[l, 0].rotation = Custom.AimFromOneVectorToAnother(new Vector2(0f, 0f), -IntVector2.ToVector2(self.room.ShorcutEntranceHoleDirection(self.room.shortcuts[l].StartTile)));
+					self.entranceSpriteLocations[l] = self.room.MiddleOfTile(self.room.shortcuts[l].StartTile) + IntVector2.ToVector2(self.room.ShorcutEntranceHoleDirection(self.room.shortcuts[l].StartTile)) * 15f;
+					if (self.room.water && self.room.waterInFrontOfTerrain && self.room.PointSubmerged(self.entranceSpriteLocations[l] + new Vector2(0f, 5f)))
+					{
+						self.camera.ReturnFContainer("Items").AddChild(self.entranceSprites[l, 0]);
+					}
+					else
+					{
+						self.camera.ReturnFContainer("Shortcuts").AddChild(self.entranceSprites[l, 0]);
+						self.camera.ReturnFContainer("Water").AddChild(self.entranceSprites[l, 1]);
+					}
+				}
+			}
+		}
+
+		float densNeeded;
+		private void ShortcutGraphics_Draw(On.ShortcutGraphics.orig_Draw orig, ShortcutGraphics self, float timeStacker, Vector2 camPos)
+		{
+			orig(self, timeStacker, camPos);
+			for (int k = 0; k < self.entranceSprites.GetLength(0); k++)
+			{
+				if (self.entranceSprites[k, 0] != null && self.room.shortcuts[k].shortCutType == ShortcutData.Type.CreatureHole)
+				{
+					float t = 1 - densNeeded;
+					self.entranceSprites[k, 0].color = Color.Lerp(self.entranceSprites[k, 0].color, self.camera.currentPalette.blackColor, t);
+					self.entranceSprites[k, 1].color = Color.Lerp(self.entranceSprites[k, 0].color, self.camera.currentPalette.blackColor, t);
+					self.entranceSprites[k, 1].alpha = Mathf.Lerp(self.entranceSprites[k, 1].alpha, 0, t);
+				}
+			}
+		}
+
+		private void ShortcutGraphics_Update(On.ShortcutGraphics.orig_Update orig, ShortcutGraphics self)
+		{
+			orig(self);
+			densNeeded = Custom.LerpAndTick(densNeeded, 0, 0.015f, 0.015f);
+		}
+
 
 		#region miscfixes
 		// bugfix the gmae
