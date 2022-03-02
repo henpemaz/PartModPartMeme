@@ -4,7 +4,6 @@ using MonoMod.Cil;
 using RWCustom;
 using SlugBase;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -14,7 +13,7 @@ namespace Squiddy
 	{
 
 		public SquiddyBase() : base("hensquiddy", FormatVersion.V1, 0, true) {
-            On.GameSession.AddPlayer += GameSession_AddPlayer;
+            On.PlayerState.ctor += PlayerState_ctor;
             On.RainWorldGame.ShutDownProcess += RainWorldGame_ShutDownProcess;
 		}
 
@@ -128,8 +127,6 @@ namespace Squiddy
 			densNeeded = false;
 		}
 
-        
-
         // Ties player and squit
         internal class SquiddyStick : AbstractPhysicalObject.AbstractObjectStick
 		{
@@ -137,21 +134,33 @@ namespace Squiddy
 		}
 		// Make squiddy
 
-		private void GameSession_AddPlayer(On.GameSession.orig_AddPlayer orig, GameSession self, AbstractCreature player)
-		{
-			orig(self, player);
-			if(player.state is PlayerState ps && ps.slugcatCharacter == this.SlugcatIndex)
-            {
-				var abscada = new AbstractCreature(player.world, StaticWorld.creatureTemplates[((int)CreatureTemplate.Type.CicadaA)], null, player.pos, player.ID);
-				new SquiddyStick(abscada, player);
 
-				player.Room.AddEntity(abscada);
+		// this used to be in playerctor which was a mess because it was mid-room-realize
+		// moved to session.addplayers but then that doesn't account for ghosts
+		// now its here in playerstate ctor which is... where the important stuff is set I suppose
+		private void PlayerState_ctor(On.PlayerState.orig_ctor orig, PlayerState self, AbstractCreature crit, int playerNumber, int slugcatCharacter, bool isGhost)
+		{
+			orig(self, crit, playerNumber, slugcatCharacter, isGhost);
+
+			if((crit.world.game.IsStorySession && slugcatCharacter == this.SlugcatIndex)
+				|| (crit.world.game.IsArenaSession && ArenaAdditions.GetSelectedArenaCharacter(crit.world.game.rainWorld.processManager.arenaSetup, playerNumber).player == this))
+            {
+				var abscada = new AbstractCreature(crit.world, StaticWorld.creatureTemplates[((int)CreatureTemplate.Type.CicadaA)], null, crit.pos, crit.ID);
+				new SquiddyStick(abscada, crit);
+
+				if (crit.world.game.IsStorySession)
+				{
+					crit.Room.AddEntity(abscada); // Actually pretty darn important,
+													// prevent player from being realized in shortcutsready since there's a squit (uses AI) in there too
+				}
+				// in arenamode stuff spawns in the shortcuts systems and plays out nicely
+
 				abscada.remainInDenCounter = 120;
-				this.player[abscada] = player;
-				cicada[player] = abscada;
+				this.player[abscada] = crit;
+				cicada[crit] = abscada;
 
 				Debug.Log("Squiddy: Abstract Squiddy created and attached");
-				Debug.Log("Squiddy: room is "  + player.Room.name);
+				//Debug.Log("Squiddy: room is "  + player.Room.name);
 			}
 		}
 
@@ -965,7 +974,7 @@ namespace Squiddy
 		{
 			if (player.TryGet(self, out var ap))
 			{
-				return false;
+				return !self.state.dead;
 			}
 			return orig(self);
 		}
@@ -1194,10 +1203,10 @@ namespace Squiddy
 		// 2 connected creatures leaving den = both added twice to the room.
 		private void AbstractCreature_IsExitingDen(On.AbstractCreature.orig_IsExitingDen orig, AbstractCreature self)
 		{
-            if (Input.GetKey("l"))
-            {
-				Debug.Log(Environment.StackTrace);
-            }
+    //        if (Input.GetKey("l"))
+    //        {
+				//Debug.Log(Environment.StackTrace);
+    //        }
 
 			if (player.TryGet(self, out var ap) && ap.realizedCreature is Player p && self.realizedCreature != null) // if its us pulling things out of den, pull them in and prevent other creatures from being added to shortcuts
 			{
