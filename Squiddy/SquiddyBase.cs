@@ -14,7 +14,6 @@ namespace Squiddy
 	{
 
 		public SquiddyBase() : base("hensquiddy", FormatVersion.V1, 0, true) {
-			On.Player.ctor += Player_ctor;
             On.GameSession.AddPlayer += GameSession_AddPlayer;
             On.RainWorldGame.ShutDownProcess += RainWorldGame_ShutDownProcess;
 		}
@@ -69,6 +68,7 @@ namespace Squiddy
 			On.Player.CanIPickThisUp -= Player_CanIPickThisUp;
 			On.Player.ObjectEaten -= Player_ObjectEaten;
 			On.Player.FoodInRoom_Room_bool -= Player_FoodInRoom_Room_bool;
+			On.Player.ObjectCountsAsFood -= Player_ObjectCountsAsFood;
 			On.AbstractCreatureAI.DoIwantToDropThisItemInDen -= AbstractCreatureAI_DoIwantToDropThisItemInDen;
 			On.CicadaGraphics.Update -= CicadaGraphics_Update;
 
@@ -107,6 +107,7 @@ namespace Squiddy
             On.Player.CanIPickThisUp += Player_CanIPickThisUp;
             On.Player.ObjectEaten += Player_ObjectEaten;
             On.Player.FoodInRoom_Room_bool += Player_FoodInRoom_Room_bool;
+            On.Player.ObjectCountsAsFood += Player_ObjectCountsAsFood;
 			On.AbstractCreatureAI.DoIwantToDropThisItemInDen += AbstractCreatureAI_DoIwantToDropThisItemInDen;
             On.CicadaGraphics.Update += CicadaGraphics_Update;
 
@@ -128,6 +129,7 @@ namespace Squiddy
 		}
 
         
+
         // Ties player and squit
         internal class SquiddyStick : AbstractPhysicalObject.AbstractObjectStick
 		{
@@ -141,37 +143,29 @@ namespace Squiddy
 			if(player.state is PlayerState ps && ps.slugcatCharacter == this.SlugcatIndex)
             {
 				var abscada = new AbstractCreature(player.world, StaticWorld.creatureTemplates[((int)CreatureTemplate.Type.CicadaA)], null, player.pos, player.ID);
+				new SquiddyStick(abscada, player);
+
 				player.Room.AddEntity(abscada);
 				abscada.remainInDenCounter = 120;
 				this.player[abscada] = player;
-				cicada[player] = abscada
+				cicada[player] = abscada;
 
-				new SquiddyStick(abscada, player);
+				Debug.Log("Squiddy: Abstract Squiddy created and attached");
+				Debug.Log("Squiddy: room is "  + player.Room.name);
 			}
-		}
-
-		private void Player_ctor(On.Player.orig_ctor orig, Player self, AbstractCreature abstractCreature, World world)
-		{
-			orig(self, abstractCreature, world);
-			if (!IsMe(self)) return;
-
-			
-			Debug.Log("Squiddy: Abstract Squiddy created and attached");
 		}
 
 		private void Cicada_ctor(On.Cicada.orig_ctor orig, Cicada self, AbstractCreature abstractCreature, World world, bool gender)
 		{
 			orig(self, abstractCreature, world, gender);
-			if (player.TryGet(self.abstractCreature, out var p))
+			if (player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p)
 			{
 				Debug.Log("Squiddy: Realized!");
-				cicada[p] = self;
-
 				// mycologist would be proud
 				p.bodyChunks = self.bodyChunks.Reverse().ToArray();
 				p.bodyChunkConnections = self.bodyChunkConnections;
 
-				self.flying = false; // shh
+				//self.flying = false; // shh
 
 				if (world.game.IsArenaSession)
 				{
@@ -189,6 +183,9 @@ namespace Squiddy
 					}
 					self.iVars.color = HSLColor.Lerp(self.iVars.color, new HSLColor(col.h, col.s, col.l), 0.5f * col.s); // magical * sat so white doesnt blend smh
 				}
+
+				p.Destroy(); // when room update actually removes the player, SquiddyStick will break and will need to be added again.
+				Debug.Log("Squiddy: Player removed");
 			}
 		}
 
@@ -196,7 +193,7 @@ namespace Squiddy
 		// player inconsious update
         private void Cicada_Update(On.Cicada.orig_Update orig, Cicada self, bool eu)
         {
-            if (player.TryGet(self.abstractCreature, out var p))
+            if (player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p)
             {
 				// make so that that the player tags along
 				// p has been "destroyed" which means it isn't in a room's update list
@@ -211,13 +208,6 @@ namespace Squiddy
 				// Match some behaviors
 				p.flipDirection = self.flipH; // influences playerpickup
 
-				if (!p.slatedForDeletetion) // still havent gotten rid of that damned player
-				{
-					p.Destroy(); // when room update actually removes the player, SquiddyStick will break and will need to be added again.
-					Debug.Log("Squiddy: Player removed");
-					self.room.abstractRoom.AddEntity(self.abstractCreature); // game just loaded, hadnt been added yet, so do it here.
-					
-				}
 				if (p.abstractCreature.stuckObjects.Count == 0) // this gets called after being added to room each time, including pipes
                 {
 					// because removefromroom breaks up sticks
@@ -353,7 +343,7 @@ namespace Squiddy
 		// player consious update
 		private void Cicada_Act(On.Cicada.orig_Act orig, Cicada self)
         {
-			if(player.TryGet(self.abstractCreature, out var p))
+			if(player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p)
 
             {
                 var room = self.room;
@@ -753,7 +743,7 @@ namespace Squiddy
 
             public int BitesLeft => bites;
 
-            public int FoodPoints => 1;
+            public int FoodPoints => 0;
 
             public bool Edible => true;
 
@@ -863,7 +853,7 @@ namespace Squiddy
 
         private void Cicada_Swim(On.Cicada.orig_Swim orig, Cicada self)
         {
-			if (player.TryGet(self.abstractCreature, out var p))
+			if (player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p)
 			{
 				if (self.Consious)
                 {
@@ -885,7 +875,7 @@ namespace Squiddy
 
         private void Cicada_GrabbedByPlayer(On.Cicada.orig_GrabbedByPlayer orig, Cicada self)
         {
-			if (player.TryGet(self.abstractCreature, out var p))
+			if (player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p)
 			{
 				if (self.Consious)
 				{
@@ -899,7 +889,7 @@ namespace Squiddy
 
 		private void Cicada_CarryObject(On.Cicada.orig_CarryObject orig, Cicada self)
 		{
-			if (player.TryGet(self.abstractCreature, out var p))
+			if (player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p)
 			{
 				// more realistic grab pos plz
 				var oldpos = self.mainBodyChunk.pos;
@@ -922,7 +912,7 @@ namespace Squiddy
 
 		private void Cicada_Collide(On.Cicada.orig_Collide orig, Cicada self, PhysicalObject otherObject, int myChunk, int otherChunk)
 		{
-			if (player.TryGet(self.abstractCreature, out var p))
+			if (player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p)
 			{
 				if(self.Charging && self.grasps[0] != null && self.grasps[0].grabbed is Weapon we && myChunk == 0 && otherChunk >= 0)
                 {
@@ -946,7 +936,7 @@ namespace Squiddy
 		// Die! Squiddy
 		private void Cicada_Die(On.Cicada.orig_Die orig, Cicada self)
 		{
-			if (player.TryGet(self.abstractCreature, out var p))
+			if (player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p)
             {
 				p.Die();
             }
@@ -956,7 +946,7 @@ namespace Squiddy
 		// dont let AI interfere on squiddy
 		private void CicadaAI_Update(On.CicadaAI.orig_Update orig, CicadaAI self)
         {
-			if (player.TryGet(self.creature, out var p))
+			if (player.TryGet(self.creature, out var ap) && ap.realizedCreature is Player p)
 			{
 				if (self.cicada.room?.Tiles != null && !self.pathFinder.DoneMappingAccessibility)
 					self.pathFinder.accessibilityStepsPerFrame = self.cicada.room.Tiles.Length; // faster, damn it. on entering a new room this needs to complete before it can pathfind
@@ -964,8 +954,6 @@ namespace Squiddy
 				self.pathFinder.Update(); // basic movement uses this
 				self.tracker.Update(); // creature looker uses this
 				self.tracker.ForgetCreature(p.abstractCreature);
-				//self.preyTracker.Update(); // for grabbing prey
-				//self.preyTracker.ForgetPrey(p.abstractCreature);
 			}
             else
             {
@@ -975,7 +963,7 @@ namespace Squiddy
 
 		private bool AbstractCreature_WantToStayInDenUntilEndOfCycle(On.AbstractCreature.orig_WantToStayInDenUntilEndOfCycle orig, AbstractCreature self)
 		{
-			if (player.TryGet(self, out var p))
+			if (player.TryGet(self, out var ap))
 			{
 				return false;
 			}
@@ -984,7 +972,7 @@ namespace Squiddy
 
 		private void AbstractCreature_Abstractize(On.AbstractCreature.orig_Abstractize orig, AbstractCreature self, WorldCoordinate coord)
 		{
-			if (player.TryGet(self, out var p))
+			if (player.TryGet(self, out var ap))
 			{
 				return; // do NOT abstractize unless I tell you to
 				// could happen at end of cycle, isenteringden + low rain timer
@@ -997,7 +985,7 @@ namespace Squiddy
             if (IsMe(self))
             {
 				if (obj is InsectHolder) return false;
-				if(cicada.TryGet(self, out var cada))
+				if(cicada.TryGet(self.abstractCreature, out var ac) && ac.realizedCreature is Cicada cada)
                 {
 					if (obj == cada) return false;
 					foreach (var g in cada.grasps) if (g != null && g.grabbed == obj) return false;
@@ -1014,15 +1002,20 @@ namespace Squiddy
 		{
             if (IsMe(self))
             {
-				if(!(edible is Creature) && edible.FoodPoints > 0)
-                {
-                    for (int i = 0; i < edible.FoodPoints; i++)
-                    {
+				if (!(edible is Creature) && edible.FoodPoints > 0)
+				{
+					for (int i = 0; i < edible.FoodPoints; i++)
+					{
 						self.AddQuarterFood();
-                    }
+					}
 					return;
-                }
-            }
+				}
+				if (edible is InsectHolder)
+				{
+					self.AddQuarterFood();
+					//return;
+				}
+			}
 			orig(self, edible);
 		}
 
@@ -1030,8 +1023,13 @@ namespace Squiddy
 		{
 			int num = self.FoodInStomach;
 			int extra = 0;
+
+			// now now here non-creature edibles will count for full food. How the heck do I prevent that ?
+			// hunter took the easy route and just disabled auto-eating
+			// attempted fix by disabling autoeat of stuff that'd be quarters using Player_ObjectCountsAsFood
+
 			// pre vanilla eating, eat creatures squiddy can eat (smallCreature only?)
-			if (IsMe(self) && cicada.TryGet(self, out var cada))
+			if (IsMe(self) && cicada.TryGet(self.abstractCreature, out var abscada) && abscada.realizedCreature is Cicada cada)
 			{
 				for (int l = checkRoom.abstractRoom.entities.Count - 1; l >= 0 && num < self.slugcatStats.foodToHibernate; l--)
 				{
@@ -1059,10 +1057,21 @@ namespace Squiddy
 			return (eatAndDestroy ? 0 : extra) + orig(self, checkRoom, eatAndDestroy);
 		}
 
+		// there, no autoeating quater pip stuff because foodinroom code bad
+		// obs the object here HAS to be an iplayeredible or player code will nullred
+		private bool Player_ObjectCountsAsFood(On.Player.orig_ObjectCountsAsFood orig, Player self, PhysicalObject obj)
+		{
+			if (IsMe(self) && cicada.TryGet(self.abstractCreature, out var abscada) && abscada.realizedCreature is Cicada cada)
+			{
+				if(!(obj is Creature)) return false ; // non-creatures are quarterpip and don't work with autoeat
+			}
+			return orig(self, obj);
+		}
+
 		// eat the thing you carried to a den
 		private bool AbstractCreatureAI_DoIwantToDropThisItemInDen(On.AbstractCreatureAI.orig_DoIwantToDropThisItemInDen orig, AbstractCreatureAI self, AbstractPhysicalObject item)
 		{
-			if (player.TryGet(self.parent, out var p) && self.parent.InDen)
+			if (player.TryGet(self.parent, out var ap) && ap.realizedCreature is Player p && self.parent.InDen)
 			{
 				bool eaten = false;
 				if(p.FoodInStomach < p.MaxFoodInStomach)
@@ -1114,7 +1123,7 @@ namespace Squiddy
 		private void CicadaGraphics_Update(On.CicadaGraphics.orig_Update orig, CicadaGraphics self)
 		{
 			orig(self);
-			if (player.TryGet(self.cicada.abstractCreature, out var p))
+			if (player.TryGet(self.cicada.abstractCreature, out var ap) && ap.realizedCreature is Player p)
 			{
 				for (int m = 0; m < 2; m++)
 				{
@@ -1190,7 +1199,7 @@ namespace Squiddy
 				Debug.Log(Environment.StackTrace);
             }
 
-			if (player.TryGet(self, out var p) && self.realizedCreature != null) // if its us pulling things out of den, pull them in and prevent other creatures from being added to shortcuts
+			if (player.TryGet(self, out var ap) && ap.realizedCreature is Player p && self.realizedCreature != null) // if its us pulling things out of den, pull them in and prevent other creatures from being added to shortcuts
 			{
 				var room = self.Room;
 				// from Abstractphisicalobjects but with changes so not to run isexitingden because that puts creatures in shortcuts
@@ -1269,7 +1278,7 @@ namespace Squiddy
 				//if (abstractRoom.index == activeGate) continue;
 				for (int j = abstractRoom.entities.Count - 1; j >= 0; j--)
 				{
-					if (abstractRoom.entities[j] is AbstractCreature ac && player.TryGet(ac, out var p))
+					if (abstractRoom.entities[j] is AbstractCreature ac && player.TryGet(ac, out var ap) && ap.realizedCreature is Player p)
 					{
 						abstractRoom.RemoveEntity(ac);
 						Debug.Log("Squiddy: removed from save");
@@ -1277,7 +1286,7 @@ namespace Squiddy
 				}
 				for (int j = abstractRoom.entitiesInDens.Count - 1; j >= 0; j--)
 				{
-					if (abstractRoom.entitiesInDens[j] is AbstractCreature ac && player.TryGet(ac, out var p))
+					if (abstractRoom.entitiesInDens[j] is AbstractCreature ac && player.TryGet(ac, out var ap) && ap.realizedCreature is Player p)
 					{
 						abstractRoom.RemoveEntity(ac);
 						Debug.Log("Squiddy: removed from save");
@@ -1304,7 +1313,7 @@ namespace Squiddy
 				c.Emit(OpCodes.Ldarg_0);
 				c.EmitDelegate<Func<Color, CicadaGraphics, Color>>((cin, self) => // MORE tone of body
 				{
-					if (player.TryGet(self.cicada.abstractCreature, out var p))
+					if (player.TryGet(self.cicada.abstractCreature, out var ap) && ap.realizedCreature is Player p)
 					{
 						if (self.cicada.room.world.game.IsArenaSession)
 						{
@@ -1323,7 +1332,7 @@ namespace Squiddy
 		{
 			orig(self, sLeaser, rCam, palette);
 
-			if (player.TryGet(self.cicada.abstractCreature, out var p))
+			if (player.TryGet(self.cicada.abstractCreature, out var ap) && ap.realizedCreature is Player p)
 			{
 				if (self.cicada.room.world.game.IsArenaSession)
 				{
@@ -1358,7 +1367,7 @@ namespace Squiddy
 		private Color Cicada_ShortCutColor(On.Cicada.orig_ShortCutColor orig, Cicada self)
 		{
 
-			if (player.TryGet(self.abstractCreature, out var p))
+			if (player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p)
 			{
 				if (self.abstractCreature.world.game.IsArenaSession)
 				{
@@ -1369,7 +1378,7 @@ namespace Squiddy
 		}
 		#endregion arenacolors
 
-		public AttachedField<AbstractCreature, Player> player = new AttachedField<AbstractCreature, Player>();
-		public AttachedField<Player, Cicada> cicada = new AttachedField<Player, Cicada>();
+		public AttachedField<AbstractCreature, AbstractCreature> player = new AttachedField<AbstractCreature, AbstractCreature>();
+		public AttachedField<AbstractCreature, AbstractCreature> cicada = new AttachedField<AbstractCreature, AbstractCreature>();
     }
 }
