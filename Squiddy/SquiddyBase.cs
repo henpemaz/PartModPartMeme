@@ -15,6 +15,7 @@ namespace Squiddy
 
 		public SquiddyBase() : base("hensquiddy", FormatVersion.V1, 0, true) {
 			On.Player.ctor += Player_ctor;
+            On.GameSession.AddPlayer += GameSession_AddPlayer;
             On.RainWorldGame.ShutDownProcess += RainWorldGame_ShutDownProcess;
 		}
 
@@ -33,6 +34,10 @@ namespace Squiddy
 		{
 			if (room.game.IsStorySession)
 			{
+                if (IsMe(room.game))
+                {
+					room.game.GetStorySession.saveState.deathPersistentSaveData.karmaCap = 3;
+                }
 				if (room.abstractRoom.name == StartRoom)
 				{
 					for (int i = 0; i < room.game.Players.Count; i++)
@@ -46,10 +51,8 @@ namespace Squiddy
 
 		protected override void Disable()
 		{
-			// its a me
 			On.Cicada.ctor -= Cicada_ctor;
 
-			// play
 			On.Cicada.Update -= Cicada_Update;
 			On.Cicada.Act -= Cicada_Act;
 			On.Cicada.Swim -= Cicada_Swim;
@@ -65,6 +68,7 @@ namespace Squiddy
 
 			On.Player.CanIPickThisUp -= Player_CanIPickThisUp;
 			On.Player.ObjectEaten -= Player_ObjectEaten;
+			On.Player.FoodInRoom_Room_bool -= Player_FoodInRoom_Room_bool;
 			On.AbstractCreatureAI.DoIwantToDropThisItemInDen -= AbstractCreatureAI_DoIwantToDropThisItemInDen;
 			On.CicadaGraphics.Update -= CicadaGraphics_Update;
 
@@ -72,13 +76,11 @@ namespace Squiddy
             On.ShortcutGraphics.Draw -= ShortcutGraphics_Draw;
 			On.ShortcutGraphics.Update -= ShortcutGraphics_Update;
 
-
 			On.AbstractCreature.IsExitingDen -= AbstractCreature_IsExitingDen;
 			IL.ShortcutHelper.Update -= ShortcutHelper_Update;
 			On.SuperJumpInstruction.ctor -= SuperJumpInstruction_ctor;
 			On.RegionState.AdaptRegionStateToWorld -= RegionState_AdaptRegionStateToWorld;
 
-			// arena colors
 			IL.CicadaGraphics.ApplyPalette -= CicadaGraphics_ApplyPalette;
             On.CicadaGraphics.ApplyPalette -= CicadaGraphics_ApplyPalette;
 			On.Cicada.ShortCutColor -= Cicada_ShortCutColor;
@@ -86,7 +88,8 @@ namespace Squiddy
 
         protected override void Enable()
 		{
-            On.Cicada.ctor += Cicada_ctor;
+			// its a me
+			On.Cicada.ctor += Cicada_ctor;
 
 			On.Cicada.Update += Cicada_Update;
 			On.Cicada.Act += Cicada_Act;
@@ -103,6 +106,7 @@ namespace Squiddy
 
             On.Player.CanIPickThisUp += Player_CanIPickThisUp;
             On.Player.ObjectEaten += Player_ObjectEaten;
+            On.Player.FoodInRoom_Room_bool += Player_FoodInRoom_Room_bool;
 			On.AbstractCreatureAI.DoIwantToDropThisItemInDen += AbstractCreatureAI_DoIwantToDropThisItemInDen;
             On.CicadaGraphics.Update += CicadaGraphics_Update;
 
@@ -119,27 +123,39 @@ namespace Squiddy
 			On.CicadaGraphics.ApplyPalette += CicadaGraphics_ApplyPalette;
             On.Cicada.ShortCutColor += Cicada_ShortCutColor;
 
-			densNeeded = 0f;
+			densNeededAmount = 0f;
+			densNeeded = false;
 		}
 
+        
         // Ties player and squit
         internal class SquiddyStick : AbstractPhysicalObject.AbstractObjectStick
 		{
 			public SquiddyStick(AbstractPhysicalObject A, AbstractPhysicalObject B) : base(A, B) { }
 		}
 		// Make squiddy
+
+		private void GameSession_AddPlayer(On.GameSession.orig_AddPlayer orig, GameSession self, AbstractCreature player)
+		{
+			orig(self, player);
+			if(player.state is PlayerState ps && ps.slugcatCharacter == this.SlugcatIndex)
+            {
+				var abscada = new AbstractCreature(player.world, StaticWorld.creatureTemplates[((int)CreatureTemplate.Type.CicadaA)], null, player.pos, player.ID);
+				player.Room.AddEntity(abscada);
+				abscada.remainInDenCounter = 120;
+				this.player[abscada] = player;
+				cicada[player] = abscada
+
+				new SquiddyStick(abscada, player);
+			}
+		}
+
 		private void Player_ctor(On.Player.orig_ctor orig, Player self, AbstractCreature abstractCreature, World world)
 		{
 			orig(self, abstractCreature, world);
 			if (!IsMe(self)) return;
 
-			var abscada = new AbstractCreature(world, StaticWorld.creatureTemplates[((int)CreatureTemplate.Type.CicadaA)], null, abstractCreature.pos, abstractCreature.ID);
-			// no stuck in den random amounts please
-			//self.abstractCreature.remainInDenCounter = 120; // this one caused a funny bug on entering a den with the player for the first time. the player would want out!!
-			abscada.remainInDenCounter = 120;
-			player[abscada] = self;
-
-			new SquiddyStick(abscada, abstractCreature);
+			
 			Debug.Log("Squiddy: Abstract Squiddy created and attached");
 		}
 
@@ -598,7 +614,7 @@ namespace Squiddy
 						if ((grasp.grabbed is IPlayerEdible ipe && ipe.FoodPoints > 0)
 							|| (grasp.grabbed is Creature c && self.abstractCreature.abstractAI.RealAI.StaticRelationship(c.abstractCreature).type == CreatureTemplate.Relationship.Type.Eats))
 						{
-							densNeeded = Custom.LerpAndTick(densNeeded, 1f, 0.015f, 0.03f);
+							densNeeded = true;
 						}
 						if(grasp.grabbed is SmallNeedleWorm snm && !snm.hasScreamed && self.enteringShortCut != null && room.shortcutData(self.enteringShortCut.Value).shortCutType == ShortcutData.Type.CreatureHole)
                         {
@@ -976,7 +992,6 @@ namespace Squiddy
 			orig(self, coord);
 		}
 
-
 		private bool Player_CanIPickThisUp(On.Player.orig_CanIPickThisUp orig, Player self, PhysicalObject obj)
 		{
             if (IsMe(self))
@@ -1009,6 +1024,39 @@ namespace Squiddy
                 }
             }
 			orig(self, edible);
+		}
+
+		private int Player_FoodInRoom_Room_bool(On.Player.orig_FoodInRoom_Room_bool orig, Player self, Room checkRoom, bool eatAndDestroy)
+		{
+			int num = self.FoodInStomach;
+			int extra = 0;
+			// pre vanilla eating, eat creatures squiddy can eat (smallCreature only?)
+			if (IsMe(self) && cicada.TryGet(self, out var cada))
+			{
+				for (int l = checkRoom.abstractRoom.entities.Count - 1; l >= 0 && num < self.slugcatStats.foodToHibernate; l--)
+				{
+					var item = checkRoom.abstractRoom.entities[l];
+					if (item is AbstractPhysicalObject apo && !(self.ObjectCountsAsFood(apo.realizedObject)) && apo is AbstractCreature ac && ac.creatureTemplate.smallCreature && cada.AI.StaticRelationship(ac).type == CreatureTemplate.Relationship.Type.Eats)
+					{
+						num += 1;
+						extra += 1;
+						if (eatAndDestroy)
+						{
+							self.AddFood(1); // we add here instead of doing funny maths because player would still eat things to fill its own counter
+							var realizedObject = ac.realizedObject;
+							if (self.SessionRecord != null)
+							{
+								self.SessionRecord.AddEat(realizedObject);
+							}
+							ac.realizedObject.Destroy();
+							checkRoom.RemoveObject(realizedObject);
+							checkRoom.abstractRoom.RemoveEntity(apo);
+						}
+					}
+				}
+			}
+			// if eaten, will be already accounted for in the original method
+			return (eatAndDestroy ? 0 : extra) + orig(self, checkRoom, eatAndDestroy);
 		}
 
 		// eat the thing you carried to a den
@@ -1107,7 +1155,8 @@ namespace Squiddy
 			}
 		}
 
-		float densNeeded;
+		float densNeededAmount;
+		bool densNeeded;
 		private void ShortcutGraphics_Draw(On.ShortcutGraphics.orig_Draw orig, ShortcutGraphics self, float timeStacker, Vector2 camPos)
 		{
 			orig(self, timeStacker, camPos);
@@ -1115,7 +1164,7 @@ namespace Squiddy
 			{
 				if (self.entranceSprites[k, 0] != null && self.room.shortcuts[k].shortCutType == ShortcutData.Type.CreatureHole)
 				{
-					float t = 1 - densNeeded;
+					float t = 1 - densNeededAmount;
 					self.entranceSprites[k, 0].color = Color.Lerp(self.entranceSprites[k, 0].color, self.camera.currentPalette.blackColor, t);
 					self.entranceSprites[k, 1].color = Color.Lerp(self.entranceSprites[k, 0].color, self.camera.currentPalette.blackColor, t);
 					self.entranceSprites[k, 1].alpha = Mathf.Lerp(self.entranceSprites[k, 1].alpha, 0, t);
@@ -1126,7 +1175,8 @@ namespace Squiddy
 		private void ShortcutGraphics_Update(On.ShortcutGraphics.orig_Update orig, ShortcutGraphics self)
 		{
 			orig(self);
-			densNeeded = Custom.LerpAndTick(densNeeded, 0, 0.015f, 0.015f);
+			densNeededAmount = Custom.LerpAndTick(densNeededAmount, densNeeded ? 1f : 0f, 0.015f, 0.015f);
+			densNeeded = false; // set every frame
 		}
 
 
@@ -1319,7 +1369,7 @@ namespace Squiddy
 		}
 		#endregion arenacolors
 
-		public static AttachedField<AbstractCreature, Player> player = new AttachedField<AbstractCreature, Player>();
-		public static AttachedField<Player, Cicada> cicada = new AttachedField<Player, Cicada>();
+		public AttachedField<AbstractCreature, Player> player = new AttachedField<AbstractCreature, Player>();
+		public AttachedField<Player, Cicada> cicada = new AttachedField<Player, Cicada>();
     }
 }

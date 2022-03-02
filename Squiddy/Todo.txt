@@ -44,7 +44,7 @@
 			needs to be able to enter those
 			watch out for rain/damage thing stuck
 
-			visual indicator of den? <---------------------
+			visual indicator of den?
 				shortcutgraphics
 					done
 				or iggy points towards it ?
@@ -58,7 +58,7 @@
 
 			WHAT HAPPENS WHEN CARRYING DEN-WORTHY FOOD TO A SHELTER??
 				should consider it in the maths of closing the shelter
-				should eat it properly/
+				should eat it properly
 
 	Make shelters work
 	Player dies when you die
