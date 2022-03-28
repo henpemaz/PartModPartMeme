@@ -4,6 +4,7 @@ using MonoMod.Cil;
 using RWCustom;
 using SlugBase;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -11,15 +12,141 @@ namespace Squiddy
 {
     public class SquiddyBase : SlugBaseCharacter
 	{
-
 		public SquiddyBase() : base("hensquiddy", FormatVersion.V1, 0, true) {
+			// pre-enable and menu hooks
+
+			// its a me
             On.PlayerState.ctor += PlayerState_ctor;
-            On.RainWorldGame.ShutDownProcess += RainWorldGame_ShutDownProcess;
+			On.RainWorldGame.ShutDownProcess += RainWorldGame_ShutDownProcess;
+
+			// starts at low karma, up on survivor
+            On.WinState.CycleCompleted += WinState_CycleCompleted;
+            On.SaveState.IncreaseKarmaCapOneStep += SaveState_IncreaseKarmaCapOneStep;
+
+			// display karma uppening on survivor event
+            On.Menu.KarmaLadder.ctor += KarmaLadder_ctor;
+            On.Menu.SleepAndDeathScreen.FoodCountDownDone += SleepAndDeathScreen_FoodCountDownDone;
 		}
 
-        private void RainWorldGame_ShutDownProcess(On.RainWorldGame.orig_ShutDownProcess orig, RainWorldGame self)
+		public override CustomSaveState CreateNewSave(PlayerProgression progression)
+        {
+            return new SquiddySaveState(progression, this);
+        }
+
+        class SquiddySaveState : CustomSaveState
+		{
+			public bool hitSurvivor = false; // survivor karma bonus applied
+			public bool shownSurvivor = false; // bonus karma animation on speepscreen displayed
+
+			public SquiddySaveState(PlayerProgression progression, SlugBaseCharacter character) : base(progression, character) { }
+
+			public override void LoadPermanent(Dictionary<string, string> data)
+			{
+				hitSurvivor = data.TryGetValue("hitSurvivor", out string temp) ? bool.Parse(temp) : false;
+				shownSurvivor = data.TryGetValue("shownSurvivor", out string temp2) ? bool.Parse(temp2) : false;
+			}
+
+			public override void SavePermanent(Dictionary<string, string> data, bool asDeath, bool asQuit)
+			{
+				data["hitSurvivor"] = hitSurvivor.ToString();
+				data["shownSurvivor"] = shownSurvivor.ToString();
+			}
+		}
+
+		private void WinState_CycleCompleted(On.WinState.orig_CycleCompleted orig, WinState self, RainWorldGame game)
+        {
+			orig(self, game);
+            if (IsMe(game))
+            {				
+				if (self.GetTracker(WinState.EndgameID.Survivor, false) is WinState.IntegerTracker survivor && survivor.GoalFullfilled)
+                {
+					Debug.Log("Squiddy: Survivor fullfiled");
+
+					if (game.TryGetSave<SquiddySaveState>(out var save))
+					{
+						if (!save.hitSurvivor)
+                        {
+							Debug.Log("Squiddy: Karma increase on hit survivor!!");
+							save.IncreaseKarmaCapOneStep();
+							save.hitSurvivor = true;
+                        }
+					}
+				}
+            }
+        }
+
+		private void SaveState_IncreaseKarmaCapOneStep(On.SaveState.orig_IncreaseKarmaCapOneStep orig, SaveState self)
+		{
+			if (IsMe(self))
+			{
+				var dps = self.deathPersistentSaveData;
+				int precap = dps.karmaCap;
+				orig(self);
+				int postcap = dps.karmaCap;
+				if (precap == (postcap - 1) && postcap < 4) // only increased one step (under k5 upgrade)
+				{
+					dps.karmaCap++;
+					if (dps.karma == postcap) dps.karma = dps.karmaCap;
+				}
+			}
+			else
+			{
+				orig(self);
+			}
+		}
+
+		private void KarmaLadder_ctor(On.Menu.KarmaLadder.orig_ctor orig, Menu.KarmaLadder self, Menu.Menu menu, Menu.MenuObject owner, Vector2 pos, HUD.HUD hud, IntVector2 displayKarma, bool reinforced)
+		{
+			orig(self, menu, owner, pos, hud, displayKarma, reinforced);
+
+			if (menu is Menu.KarmaLadderScreen kls && IsMe(kls.saveState) && kls.saveState is SquiddySaveState sss)
+			{
+				if (sss.hitSurvivor && !sss.shownSurvivor && sss.deathPersistentSaveData.karmaCap < 5)
+				{
+					int startpoint = kls.karma.y - 2;
+					kls.preGhostEncounterKarmaCap = startpoint;
+					self.displayKarma.x = startpoint;
+					self.moveToKarma = startpoint;
+					self.scroll = startpoint;
+					self.lastScroll = startpoint;
+
+					for (int num6 = kls.preGhostEncounterKarmaCap + 1; num6 < self.karmaSymbols.Count; num6++)
+					{
+						self.karmaSymbols[num6].energy = 0f;
+						self.karmaSymbols[num6].flickerCounter = int.MaxValue - 1000; // silence, but please no overflow lmao
+					}
+				}
+			}
+		}
+
+		private void SleepAndDeathScreen_FoodCountDownDone(On.Menu.SleepAndDeathScreen.orig_FoodCountDownDone orig, Menu.SleepAndDeathScreen self)
+		{
+			orig(self);
+			if (IsMe(self.saveState) && self.saveState is SquiddySaveState sss)
+			{
+				if (sss.hitSurvivor && !sss.shownSurvivor && sss.deathPersistentSaveData.karmaCap < 5)
+				{
+
+					self.karmaLadder.increaseKarmaCapMode = true;
+					self.preGhostEncounterKarmaCap = self.karma.y - 2;
+					self.karmaLadder.displayKarma.x = self.karma.y - 2;
+
+					for (int num6 = self.preGhostEncounterKarmaCap + 1; num6 < self.karmaLadder.karmaSymbols.Count; num6++)
+					{
+						self.karmaLadder.karmaSymbols[num6].flickerCounter = UnityEngine.Random.Range(12, UnityEngine.Random.Range(40, 80));
+					}
+
+					sss.shownSurvivor = true;
+					Debug.Log("Squiddy: Karma Ladder DANCE!");
+					self.manager.rainWorld.progression.SaveDeathPersistentDataOfCurrentState(false, false);
+				}
+			}
+		}
+
+		private void RainWorldGame_ShutDownProcess(On.RainWorldGame.orig_ShutDownProcess orig, RainWorldGame self)
         {
 			orig(self);
+			// maybe only cull where player.world.game is self ? can't do that with these, shame
 			player.Clear();
 			cicada.Clear();
         }
@@ -34,7 +161,7 @@ namespace Squiddy
 			{
                 if (IsMe(room.game))
                 {
-					room.game.GetStorySession.saveState.deathPersistentSaveData.karmaCap = 3;
+					room.game.GetStorySession.saveState.deathPersistentSaveData.karmaCap = 2; // starts campaign at k3
                 }
 				if (room.abstractRoom.name == StartRoom)
 				{
@@ -49,8 +176,6 @@ namespace Squiddy
 
 		protected override void Disable()
 		{
-			On.Cicada.ctor -= Cicada_ctor;
-
 			On.Cicada.Update -= Cicada_Update;
 			On.Cicada.Act -= Cicada_Act;
 			On.Cicada.Swim -= Cicada_Swim;
@@ -80,16 +205,16 @@ namespace Squiddy
 			On.SuperJumpInstruction.ctor -= SuperJumpInstruction_ctor;
 			On.RegionState.AdaptRegionStateToWorld -= RegionState_AdaptRegionStateToWorld;
 
+			On.Cicada.InitiateGraphicsModule -= Cicada_InitiateGraphicsModule;
 			IL.CicadaGraphics.ApplyPalette -= CicadaGraphics_ApplyPalette;
             On.CicadaGraphics.ApplyPalette -= CicadaGraphics_ApplyPalette;
 			On.Cicada.ShortCutColor -= Cicada_ShortCutColor;
+
+			On.SSOracleBehavior.PebblesConversation.AddEvents -= PebblesConversation_AddEvents;
 		}
 
         protected override void Enable()
 		{
-			// its a me
-			On.Cicada.ctor += Cicada_ctor;
-
 			On.Cicada.Update += Cicada_Update;
 			On.Cicada.Act += Cicada_Act;
 			On.Cicada.Swim += Cicada_Swim;
@@ -119,22 +244,37 @@ namespace Squiddy
             On.SuperJumpInstruction.ctor += SuperJumpInstruction_ctor;
             On.RegionState.AdaptRegionStateToWorld += RegionState_AdaptRegionStateToWorld;
 
+			On.Cicada.InitiateGraphicsModule += Cicada_InitiateGraphicsModule;
 			IL.CicadaGraphics.ApplyPalette += CicadaGraphics_ApplyPalette;
 			On.CicadaGraphics.ApplyPalette += CicadaGraphics_ApplyPalette;
             On.Cicada.ShortCutColor += Cicada_ShortCutColor;
+
+            On.SSOracleBehavior.PebblesConversation.AddEvents += PebblesConversation_AddEvents;
 
 			densNeededAmount = 0f;
 			densNeeded = false;
 		}
 
-        // Ties player and squit
+        private void PebblesConversation_AddEvents(On.SSOracleBehavior.PebblesConversation.orig_AddEvents orig, SSOracleBehavior.PebblesConversation self)
+        {
+            if (IsMe(self.owner.oracle.room.game) && self.id == Conversation.ID.Pebbles_White)
+            {
+				//orig(self);
+				self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("Oh you're still alive."), 0));
+			}
+            else
+            {
+				orig(self);
+            }
+        }
+
+        // Ties player and squit (not a grasp, so not easily undone by game code)
         internal class SquiddyStick : AbstractPhysicalObject.AbstractObjectStick
 		{
 			public SquiddyStick(AbstractPhysicalObject A, AbstractPhysicalObject B) : base(A, B) { }
 		}
+		
 		// Make squiddy
-
-
 		// this used to be in playerctor which was a mess because it was mid-room-realize
 		// moved to session.addplayers but then that doesn't account for ghosts
 		// now its here in playerstate ctor which is... where the important stuff is set I suppose
@@ -164,40 +304,6 @@ namespace Squiddy
 			}
 		}
 
-		private void Cicada_ctor(On.Cicada.orig_ctor orig, Cicada self, AbstractCreature abstractCreature, World world, bool gender)
-		{
-			orig(self, abstractCreature, world, gender);
-			if (player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p)
-			{
-				Debug.Log("Squiddy: Realized!");
-				// mycologist would be proud
-				p.bodyChunks = self.bodyChunks.Reverse().ToArray();
-				p.bodyChunkConnections = self.bodyChunkConnections;
-
-				//self.flying = false; // shh
-
-				if (world.game.IsArenaSession)
-				{
-					// hsl math was failing to lerp to survivor-white somehow, had a red tint. no hue weight compensation for low sat colors
-					var col = RXColor.HSLFromColor(p.ShortCutColor());
-					var del = Mathf.Abs(col.h * col.s - self.iVars.color.hue * self.iVars.color.saturation) * col.s;
-					//Debug.Log("got del " + del + " for p " + p.playerState.playerNumber);
-					// hunter was getting this ugly purple result from blending cyan and red, looks way better if you shift the other way around, through green
-					// this solution is somewhat 'fragile' but I doubt we're getting that many more characters in arena
-					if (del > 0.5f) // too divergent, blend towards
-					{
-						//col.h = Mathf.Lerp(col.h, 0.33f, 0.66f);
-						col.h = self.iVars.color.hue; // huh just jumping to the opposite side looked great on hunter
-													  //self.iVars.color.hue = (self.iVars.color.hue + 0.33f) / 2f;
-					}
-					self.iVars.color = HSLColor.Lerp(self.iVars.color, new HSLColor(col.h, col.s, col.l), 0.5f * col.s); // magical * sat so white doesnt blend smh
-				}
-
-				p.Destroy(); // when room update actually removes the player, SquiddyStick will break and will need to be added again.
-				Debug.Log("Squiddy: Player removed");
-			}
-		}
-
 		// Lock player and squiddy
 		// player inconsious update
         private void Cicada_Update(On.Cicada.orig_Update orig, Cicada self, bool eu)
@@ -212,10 +318,21 @@ namespace Squiddy
 
 				// underwater cam checks these
 				p.airInLungs = self.lungs;
+				if (p.dead && !self.dead) self.Die();
 				p.dead = self.dead;
 
 				// Match some behaviors
 				p.flipDirection = self.flipH; // influences playerpickup
+				p.stun = self.stun;
+
+                if (!p.slatedForDeletetion)
+                {
+					// mycologist would be proud
+					p.bodyChunks = self.bodyChunks.Reverse().ToArray();
+					p.bodyChunkConnections = self.bodyChunkConnections;
+					p.Destroy(); // when room update actually removes the player, SquiddyStick will break and will need to be added again.
+					Debug.Log("Squiddy: Player removed");
+				}
 
 				if (p.abstractCreature.stuckObjects.Count == 0) // this gets called after being added to room each time, including pipes
                 {
@@ -341,6 +458,30 @@ namespace Squiddy
 					if (p.dangerGraspTime == 60)
 					{
 						p.room.game.GameOver(p.dangerGrasp);
+					}
+				}
+
+				// cheats
+				if (self.room != null && self.room.game.devToolsActive)
+				{
+					if (Input.GetKey("q") && !p.FLYEATBUTTON)
+					{
+						p.AddFood(1);
+					}
+					p.FLYEATBUTTON = Input.GetKey("q");
+
+					if (Input.GetKey("v"))
+					{
+						for (int m = 0; m < 2; m++)
+						{
+							self.bodyChunks[m].vel = Custom.DegToVec(UnityEngine.Random.value * 360f) * 12f;
+							self.bodyChunks[m].pos = (Vector2)Input.mousePosition + self.room.game.cameras[0].pos;
+							self.bodyChunks[m].lastPos = (Vector2)Input.mousePosition + self.room.game.cameras[0].pos;
+						}
+					}
+					else if (Input.GetKey("w"))
+					{
+						self.bodyChunks[1].vel += Custom.DirVec(self.bodyChunks[1].pos, Input.mousePosition) * 7f;
 					}
 				}
 			}
@@ -947,7 +1088,7 @@ namespace Squiddy
 		{
 			if (player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p)
             {
-				p.Die();
+				if(!p.dead) p.Die();
             }
 			orig(self);
 		}
@@ -974,7 +1115,7 @@ namespace Squiddy
 		{
 			if (player.TryGet(self, out var ap))
 			{
-				return !self.state.dead;
+				return self.state.dead;
 			}
 			return orig(self);
 		}
@@ -1310,6 +1451,33 @@ namespace Squiddy
 		#region arenacolors
 		// arena colors
 
+		private void Cicada_InitiateGraphicsModule(On.Cicada.orig_InitiateGraphicsModule orig, Cicada self)
+		{
+			if (self.graphicsModule == null && player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p)
+			{
+				Debug.Log("Squiddy: InitiateGraphicsModule!");
+				//self.flying = false; // shh
+
+				if (self.abstractCreature.world.game.IsArenaSession)
+				{
+					// hsl math was failing to lerp to survivor-white somehow, had a red tint. no hue weight compensation for low sat colors
+					var col = RXColor.HSLFromColor(p.ShortCutColor());
+					var del = Mathf.Abs(col.h * col.s - self.iVars.color.hue * self.iVars.color.saturation) * col.s;
+					//Debug.Log("got del " + del + " for p " + p.playerState.playerNumber);
+					// hunter was getting this ugly purple result from blending cyan and red, looks way better if you shift the other way around, through green
+					// this solution is somewhat 'fragile' but I doubt we're getting that many more characters in arena
+					if (del > 0.5f) // too divergent, blend towards
+					{
+						//col.h = Mathf.Lerp(col.h, 0.33f, 0.66f);
+						col.h = self.iVars.color.hue; // huh just jumping to the opposite side looked great on hunter
+													  //self.iVars.color.hue = (self.iVars.color.hue + 0.33f) / 2f;
+					}
+					self.iVars.color = HSLColor.Lerp(self.iVars.color, new HSLColor(col.h, col.s, col.l), 0.5f * col.s); // magical * sat so white doesnt blend smh
+				}
+			}
+			orig(self);
+		}
+
 		// arena color mixing patchup
 		private void CicadaGraphics_ApplyPalette(ILContext il)
 		{
@@ -1324,7 +1492,7 @@ namespace Squiddy
 				{
 					if (player.TryGet(self.cicada.abstractCreature, out var ap) && ap.realizedCreature is Player p)
 					{
-						if (self.cicada.room.world.game.IsArenaSession)
+						if (self.cicada.room?.world?.game.IsArenaSession ?? false)
 						{
 							var col = RXColor.HSLFromColor(p.ShortCutColor());
 							return HSLColor.Lerp(self.iVars.color, new HSLColor(col.h, col.s, col.l), 0.8f * col.s).rgb;
@@ -1343,7 +1511,7 @@ namespace Squiddy
 
 			if (player.TryGet(self.cicada.abstractCreature, out var ap) && ap.realizedCreature is Player p)
 			{
-				if (self.cicada.room.world.game.IsArenaSession)
+				if (self.cicada.room?.world?.game.IsArenaSession ?? false)
 				{
 					// use 1:1 color no blending no filter
 					Color bodyColor = p.ShortCutColor();

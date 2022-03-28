@@ -68,14 +68,34 @@
 
 	Karma starts at capped at 1
 		echo in outskirts puts it at 3
+	or starts at 3 but no echo, probably heaps easier and still interesting
+		or hitting "survivor" unlocks more karma ?
 
 	Five pebbles
-		Wait how did you get in
-		Stupid creature get out get out
-		Hold still
-		BAM
-		wait that's the wrong thing
-		just be gone with you before I turn you into a blue goop
+		(changedspecial crosshair dashing around on screen)
+		(triggers stun)
+		BAM (gives mark and karma)
+		... wait no that was the wrong thing
+		How did you get in in the first place, stupid creature.
+		Just be gone with you before I turn you into a blue goop
+
+		(throwouts go by in quick succession, much faster than usual)
+
+		I'm not kidding. I'll mess you up.
+
+		(actually turns you into a blue goop if you stay too long)
+
+
+		newaction meetwhite -> meetwhite behavior and then there the magic happens
+			meetwhitebehavior handles everything, including custom givemark
+			shocked = start
+			curious = brings up crosshair and aims around
+			texting = aims at player, minigame, stuns player if taking too long
+			images = give mark?
+			jumps to convo
+
+			does throwout replace dialogue in addevents?
+
 
 	Moon
 		Little creature
