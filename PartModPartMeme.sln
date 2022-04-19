@@ -92,6 +92,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpawnMenu", "SpawnMenu\Spaw
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CameraFreeze", "CameraFreeze\CameraFreeze.csproj", "{BDB07E55-7D2F-4325-8B52-2D9BF15ADC43}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LuaMods", "LuaMods\LuaMods.csproj", "{0501C352-AF3B-434C-9FC3-A0EC425A6DE4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AudioFilters", "AudioFilters\AudioFilters.csproj", "{5876957C-E74C-40CA-89D1-87D3937580AD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -266,6 +270,14 @@ Global
 		{BDB07E55-7D2F-4325-8B52-2D9BF15ADC43}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BDB07E55-7D2F-4325-8B52-2D9BF15ADC43}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BDB07E55-7D2F-4325-8B52-2D9BF15ADC43}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0501C352-AF3B-434C-9FC3-A0EC425A6DE4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0501C352-AF3B-434C-9FC3-A0EC425A6DE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0501C352-AF3B-434C-9FC3-A0EC425A6DE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0501C352-AF3B-434C-9FC3-A0EC425A6DE4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5876957C-E74C-40CA-89D1-87D3937580AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5876957C-E74C-40CA-89D1-87D3937580AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5876957C-E74C-40CA-89D1-87D3937580AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5876957C-E74C-40CA-89D1-87D3937580AD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
