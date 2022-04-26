@@ -96,6 +96,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LuaMods", "LuaMods\LuaMods.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AudioFilters", "AudioFilters\AudioFilters.csproj", "{5876957C-E74C-40CA-89D1-87D3937580AD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TorsoOnTopOfHips", "TorsoOnTopOfHips\TorsoOnTopOfHips.csproj", "{18F20002-232F-41A6-BF31-11D8362AB19A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -278,6 +280,10 @@ Global
 		{5876957C-E74C-40CA-89D1-87D3937580AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5876957C-E74C-40CA-89D1-87D3937580AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5876957C-E74C-40CA-89D1-87D3937580AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{18F20002-232F-41A6-BF31-11D8362AB19A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{18F20002-232F-41A6-BF31-11D8362AB19A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{18F20002-232F-41A6-BF31-11D8362AB19A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{18F20002-232F-41A6-BF31-11D8362AB19A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
