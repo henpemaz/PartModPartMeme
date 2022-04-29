@@ -23,8 +23,7 @@ namespace AudioFilters
     {
         public string author = "Henpemaz";
         public static AudioFilters instance;
-
-        UnityEngine.AudioListener listener = null;
+        private bool isHUDSound;
 
         public static class EnumExt_AudioFilters
         {
@@ -33,71 +32,98 @@ namespace AudioFilters
 #pragma warning restore 0649
         }
 
-
         public void OnEnable()
         {
             instance = this;
 
-            On.RainWorld.Start += RainWorld_Start;
+            // add filters
+            On.VirtualMicrophone.SoundObject.ctor += SoundObject_ctor;
+            On.AmbientSoundPlayer.TryInitiation += AmbientSoundPlayer_TryInitiation;
 
+            // remove filters
             On.VirtualMicrophone.NewRoom += VirtualMicrophone_NewRoom;
-            On.VirtualMicrophone.AllQuiet += VirtualMicrophone_AllQuiet;
 
-            // todo make songs bypass effects
+            // bypass hud sounds
+            On.Player.PlayHUDSound += Player_PlayHUDSound;
 
             // make intensity
-            // add different presets ?
-            // make tunable?
+            // add different presets
+            // make tunable
+
+            // placed rectangle reverb area
         }
 
-        private void RainWorld_Start(On.RainWorld.orig_Start orig, RainWorld self)
+        private void Player_PlayHUDSound(On.Player.orig_PlayHUDSound orig, Player self, SoundID soundID)
+        {
+            isHUDSound = true;
+            orig(self, soundID);
+            isHUDSound = false;
+        }
+
+        private void AmbientSoundPlayer_TryInitiation(On.AmbientSoundPlayer.orig_TryInitiation orig, AmbientSoundPlayer self)
         {
             orig(self);
-
-            // find listener
-            // could instead store game object
-            foreach(UnityEngine.Camera cam in GameObject.FindObjectsOfType<UnityEngine.Camera>())
+            if (self.initiated)
             {
-                if(cam.GetComponent<UnityEngine.AudioListener>() is AudioListener l)
+                var room = self.mic.camera.loadingRoom ?? self.mic.camera.room;
+                if (room.roomSettings.GetEffectAmount(EnumExt_AudioFilters.AudioFiltersReverb) > 0f)
                 {
-                    listener = l;
+                    Debug.Log("Added reverb to " + room.abstractRoom.name + ":" + self.aSound.sample);
+                    var reverb = self.gameObject.AddComponent<AudioReverbFilter>();
+                    reverb.reverbPreset = AudioReverbPreset.SewerPipe;
                 }
             }
         }
 
-        // had trouble trying to tag or name these, keep them in a list instead
-        private List<Component> activeFilters = new List<Component>();
+        private void SoundObject_ctor(On.VirtualMicrophone.SoundObject.orig_ctor orig, VirtualMicrophone.SoundObject self, VirtualMicrophone mic, SoundLoader.SoundData soundData, bool loop, float initPan, float initVol, float initPitch, bool startAtRandomTime)
+        {
+            orig(self, mic, soundData, loop, initPan, initVol, initPitch, startAtRandomTime);
+
+            if (!isHUDSound && self.mic.room.roomSettings.GetEffectAmount(EnumExt_AudioFilters.AudioFiltersReverb) > 0f)
+            {
+                var reverb = self.gameObject.AddComponent<AudioReverbFilter>();
+                reverb.reverbPreset = AudioReverbPreset.SewerPipe;
+            }
+        }
 
         private void VirtualMicrophone_NewRoom(On.VirtualMicrophone.orig_NewRoom orig, VirtualMicrophone self, Room room)
         {
             orig(self, room);
-            ClearAllFilters();
 
+            // remove or adjust effect of existing objects
             if (room.roomSettings.GetEffectAmount(EnumExt_AudioFilters.AudioFiltersReverb) > 0f)
             {
-                var reverb = listener.gameObject.AddComponent<AudioReverbFilter>();
+                foreach (var a in self.ambientSoundPlayers)
+                {
+                    if (a.gameObject != null)
+                    {
+                        Debug.Log("Added reverb to " + self.room.abstractRoom.name + ":" + a.aSound.sample);
+                        var reverb = a.gameObject.GetComponent<AudioReverbFilter>() ?? a.gameObject.AddComponent<AudioReverbFilter>();
+                        reverb.reverbPreset = AudioReverbPreset.SewerPipe;
+                    }
+                }
 
-                reverb.reverbPreset = AudioReverbPreset.SewerPipe;
-
-                activeFilters.Add(reverb);
+                foreach (var o in self.soundObjects)
+                {
+                    if (o.gameObject != null)
+                    {
+                        Debug.Log("Added reverb to " + self.room.abstractRoom.name + ":" + o.soundData.soundID);
+                        var reverb = o.gameObject.GetComponent<AudioReverbFilter>() ?? o.gameObject.AddComponent<AudioReverbFilter>();
+                        reverb.reverbPreset = AudioReverbPreset.SewerPipe;
+                    }
+                }
             }
-        }
-
-        private void ClearAllFilters()
-        {
-            foreach (var c in activeFilters)
+            else
             {
-                Destroy(c);
+                foreach (var a in self.ambientSoundPlayers)
+                {
+                    if (a.gameObject != null)
+                    {
+                        var reverb = a.gameObject.GetComponent<AudioReverbFilter>();
+                        if (reverb != null) Destroy(a.gameObject.GetComponent<AudioReverbFilter>());
+                    }
+                }
             }
-            activeFilters.Clear();
         }
-
-        private void VirtualMicrophone_AllQuiet(On.VirtualMicrophone.orig_AllQuiet orig, VirtualMicrophone self)
-        {
-            orig(self);
-
-            ClearAllFilters();
-        }
-
     }
 }
