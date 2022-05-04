@@ -98,6 +98,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AudioFilters", "AudioFilter
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TorsoOnTopOfHips", "TorsoOnTopOfHips\TorsoOnTopOfHips.csproj", "{18F20002-232F-41A6-BF31-11D8362AB19A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SweetDreams", "SweetDreams\SweetDreams.csproj", "{F11E0751-B0D6-4839-B1EC-9456ABB42BCF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -284,6 +286,10 @@ Global
 		{18F20002-232F-41A6-BF31-11D8362AB19A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{18F20002-232F-41A6-BF31-11D8362AB19A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{18F20002-232F-41A6-BF31-11D8362AB19A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F11E0751-B0D6-4839-B1EC-9456ABB42BCF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F11E0751-B0D6-4839-B1EC-9456ABB42BCF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F11E0751-B0D6-4839-B1EC-9456ABB42BCF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F11E0751-B0D6-4839-B1EC-9456ABB42BCF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
