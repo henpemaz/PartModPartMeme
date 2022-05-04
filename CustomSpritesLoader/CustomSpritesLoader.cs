@@ -22,7 +22,7 @@ namespace CustomSpritesLoader
         public CustomSpritesLoader()
         {
             this.ModID = modid;
-            this.Version = "1.2";
+            this.Version = "1.3";
             this.author = "Henpemaz";
 
             instance = this;
@@ -63,6 +63,21 @@ Happy modding
             On.FAtlasManager.LoadAtlas += FAtlasManager_LoadAtlas;
             On.FAtlasManager.LoadImage += FAtlasManager_LoadImage;
             On.FAtlasManager.ActuallyLoadAtlasOrImage += FAtlasManager_ActuallyLoadAtlasOrImage;
+
+            // if menuilustration loads image with different dimentions, patch up menuilustration
+            On.Menu.MenuIllustration.LoadFile_1 += MenuIllustration_LoadFile_1;
+        }
+
+        private void MenuIllustration_LoadFile_1(On.Menu.MenuIllustration.orig_LoadFile_1 orig, Menu.MenuIllustration self, string folder)
+        {
+            orig(self, folder);
+
+            if (DoIHaveAReplacementForThis(self.fileName))
+            {
+                // self asign newly loaded texture, original was loaded through WWW and screw interfering with that
+                var tex = Futile.atlasManager.GetAtlasWithName(self.fileName).texture;
+                if (tex is Texture2D tex2d) self.texture = tex2d;
+            }
         }
 
         private FAtlas FAtlasManager_ActuallyLoadAtlasOrImage(On.FAtlasManager.orig_ActuallyLoadAtlasOrImage orig, FAtlasManager self, string name, string imagePath, string dataPath)
@@ -119,6 +134,14 @@ Happy modding
 
         public FAtlas TryLoadReplacement(string atlasname)
         {
+            // if requested atlas already in memory, use instead of reading replacement from disk again
+            var alreadyLoaded = Futile.atlasManager.GetAtlasWithName(atlasname);
+            if (alreadyLoaded != null)
+            {
+                Debug.Log("texture : " + atlasname + "already loaded");
+                return alreadyLoaded;
+            }
+
             if (atlasname.StartsWith("Atlases/"))
             {
                 atlasname = atlasname.Substring(8);
@@ -153,7 +176,7 @@ Happy modding
         {
             Directory.CreateDirectory(CustomSpritesLoaderFolder);
             FileInfo readme = new FileInfo(Path.Combine(CustomSpritesLoaderFolder, "Readme.txt"));
-            if(!readme.Exists || readme.Length != description.Length)
+            if (!readme.Exists || readme.Length != description.Length)
             {
                 StreamWriter readmeWriter = readme.CreateText();
                 readmeWriter.Write(description);
@@ -165,8 +188,13 @@ Happy modding
             Directory.CreateDirectory(ReplaceAtlasesFolder);
             File.Create(Path.Combine(ReplaceAtlasesFolder, "Place full atlas or image replacements here"));
 
+            CheckFolder(ReplaceAtlasesFolder);
+        }
+
+        private void CheckFolder(string folderToCheck)
+        {
             Debug.Log("CustomSpritesLoader: Scanning for atlas replacements");
-            DirectoryInfo atlasesFolder = new DirectoryInfo(ReplaceAtlasesFolder);
+            DirectoryInfo atlasesFolder = new DirectoryInfo(folderToCheck);
             FileInfo[] atlasFiles = atlasesFolder.GetFiles("*.png", SearchOption.AllDirectories);
             foreach (FileInfo atlasFile in atlasFiles)
             {
@@ -182,7 +210,7 @@ Happy modding
         private bool IsDirectoryDisabled(FileInfo file, DirectoryInfo root)
         {
             DirectoryInfo parentDir = file.Directory;
-            while(String.Compare(parentDir.FullName, root.FullName, StringComparison.OrdinalIgnoreCase) != 0)
+            while (String.Compare(parentDir.FullName.TrimEnd('\\'), root.FullName.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase) != 0)
             {
                 if (parentDir.Name.StartsWith("_") || File.Exists(Path.Combine(parentDir.FullName, "disabled.txt")) || File.Exists(Path.Combine(parentDir.FullName, "disabled.txt.txt")) || File.Exists(Path.Combine(parentDir.FullName, "disabled"))) return true;
                 parentDir = parentDir.Parent;
@@ -262,8 +290,61 @@ Happy modding
 
         private void RainWorld_LoadResources_hk(On.RainWorld.orig_LoadResources orig, RainWorld self)
         {
+            try
+            {
+                TryCheckCRSFolders();
+            }
+            catch  { }
+
             orig(self);
-            LoadCustomAtlases();
+            LoadCustomAtlases(LoadAtlasesFolder);
+
+            try
+            {
+                // try load from CRS packs
+                TryLoadCRSAtlases();
+            }
+            catch  { }
+        }
+
+        private void TryCheckCRSFolders()
+        {
+            try
+            {
+                foreach (KeyValuePair<string, string> keyValues in CustomRegions.Mod.CustomWorldMod.activatedPacks)
+                {
+                    Debug.Log("CustomSpritesLoader: Checking pack " + keyValues.Key);
+                    var dir = new DirectoryInfo(CustomRegions.Mod.CRExtras.BuildPath(keyValues.Value, CustomRegions.Mod.CRExtras.CustomFolder.Assets, folder: "Replace"));
+                    if (dir.Exists)
+                    {
+                        CheckFolder(dir.FullName);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+        }
+
+        private void TryLoadCRSAtlases()
+        {
+            try
+            {
+                foreach (KeyValuePair<string, string> keyValues in CustomRegions.Mod.CustomWorldMod.activatedPacks)
+                {
+                    Debug.Log("CustomSpritesLoader: Checking pack " + keyValues.Key);
+                    var dir = new DirectoryInfo(CustomRegions.Mod.CRExtras.BuildPath(keyValues.Value, CustomRegions.Mod.CRExtras.CustomFolder.Assets, folder: "Load"));
+                    if (dir.Exists)
+                    {
+                        LoadCustomAtlases(dir.FullName);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
         }
 
         public static KeyValuePair<string, string> MetaEntryToKeyVal(string input)
@@ -275,10 +356,10 @@ Happy modding
             return new KeyValuePair<string, string>(pieces[0].Trim(), pieces[1].Trim());
         }
 
-        private void LoadCustomAtlases()
+        private void LoadCustomAtlases(string folderToLoadFrom)
         {
-            Debug.Log("CustomSpritesLoader: LoadCustomAtlases");
-            DirectoryInfo atlasesFolder = new DirectoryInfo(LoadAtlasesFolder);
+            Debug.Log("CustomSpritesLoader: LoadCustomAtlases from folder " + folderToLoadFrom);
+            DirectoryInfo atlasesFolder = new DirectoryInfo(folderToLoadFrom);
             FileInfo[] atlasFiles = atlasesFolder.GetFiles("*.png", SearchOption.AllDirectories);
             foreach (FileInfo atlasFile in atlasFiles)
             {

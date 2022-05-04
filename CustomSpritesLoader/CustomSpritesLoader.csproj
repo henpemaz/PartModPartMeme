@@ -36,6 +36,9 @@
       <HintPath>..\References\Assembly-CSharp - publicitystuntd.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="CustomRegions">
+      <HintPath>..\References\CustomRegions.dll</HintPath>
+    </Reference>
     <Reference Include="HOOKS-Assembly-CSharp">
       <HintPath>..\References\HOOKS-Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
