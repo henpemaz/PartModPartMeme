@@ -32,6 +32,7 @@ namespace LuaMods
 
             try
             {
+                // From here https://github.com/kevzhao2/triton-old/
                 lua = new Lua();
                 lua.ImportNamespace("On");
             }
