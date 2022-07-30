@@ -15,7 +15,7 @@ using MonoMod.RuntimeDetour.HookGen;
 
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
-[assembly: System.Runtime.CompilerServices.SuppressIldasmAttribute()]
+[assembly: System.Runtime.CompilerServices.SuppressIldasm()]
 namespace AudioFilters
 {
     [BepInEx.BepInPlugin("henpemaz.audiofilters", "AudioFilters", "1.0")]

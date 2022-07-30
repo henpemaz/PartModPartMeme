@@ -7,6 +7,12 @@
 	Move
 		Done
 
+	Movement near long poles = refuses to move depending on placement
+
+	Arena mode bugged can't enter shelters
+
+	Cannot hit pole plant, no collision lol
+
 	Update controll mapping description :)
 
 	Grab

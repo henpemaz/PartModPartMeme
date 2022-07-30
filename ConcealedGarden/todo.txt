@@ -1,5 +1,6 @@
 ﻿for 1.3:
-	hunter + entering LRU = crash, apparently
+	hunter + echo active + entering LRU = crash, apparently
+	Song sfx fades out on rain approach, fix
 
 	add flat-mode scenes
 	fix tamed scav, follow me properly damn it
@@ -7,7 +8,8 @@
 	kill hostiles in door-less shelter
 	creatures zero-G fix
 	
-	moon/pebbles acknowledge plastified
+	
+	moon/pebbles should acknowledge plastified
 
 1.2
 	directoryinfo refresh fix

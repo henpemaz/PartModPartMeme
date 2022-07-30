@@ -28,6 +28,45 @@ namespace Squiddy
             On.Menu.SleepAndDeathScreen.FoodCountDownDone += SleepAndDeathScreen_FoodCountDownDone;
 		}
 
+		// Make squiddy
+		// this used to be in playerctor which was a mess because it was mid-room-realize
+		// moved to session.addplayers but then that doesn't account for ghosts
+		// now its here in playerstate ctor which is... where the important stuff is set I suppose
+		private void PlayerState_ctor(On.PlayerState.orig_ctor orig, PlayerState self, AbstractCreature crit, int playerNumber, int slugcatCharacter, bool isGhost)
+		{
+			orig(self, crit, playerNumber, slugcatCharacter, isGhost);
+
+			if ((crit.world.game.IsStorySession && slugcatCharacter == this.SlugcatIndex)
+				|| (crit.world.game.IsArenaSession && ArenaAdditions.GetSelectedArenaCharacter(crit.world.game.rainWorld.processManager.arenaSetup, playerNumber).player == this))
+			{
+				var abscada = new AbstractCreature(crit.world, StaticWorld.creatureTemplates[((int)CreatureTemplate.Type.CicadaA)], null, crit.pos, crit.ID);
+				new SquiddyStick(abscada, crit);
+
+				if (crit.world.game.IsStorySession)
+				{
+					crit.Room.AddEntity(abscada); // Actually pretty darn important,
+												  // prevent player from being realized in shortcutsready since there's a squit (uses AI) in there too
+				}
+				// in arenamode stuff spawns in the shortcuts systems and plays out nicely
+
+				abscada.remainInDenCounter = 120;
+				this.player[abscada] = crit;
+				cicada[crit] = abscada;
+
+				Debug.Log("Squiddy: Abstract Squiddy created and attached");
+				//Debug.Log("Squiddy: room is "  + player.Room.name);
+			}
+		}
+
+		private void RainWorldGame_ShutDownProcess(On.RainWorldGame.orig_ShutDownProcess orig, RainWorldGame self)
+		{
+			orig(self);
+			// maybe only cull where player.world.game is self ? can't do that with these, shame
+			player.Clear();
+			cicada.Clear();
+		}
+
+		#region CUSTOM_PROGRESSION
 		public override CustomSaveState CreateNewSave(PlayerProgression progression)
         {
             return new SquiddySaveState(progression, this);
@@ -142,16 +181,9 @@ namespace Squiddy
 				}
 			}
 		}
-
-		private void RainWorldGame_ShutDownProcess(On.RainWorldGame.orig_ShutDownProcess orig, RainWorldGame self)
-        {
-			orig(self);
-			// maybe only cull where player.world.game is self ? can't do that with these, shame
-			player.Clear();
-			cicada.Clear();
-        }
-
-        public override string DisplayName => "Squiddy";
+		#endregion CUSTOM_PROGRESSION
+		
+		public override string DisplayName => "Squiddy";
 		public override string Description => @"Look at 'em go!";
 
 		public override string StartRoom => "SU_A13";
@@ -260,7 +292,7 @@ namespace Squiddy
             if (IsMe(self.owner.oracle.room.game) && self.id == Conversation.ID.Pebbles_White)
             {
 				//orig(self);
-				self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("Oh you're still alive."), 0));
+				self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("Oh you're still alive. That's a shame, my circuits must be miscalibrated."), 0));
 			}
             else
             {
@@ -274,36 +306,6 @@ namespace Squiddy
 			public SquiddyStick(AbstractPhysicalObject A, AbstractPhysicalObject B) : base(A, B) { }
 		}
 		
-		// Make squiddy
-		// this used to be in playerctor which was a mess because it was mid-room-realize
-		// moved to session.addplayers but then that doesn't account for ghosts
-		// now its here in playerstate ctor which is... where the important stuff is set I suppose
-		private void PlayerState_ctor(On.PlayerState.orig_ctor orig, PlayerState self, AbstractCreature crit, int playerNumber, int slugcatCharacter, bool isGhost)
-		{
-			orig(self, crit, playerNumber, slugcatCharacter, isGhost);
-
-			if((crit.world.game.IsStorySession && slugcatCharacter == this.SlugcatIndex)
-				|| (crit.world.game.IsArenaSession && ArenaAdditions.GetSelectedArenaCharacter(crit.world.game.rainWorld.processManager.arenaSetup, playerNumber).player == this))
-            {
-				var abscada = new AbstractCreature(crit.world, StaticWorld.creatureTemplates[((int)CreatureTemplate.Type.CicadaA)], null, crit.pos, crit.ID);
-				new SquiddyStick(abscada, crit);
-
-				if (crit.world.game.IsStorySession)
-				{
-					crit.Room.AddEntity(abscada); // Actually pretty darn important,
-													// prevent player from being realized in shortcutsready since there's a squit (uses AI) in there too
-				}
-				// in arenamode stuff spawns in the shortcuts systems and plays out nicely
-
-				abscada.remainInDenCounter = 120;
-				this.player[abscada] = crit;
-				cicada[crit] = abscada;
-
-				Debug.Log("Squiddy: Abstract Squiddy created and attached");
-				//Debug.Log("Squiddy: room is "  + player.Room.name);
-			}
-		}
-
 		// Lock player and squiddy
 		// player inconsious update
         private void Cicada_Update(On.Cicada.orig_Update orig, Cicada self, bool eu)
