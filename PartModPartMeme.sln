@@ -100,6 +100,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TorsoOnTopOfHips", "TorsoOn
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SweetDreams", "SweetDreams\SweetDreams.csproj", "{F11E0751-B0D6-4839-B1EC-9456ABB42BCF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RandomStart", "RandomStart\RandomStart.csproj", "{76AFC860-2EA1-4506-A5A0-33749E8EEACB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -290,6 +292,10 @@ Global
 		{F11E0751-B0D6-4839-B1EC-9456ABB42BCF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F11E0751-B0D6-4839-B1EC-9456ABB42BCF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F11E0751-B0D6-4839-B1EC-9456ABB42BCF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{76AFC860-2EA1-4506-A5A0-33749E8EEACB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{76AFC860-2EA1-4506-A5A0-33749E8EEACB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{76AFC860-2EA1-4506-A5A0-33749E8EEACB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{76AFC860-2EA1-4506-A5A0-33749E8EEACB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
