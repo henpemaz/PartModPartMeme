@@ -102,6 +102,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SweetDreams", "SweetDreams\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RandomStart", "RandomStart\RandomStart.csproj", "{76AFC860-2EA1-4506-A5A0-33749E8EEACB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SplitScreenMod", "SplitScreenMod\SplitScreenMod.csproj", "{15D47287-55E6-4FB1-9B2F-25D9A9166214}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -296,6 +298,10 @@ Global
 		{76AFC860-2EA1-4506-A5A0-33749E8EEACB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{76AFC860-2EA1-4506-A5A0-33749E8EEACB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{76AFC860-2EA1-4506-A5A0-33749E8EEACB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{15D47287-55E6-4FB1-9B2F-25D9A9166214}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{15D47287-55E6-4FB1-9B2F-25D9A9166214}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{15D47287-55E6-4FB1-9B2F-25D9A9166214}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{15D47287-55E6-4FB1-9B2F-25D9A9166214}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
