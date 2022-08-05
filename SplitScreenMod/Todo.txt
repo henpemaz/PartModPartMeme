@@ -1,0 +1,32 @@
+﻿patching needed so far:
+futile -> turn on splitscreen mode -> done
+
+rwgame -> actually create cam2, cam1 follow p1 fix, cam2 follow play2 added -> done
+
+cam -> turn on splitscreen mode, fix name of sprites for each cam -> done
+
+shortcuthandler -> follow p2 between rooms added, crtl-c'd from p1 -> done
+
+shader fix
+shader coord fix -> done
+
+
+fix map/ map shaders
+
+fix menu -> done
+
+fix cam transitions -> done
+
+fix room loading
+
+fix shutdown / memleek
+	make weakrefs?
+
+
+might wanna consider vertical split -> done
+
+make zoom level adjustable?
+
+2 windows? -> unity wont cooperate? display class is there just wont work
+
+
