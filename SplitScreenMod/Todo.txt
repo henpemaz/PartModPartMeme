@@ -7,26 +7,59 @@ cam -> turn on splitscreen mode, fix name of sprites for each cam -> done
 
 shortcuthandler -> follow p2 between rooms added, crtl-c'd from p1 -> done
 
-shader fix
-shader coord fix -> done
+level shader coord fix -> done
 
+might wanna consider vertical split -> done
 
-fix map/ map shaders
+fix map/ map shaders -> done
+
+any more shaders to fix?							????
 
 fix menu -> done
 
 fix cam transitions -> done
 
-fix room loading
+fix room loading -> done
 
 fix shutdown / memleek
-	make weakrefs?
+	return to single cam -> done
+	make weakrefs? -< made cleanup
+
+test with Jolly
+	disabled map rotation when 2p, seems fine otherwise
+
+fix pause menu
+	how? duplicate and offset? -> done
+
+fix screen of dead slug stops -> done
+
+fix rain -> done
+
+fix text popups
+
+test water
+	fix water
+
+fix sounds
+	water sounds super annoying
+
+test text boxes
+	offset because hud offset
+
+test with voxel
+	breaks *violently*
+
+test with scrollmod
+	needed fix bounds
+	needed fix offset
+	needed fix reset/recalc (wont do, fix your code schbun)
 
 
-might wanna consider vertical split -> done
+on split, do players go to player-number positions, or do they take the position they were closest to graphics wise?
 
 make zoom level adjustable?
 
 2 windows? -> unity wont cooperate? display class is there just wont work
+
 
 

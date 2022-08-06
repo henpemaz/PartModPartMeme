@@ -91,6 +91,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SplitScreenInterop.cs" />
+    <Compile Include="SplitScreenFixes.cs" />
     <Compile Include="SplitScreenMod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
