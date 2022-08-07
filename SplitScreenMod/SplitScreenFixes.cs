@@ -13,6 +13,30 @@ namespace SplitScreenMod
 {
     public partial class SplitScreenMod : BaseUnityPlugin
     {
+        private Vector2 DialogBox_DrawPos(On.HUD.DialogBox.orig_DrawPos orig, HUD.DialogBox self, float timeStacker)
+        {
+            if (CurrentSplitMode == SplitMode.SplitVertical && curCamera >= 0 && cameraListeners[curCamera] is CameraListener cl)
+            {
+                return orig(self, timeStacker) - new Vector2(cl.roomCamera.sSize.x / 4f, 0f);
+            }
+            return orig(self, timeStacker);
+        }
+
+        private void VirtualMicrophone_DrawUpdate(On.VirtualMicrophone.orig_DrawUpdate orig, VirtualMicrophone self, float timeStacker, float timeSpeed)
+        {
+            if (self.camera.cameraNumber > 0 && self.camera.room == self.camera.game.cameras[0].room)
+            {
+                self.volumeGroups[0] *= 1f;
+                if(self.camera.game.cameras[0].virtualMicrophone is VirtualMicrophone other)
+                {
+                    self.volumeGroups[0] *= Mathf.InverseLerp(100f, 1000f, (self.listenerPoint - other.listenerPoint).magnitude);
+                }
+                self.volumeGroups[1] *= 0f;
+                self.volumeGroups[2] *= 0f;
+            }
+            orig(self, timeStacker, timeSpeed);
+        }
+
         private void OverWorld_WorldLoaded(On.OverWorld.orig_WorldLoaded orig, OverWorld self)
         {
             orig(self);
@@ -107,6 +131,28 @@ namespace SplitScreenMod
                     if (s.GetType() == typeof(FSprite)) // move basic sprites only, don't move anything else because it could do vertex manip instead and that'll move it
                         s.SetPosition(s.GetPosition() + rCam.offset);
                 }
+        }
+
+        // cull should account for more cams
+        public delegate bool delget_ShouldBeCulled(GraphicsModule gm);
+        public bool get_ShouldBeCulled(delget_ShouldBeCulled orig, GraphicsModule gm)
+        {
+            return orig(gm) && !gm.owner.room.game.cameras[1].PositionCurrentlyVisible(gm.owner.firstChunk.pos, gm.cullRange + ((!gm.culled) ? 100f : 0f), true) && !gm.owner.room.game.cameras[1].PositionVisibleInNextScreen(gm.owner.firstChunk.pos, (!gm.culled) ? 100f : 50f, true);
+        }
+
+        // stup' wa'er
+        private void Water_DrawSprites(On.Water.orig_DrawSprites orig, Water self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+        {
+            if (rCam.cameraNumber > 0)
+            {
+                camPos -= rCam.offset;
+                orig(self, sLeaser, rCam, timeStacker, camPos);
+                foreach (var s in sLeaser.sprites) if (s is WaterTriangleMesh) { s.SetPosition(-rCam.offset); };// if(s.isMatrixDirty) s.UpdateMatrix(); };
+            }
+            else
+            {
+                orig(self, sLeaser, rCam, timeStacker, camPos);
+            }
         }
     }
 }

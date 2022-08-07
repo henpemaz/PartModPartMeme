@@ -34,17 +34,23 @@ fix pause menu
 fix screen of dead slug stops -> done
 
 fix rain -> done
+	breaks on horiz split????						????
 
-fix text popups
+fix text popups -> hud moved
+
+fix culling -> done
 
 test water
-	fix water
+	fix water -> done
 
 fix sounds
 	water sounds super annoying
+		done???
 
-test text boxes
-	offset because hud offset
+
+test text boxes -> done
+
+test ending -> god fucking damn it jolly
 
 test with voxel
 	breaks *violently*
