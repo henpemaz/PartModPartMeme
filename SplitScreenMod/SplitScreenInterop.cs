@@ -125,21 +125,6 @@ namespace SplitScreenMod
                 Debug.LogException(new Exception("Couldn't IL-hook fixsbcsCheckBorders from SplitScreenMod", e)); // deffendisve progrmanig
             }
         }
-        private void fixsbcsDrawUpdate(ILContext il)
-        {
-            var c = new ILCursor(il);
-            if (c.TryGotoNext(MoveType.After,
-                i => i.MatchCallOrCallvirt<UnityEngine.Vector2>("Lerp")
-                ))
-            {
-                c.Emit(OpCodes.Ldarg_1);
-                c.EmitDelegate<Func<Vector2, RoomCamera, Vector2>>((vec, cam) => // please use the camera offset instead of ignoring it
-                {
-                    return vec + cam.offset;
-                });
-            }
-            else Debug.LogException(new Exception("Couldn't IL-hook fixsbcsDrawUpdate from SplitScreenMod")); // deffendisve progrmanig
-        }
 
         public delegate void delsbcsDrawUpdate(On.RoomCamera.orig_DrawUpdate orig, global::RoomCamera roomCamera, float timeStacker, float timeSpeed);
 

@@ -99,26 +99,26 @@ namespace SplitScreenMod
         private void RoomCamera_FireUpSinglePlayerHUD(On.RoomCamera.orig_FireUpSinglePlayerHUD orig, RoomCamera self, Player player)
         {
             orig(self, player);
-            OffsetHud(self);
+            if (CurrentSplitMode != SplitMode.NoSplit) OffsetHud(self);
         }
 
         private void OffsetHud(RoomCamera self)
         {
             if (self.hud != null)
             {
+                Vector2 ex = CurrentSplitMode == SplitMode.SplitHorizontal ? new Vector2(0, self.sSize.y / 4f) : new Vector2(self.sSize.x / 4f, 0);
                 if (CurrentSplitMode != SplitMode.NoSplit)
                 {
-                    Vector2 ex = CurrentSplitMode == SplitMode.SplitHorizontal ? new Vector2(0, self.sSize.y / 4f) : new Vector2(self.sSize.x / 4f, 0);
-                    //if (self.cameraNumber == 1) ex = -ex;
-                    self.ReturnFContainer("HUD").SetPosition(-self.offset + ex);
-                    self.ReturnFContainer("HUD2").SetPosition(-self.offset + ex);
-                    self.hud.map.inFrontContainer.SetPosition(-self.offset + ex);
+
+                    var hud = self.ReturnFContainer("HUD"); hud.SetPosition(hud.GetPosition() + ex);
+                    var hud2 = self.ReturnFContainer("HUD2"); hud2.SetPosition(hud2.GetPosition() + ex);
+                    self.hud.map.inFrontContainer.SetPosition(hud2.GetPosition() + ex);
                 }
                 else
                 {
-                    self.ReturnFContainer("HUD").SetPosition(-self.offset);
-                    self.ReturnFContainer("HUD2").SetPosition(-self.offset);
-                    self.hud.map.inFrontContainer.SetPosition(-self.offset);
+                    var hud = self.ReturnFContainer("HUD"); hud.SetPosition(hud.GetPosition() - ex);
+                    var hud2 = self.ReturnFContainer("HUD2"); hud2.SetPosition(hud2.GetPosition() - ex);
+                    self.hud.map.inFrontContainer.SetPosition(hud2.GetPosition() - ex);
                 }
             }
         }
@@ -134,25 +134,6 @@ namespace SplitScreenMod
                 !gm.owner.room.game.cameras[1].PositionVisibleInNextScreen(gm.owner.firstChunk.pos, (!gm.culled) ? 100f : 50f, true);
             }
             return orig(gm);
-        }
-
-        private void RoomCamera_SetUpFullScreenEffect(On.RoomCamera.orig_SetUpFullScreenEffect orig, RoomCamera self, string container)
-        {
-            orig(self, container);
-            self.fullScreenEffect.SetPosition(-self.offset);
-        }
-
-        // some sprites are initailized at 0/0 and never moved
-        // ie water
-        // moving 'all' sprites messes up trimeshes, so only move base type sprotes
-        private void SpriteLeaser_ctor(On.RoomCamera.SpriteLeaser.orig_ctor orig, RoomCamera.SpriteLeaser self, IDrawable obj, RoomCamera rCam)
-        {
-            orig(self, obj, rCam);
-            if (self.sprites != null && rCam.cameraNumber > 0) foreach (var s in self.sprites)
-                {
-                    if (s.GetType() == typeof(FSprite)) // move basic sprites only, don't move anything else because it could do vertex manip instead and that'll move it
-                        s.SetPosition(s.GetPosition() + rCam.offset);
-                }
         }
 
         // water wont move all vertices if the camera is too far to the right, move everything at startup
@@ -176,21 +157,6 @@ namespace SplitScreenMod
 
                 (sLeaser.sprites[1] as WaterTriangleMesh).MoveVertice(num3, top);
                 (sLeaser.sprites[1] as WaterTriangleMesh).MoveVertice(num3 + 1, bottom);
-            }
-        }
-
-        // stup' wa'er moves to fixed coordinates
-        private void Water_DrawSprites(On.Water.orig_DrawSprites orig, Water self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
-        {
-            if (rCam.cameraNumber > 0)
-            {
-                camPos -= rCam.offset;
-                orig(self, sLeaser, rCam, timeStacker, camPos);
-                foreach (var s in sLeaser.sprites) if (s is WaterTriangleMesh) { s.SetPosition(-rCam.offset); };// if(s.isMatrixDirty) s.UpdateMatrix(); };
-            }
-            else
-            {
-                orig(self, sLeaser, rCam, timeStacker, camPos);
             }
         }
     }

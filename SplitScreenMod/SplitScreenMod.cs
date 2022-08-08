@@ -40,10 +40,10 @@ namespace SplitScreenMod
                     SetSplitMode(SplitMode.NoSplit, game); // unsplit and let the main logic decide
             }
 
-            //if (Input.GetKeyDown("9"))
-            //{
-            //    if (GameObject.FindObjectOfType<RainWorld>()?.processManager?.currentMainLoop is RainWorldGame game) game.world.rainCycle.ArenaEndSessionRain();
-            //}
+            if (Input.GetKeyDown("9"))
+            {
+                if (GameObject.FindObjectOfType<RainWorld>()?.processManager?.currentMainLoop is RainWorldGame game) game.world.rainCycle.ArenaEndSessionRain();
+            }
 
             //if (Input.GetKeyDown("1"))
             //{
@@ -64,6 +64,7 @@ namespace SplitScreenMod
 
             On.Futile.Init += Futile_Init; // turn on splitscreen
             On.Futile.UpdateCameraPosition += Futile_UpdateCameraPosition; // handle custom switcheroos
+
             // game hook moved to rwstart for compat, lotsa things in it
             On.RoomCamera.ctor += RoomCamera_ctor1; // bind cam to camlistener
             On.RainWorldGame.ShutDownProcess += RainWorldGame_ShutDownProcess; // unbind camlistener
@@ -78,12 +79,9 @@ namespace SplitScreenMod
             // fixes in fixes file
             On.OverWorld.WorldLoaded += OverWorld_WorldLoaded; // roomrealizer 2 
             On.RoomCamera.FireUpSinglePlayerHUD += RoomCamera_FireUpSinglePlayerHUD;// displace cam2 map
-            On.RoomCamera.SetUpFullScreenEffect += RoomCamera_SetUpFullScreenEffect;
-            On.RoomCamera.SpriteLeaser.ctor += SpriteLeaser_ctor; // some sprotes initialize at 00 and are never moved, move
             On.Menu.PauseMenu.ctor += PauseMenu_ctor;// displace pause menu
             On.RainWorldGame.ContinuePaused += RainWorldGame_ContinuePaused; // kill dupe pause menu
             On.Water.InitiateSprites += Water_InitiateSprites;
-            On.Water.DrawSprites += Water_DrawSprites; // water doest move some vertices every frame
             On.VirtualMicrophone.DrawUpdate += VirtualMicrophone_DrawUpdate; // mic from 2nd cam should not pic up while on same cam
             On.HUD.DialogBox.DrawPos += DialogBox_DrawPos; // center dialog in half screen
         }
@@ -123,8 +121,6 @@ namespace SplitScreenMod
 
             if (Type.GetType("SBCameraScroll.RoomCameraMod, SBCameraScroll") is Type sbcs)
             {
-                HookEndpointManager.Modify(sbcs.GetMethod("RoomCamera_DrawUpdate", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static),
-                    (Action<ILContext>)fixsbcsDrawUpdate); // please do take in account that there might be more than one cam
                 HookEndpointManager.Modify(sbcs.GetMethod("CheckBorders", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static),
                     (Action<ILContext>)fixsbcsCheckBorders); // please do offsets right
                 // todo fix this mod calling resetpos all the time when 2 scrollers, causes a bit of a stuttew
@@ -188,13 +184,16 @@ namespace SplitScreenMod
                 cams[0].followAbstractCreature = self.session.Players[0];
                 cams[1].followAbstractCreature = self.session.Players[1];
 
-                realizer2 = new RoomRealizer(self.session.Players[0], self.world);
-                realizer2.realizedRooms = self.roomRealizer.realizedRooms;
-                realizer2.recentlyAbstractedRooms = self.roomRealizer.recentlyAbstractedRooms;
-                realizer2.realizeNeighborCandidates = self.roomRealizer.realizeNeighborCandidates;
+                realizer2 = new RoomRealizer(self.session.Players[0], self.world)
+                {
+                    realizedRooms = self.roomRealizer.realizedRooms,
+                    recentlyAbstractedRooms = self.roomRealizer.recentlyAbstractedRooms,
+                    realizeNeighborCandidates = self.roomRealizer.realizeNeighborCandidates
+                };
 
                 // vanilla splitScreenMode = horiz split only, we want MORE
                 //foreach (RoomCamera c in cams) if (c != null) c.splitScreenMode = true;
+                // cam.offset also dropped, too buggy as some idraws wouldnt use campos
             }
             else
             {
@@ -222,6 +221,9 @@ namespace SplitScreenMod
             {
                 cameraListeners[1] = Futile.instance._cameraHolder2.AddComponent<CameraListener>();
                 cameraListeners[1].roomCamera = self;
+                foreach (var c in self.SpriteLayers) c.SetPosition(-self.offset);
+                self.offset = Vector2.zero; // nulla zero niente don't use it
+                // so many drawables don't ever fucking move or don't take into account the offset its infuriating
             }
         }
 
@@ -255,25 +257,26 @@ namespace SplitScreenMod
                     SetSplitMode(SplitMode.NoSplit, self);
                 }
 
-                if (CurrentSplitMode != SplitMode.NoSplit && main.room.abstractRoom.name == "SB_L01" && (other.followAbstractCreature?.realizedCreature?.slatedForDeletetion ?? true)) // honestly fuck jolly
-                {
-                    other.followAbstractCreature = main.followAbstractCreature;
-                    SetSplitMode(SplitMode.NoSplit, self);
-                    other.ClearAllSprites();
-                    //other.hud.ClearAllSprites();
-                    other.hud = null;
-                    //cameraListeners[1]?.Destroy();
-                    //cameraListeners[1] = null;
-                    //self.cameras = new RoomCamera[] { main };
-                }
+                //if (CurrentSplitMode != SplitMode.NoSplit && main.room.abstractRoom.name == "SB_L01" && (other.followAbstractCreature?.realizedCreature?.slatedForDeletetion ?? true)) // honestly fuck jolly
+                //{
+                //    other.followAbstractCreature = main.followAbstractCreature;
+                //    SetSplitMode(SplitMode.NoSplit, self);
+                //    other.ClearAllSprites();
+                //    //other.hud.ClearAllSprites();
+                //    other.hud = null; // pain
+                //    //cameraListeners[1]?.Destroy();
+                //    //cameraListeners[1] = null;
+                //    //self.cameras = new RoomCamera[] { main };
+                //}
             }
 
             if (realizer2 != null) realizer2.Update();
         }
 
+        // should only ever go nosplit-split, switching between splitmodes here will mess up the HUD offset
         public void SetSplitMode(SplitMode split, RainWorldGame game)
         {
-            if(game.cameras.Length > 1)
+            if(game.cameras.Length > 1 && split != CurrentSplitMode)
             {
                 var main = game.cameras[0];
                 var other = game.cameras[1];
@@ -305,6 +308,7 @@ namespace SplitScreenMod
             try
             {
                 curCamera = self.cameraNumber;
+                if (self.cameraNumber > 0 && CurrentSplitMode == SplitMode.NoSplit) return;
                 orig(self, timeStacker, timeSpeed);
             }
             finally
@@ -371,26 +375,10 @@ namespace SplitScreenMod
                         int b = CurrentSplitMode == SplitMode.SplitHorizontal ? 3 : 2;
                         vec[a] = vec[a] * 2f - 0.5f;
                         vec[b] = vec[b] * 2f - 0.5f;
-                        if (curCamera == 1)
-                        {
-                            var rc = l.roomCamera; // - offset was being passed here, get rid of it
-                            vec[0] += rc.offset.x / rc.sSize.x;
-                            vec[2] += rc.offset.x / rc.sSize.x;
-                            if (CurrentSplitMode == SplitMode.SplitVertical) // times 2!!
-                            {
-                                vec[0] += rc.offset.x / rc.sSize.x;
-                                vec[2] += rc.offset.x / rc.sSize.x;
-                            }
-                        }
                     }
                     else if (propertyName == "_caminroomrect")
                     {
                         vec[CurrentSplitMode == SplitMode.SplitHorizontal ? 3 : 2] /= 2f;
-                    }
-                    else if (propertyName == "_RainSpriteRect" && curCamera == 1)
-                    {
-                        var rc = l.roomCamera; // - offset was being passed here, get rid of it
-                        vec[0] -= rc.offset.x / (20f * (float)rc.room.TileWidth);
                     }
                 }
                 l.ShaderColors[propertyName] = vec;
