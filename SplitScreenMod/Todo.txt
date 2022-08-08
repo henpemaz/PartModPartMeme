@@ -2,64 +2,41 @@
 futile -> turn on splitscreen mode -> done
 
 rwgame -> actually create cam2, cam1 follow p1 fix, cam2 follow play2 added -> done
-
 cam -> turn on splitscreen mode, fix name of sprites for each cam -> done
-
 shortcuthandler -> follow p2 between rooms added, crtl-c'd from p1 -> done
-
 level shader coord fix -> done
-
 might wanna consider vertical split -> done
-
 fix map/ map shaders -> done
-
 any more shaders to fix?							????
-
 fix menu -> done
-
 fix cam transitions -> done
-
 fix room loading -> done
-
 fix shutdown / memleek
 	return to single cam -> done
 	make weakrefs? -< made cleanup
-
 test with Jolly
 	disabled map rotation when 2p, seems fine otherwise
-
 fix pause menu
 	how? duplicate and offset? -> done
-
 fix screen of dead slug stops -> done
-
 fix rain -> done
 	breaks on horiz split????						????
-
 fix text popups -> hud moved
-
 fix culling -> done
-
 test water
 	fix water -> done
-
 fix sounds
 	water sounds super annoying
 		done???
-
-
 test text boxes -> done
-
-test ending -> god fucking damn it jolly
-
+test ending -> god fucking damn it jolly -> fixed
 test with voxel
 	breaks *violently*
 
 test with scrollmod
-	needed fix bounds
-	needed fix offset
-	needed fix reset/recalc (wont do, fix your code schbun)
-
+	needs fix bounds -> done
+	needs fix offset -> done
+	needs fix reset/recalc (wont do, fix your code schbun)
 
 on split, do players go to player-number positions, or do they take the position they were closest to graphics wise?
 
@@ -68,4 +45,13 @@ make zoom level adjustable?
 2 windows? -> unity wont cooperate? display class is there just wont work
 
 
+round 2
 
+https://discord.com/channels/@me/1005701084637044736/1005701836440879124
+	pause menu black borders are inconsistent
+
+	can't start game as single player
+
+https://discord.com/channels/291184728944410624/431534164932689921/1006106126338760717
+	lizardskin cosmetics break
+		maybe moving all sprotes not a good idea?
