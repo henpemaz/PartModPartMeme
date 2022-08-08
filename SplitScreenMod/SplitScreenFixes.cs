@@ -40,9 +40,10 @@ namespace SplitScreenMod
         private void OverWorld_WorldLoaded(On.OverWorld.orig_WorldLoaded orig, OverWorld self)
         {
             orig(self);
-
-            if (self.game.roomRealizer == null) return;
-            realizer2 = new RoomRealizer(self.game.session.Players[1], self.game.world);
+            if (self.game.session.Players.Count < 2 || self.game.roomRealizer == null) return;
+            var player = self.game.session.Players.FirstOrDefault(p => p != self.game.roomRealizer.followCreature);
+            if (player == null) return;
+            realizer2 = new RoomRealizer(player, self.game.world);
             realizer2.realizedRooms = self.game.roomRealizer.realizedRooms;
             realizer2.recentlyAbstractedRooms = self.game.roomRealizer.recentlyAbstractedRooms;
             realizer2.realizeNeighborCandidates = self.game.roomRealizer.realizeNeighborCandidates;
@@ -51,7 +52,8 @@ namespace SplitScreenMod
         private void RainWorldGame_ContinuePaused(On.RainWorldGame.orig_ContinuePaused orig, RainWorldGame self)
         {
             orig(self);
-            self.manager.StopSideProcess(self.manager.sideProcesses.FirstOrDefault(t => t is Menu.PauseMenu));
+            var otherpause = self.manager.sideProcesses.FirstOrDefault(t => t is Menu.PauseMenu);
+            if(otherpause != null)self.manager.StopSideProcess(otherpause);
         }
 
         bool inpause; // non reentrant
@@ -121,8 +123,28 @@ namespace SplitScreenMod
             }
         }
 
+        // cull should account for more cams
+        public delegate bool delget_ShouldBeCulled(GraphicsModule gm);
+        public bool get_ShouldBeCulled(delget_ShouldBeCulled orig, GraphicsModule gm)
+        {
+            if (gm.owner.room.game.cameras.Length > 1)
+            {
+                return orig(gm) &&
+                !gm.owner.room.game.cameras[1].PositionCurrentlyVisible(gm.owner.firstChunk.pos, gm.cullRange + ((!gm.culled) ? 100f : 0f), true) &&
+                !gm.owner.room.game.cameras[1].PositionVisibleInNextScreen(gm.owner.firstChunk.pos, (!gm.culled) ? 100f : 50f, true);
+            }
+            return orig(gm);
+        }
+
+        private void RoomCamera_SetUpFullScreenEffect(On.RoomCamera.orig_SetUpFullScreenEffect orig, RoomCamera self, string container)
+        {
+            orig(self, container);
+            self.fullScreenEffect.SetPosition(-self.offset);
+        }
+
         // some sprites are initailized at 0/0 and never moved
-        // moving 'all' sprites messes up trimeshes
+        // ie water
+        // moving 'all' sprites messes up trimeshes, so only move base type sprotes
         private void SpriteLeaser_ctor(On.RoomCamera.SpriteLeaser.orig_ctor orig, RoomCamera.SpriteLeaser self, IDrawable obj, RoomCamera rCam)
         {
             orig(self, obj, rCam);
@@ -133,14 +155,31 @@ namespace SplitScreenMod
                 }
         }
 
-        // cull should account for more cams
-        public delegate bool delget_ShouldBeCulled(GraphicsModule gm);
-        public bool get_ShouldBeCulled(delget_ShouldBeCulled orig, GraphicsModule gm)
+        // water wont move all vertices if the camera is too far to the right, move everything at startup
+        private void Water_InitiateSprites(On.Water.orig_InitiateSprites orig, Water self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
         {
-            return orig(gm) && !gm.owner.room.game.cameras[1].PositionCurrentlyVisible(gm.owner.firstChunk.pos, gm.cullRange + ((!gm.culled) ? 100f : 0f), true) && !gm.owner.room.game.cameras[1].PositionVisibleInNextScreen(gm.owner.firstChunk.pos, (!gm.culled) ? 100f : 50f, true);
+            orig(self, sLeaser, rCam);
+            var camPos = rCam.pos + rCam.offset;
+            float y = -10f;
+            if (self.cosmeticLowerBorder > -1f)
+            {
+                y = self.cosmeticLowerBorder - camPos.y;
+            }
+            Vector2 top = new Vector2(1400f, self.fWaterLevel - camPos.y + self.cosmeticSurfaceDisplace);
+            Vector2 bottom = new Vector2(1400f, y);
+            for (int i = 0; i < self.pointsToRender; i++)
+            {
+                int num3 = i * 2;
+
+                (sLeaser.sprites[0] as WaterTriangleMesh).MoveVertice(num3, top);
+                (sLeaser.sprites[0] as WaterTriangleMesh).MoveVertice(num3 + 1, top);
+
+                (sLeaser.sprites[1] as WaterTriangleMesh).MoveVertice(num3, top);
+                (sLeaser.sprites[1] as WaterTriangleMesh).MoveVertice(num3 + 1, bottom);
+            }
         }
 
-        // stup' wa'er
+        // stup' wa'er moves to fixed coordinates
         private void Water_DrawSprites(On.Water.orig_DrawSprites orig, Water self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
         {
             if (rCam.cameraNumber > 0)

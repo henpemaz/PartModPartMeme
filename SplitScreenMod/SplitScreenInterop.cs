@@ -13,7 +13,7 @@ namespace SplitScreenMod
 {
     public partial class SplitScreenMod : BaseUnityPlugin
     {
-        private void fixsbcsCheckBorders(ILContext il)
+        private void fixsbcsCheckBorders(ILContext il) // patch up cam scroll boundaries
         {
             var c = new ILCursor(il);
             // buncha gotos, faster like this
@@ -133,7 +133,7 @@ namespace SplitScreenMod
                 ))
             {
                 c.Emit(OpCodes.Ldarg_1);
-                c.EmitDelegate<Func<Vector2, RoomCamera, Vector2>>((vec, cam) =>
+                c.EmitDelegate<Func<Vector2, RoomCamera, Vector2>>((vec, cam) => // please use the camera offset instead of ignoring it
                 {
                     return vec + cam.offset;
                 });

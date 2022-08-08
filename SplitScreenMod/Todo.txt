@@ -44,13 +44,26 @@ make zoom level adjustable?
 
 2 windows? -> unity wont cooperate? display class is there just wont work
 
+possible optimizations
+	on collapse kill roomcam2, or somehow disable it, reduced processing
+		can't rn because un-moved sprites are in the field of view damn it
+	on single-cam game, don't create listener, don't set shader variables
+
 
 round 2
 
 https://discord.com/channels/@me/1005701084637044736/1005701836440879124
 	pause menu black borders are inconsistent
 
-	can't start game as single player
+	can't start game as single player -> done
+
+	pebbles sequence is glitchy af
+
+	switching cams at 3 and 4 players unintuitive
+
+	sharpener causes half black screen
+
+	clouds and bloom are messy
 
 https://discord.com/channels/291184728944410624/431534164932689921/1006106126338760717
 	lizardskin cosmetics break
