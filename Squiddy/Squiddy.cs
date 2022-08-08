@@ -2,6 +2,7 @@
 using System.Security.Permissions;
 using System.Reflection;
 using SlugBase;
+using UnityEngine;
 
 [assembly: AssemblyTrademark("Henpemaz")]
 
@@ -19,6 +20,14 @@ namespace Squiddy
         {
             instance = this;
             PlayerManager.RegisterCharacter(new SquiddyBase());
+        }
+        void Update() // debug thinghies
+        {
+            if (Input.GetKeyDown("1"))
+            {
+                if (GameObject.FindObjectOfType<RainWorld>()?.processManager?.currentMainLoop is RainWorldGame game)
+                    Debug.LogError(game.cameras[0].virtualMicrophone.listenerPoint);
+            }
         }
     }
 }

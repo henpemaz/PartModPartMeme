@@ -52,11 +52,11 @@ namespace Squiddy
 				}
 				// in arenamode stuff spawns in the shortcuts systems and plays out nicely
 
-				abscada.remainInDenCounter = 120;
+				abscada.remainInDenCounter = 120; // maybe move this to story start?
 				this.player[abscada] = crit;
 				cicada[crit] = abscada;
 
-				Debug.Log("Squiddy: Abstract Squiddy created and attached");
+				Debug.Log("Squiddy: Abstract Squiddy created and attached for player no:" + playerNumber);
 				//Debug.Log("Squiddy: room is "  + player.Room.name);
 			}
 		}
@@ -71,6 +71,8 @@ namespace Squiddy
 
 		public override string DisplayName => "Squiddy";
 		public override string Description => @"Look at 'em go!";
+
+		//override color
 
 		public override string StartRoom => "SU_A13";
 		public override void StartNewGame(Room room)
@@ -92,52 +94,13 @@ namespace Squiddy
 			}
 		}
 
-		protected override void Disable()
-		{
-			On.Cicada.Update -= Cicada_Update;
-			On.Cicada.Act -= Cicada_Act;
-			On.Cicada.Swim -= Cicada_Swim;
-
-			On.Cicada.GrabbedByPlayer -= Cicada_GrabbedByPlayer;
-			On.Cicada.CarryObject -= Cicada_CarryObject;
-			On.Cicada.Collide -= Cicada_Collide;
-
-			On.Cicada.Die -= Cicada_Die;
-			On.CicadaAI.Update -= CicadaAI_Update;
-			On.AbstractCreature.WantToStayInDenUntilEndOfCycle -= AbstractCreature_WantToStayInDenUntilEndOfCycle;
-			On.AbstractCreature.Abstractize -= AbstractCreature_Abstractize;
-
-			On.Player.CanIPickThisUp -= Player_CanIPickThisUp;
-			On.Player.ObjectEaten -= Player_ObjectEaten;
-			On.Player.FoodInRoom_Room_bool -= Player_FoodInRoom_Room_bool;
-			On.Player.ObjectCountsAsFood -= Player_ObjectCountsAsFood;
-			On.AbstractCreatureAI.DoIwantToDropThisItemInDen -= AbstractCreatureAI_DoIwantToDropThisItemInDen;
-			On.CicadaGraphics.Update -= CicadaGraphics_Update;
-
-			On.ShortcutGraphics.GenerateSprites -= ShortcutGraphics_GenerateSprites;
-            On.ShortcutGraphics.Draw -= ShortcutGraphics_Draw;
-			On.ShortcutGraphics.Update -= ShortcutGraphics_Update;
-
-			On.AbstractCreature.IsExitingDen -= AbstractCreature_IsExitingDen;
-			IL.ShortcutHelper.Update -= ShortcutHelper_Update;
-			On.SuperJumpInstruction.ctor -= SuperJumpInstruction_ctor;
-			On.RegionState.AdaptRegionStateToWorld -= RegionState_AdaptRegionStateToWorld;
-
-			On.Cicada.InitiateGraphicsModule -= Cicada_InitiateGraphicsModule;
-			IL.CicadaGraphics.ApplyPalette -= CicadaGraphics_ApplyPalette;
-            On.CicadaGraphics.ApplyPalette -= CicadaGraphics_ApplyPalette;
-			On.Cicada.ShortCutColor -= Cicada_ShortCutColor;
-
-			On.SSOracleBehavior.PebblesConversation.AddEvents -= PebblesConversation_AddEvents;
-		}
-
         protected override void Enable()
 		{
-			On.Cicada.Update += Cicada_Update;
-			On.Cicada.Act += Cicada_Act;
-			On.Cicada.Swim += Cicada_Swim;
+			On.Cicada.Update += Cicada_Update; // input, sync, player things
+			On.Cicada.Act += Cicada_Act; // movement
+			On.Cicada.Swim += Cicada_Swim; // prevent loss of control
 
-			On.Cicada.GrabbedByPlayer += Cicada_GrabbedByPlayer;
+			On.Cicada.GrabbedByPlayer += Cicada_GrabbedByPlayer; // prevent loss of control
             On.Cicada.CarryObject += Cicada_CarryObject;
             On.Cicada.Collide += Cicada_Collide;
 
@@ -145,6 +108,10 @@ namespace Squiddy
 			On.CicadaAI.Update += CicadaAI_Update;
             On.AbstractCreature.WantToStayInDenUntilEndOfCycle += AbstractCreature_WantToStayInDenUntilEndOfCycle;
             On.AbstractCreature.Abstractize += AbstractCreature_Abstractize;
+            On.ShortcutHandler.SuckInCreature += ShortcutHandler_SuckInCreature;
+            On.ShortcutHandler.OnScreenPositionOfInShortCutCreature += ShortcutHandler_OnScreenPositionOfInShortCutCreature;
+            On.Player.ShortCutColor += Player_ShortCutColor;
+            On.RoomCamera.MoveCamera_Room_int += RoomCamera_MoveCamera_Room_int;
 
             On.Player.CanIPickThisUp += Player_CanIPickThisUp;
             On.Player.ObjectEaten += Player_ObjectEaten;
@@ -165,7 +132,6 @@ namespace Squiddy
 			On.Cicada.InitiateGraphicsModule += Cicada_InitiateGraphicsModule;
 			IL.CicadaGraphics.ApplyPalette += CicadaGraphics_ApplyPalette;
 			On.CicadaGraphics.ApplyPalette += CicadaGraphics_ApplyPalette;
-            On.Cicada.ShortCutColor += Cicada_ShortCutColor;
 
             On.SSOracleBehavior.PebblesConversation.AddEvents += PebblesConversation_AddEvents;
 
@@ -173,8 +139,51 @@ namespace Squiddy
 			densNeeded = false;
 		}
 
-        // Ties player and squit (not a grasp, so not easily undone by game code)
-        internal class SquiddyStick : AbstractPhysicalObject.AbstractObjectStick
+        protected override void Disable()
+		{
+			On.Cicada.Update -= Cicada_Update;
+			On.Cicada.Act -= Cicada_Act;
+			On.Cicada.Swim -= Cicada_Swim;
+
+			On.Cicada.GrabbedByPlayer -= Cicada_GrabbedByPlayer;
+			On.Cicada.CarryObject -= Cicada_CarryObject;
+			On.Cicada.Collide -= Cicada_Collide;
+
+			On.Cicada.Die -= Cicada_Die;
+			On.CicadaAI.Update -= CicadaAI_Update;
+			On.AbstractCreature.WantToStayInDenUntilEndOfCycle -= AbstractCreature_WantToStayInDenUntilEndOfCycle;
+			On.AbstractCreature.Abstractize -= AbstractCreature_Abstractize;
+			On.ShortcutHandler.SuckInCreature -= ShortcutHandler_SuckInCreature;
+			On.ShortcutHandler.OnScreenPositionOfInShortCutCreature -= ShortcutHandler_OnScreenPositionOfInShortCutCreature;
+			On.Player.ShortCutColor -= Player_ShortCutColor;
+			On.RoomCamera.MoveCamera_Room_int -= RoomCamera_MoveCamera_Room_int;
+
+			On.Player.CanIPickThisUp -= Player_CanIPickThisUp;
+			On.Player.ObjectEaten -= Player_ObjectEaten;
+			On.Player.FoodInRoom_Room_bool -= Player_FoodInRoom_Room_bool;
+			On.Player.ObjectCountsAsFood -= Player_ObjectCountsAsFood;
+			On.AbstractCreatureAI.DoIwantToDropThisItemInDen -= AbstractCreatureAI_DoIwantToDropThisItemInDen;
+			On.CicadaGraphics.Update -= CicadaGraphics_Update;
+
+			On.ShortcutGraphics.GenerateSprites -= ShortcutGraphics_GenerateSprites;
+			On.ShortcutGraphics.Draw -= ShortcutGraphics_Draw;
+			On.ShortcutGraphics.Update -= ShortcutGraphics_Update;
+
+			On.AbstractCreature.IsExitingDen -= AbstractCreature_IsExitingDen;
+			IL.ShortcutHelper.Update -= ShortcutHelper_Update;
+			On.SuperJumpInstruction.ctor -= SuperJumpInstruction_ctor;
+			On.RegionState.AdaptRegionStateToWorld -= RegionState_AdaptRegionStateToWorld;
+
+			On.Cicada.InitiateGraphicsModule -= Cicada_InitiateGraphicsModule;
+			IL.CicadaGraphics.ApplyPalette -= CicadaGraphics_ApplyPalette;
+			On.CicadaGraphics.ApplyPalette -= CicadaGraphics_ApplyPalette;
+
+
+			On.SSOracleBehavior.PebblesConversation.AddEvents -= PebblesConversation_AddEvents;
+		}
+
+		// Ties player and squit (not a grasp, so not easily undone by game code)
+		internal class SquiddyStick : AbstractPhysicalObject.AbstractObjectStick
 		{
 			public SquiddyStick(AbstractPhysicalObject A, AbstractPhysicalObject B) : base(A, B) { }
 		}
@@ -431,7 +440,24 @@ namespace Squiddy
                     self.chargeDir = (self.chargeDir
                                                 + 0.15f * inputDir
                                                 + 0.03f * Custom.DirVec(self.bodyChunks[1].pos, self.mainBodyChunk.pos)).normalized;
-                }
+
+					if (self.Charging && self.grasps[0] != null && self.grasps[0].grabbed is Weapon w)
+					{
+						SharedPhysics.CollisionResult result = SharedPhysics.TraceProjectileAgainstBodyChunks(null, self.room, w.firstChunk.lastPos, ref w.firstChunk.pos, w.firstChunk.rad + 5f, 1, self, true);
+                        if (result.hitSomething)
+                        {
+							var dir = (self.bodyChunks[0].pos - self.bodyChunks[1].pos).normalized;
+							var throwndir = new IntVector2(Mathf.Abs(dir.x) > 0.38 ? (int)Mathf.Sign(dir.x) : 0, Mathf.Abs(dir.y) > 0.38 ? (int)Mathf.Sign(dir.y) : 0);
+							w.Thrown(self, self.mainBodyChunk.pos, self.mainBodyChunk.pos - dir * 30f, throwndir, 1f, self.evenUpdate);
+							if (w is Spear sp && !(result.obj is Player))
+							{
+								sp.spearDamageBonus *= 0.6f;
+							}
+							w.Forbid();
+							self.ReleaseGrasp(0);
+						}
+					}
+				}
 
                 // scoooot
                 self.AI.swooshToPos = null;
@@ -488,7 +514,7 @@ namespace Squiddy
                 // from player movementupdate code, entering a shortcut
                 if (self.shortcutDelay < 1)
                 {
-					self.abstractCreature.remainInDenCounter = 40; // so can eat whatever whenever
+					self.abstractCreature.remainInDenCounter = 200; // so can eat whatever whenever
                     for (int i = 0; i < nc; i++)
                     {
                         if (self.enteringShortCut == null && room.GetTile(chunks[i].pos).Terrain == Room.Tile.TerrainType.ShortcutEntrance)
@@ -504,7 +530,6 @@ namespace Squiddy
                                     self.enteringShortCut = new IntVector2?(room.GetTilePosition(chunks[i].pos));
                                 }
                             }
-
                         }
                     }
                 }
@@ -571,19 +596,19 @@ namespace Squiddy
 		{
 			if (player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p)
 			{
-				if(self.Charging && self.grasps[0] != null && self.grasps[0].grabbed is Weapon we && myChunk == 0 && otherChunk >= 0)
-                {
+				if (self.Charging && self.grasps[0] != null && self.grasps[0].grabbed is Weapon we && myChunk == 0 && otherChunk >= 0)
+				{
 					var dir = (self.bodyChunks[0].pos - self.bodyChunks[1].pos).normalized;
 					var throwndir = new IntVector2(Mathf.Abs(dir.x) > 0.38 ? (int)Mathf.Sign(dir.x) : 0, Mathf.Abs(dir.y) > 0.38 ? (int)Mathf.Sign(dir.y) : 0);
 					we.Thrown(self, self.mainBodyChunk.pos + dir * 30f, self.mainBodyChunk.pos, throwndir, 1f, self.evenUpdate);
 					we.meleeHitChunk = otherObject.bodyChunks[otherChunk];
-					if(we is Spear sp && !(otherObject is Player))
-                    {
+					if (we is Spear sp && !(otherObject is Player))
+					{
 						sp.spearDamageBonus *= 0.6f;
-                    }
+					}
 					we.Forbid();
 					self.ReleaseGrasp(0);
-                }
+				}
 				orig(self, otherObject, myChunk, otherChunk);
 				return;
 			}
@@ -635,8 +660,9 @@ namespace Squiddy
 				if (self.Consious)
 				{
 					var oldflypower = self.flyingPower;
-					self.flyingPower = self.flying ? 0.2f : self.flyingPower;
+					self.flyingPower *= 0.6f;
 					self.Act();
+					self.flyingPower = oldflypower;
 				}
 			}
 			orig(self);

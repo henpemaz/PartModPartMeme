@@ -12,6 +12,30 @@ namespace Squiddy
 {
     public partial class SquiddyBase
     {
+
+		// comming out of den trips the newroom which trips roommic to reset
+		private void RoomCamera_MoveCamera_Room_int(On.RoomCamera.orig_MoveCamera_Room_int orig, RoomCamera self, Room newRoom, int camPos)
+		{
+			if (cicada.TryGet(self.followAbstractCreature, out _) && newRoom == self.room && camPos == self.cameraNumber) return;
+			orig(self, newRoom, camPos);
+		}
+
+		private Vector2? ShortcutHandler_OnScreenPositionOfInShortCutCreature(On.ShortcutHandler.orig_OnScreenPositionOfInShortCutCreature orig, ShortcutHandler self, Room room, Creature crit)
+		{
+			var r = orig(self, room, crit);
+			if (r == null && crit is Player p && p.inShortcut && IsMe(p))
+			{
+				foreach (var e in room.abstractRoom.entitiesInDens)
+				{
+					if (e == p.abstractCreature)
+					{
+						return room.MiddleOfTile(room.LocalCoordinateOfNode(p.abstractCreature.pos.abstractNode).Tile);
+					}
+				}
+			}
+			return r;
+		}
+
 		// Die! Squiddy
 		private void Cicada_Die(On.Cicada.orig_Die orig, Cicada self)
 		{
@@ -40,6 +64,27 @@ namespace Squiddy
 						// could happen at end of cycle, isenteringden + low rain timer
 			}
 			orig(self, coord);
+		}
+
+		// players goes in shortcuts for better behavior
+		// needed for arena sessions, otherwise cant enter shelter
+		private void ShortcutHandler_SuckInCreature(On.ShortcutHandler.orig_SuckInCreature orig, ShortcutHandler self, Creature creature, Room room, ShortcutData shortCut)
+		{
+			if (player.TryGet(creature.abstractCreature, out var ap) && ap.realizedCreature is Player p && shortCut.shortCutType != ShortcutData.Type.CreatureHole)
+			{
+				creature = p;
+			}
+			orig(self, creature, room, shortCut);
+		}
+
+		// use cada color for shortcuts unless in arena
+		private Color Player_ShortCutColor(On.Player.orig_ShortCutColor orig, Player self)
+		{
+			if (cicada.TryGet(self.abstractCreature, out var ac) && ac.realizedCreature is Cicada c && !self.abstractCreature.world.game.IsArenaSession)
+			{
+				return c.ShortCutColor();
+			}
+			return orig(self);
 		}
 
 		float densNeededAmount;
@@ -287,21 +332,6 @@ namespace Squiddy
 						}
 				}
 			}
-		}
-
-		// correct shortcut color in arena
-		// storymode remains squiddy-colored I guess
-		private Color Cicada_ShortCutColor(On.Cicada.orig_ShortCutColor orig, Cicada self)
-		{
-
-			if (player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p)
-			{
-				if (self.abstractCreature.world.game.IsArenaSession)
-				{
-					return p.ShortCutColor(); // replaces ivar color which is a blend
-				}
-			}
-			return orig(self);
 		}
 		#endregion arenacolorss
 	}
