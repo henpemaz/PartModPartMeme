@@ -51,6 +51,9 @@
       <HintPath>..\References\bepinex\HOOKS-Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="JollyCoop">
+      <HintPath>..\References\JollyCoop.dll</HintPath>
+    </Reference>
     <Reference Include="Mono.Cecil">
       <HintPath>..\References\bepinex\Mono.Cecil.dll</HintPath>
       <Private>False</Private>

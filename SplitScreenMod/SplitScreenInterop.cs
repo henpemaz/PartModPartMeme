@@ -13,6 +13,70 @@ namespace SplitScreenMod
 {
     public partial class SplitScreenMod : BaseUnityPlugin
     {
+        public delegate void delHandleCoopCamera(Player self, int playerNumber);
+        public void fixHandleCoopCamera(delHandleCoopCamera orig, Player self, int playerNumber)
+        {
+            if (self?.room?.game?.GetStorySession is StoryGameSession sgs && sgs.Players.Count > 1 && self.room.game.cameras.Length > 1)
+            {
+                var cameras = self.room.game.cameras;
+                RoomCamera thecam = null;
+   
+                
+                foreach (var cam in cameras)
+                {
+                    if (cam.followAbstractCreature == self.abstractCreature) return;
+                }
+
+                // any dead cams?
+                if (cameras.Reverse().FirstOrDefault(c => IsCamDead(c)) is RoomCamera deadcam) thecam = deadcam;
+                // any free cams?
+                else if (cameras.Reverse().FirstOrDefault(c => cameras.Any(c2 => c != c2 && (c2.followAbstractCreature == c.followAbstractCreature))) is RoomCamera freecam) thecam = freecam;
+                // if player doing it has a camera, ignore
+                else if (cameras.Any(c => c.followAbstractCreature == self.abstractCreature)) return;
+                // any duped cams?
+                else if (cameras.Reverse().FirstOrDefault(c => cameras.Any(c2 => c != c2 && (c2.room == c.room && c2.currentCameraPosition == c.currentCameraPosition))) is RoomCamera dupecam) thecam = dupecam;
+                // rotate cam2
+                else thecam = cameras[1];
+
+                if (thecam != null)
+                {
+                    AssignCameraToPlayer(thecam, self);
+                }
+                return;
+
+            }
+            orig(self, playerNumber);
+        }
+
+        // man
+        public delegate void delPlayerMeterDraw(object self, float timeStacker);
+        public void fixPlayerMeterDraw(delPlayerMeterDraw orig, object self, float timeStacker)
+        {
+            if (self is HUD.HudPart part && part.hud.owner is Player p) JollyCoop.PlayerHK.currentPlayerWithCamera = p.playerState.playerNumber; //if only there was a way to know which player owns the hud...
+            orig(self, timeStacker);
+        }
+
+        private void fixjollyBodyTransplant(ILContext il) // please do not the slugcat
+        {
+            var c = new ILCursor(il);
+            try
+            {
+                // do not
+                c.GotoNext(
+                    i => i.MatchCallOrCallvirt<AbstractCreature>("set_realizedCreature") // oh god oh fuck
+                    );
+                c.Remove(); // no set_realizedCreature
+                c.Emit<PhysicalObject>(OpCodes.Ldfld, "abstractPhysicalObject");
+                c.Emit<RoomCamera>(OpCodes.Stfld, "followAbstractCreature");
+                c.Index -= 5;
+                c.Remove(); // no cam.followabs
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(new Exception("Couldn't IL-hook fixjollyBodyTransplant from SplitScreenMod", e)); // deffendisve progrmanig
+            }
+        }
+
         private void fixsbcsCheckBorders(ILContext il) // patch up cam scroll boundaries
         {
             var c = new ILCursor(il);
@@ -125,15 +189,5 @@ namespace SplitScreenMod
                 Debug.LogException(new Exception("Couldn't IL-hook fixsbcsCheckBorders from SplitScreenMod", e)); // deffendisve progrmanig
             }
         }
-
-        public delegate void delsbcsDrawUpdate(On.RoomCamera.orig_DrawUpdate orig, global::RoomCamera roomCamera, float timeStacker, float timeSpeed);
-
-        public delegate void delHandleCoopCamera(Player self, int playerNumber);
-        public void fixHandleCoopCamera(delHandleCoopCamera orig, Player self, int playerNumber)
-        {
-            if (self?.room?.game?.GetStorySession is StoryGameSession sgs && sgs.Players.Count == 2) return; // prevent cam rotate
-            orig(self, playerNumber);
-        }
-
     }
 }

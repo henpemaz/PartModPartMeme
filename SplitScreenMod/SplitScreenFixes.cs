@@ -99,23 +99,23 @@ namespace SplitScreenMod
         private void RoomCamera_FireUpSinglePlayerHUD(On.RoomCamera.orig_FireUpSinglePlayerHUD orig, RoomCamera self, Player player)
         {
             orig(self, player);
-            if (CurrentSplitMode != SplitMode.NoSplit) OffsetHud(self);
+            if (CurrentSplitMode != SplitMode.NoSplit) OffsetHud(self, CurrentSplitMode);
         }
 
-        private void OffsetHud(RoomCamera self)
+        private void OffsetHud(RoomCamera self, SplitMode nextSplitMode)
         {
             if (self.hud != null)
             {
-                Vector2 ex = CurrentSplitMode == SplitMode.SplitHorizontal ? new Vector2(0, self.sSize.y / 4f) : new Vector2(self.sSize.x / 4f, 0);
-                if (CurrentSplitMode != SplitMode.NoSplit)
+                if (nextSplitMode != SplitMode.NoSplit)
                 {
-
+                    Vector2 ex = nextSplitMode == SplitMode.SplitHorizontal ? new Vector2(0, self.sSize.y / 4f) : new Vector2(self.sSize.x / 4f, 0);
                     var hud = self.ReturnFContainer("HUD"); hud.SetPosition(hud.GetPosition() + ex);
                     var hud2 = self.ReturnFContainer("HUD2"); hud2.SetPosition(hud2.GetPosition() + ex);
                     self.hud.map.inFrontContainer.SetPosition(hud2.GetPosition() + ex);
                 }
                 else
                 {
+                    Vector2 ex = CurrentSplitMode == SplitMode.SplitHorizontal ? new Vector2(0, self.sSize.y / 4f) : new Vector2(self.sSize.x / 4f, 0);
                     var hud = self.ReturnFContainer("HUD"); hud.SetPosition(hud.GetPosition() - ex);
                     var hud2 = self.ReturnFContainer("HUD2"); hud2.SetPosition(hud2.GetPosition() - ex);
                     self.hud.map.inFrontContainer.SetPosition(hud2.GetPosition() - ex);

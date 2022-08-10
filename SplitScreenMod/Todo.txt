@@ -59,15 +59,18 @@ https://discord.com/channels/@me/1005701084637044736/1005701836440879124
 
 	pebbles sequence is glitchy af
 
-	switching cams at 3 and 4 players unintuitive
+	switching cams at 3 and 4 players unintuitive / doesnt work
+		p2 dies and then what
+			handled very very thorougly
 
 	sharpener causes half black screen
+		I'm not good enough to fix it
 
-	clouds and bloom are messy
+	clouds and bloom are messy -> fixed
 
 https://discord.com/channels/291184728944410624/431534164932689921/1006106126338760717
 	lizardskin cosmetics break
 		maybe moving all sprotes not a good idea?
 
 
-forecast breaks violently
+forecast breaks violently -> fixed

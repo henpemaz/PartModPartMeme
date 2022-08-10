@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace SplitScreenMod
 {
-    [BepInPlugin("henpemaz.splitscreen", "SplitScreen", "0.1.0")]
+    [BepInPlugin("henpemaz.splitscreen", "SplitScreen", "0.1.2")]
     public partial class SplitScreenMod : BaseUnityPlugin
     {
         public enum SplitMode
@@ -40,10 +40,10 @@ namespace SplitScreenMod
                     SetSplitMode(SplitMode.NoSplit, game); // unsplit and let the main logic decide
             }
 
-            if (Input.GetKeyDown("9"))
-            {
-                if (GameObject.FindObjectOfType<RainWorld>()?.processManager?.currentMainLoop is RainWorldGame game) game.world.rainCycle.ArenaEndSessionRain();
-            }
+            //if (Input.GetKeyDown("9"))
+            //{
+            //    if (GameObject.FindObjectOfType<RainWorld>()?.processManager?.currentMainLoop is RainWorldGame game) game.world.rainCycle.ArenaEndSessionRain();
+            //}
 
             //if (Input.GetKeyDown("1"))
             //{
@@ -115,16 +115,48 @@ namespace SplitScreenMod
             // currently only if pcount == 2
             if (Type.GetType("JollyCoop.PlayerHK, JollyCoop") is Type jol)
             {
-                new Hook(jol.GetMethod("HandleCoopCamera", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static),
-                 typeof(SplitScreenMod).GetMethod("fixHandleCoopCamera"), this);
+                try
+                {
+                    new Hook(jol.GetMethod("HandleCoopCamera", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static),
+                        typeof(SplitScreenMod).GetMethod("fixHandleCoopCamera"), this);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
+                try
+                {
+                    new Hook(Type.GetType("JollyCoop.PlayerMeter, JollyCoop").GetMethod("Draw", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance),
+                        typeof(SplitScreenMod).GetMethod("fixPlayerMeterDraw"), this);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
+                try
+                {
+                    HookEndpointManager.Modify(Type.GetType("JollyCoop.RoomScriptHK/VanillaEndingGhost, JollyCoop").GetMethod("Update", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance),
+                        (Action<ILContext>)fixjollyBodyTransplant); // christ
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
             }
 
             if (Type.GetType("SBCameraScroll.RoomCameraMod, SBCameraScroll") is Type sbcs)
             {
-                HookEndpointManager.Modify(sbcs.GetMethod("CheckBorders", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static),
-                    (Action<ILContext>)fixsbcsCheckBorders); // please do offsets right
-                // todo fix this mod calling resetpos all the time when 2 scrollers, causes a bit of a stuttew
-                // it simply doesn't account for 2 cams as it stores a bunch of static vars
+                try
+                {
+                    HookEndpointManager.Modify(sbcs.GetMethod("CheckBorders", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static),
+                        (Action<ILContext>)fixsbcsCheckBorders); // please do offsets right
+                    // todo fix this mod calling resetpos all the time when 2 scrollers, causes a bit of a stuttew
+                    // it simply doesn't account for 2 cams as it stores a bunch of static vars
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
             }
 
             orig(self);
@@ -257,17 +289,10 @@ namespace SplitScreenMod
                     SetSplitMode(SplitMode.NoSplit, self);
                 }
 
-                //if (CurrentSplitMode != SplitMode.NoSplit && main.room.abstractRoom.name == "SB_L01" && (other.followAbstractCreature?.realizedCreature?.slatedForDeletetion ?? true)) // honestly fuck jolly
-                //{
-                //    other.followAbstractCreature = main.followAbstractCreature;
-                //    SetSplitMode(SplitMode.NoSplit, self);
-                //    other.ClearAllSprites();
-                //    //other.hud.ClearAllSprites();
-                //    other.hud = null; // pain
-                //    //cameraListeners[1]?.Destroy();
-                //    //cameraListeners[1] = null;
-                //    //self.cameras = new RoomCamera[] { main };
-                //}
+                if (CurrentSplitMode != SplitMode.NoSplit && main.room.abstractRoom.name == "SB_L01") // honestly jolly
+                {
+                    ConsiderColapsing(self);
+                }
             }
 
             if (realizer2 != null) realizer2.Update();
@@ -280,11 +305,17 @@ namespace SplitScreenMod
             {
                 var main = game.cameras[0];
                 var other = game.cameras[1];
+                OffsetHud(main, split);
+                OffsetHud(other, split);
                 CurrentSplitMode = split;
                 Futile.instance.UpdateCameraPosition();
-                OffsetHud(main);
-                OffsetHud(other);
             }
+        }
+
+        // following null or deleted or dead
+        private bool IsCamDead(RoomCamera cam)
+        {
+            return (cam.followAbstractCreature?.state?.dead ?? true) || (cam.followAbstractCreature?.realizedCreature?.slatedForDeletetion ?? true);
         }
 
         private void ConsiderColapsing(RainWorldGame game)
@@ -294,12 +325,22 @@ namespace SplitScreenMod
                 foreach (var cam in game.cameras)
                 {
                     // if following dead critter, switch!
-                    if (cam.followAbstractCreature?.state?.dead ?? false)
+                    if (IsCamDead(cam))
                     {
-                        cam.followAbstractCreature = cam.game.cameras.FirstOrDefault(c => c.followAbstractCreature?.state?.alive ?? false)?.followAbstractCreature ?? cam.followAbstractCreature;
+                        if (cam.game.cameras.FirstOrDefault(c => !IsCamDead(c))?.followAbstractCreature?.realizedCreature is Player player) 
+                            AssignCameraToPlayer(cam, player);
                     }
                 }
             }
+        }
+
+        public void AssignCameraToPlayer(RoomCamera camera, Player player)
+        {
+            camera.followAbstractCreature = player.abstractCreature;
+            var newroom = player.room ?? player.abstractCreature.Room.realizedRoom;
+            if (newroom != null && camera.room != null && camera.room != newroom)
+                camera.MoveCamera(newroom, newroom.CameraViewingNode(player.abstractCreature.pos.abstractNode));
+            if (camera.hud != null) camera.hud.owner = player;
         }
 
         private void RoomCamera_DrawUpdate(On.RoomCamera.orig_DrawUpdate orig, RoomCamera self, float timeStacker, float timeSpeed)
