@@ -41,6 +41,18 @@ namespace SpawnMenu
 
             On.ArenaBehaviors.SandboxEditor.LoadConfig += SandboxEditor_LoadConfig;
             On.ArenaBehaviors.SandboxEditor.AddIcon_IconSymbolData_Vector2_EntityID_bool_bool += SandboxEditor_AddIcon_IconSymbolData_Vector2_EntityID_bool_bool;
+
+            On.ArenaBehaviors.SandboxEditor.CreatureOrItemIcon.DrawSprites += CreatureOrItemIcon_DrawSprites; // support being drawn by more than 1 cam
+        }
+
+        private void CreatureOrItemIcon_DrawSprites(On.ArenaBehaviors.SandboxEditor.CreatureOrItemIcon.orig_DrawSprites orig, ArenaBehaviors.SandboxEditor.CreatureOrItemIcon self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+        {
+            if(self.symbol == null) // deleted
+            {
+                sLeaser.CleanSpritesAndRemove();
+                return;
+            }
+            orig(self, sLeaser, rCam, timeStacker, camPos);
         }
 
         private void SandboxEditor_LoadConfig(On.ArenaBehaviors.SandboxEditor.orig_LoadConfig orig, ArenaBehaviors.SandboxEditor self)
@@ -147,8 +159,11 @@ namespace SpawnMenu
                 sb.editor.currentConfig = -1;
 
 
-                sb.editor.cursors.Add(new ArenaBehaviors.SandboxEditor.EditCursor(sb.editor, os.abstractAI as OverseerAbstractAI, 0, new Vector2(-1000, -1000)));
-                room.AddObject(sb.editor.cursors[0]);
+                var c = new ArenaBehaviors.SandboxEditor.EditCursor(sb.editor, os.abstractAI as OverseerAbstractAI, 0, new Vector2(-1000, -1000));
+                sb.editor.cursors.Add(c);
+                room.AddObject(c);
+                (os.realizedCreature as Overseer).editCursor = c;
+
                 sb.overlay.sandboxEditorSelector.ConnectToEditor(sb.editor);
 
                 sb.sandboxInitiated = true;
@@ -169,20 +184,21 @@ namespace SpawnMenu
                 return;
             }
 
+            var was = self.game.pauseMenu;
             self.game.pauseMenu = null; // several menu thinghies check this and stop working :(
             // some room thinghies need updating
             var room = self.game.cameras[0].room;
             var overlayowner = room.updateList.First(o => o is SandboxOverlayOwner) as SandboxOverlayOwner;
-            overlayowner.Update(false);
-            room.updateList.First(o => o is ArenaBehaviors.SandboxEditor.EditCursor).Update(false);
-            foreach(var uad in room.updateList)
+            foreach(var uad in room.updateList.ToList())
             {
                 if(uad is ArenaBehaviors.SandboxEditor.PlacedIcon 
                     || uad is SeedPicker
+                    || uad is SandboxOverlayOwner
+                    || uad is ArenaBehaviors.SandboxEditor.EditCursor
                     ) 
                     uad.Update(false);
             }
-            self.game.pauseMenu = self; // done here
+            self.game.pauseMenu = was; // done here
 
             // grab processed by our menus not pause menu
             // if doing anything, pause buttons shut down
@@ -223,7 +239,8 @@ namespace SpawnMenu
         {
             orig(self, timeStacker);
             if (!self.game.IsStorySession || self.game.pauseMenu == null) return;
-            self.game.cameras[0].DrawUpdate(0f, 1f); // so icons and cursor also update otherwise this would get quite verbose in here
+            foreach (var cam in self.game.cameras) cam.DrawUpdate(0f,1f);
+            //self.game.cameras[0].DrawUpdate(0f, 1f); // so icons and cursor also update otherwise this would get quite verbose in here
             // timespeed 1 so audio doesnt glitch out
         }
 
@@ -235,7 +252,7 @@ namespace SpawnMenu
                 if (self.game.IsStorySession)
                 {
                     var room = self.game.cameras[0].room;
-                    var overlayowner = room.updateList.First(o => o is SandboxOverlayOwner) as SandboxOverlayOwner;
+                    var overlayowner = room.updateList.First(o => o is SandboxOverlayOwner && !o.slatedForDeletetion) as SandboxOverlayOwner;
                     var editor = overlayowner.gameSession.editor;
                     overlayowner.gameSession.PlayMode = true;
 
@@ -295,8 +312,17 @@ namespace SpawnMenu
                     overlayowner.Destroy();
                     overlayowner.overlay.ShutDownProcess();
 
-                    var editCursor = room.updateList.First(o => o is ArenaBehaviors.SandboxEditor.EditCursor) as ArenaBehaviors.SandboxEditor.EditCursor;
+                    var editCursor = room.updateList.First(o => o is ArenaBehaviors.SandboxEditor.EditCursor && !o.slatedForDeletetion) as ArenaBehaviors.SandboxEditor.EditCursor;
                     editCursor.Destroy();
+                    // with splitscreen, slugbase nullrefs on a hook if one of these is deleted, removed from room, then drawn. not too sure how
+                    foreach (var cam in self.game.cameras) 
+                        foreach (var sl in cam.spriteLeasers.ToList()) 
+                            if (sl.drawableObject is ArenaBehaviors.SandboxEditor.EditCursor ec && ec.slatedForDeletetion 
+                                || sl.drawableObject is SandboxOverlayOwner ow && ow.slatedForDeletetion)
+                            {
+                                sl.CleanSpritesAndRemove();
+                                cam.spriteLeasers.Remove(sl);
+                            }
                 }
             }
             finally
