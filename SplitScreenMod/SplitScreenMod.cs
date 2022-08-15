@@ -1,9 +1,9 @@
 ﻿using BepInEx;
+using BepInEx.Configuration;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 using MonoMod.RuntimeDetour.HookGen;
-using RWCustom;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,9 +12,13 @@ using UnityEngine;
 
 namespace SplitScreenMod
 {
-    [BepInPlugin("henpemaz.splitscreen", "SplitScreen", "0.1.2")]
+    [BepInPlugin("henpemaz.splitscreen", "SplitScreen", "0.1.3")]
     public partial class SplitScreenMod : BaseUnityPlugin
     {
+
+        private ConfigEntry<SplitMode> confPreferedSplitMode;
+        private ConfigEntry<bool> confAlwaysSplit;
+
         public enum SplitMode
         {
             NoSplit,
@@ -22,22 +26,25 @@ namespace SplitScreenMod
             SplitVertical // left right screens
         }
 
-        SplitMode CurrentSplitMode;
-        SplitMode preferedSplitMode = SplitMode.SplitVertical;
+        public static SplitMode CurrentSplitMode;
+        public static SplitMode preferedSplitMode = SplitMode.SplitVertical;
+        public static bool alwaysSplit;
+        public static Vector2[] camOffsets = new Vector2[] { new Vector2(0,0), new Vector2(32000, 0), new Vector2(0, 32000), new Vector2(32000,32000) }; // one can dream
 
         int curCamera = -1;
-        CameraListener[] cameraListeners = new CameraListener[2];
-        private RoomRealizer realizer2;
+        public static CameraListener[] cameraListeners = new CameraListener[2];
+        public static RoomRealizer realizer2;
 
         //float offset;
         void Update() // debug thinghies
         {
             if (Input.GetKeyDown("f8"))
             {
+                if (preferedSplitMode == SplitMode.NoSplit) return;
                 if (preferedSplitMode == SplitMode.SplitHorizontal) preferedSplitMode = SplitMode.SplitVertical;
                 else if (preferedSplitMode == SplitMode.SplitVertical) preferedSplitMode = SplitMode.SplitHorizontal;
-                if(GameObject.FindObjectOfType<RainWorld>()?.processManager?.currentMainLoop is RainWorldGame game) 
-                    SetSplitMode(SplitMode.NoSplit, game); // unsplit and let the main logic decide
+                if(CurrentSplitMode != SplitMode.NoSplit && GameObject.FindObjectOfType<RainWorld>()?.processManager?.currentMainLoop is RainWorldGame game) 
+                    SetSplitMode(preferedSplitMode, game);
             }
 
             //if (Input.GetKeyDown("9"))
@@ -60,6 +67,16 @@ namespace SplitScreenMod
 
         public void OnEnable()
         {
+            confPreferedSplitMode = Config.Bind("General",
+                                         "preferedSplitMode",
+                                         SplitMode.SplitVertical,
+                                         "Preferred split mode");
+            confAlwaysSplit = Config.Bind("General",
+                                         "alwaysSplit",
+                                         false,
+                                         "Permanent split mode");
+
+
             On.RainWorld.Start += RainWorld_Start; // ils and deguggable hooks and late compat
 
             On.Futile.Init += Futile_Init; // turn on splitscreen
@@ -67,8 +84,8 @@ namespace SplitScreenMod
 
             // game hook moved to rwstart for compat, lotsa things in it
             On.RoomCamera.ctor += RoomCamera_ctor1; // bind cam to camlistener
-            On.RainWorldGame.ShutDownProcess += RainWorldGame_ShutDownProcess; // unbind camlistener
             On.RainWorldGame.Update += RainWorldGame_Update; // split unsplit
+            On.RainWorldGame.ShutDownProcess += RainWorldGame_ShutDownProcess; // unbind camlistener
 
             // wrapped calls to store shader globals
             On.RoomCamera.DrawUpdate += RoomCamera_DrawUpdate;
@@ -80,10 +97,11 @@ namespace SplitScreenMod
             On.OverWorld.WorldLoaded += OverWorld_WorldLoaded; // roomrealizer 2 
             On.RoomCamera.FireUpSinglePlayerHUD += RoomCamera_FireUpSinglePlayerHUD;// displace cam2 map
             On.Menu.PauseMenu.ctor += PauseMenu_ctor;// displace pause menu
-            On.RainWorldGame.ContinuePaused += RainWorldGame_ContinuePaused; // kill dupe pause menu
-            On.Water.InitiateSprites += Water_InitiateSprites;
+            On.Menu.PauseMenu.ShutDownProcess += PauseMenu_ShutDownProcess;// kill dupe pause menu
+            On.Water.InitiateSprites += Water_InitiateSprites; // move water somewhere near final position
             On.VirtualMicrophone.DrawUpdate += VirtualMicrophone_DrawUpdate; // mic from 2nd cam should not pic up while on same cam
             On.HUD.DialogBox.DrawPos += DialogBox_DrawPos; // center dialog in half screen
+            On.RoomRealizer.CanAbstractizeRoom += RoomRealizer_CanAbstractizeRoom;
         }
 
         private void RainWorld_Start(On.RainWorld.orig_Start orig, RainWorld self)
@@ -96,6 +114,8 @@ namespace SplitScreenMod
             IL.RoomCamera.Update += RoomCamera_Update1; // follow critter, clamp to proper values
             IL.RoomCamera.DrawUpdate += RoomCamera_DrawUpdate1; // clamp to proper values
             IL.ShortcutHandler.Update += ShortcutHandler_Update; // activate room if followed, move cam1 if p moves
+            IL.ShortcutHandler.SuckInCreature += ShortcutHandler_SuckInCreature; // the vanilla room loading system is fragile af
+            IL.PoleMimicGraphics.InitiateSprites += PoleMimicGraphics_InitiateSprites; // dont resize on re-init
 
             // creature culling has to take into account cam2
             new Hook(typeof(GraphicsModule).GetMethod("get_ShouldBeCulled", BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic),
@@ -111,37 +131,26 @@ namespace SplitScreenMod
                 typeof(SplitScreenMod).GetMethod("Shader_SetGlobalTexture"), this);
 
             // interop in interop files
-            // jolly don't mess with the cameras PLEASE
-            // currently only if pcount == 2
             if (Type.GetType("JollyCoop.PlayerHK, JollyCoop") is Type jol)
             {
                 try
                 {
                     new Hook(jol.GetMethod("HandleCoopCamera", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static),
-                        typeof(SplitScreenMod).GetMethod("fixHandleCoopCamera"), this);
+                        typeof(SplitScreenMod).GetMethod("fixHandleCoopCamera"), this); // jolly don't mess with the cameras PLEASE
                 }
-                catch (Exception e)
-                {
-                    Debug.LogException(e);
-                }
+                catch (Exception e) { Debug.LogException(e); }
                 try
                 {
                     new Hook(Type.GetType("JollyCoop.PlayerMeter, JollyCoop").GetMethod("Draw", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance),
-                        typeof(SplitScreenMod).GetMethod("fixPlayerMeterDraw"), this);
+                        typeof(SplitScreenMod).GetMethod("fixPlayerMeterDraw"), this); // if only there was a way to get which player the hud is following... oh
                 }
-                catch (Exception e)
-                {
-                    Debug.LogException(e);
-                }
+                catch (Exception e) { Debug.LogException(e); }
                 try
                 {
                     HookEndpointManager.Modify(Type.GetType("JollyCoop.RoomScriptHK/VanillaEndingGhost, JollyCoop").GetMethod("Update", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance),
                         (Action<ILContext>)fixjollyBodyTransplant); // christ
                 }
-                catch (Exception e)
-                {
-                    Debug.LogException(e);
-                }
+                catch (Exception e) { Debug.LogException(e); }
             }
 
             if (Type.GetType("SBCameraScroll.RoomCameraMod, SBCameraScroll") is Type sbcs)
@@ -150,13 +159,14 @@ namespace SplitScreenMod
                 {
                     HookEndpointManager.Modify(sbcs.GetMethod("CheckBorders", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static),
                         (Action<ILContext>)fixsbcsCheckBorders); // please do offsets right
-                    // todo fix this mod calling resetpos all the time when 2 scrollers, causes a bit of a stuttew
-                    // it simply doesn't account for 2 cams as it stores a bunch of static vars
                 }
-                catch (Exception e)
+                catch (Exception e) { Debug.LogException(e); }
+                try
                 {
-                    Debug.LogException(e);
+                    HookEndpointManager.Modify(sbcs.GetMethod("RoomCamera_ApplyPositionChange", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static),
+                        (Action<ILContext>)fixsbcsApplyPositionChange); // the right texture please
                 }
+                catch (Exception e) { Debug.Log(e); }
             }
 
             orig(self);
@@ -182,6 +192,10 @@ namespace SplitScreenMod
                 self._camera.rect = new Rect(0f, 0.5f, 1f, 1f);
                 self._camera2.orthographicSize = Futile.screen.pixelHeight / 2f * Futile.displayScaleInverse * 0.5f;
                 self._camera2.rect = new Rect(0f, 0f, 1f, 0.5f);
+                var offset = camOffsets[1];
+                var x = (Futile.screen.originX - 0.5f) * -Futile.screen.pixelWidth * Futile.displayScaleInverse + Futile.screenPixelOffset + offset.x;
+                var y = (Futile.screen.originY - 0.5f) * -Futile.screen.pixelHeight * Futile.displayScaleInverse - Futile.screenPixelOffset + offset.y;
+                self._camera2.transform.position = new Vector3(x, y, -10f);
             }
             else if (CurrentSplitMode == SplitMode.SplitVertical)
             {
@@ -190,6 +204,10 @@ namespace SplitScreenMod
                 self._camera.rect = new Rect(0f, 0f, 0.5f, 1f);
                 self._camera2.orthographicSize = Futile.screen.pixelHeight / 2f * Futile.displayScaleInverse * 1f;
                 self._camera2.rect = new Rect(0.5f, 0f, 1f, 1f);
+                var offset = camOffsets[1];
+                var x = (Futile.screen.originX - 0.5f) * -Futile.screen.pixelWidth * Futile.displayScaleInverse + Futile.screenPixelOffset + offset.x;
+                var y = (Futile.screen.originY - 0.5f) * -Futile.screen.pixelHeight * Futile.displayScaleInverse - Futile.screenPixelOffset + offset.y;
+                self._camera2.transform.position = new Vector3(x, y, -10f);
             }
             else
             {
@@ -201,10 +219,19 @@ namespace SplitScreenMod
 
         private void RainWorldGame_ctor(On.RainWorldGame.orig_ctor orig, RainWorldGame self, ProcessManager manager)
         {
+            for (int i = 0; i < cameraListeners.Length; i++)
+            {
+                if (cameraListeners[i] != null) cameraListeners[i].Destroy();
+                cameraListeners[i] = null;
+            }
+            realizer2 = null;
             // note, this could maybe be moved to manager.switchmainprocess, so that it's tied to game being the main process and wont fire if someone tries to instantiate a game for some reason
             // but then I'd have to rain checks for game == pm.mainprocess everywhere and thatd be ass
             orig(self, manager);
-            if(self.session.Players.Count > 1)
+            preferedSplitMode = confPreferedSplitMode.Value;
+            alwaysSplit = confAlwaysSplit.Value;
+            
+            if (self.session.Players.Count > 1 && preferedSplitMode != SplitMode.NoSplit)
             {
                 var cams = self.cameras;
                 Array.Resize(ref cams, 2);
@@ -216,7 +243,7 @@ namespace SplitScreenMod
                 cams[0].followAbstractCreature = self.session.Players[0];
                 cams[1].followAbstractCreature = self.session.Players[1];
 
-                realizer2 = new RoomRealizer(self.session.Players[0], self.world)
+                realizer2 = new RoomRealizer(self.session.Players.First(p => p != self.roomRealizer.followCreature), self.world)
                 {
                     realizedRooms = self.roomRealizer.realizedRooms,
                     recentlyAbstractedRooms = self.roomRealizer.recentlyAbstractedRooms,
@@ -227,17 +254,11 @@ namespace SplitScreenMod
                 //foreach (RoomCamera c in cams) if (c != null) c.splitScreenMode = true;
                 // cam.offset also dropped, too buggy as some idraws wouldnt use campos
             }
-            else
-            {
-                for (int i = 0; i < cameraListeners.Length; i++)
-                {
-                    if (cameraListeners[i] != null) cameraListeners[i].Destroy();
-                    cameraListeners[i] = null;
-                }
-                realizer2 = null;
-            }
+
             CurrentSplitMode = SplitMode.NoSplit;
             Futile.instance.UpdateCameraPosition();
+
+            SetSplitMode(alwaysSplit ? preferedSplitMode : SplitMode.NoSplit, self);
         }
 
         // adds a listener for render events so shader globals can be set
@@ -246,14 +267,16 @@ namespace SplitScreenMod
             orig(self, game, cameraNumber);
             if (cameraNumber == 0)
             {
+                if (cameraListeners[0] != null) cameraListeners[0].Destroy();
                 cameraListeners[0] = Futile.instance._cameraHolder.AddComponent<CameraListener>();
                 cameraListeners[0].roomCamera = self;
             }
             else
             {
+                if (cameraListeners[1] != null) cameraListeners[1].Destroy();
                 cameraListeners[1] = Futile.instance._cameraHolder2.AddComponent<CameraListener>();
                 cameraListeners[1].roomCamera = self;
-                foreach (var c in self.SpriteLayers) c.SetPosition(-self.offset);
+                foreach (var c in self.SpriteLayers) c.SetPosition(camOffsets[self.cameraNumber]);
                 self.offset = Vector2.zero; // nulla zero niente don't use it
                 // so many drawables don't ever fucking move or don't take into account the offset its infuriating
             }
@@ -261,7 +284,6 @@ namespace SplitScreenMod
 
         private void RainWorldGame_ShutDownProcess(On.RainWorldGame.orig_ShutDownProcess orig, RainWorldGame self)
         {
-            orig(self);
             CurrentSplitMode = SplitMode.NoSplit;
             Futile.instance.UpdateCameraPosition();
             for (int i = 0; i < cameraListeners.Length; i++)
@@ -270,6 +292,7 @@ namespace SplitScreenMod
                 cameraListeners[i] = null;
             }
             realizer2 = null;
+            orig(self);
         }
 
         private void RainWorldGame_Update(On.RainWorldGame.orig_Update orig, RainWorldGame self)
@@ -284,7 +307,7 @@ namespace SplitScreenMod
                     SetSplitMode(preferedSplitMode, self);
                 }
 
-                if (CurrentSplitMode != SplitMode.NoSplit && (other.room == main.room && other.currentCameraPosition == main.currentCameraPosition))
+                if (CurrentSplitMode != SplitMode.NoSplit && (other.room == main.room && other.currentCameraPosition == main.currentCameraPosition) && !alwaysSplit)
                 {
                     SetSplitMode(SplitMode.NoSplit, self);
                 }
@@ -298,16 +321,15 @@ namespace SplitScreenMod
             if (realizer2 != null) realizer2.Update();
         }
 
-        // should only ever go nosplit-split, switching between splitmodes here will mess up the HUD offset
         public void SetSplitMode(SplitMode split, RainWorldGame game)
         {
             if(game.cameras.Length > 1 && split != CurrentSplitMode)
             {
                 var main = game.cameras[0];
                 var other = game.cameras[1];
-                OffsetHud(main, split);
-                OffsetHud(other, split);
                 CurrentSplitMode = split;
+                OffsetHud(main);
+                OffsetHud(other);
                 Futile.instance.UpdateCameraPosition();
             }
         }
@@ -315,20 +337,30 @@ namespace SplitScreenMod
         // following null or deleted or dead
         private bool IsCamDead(RoomCamera cam)
         {
-            return (cam.followAbstractCreature?.state?.dead ?? true) || (cam.followAbstractCreature?.realizedCreature?.slatedForDeletetion ?? true);
+            return IsCreatureDead(cam.followAbstractCreature);
         }
 
+        // null or dead or deleted
+        private bool IsCreatureDead(AbstractCreature critter)
+        {
+            return (critter?.state?.dead ?? true) || (critter?.realizedCreature?.slatedForDeletetion ?? true);
+        }
+
+        // consider changing if someones dead or deleted
         private void ConsiderColapsing(RainWorldGame game)
         {
             if(game.cameras.Length > 1)
             {
+                if (game.Players.Count == 2 && alwaysSplit) return; // I guess
                 foreach (var cam in game.cameras)
                 {
                     // if following dead critter, switch!
                     if (IsCamDead(cam))
                     {
-                        if (cam.game.cameras.FirstOrDefault(c => !IsCamDead(c))?.followAbstractCreature?.realizedCreature is Player player) 
-                            AssignCameraToPlayer(cam, player);
+                        if(cam.game.Players.ToArray().Reverse().FirstOrDefault(cr=>!IsCreatureDead(cr))?.realizedCreature is Player p)
+                            AssignCameraToPlayer(cam, p);
+                        else if (cam.game.cameras.FirstOrDefault(c => !IsCamDead(c))?.followAbstractCreature?.realizedCreature is Player pp) 
+                            AssignCameraToPlayer(cam, pp);
                     }
                 }
             }
@@ -339,9 +371,25 @@ namespace SplitScreenMod
             camera.followAbstractCreature = player.abstractCreature;
             var newroom = player.room ?? player.abstractCreature.Room.realizedRoom;
             if (newroom != null && camera.room != null && camera.room != newroom)
-                camera.MoveCamera(newroom, newroom.CameraViewingNode(player.abstractCreature.pos.abstractNode));
+            {
+                int node = player.abstractCreature.pos.abstractNode;
+                camera.MoveCamera(newroom, newroom.CameraViewingNode(node != -1 ? node : 0));
+            }
             if (camera.hud != null) camera.hud.owner = player;
         }
+
+        private void OffsetHud(RoomCamera self)
+        {
+            Vector2 offset = camOffsets[self.cameraNumber];
+            if (CurrentSplitMode != SplitMode.NoSplit)
+            {
+                offset += (CurrentSplitMode == SplitMode.SplitHorizontal ? new Vector2(0, self.sSize.y / 4f) : new Vector2(self.sSize.x / 4f, 0));
+            }
+            self.ReturnFContainer("HUD").SetPosition(offset);
+            self.ReturnFContainer("HUD2").SetPosition(offset);
+            self.hud?.map?.inFrontContainer?.SetPosition(offset);
+        }
+
 
         private void RoomCamera_DrawUpdate(On.RoomCamera.orig_DrawUpdate orig, RoomCamera self, float timeStacker, float timeSpeed)
         {
@@ -349,7 +397,11 @@ namespace SplitScreenMod
             try
             {
                 curCamera = self.cameraNumber;
-                if (self.cameraNumber > 0 && CurrentSplitMode == SplitMode.NoSplit) return;
+                if (self.cameraNumber > 0 && CurrentSplitMode == SplitMode.NoSplit) // optimized out
+                {
+                    self.virtualMicrophone.DrawUpdate(timeStacker, timeSpeed); // needs to remove old loops though
+                    return;
+                }
                 orig(self, timeStacker, timeSpeed);
             }
             finally
@@ -446,274 +498,7 @@ namespace SplitScreenMod
             }
         }
 
-        private void ShortcutHandler_Update(ILContext il)
-        {
-            var c = new ILCursor(il);
-
-            // this is loading room if creature followed by camera
-            if (c.TryGotoNext(MoveType.Before,
-                i => i.MatchCallvirt<AbstractCreature>("FollowedByCamera"),
-                i => i.MatchBrfalse(out _),
-                i => i.MatchLdarg(0),
-                i => i.MatchLdfld< ShortcutHandler>("betweenRoomsWaitingLobby")
-                ))
-            {
-                c.Index++;
-                c.Emit(OpCodes.Ldarg_0);
-                c.Emit(OpCodes.Ldloc, 6);
-                // was A && !B
-                // becomes (A || A2) && !B
-                // b param here is A
-                c.EmitDelegate<Func<bool, ShortcutHandler, int, bool>>((b, sc, k) =>
-                {
-                    return b || (sc.game.cameras.Length > 1 && sc.betweenRoomsWaitingLobby[k].creature.abstractCreature.FollowedByCamera(1));
-                });
-            }
-            else Debug.LogException(new Exception("Couldn't IL-hook ShortcutHandler_Update part 1 from SplitScreenMod")); // deffendisve progrmanig
-            
-            
-            // this is moving the camera if the creature is followed by camera
-            ILLabel jump = null;
-            if (c.TryGotoNext(MoveType.Before,
-                i => i.MatchCallvirt<AbstractCreature>("FollowedByCamera"),
-                i => i.MatchBrfalse(out jump),
-                i => i.MatchLdarg(0),
-                i => i.MatchLdfld<ShortcutHandler>("game")
-                ))
-            {
-                c.GotoLabel(jump);
-
-                c.Emit(OpCodes.Ldarg_0);
-                c.Emit(OpCodes.Ldloc, 6);
-                c.EmitDelegate<Action<ShortcutHandler, int>>((sc, k) =>
-                {
-                    if (sc.game.cameras.Length > 1 && sc.betweenRoomsWaitingLobby[k].creature.abstractCreature.FollowedByCamera(1))
-                        sc.game.cameras[1].MoveCamera(sc.betweenRoomsWaitingLobby[k].room.realizedRoom, sc.betweenRoomsWaitingLobby[k].room.nodes[sc.betweenRoomsWaitingLobby[k].entranceNode].viewedByCamera);
-                });
-            }
-            else Debug.LogException(new Exception("Couldn't IL-hook ShortcutHandler_Update part 2 from SplitScreenMod")); // deffendisve progrmanig
-        }
-
-        private void RoomCamera_ctor(ILContext il)
-        {
-			var c = new ILCursor(il);
-			if (c.TryGotoNext(MoveType.Before,
-				i => i.MatchLdstr("LevelTexture"),
-                i => i.MatchLdcI4(1),
-                i => i.MatchNewobj<FSprite>()
-				))
-			{
-                c.Index++;
-                c.Emit(OpCodes.Ldarg_2);
-                c.EmitDelegate<Func<string, int, string>>((name, camnum) => 
-                {
-                    return camnum > 0? name + camnum.ToString() : name;
-                });
-            }
-			else Debug.LogException(new Exception("Couldn't IL-hook RoomCamera_ctor from SplitScreenMod")); // deffendisve progrmanig
-		}
-
-        private void RoomCamera_Update1(ILContext il)
-        {
-            var c = new ILCursor(il);
-            ILLabel jump = null;
-            if (c.TryGotoNext(MoveType.Before,
-                i => i.MatchLdarg(0),
-                i => i.MatchLdfld<RoomCamera>("splitScreenMode"),
-                i => i.MatchBrfalse(out jump),
-                i => i.MatchLdarg(0),
-                i => i.MatchLdfld<RoomCamera>("followAbstractCreature"),
-                i => i.MatchCallvirt<AbstractCreature>("get_realizedCreature")
-                ))
-            {
-                c.GotoLabel(jump);
-                c.MoveAfterLabels();
-                c.Emit(OpCodes.Ldarg_0);
-                c.EmitDelegate<Action<RoomCamera>>((rc) =>
-                {
-                    if (CurrentSplitMode == SplitMode.SplitHorizontal)
-                    {
-                        float pad = rc.sSize.y / 4f;
-                        if(rc.followAbstractCreature != null && rc.followAbstractCreature.realizedCreature is Creature cr)
-                        {
-                            if(!cr.inShortcut) rc.pos.y = rc.followAbstractCreature.realizedCreature.mainBodyChunk.pos.y - 2 * pad;
-                            else
-                            {
-                                Vector2? vector = rc.room.game.shortcuts.OnScreenPositionOfInShortCutCreature(rc.room, cr);
-                                if (vector != null)
-                                {
-                                    rc.pos.y = vector.Value.y - 2 * pad;
-                                }
-                            }
-                            rc.pos.y += rc.followCreatureInputForward.y * 2f;
-                        }
-                    }
-                    else if (CurrentSplitMode == SplitMode.SplitVertical)
-                    {
-                        float pad = rc.sSize.x / 4f;
-                        if (rc.followAbstractCreature != null && rc.followAbstractCreature.realizedCreature is Creature cr)
-                        {
-                            if (!cr.inShortcut) rc.pos.x = rc.followAbstractCreature.realizedCreature.mainBodyChunk.pos.x - 2 * pad;
-                            else
-                            {
-                                Vector2? vector = rc.room.game.shortcuts.OnScreenPositionOfInShortCutCreature(rc.room, cr);
-                                if (vector != null)
-                                {
-                                    rc.pos.x = vector.Value.x - 2 * pad;
-                                }
-                            }
-                            rc.pos.x += rc.followCreatureInputForward.x * 2f;
-                        }
-                    }
-                });
-
-                try
-                {
-                    c.GotoNext(MoveType.After, i => i.MatchCallOrCallvirt<RoomCamera>("get_hDisplace")); // IL_00A7
-
-                    c.Emit(OpCodes.Ldarg_0); // RoomCamera
-                    c.EmitDelegate<Func<float, RoomCamera, float>>((v, rc) =>
-                    {
-                        if (CurrentSplitMode == SplitMode.SplitVertical)
-                        {
-                            return v - rc.sSize.x / 4f;
-                        }
-                        return v;
-                    });
-
-                    c.GotoNext(MoveType.After, i => i.MatchCallOrCallvirt<RoomCamera>("get_hDisplace")); // IL_00CF
-
-                    c.Emit(OpCodes.Ldarg_0); // RoomCamera
-                    c.EmitDelegate<Func<float, RoomCamera, float>>((v, rc) =>
-                    {
-                        if (CurrentSplitMode == SplitMode.SplitVertical)
-                        {
-                            return v + rc.sSize.x / 4f;
-                        }
-                        return v;
-                    });
-
-                    ILLabel hop = null;
-                    c.GotoNext(MoveType.After, i => i.MatchLdfld<RoomCamera>("splitScreenMode"), i => i.MatchBrfalse(out hop)); // IL_0116
-                    c.GotoLabel(hop, MoveType.After);
-                    c.MoveAfterLabels();
-                    c.Emit(OpCodes.Ldarg_0); // RoomCamera
-                    c.EmitDelegate<Func<float, RoomCamera, float>>((v, rc) =>
-                    {
-                        if (CurrentSplitMode == SplitMode.SplitHorizontal)
-                        {
-                            return v + rc.sSize.y / 4f;
-                        }
-                        return v;
-                    });
-
-
-                    c.GotoNext(MoveType.After, i => i.MatchLdfld<RoomCamera>("splitScreenMode"), i => i.MatchBrfalse(out hop)); // IL_014C
-                    c.GotoLabel(hop, MoveType.After);
-                    c.MoveAfterLabels();
-                    c.Emit(OpCodes.Ldarg_0); // RoomCamera
-                    c.EmitDelegate<Func<float, RoomCamera, float>>((v, rc) =>
-                    {
-                        if (CurrentSplitMode == SplitMode.SplitHorizontal)
-                        {
-                            return v + rc.sSize.y / 4f;
-                        }
-                        return v;
-                    });
-                }
-                catch (Exception e)
-                {
-                    Debug.LogException(new Exception("Couldn't IL-hook RoomCamera_Update1 from SplitScreenMod, inner spot", e)); // deffendisve progrmanig
-                    throw;
-                }
-            }
-            else Debug.LogException(new Exception("Couldn't IL-hook RoomCamera_Update1 from SplitScreenMod")); // deffendisve progrmanig
-        }
-
-        private void RoomCamera_DrawUpdate1(ILContext il)
-        {
-            var c = new ILCursor(il);
-            ILLabel jump = null;
-            ILLabel jump2 = null;
-            if (c.TryGotoNext(MoveType.Before,
-                i => i.MatchLdarg(0),
-                i => i.MatchLdfld<RoomCamera>("voidSeaMode"),
-                i => i.MatchBrtrue(out jump),
-                i => i.MatchLdloca(0)
-                ))
-            {
-                var b = c.Index;
-                c.GotoLabel(jump);
-                if (c.Prev.MatchBr(out jump2))
-                {
-                    try
-                    {
-                        c.Index = b + 3; // NOT void Sea
-
-                        c.GotoNext(MoveType.After, i => i.MatchCallOrCallvirt<RoomCamera>("get_hDisplace")); // IL_00A7
-
-                        c.Emit(OpCodes.Ldarg_0); // RoomCamera
-                        c.EmitDelegate<Func<float, RoomCamera, float>>((v, rc) =>
-                        {
-                            if (CurrentSplitMode == SplitMode.SplitVertical)
-                            {
-                                return v - rc.sSize.x / 4f;
-                            }
-                            return v;
-                        });
-
-                        c.GotoNext(MoveType.After, i => i.MatchCallOrCallvirt<RoomCamera>("get_hDisplace")); // IL_00CF
-
-                        c.Emit(OpCodes.Ldarg_0); // RoomCamera
-                        c.EmitDelegate<Func<float, RoomCamera, float>>((v, rc) =>
-                        {
-                            if (CurrentSplitMode == SplitMode.SplitVertical)
-                            {
-                                return v + rc.sSize.x / 4f;
-                            }
-                            return v;
-                        });
-
-                        ILLabel hop = null;
-                        c.GotoNext(MoveType.After, i => i.MatchLdfld<RoomCamera>("splitScreenMode"), i => i.MatchBrfalse(out hop)); // IL_0116
-                        c.GotoLabel(hop, MoveType.After);
-                        c.MoveAfterLabels();
-                        c.Emit(OpCodes.Ldarg_0); // RoomCamera
-                        c.EmitDelegate<Func<float, RoomCamera, float>>((v, rc) =>
-                        {
-                            if (CurrentSplitMode == SplitMode.SplitHorizontal)
-                            {
-                                return v + rc.sSize.y / 4f;
-                            }
-                            return v;
-                        });
-
-
-                        c.GotoNext(MoveType.After, i => i.MatchLdfld<RoomCamera>("splitScreenMode"), i => i.MatchBrfalse(out hop)); // IL_014C
-                        c.GotoLabel(hop, MoveType.After);
-                        c.MoveAfterLabels();
-                        c.Emit(OpCodes.Ldarg_0); // RoomCamera
-                        c.EmitDelegate<Func<float, RoomCamera, float>>((v, rc) =>
-                        {
-                            if (CurrentSplitMode == SplitMode.SplitHorizontal)
-                            {
-                                return v + rc.sSize.y / 4f;
-                            }
-                            return v;
-                        });
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogException(new Exception("Couldn't IL-hook RoomCamera_DrawUpdate1 from SplitScreenMod, inner inner spot", e)); // deffendisve progrmanig
-                        throw;
-                    }
-                }
-                else Debug.LogException(new Exception("Couldn't IL-hook RoomCamera_DrawUpdate1 from SplitScreenMod, inner spot")); // deffendisve progrmanig
-            }
-            else Debug.LogException(new Exception("Couldn't IL-hook RoomCamera_DrawUpdate1 from SplitScreenMod")); // deffendisve progrmanig
-        }
-
-        private class CameraListener: MonoBehaviour
+        public class CameraListener: MonoBehaviour
         {
             public RoomCamera roomCamera;
             public Dictionary<string, Color> ShaderColors = new Dictionary<string, Color>();

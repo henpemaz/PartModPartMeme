@@ -189,5 +189,32 @@ namespace SplitScreenMod
                 Debug.LogException(new Exception("Couldn't IL-hook fixsbcsCheckBorders from SplitScreenMod", e)); // deffendisve progrmanig
             }
         }
+
+        private void fixsbcsApplyPositionChange(ILContext il) // use the right texture please
+        {
+            var c = new ILCursor(il);
+            try
+            {
+                // LevelTexture -> LevelTexture1
+                while (c.TryGotoNext(MoveType.Before,
+                    i => i.MatchLdstr("LevelTexture"),
+                    i => i.MatchCallOrCallvirt(out _) || (i.MatchLdloc(out _) && i.Next.MatchLdindRef()) || i.MatchLdcI4(out _)
+                    ))
+                {
+                    c.Index++;
+                    c.Emit(OpCodes.Ldarg_0);
+                    c.EmitDelegate<Func<string, RoomCamera, string>>((t, cam) =>
+                    {
+                        return t + ((cam.cameraNumber != 0) ? cam.cameraNumber.ToString() : string.Empty);
+                    });
+                }
+
+            }
+            catch (Exception e)
+            {
+                Debug.Log(new Exception("Couldn't IL-hook fixsbcsApplyPositionChange from SplitScreenMod, but everything is probably fine maybe they fixed it", e));
+                // its fine maybe they fixed it
+            }
+        }
     }
 }
