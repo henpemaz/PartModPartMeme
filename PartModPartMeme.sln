@@ -104,6 +104,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RandomStart", "RandomStart\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SplitScreenMod", "SplitScreenMod\SplitScreenMod.csproj", "{15D47287-55E6-4FB1-9B2F-25D9A9166214}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheWilderness", "TheWilderness\TheWilderness.csproj", "{96A41D62-3E21-45CB-BAD7-CB3D555C18D8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZeroG", "ZeroG\ZeroG.csproj", "{77C4C2CE-29AE-40B3-816A-D38BC4E0F4D6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -302,6 +306,14 @@ Global
 		{15D47287-55E6-4FB1-9B2F-25D9A9166214}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{15D47287-55E6-4FB1-9B2F-25D9A9166214}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{15D47287-55E6-4FB1-9B2F-25D9A9166214}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96A41D62-3E21-45CB-BAD7-CB3D555C18D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96A41D62-3E21-45CB-BAD7-CB3D555C18D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96A41D62-3E21-45CB-BAD7-CB3D555C18D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96A41D62-3E21-45CB-BAD7-CB3D555C18D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77C4C2CE-29AE-40B3-816A-D38BC4E0F4D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77C4C2CE-29AE-40B3-816A-D38BC4E0F4D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77C4C2CE-29AE-40B3-816A-D38BC4E0F4D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77C4C2CE-29AE-40B3-816A-D38BC4E0F4D6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
