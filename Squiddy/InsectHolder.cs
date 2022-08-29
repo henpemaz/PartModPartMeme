@@ -42,8 +42,9 @@ namespace Squiddy
 			if (slatedForDeletetion) return;
 			if (this.grabbedBy.Count != 0)
 			{
-				insect.pos = this.firstChunk.pos;
-				insect.vel = 0.8f * insect.vel + this.firstChunk.vel;
+				insect.Reset(this.firstChunk.pos);
+				//insect.pos = this.firstChunk.pos;
+				//insect.vel = 0.8f * insect.vel + this.firstChunk.vel;
 			}
 			else
 			{

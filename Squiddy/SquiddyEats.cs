@@ -44,7 +44,17 @@ namespace Squiddy
 								p.BiteEdibleObject(self.evenUpdate); // player code go
 								edible.grabber = self;
 								p.grasps[0] = null;
-								if (edible.discontinued) edible.Release();
+								if (edible.discontinued)
+                                {
+									edible.Release();
+									if(ipe is InsectHolder ih) { // store consumed insects to reduce respawns
+										var insects = consumedInsects[room.abstractRoom] ?? (consumedInsects[room.abstractRoom] = new int[Enum.GetValues(typeof(CosmeticInsect.Type)).Length]);
+										if ((int)ih.insect.type < insects.Length)
+										{
+											insects[(int)ih.insect.type]++;
+										}
+									}
+								}
 							}
 						}
 						else // no can eat
@@ -392,6 +402,31 @@ namespace Squiddy
 			else
 			{
 				return orig(self, item);
+			}
+		}
+
+		private void InsectCoordinator_NowViewed(On.InsectCoordinator.orig_NowViewed orig, InsectCoordinator self)
+		{
+			orig(self);
+			var consumed = consumedInsects[self.room.abstractRoom];
+			if (consumed != null)
+			{
+				for (int i = 0; i < consumed.Length; i++)
+				{
+					var t = (CosmeticInsect.Type)i;
+					var amount = consumed[i];
+					for (int j = 0; j < amount; j++)
+					{
+						foreach (var item in self.allInsects)
+						{
+							if (item.type == t && !item.slatedForDeletetion)
+							{
+								item.Destroy();
+								break;
+							}
+						}
+					}
+				}
 			}
 		}
 	}

@@ -34,6 +34,8 @@ namespace Squiddy
 		public AttachedField<AbstractCreature, AbstractCreature> player = new AttachedField<AbstractCreature, AbstractCreature>();
 		public AttachedField<AbstractCreature, AbstractCreature> cicada = new AttachedField<AbstractCreature, AbstractCreature>();
 
+		public AttachedField<AbstractRoom, int[]> consumedInsects = new AttachedField<AbstractRoom, int[]>();
+
 		// Ties player and squit (not a grasp, so not easily undone by game code)
 		internal class SquiddyStick : AbstractPhysicalObject.AbstractObjectStick
 		{
@@ -62,7 +64,7 @@ namespace Squiddy
 				// in arenamode stuff spawns in the shortcuts systems and plays out nicely
 
 				abscada.remainInDenCounter = 120; // maybe move this to story start?
-				this.player[abscada] = crit;
+				player[abscada] = crit;
 				cicada[crit] = abscada;
 
 				Debug.Log("Squiddy: Abstract Squiddy created and attached for player n: " + playerNumber);
@@ -76,9 +78,11 @@ namespace Squiddy
 			// maybe only cull where player.world.game is self ? can't do that with these, shame
 			player.Clear();
 			cicada.Clear();
+
+			consumedInsects.Clear();
 		}
 
-        protected override void Enable()
+		protected override void Enable()
 		{
 			On.Cicada.Update += Cicada_Update; // input, sync, player things
 			On.Cicada.Act += Cicada_Act; // movement
@@ -100,6 +104,7 @@ namespace Squiddy
             On.AbstractPhysicalObject.Destroy += AbstractPhysicalObject_Destroy;
 
 			IL.Cicada.Act += Cicada_Act1;
+            On.InsectCoordinator.NowViewed += InsectCoordinator_NowViewed;
 
 			On.Player.CanIPickThisUp += Player_CanIPickThisUp;
             On.Player.ObjectEaten += Player_ObjectEaten;
@@ -150,7 +155,8 @@ namespace Squiddy
 			On.RoomCamera.MoveCamera_Room_int -= RoomCamera_MoveCamera_Room_int;
 			On.AbstractPhysicalObject.Destroy -= AbstractPhysicalObject_Destroy;
 
-			IL.Cicada.Act += Cicada_Act1;
+			IL.Cicada.Act -= Cicada_Act1;
+			On.InsectCoordinator.NowViewed -= InsectCoordinator_NowViewed;
 
 			On.Player.CanIPickThisUp -= Player_CanIPickThisUp;
 			On.Player.ObjectEaten -= Player_ObjectEaten;
@@ -332,6 +338,46 @@ namespace Squiddy
 					}
 				}
 
+				// map progression specifics
+
+				if (p.MapDiscoveryActive && p.coord != p.lastCoord)
+				{
+					if (p.exitsToBeDiscovered == null)
+					{
+						if (p.room != null && p.room.shortCutsReady)
+						{
+							p.exitsToBeDiscovered = new List<Vector2>();
+							for (int i = 0; i < p.room.shortcuts.Length; i++)
+							{
+								if (p.room.shortcuts[i].shortCutType == ShortcutData.Type.RoomExit)
+								{
+									p.exitsToBeDiscovered.Add(p.room.MiddleOfTile(p.room.shortcuts[i].StartTile));
+								}
+							}
+						}
+					}
+					else if (p.exitsToBeDiscovered.Count > 0 && p.room.game.cameras[0].hud != null && p.room.game.cameras[0].hud.map != null && !p.room.CompleteDarkness(p.firstChunk.pos, 0f, 0.95f, false))
+					{
+						int index = UnityEngine.Random.Range(0, p.exitsToBeDiscovered.Count);
+						if (p.room.ViewedByAnyCamera(p.exitsToBeDiscovered[index], -10f))
+						{
+							Vector2 vector = p.firstChunk.pos;
+							for (int j = 0; j < 20; j++)
+							{
+								if (Custom.DistLess(vector, p.exitsToBeDiscovered[index], 50f))
+								{
+									p.room.game.cameras[0].hud.map.ExternalExitDiscover((vector + p.exitsToBeDiscovered[index]) / 2f, p.room.abstractRoom.index);
+									p.room.game.cameras[0].hud.map.ExternalOnePixelDiscover(p.exitsToBeDiscovered[index], p.room.abstractRoom.index);
+									p.exitsToBeDiscovered.RemoveAt(index);
+									break;
+								}
+								p.room.game.cameras[0].hud.map.ExternalSmallDiscover(vector, p.room.abstractRoom.index);
+								vector += Custom.DirVec(vector, p.exitsToBeDiscovered[index]) * 50f;
+							}
+						}
+					}
+				}
+
 				// cheats
 				if (self.room != null && self.room.game.devToolsActive)
 				{
@@ -434,10 +480,11 @@ namespace Squiddy
                         {
 							var dir = (self.bodyChunks[0].pos - self.bodyChunks[1].pos).normalized;
 							var throwndir = new IntVector2(Mathf.Abs(dir.x) > 0.38 ? (int)Mathf.Sign(dir.x) : 0, Mathf.Abs(dir.y) > 0.38 ? (int)Mathf.Sign(dir.y) : 0);
-							w.Thrown(self, self.mainBodyChunk.pos, self.mainBodyChunk.pos - dir * 30f, throwndir, 1f, self.evenUpdate);
+							w.Thrown(p, w.firstChunk.pos, w.firstChunk.lastPos, throwndir, 1f, self.evenUpdate);
 							if (w is Spear sp && !(result.obj is Player))
 							{
 								sp.spearDamageBonus *= 0.6f;
+								sp.setRotation = dir;
 							}
 							w.Forbid();
 							self.ReleaseGrasp(0);
@@ -644,17 +691,18 @@ namespace Squiddy
 		}
 		private void Cicada_GrabbedByPlayer(On.Cicada.orig_GrabbedByPlayer orig, Cicada self)
 		{
-			if (player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p)
+			if (player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p && self.Consious)
 			{
-				if (self.Consious)
-				{
-					var oldflypower = self.flyingPower;
-					self.flyingPower *= 0.6f;
-					self.Act();
-					self.flyingPower = oldflypower;
-				}
+				var oldflypower = self.flyingPower;
+				self.flyingPower *= 0.6f;
+				self.Act();
+				orig(self);
+				self.flyingPower = oldflypower;
 			}
-			orig(self);
+            else
+            {
+				orig(self);
+			}
 		}
 	}
 }
