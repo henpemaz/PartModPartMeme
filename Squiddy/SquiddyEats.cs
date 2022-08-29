@@ -22,6 +22,7 @@ namespace Squiddy
 			bool swallow = false;
 			if (still)
 			{
+				if(grasps.FirstOrDefault(g => g != null && (g.grabbed is Fly f && !f.dead))?.grabbed is Fly fly && UnityEngine.Random.value < 0.00625f) fly.Die();
 				Creature.Grasp edible = grasps.FirstOrDefault(g => g != null && (
 					(g.grabbed is IPlayerEdible ipe && ipe.Edible && ipe.FoodPoints == 0) // Edible with no food points (otherwise must carry to den)
 				  || g.grabbed is InsectHolder

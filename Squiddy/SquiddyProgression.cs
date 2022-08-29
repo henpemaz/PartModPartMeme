@@ -12,6 +12,26 @@ namespace Squiddy
 {
     public partial class SquiddyBase
     {
+		public override string StartRoom => "SU_A13";
+		public override void StartNewGame(Room room)
+		{
+			if (room.game.IsStorySession)
+			{
+				if (IsMe(room.game))
+				{
+					room.game.GetStorySession.saveState.deathPersistentSaveData.karmaCap = 2; // starts campaign at k3
+				}
+				if (room.abstractRoom.name == StartRoom)
+				{
+					for (int i = 0; i < room.game.Players.Count; i++)
+					{
+						room.game.Players[i].pos = new WorldCoordinate(room.abstractRoom.index, -1, -1, 3);
+						Debug.Log("Squiddy: Player position set to " + room.game.Players[i].pos);
+					}
+				}
+			}
+		}
+
 		public override CustomSaveState CreateNewSave(PlayerProgression progression)
 		{
 			return new SquiddySaveState(progression, this);

@@ -23,11 +23,11 @@ namespace Squiddy
         }
         void Update() // debug thinghies
         {
-            if (Input.GetKeyDown("1"))
-            {
-                if (GameObject.FindObjectOfType<RainWorld>()?.processManager?.currentMainLoop is RainWorldGame game)
-                    Debug.LogError(game.cameras[0].virtualMicrophone.listenerPoint);
-            }
+            //if (Input.GetKeyDown("1"))
+            //{
+            //    if (GameObject.FindObjectOfType<RainWorld>()?.processManager?.currentMainLoop is RainWorldGame game)
+            //        Debug.LogError(game.cameras[0].virtualMicrophone.listenerPoint);
+            //}
         }
     }
 }

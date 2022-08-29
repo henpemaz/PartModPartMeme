@@ -12,12 +12,54 @@ namespace Squiddy
 {
     public partial class SquiddyBase
     {
+		// don't break up on player removal
+		private void AbstractPhysicalObject_Destroy(On.AbstractPhysicalObject.orig_Destroy orig, AbstractPhysicalObject self)
+		{
+			if (self is AbstractCreature ac && cicada.TryGet(ac, out var _))
+			{
+				return;
+			}
+			orig(self);
+		}
 
 		// comming out of den trips the newroom which trips roommic to reset
 		private void RoomCamera_MoveCamera_Room_int(On.RoomCamera.orig_MoveCamera_Room_int orig, RoomCamera self, Room newRoom, int camPos)
 		{
 			if (cicada.TryGet(self.followAbstractCreature, out _) && newRoom == self.room && camPos == self.cameraNumber) return;
 			orig(self, newRoom, camPos);
+		}
+
+		// cicada pather gets confused about entering shortcuts, let our code handle that instead
+		private void Cicada_Act1(ILContext il)
+		{
+			var c = new ILCursor(il);
+			ILLabel dorun = null;
+			ILLabel dontrun = null;
+			if (c.TryGotoNext(MoveType.AfterLabel,
+				//i => i.MatchStfld<Creature>("enteringShortCut")
+				i => i.MatchLdloc(0),
+				i => i.MatchLdfld<MovementConnection>("type"),
+				i => i.MatchLdcI4(13),
+				i => i.MatchBeq(out dorun),
+				i => i.MatchLdloc(0),
+				i => i.MatchLdfld<MovementConnection>("type"),
+				i => i.MatchLdcI4(14),
+				i => i.MatchBneUn(out dontrun)
+				))
+			{
+				c.MoveAfterLabels();
+				c.Emit(OpCodes.Ldarg_0);
+				c.EmitDelegate<Func<Cicada, bool>>((self) => // squiddy don't
+				{
+					if (player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p)
+					{
+						return true;
+					}
+					return false;
+				});
+				c.Emit(OpCodes.Brtrue, dontrun); // dont run if squiddy
+			}
+			else Debug.LogException(new Exception("Couldn't IL-hook Cicada_Act1 from squiddy")); // deffendisve progrmanig
 		}
 
 		private Vector2? ShortcutHandler_OnScreenPositionOfInShortCutCreature(On.ShortcutHandler.orig_OnScreenPositionOfInShortCutCreature orig, ShortcutHandler self, Room room, Creature crit)

@@ -12,6 +12,9 @@ namespace Squiddy
 {
     public partial class SquiddyBase : SlugBaseCharacter
 	{
+		public override string DisplayName => "Squiddy";
+		public override string Description => @"Look at 'em go!";
+
 		public SquiddyBase() : base("hensquiddy", FormatVersion.V1, 0, true) {
 			// pre-enable and menu hooks
 
@@ -19,10 +22,10 @@ namespace Squiddy
             On.PlayerState.ctor += PlayerState_ctor;
 			On.RainWorldGame.ShutDownProcess += RainWorldGame_ShutDownProcess;
 
+			// progression stuff in progression file
 			// starts at low karma, up on survivor
             On.WinState.CycleCompleted += WinState_CycleCompleted;
             On.SaveState.IncreaseKarmaCapOneStep += SaveState_IncreaseKarmaCapOneStep;
-
 			// display karma uppening on survivor event
             On.Menu.KarmaLadder.ctor += KarmaLadder_ctor;
             On.Menu.SleepAndDeathScreen.FoodCountDownDone += SleepAndDeathScreen_FoodCountDownDone;
@@ -30,6 +33,12 @@ namespace Squiddy
 
 		public AttachedField<AbstractCreature, AbstractCreature> player = new AttachedField<AbstractCreature, AbstractCreature>();
 		public AttachedField<AbstractCreature, AbstractCreature> cicada = new AttachedField<AbstractCreature, AbstractCreature>();
+
+		// Ties player and squit (not a grasp, so not easily undone by game code)
+		internal class SquiddyStick : AbstractPhysicalObject.AbstractObjectStick
+		{
+			public SquiddyStick(AbstractPhysicalObject A, AbstractPhysicalObject B) : base(A, B) { }
+		}
 
 		// Make squiddy
 		// this used to be in playerctor which was a mess because it was mid-room-realize
@@ -56,7 +65,7 @@ namespace Squiddy
 				this.player[abscada] = crit;
 				cicada[crit] = abscada;
 
-				Debug.Log("Squiddy: Abstract Squiddy created and attached for player no:" + playerNumber);
+				Debug.Log("Squiddy: Abstract Squiddy created and attached for player n: " + playerNumber);
 				//Debug.Log("Squiddy: room is "  + player.Room.name);
 			}
 		}
@@ -67,31 +76,6 @@ namespace Squiddy
 			// maybe only cull where player.world.game is self ? can't do that with these, shame
 			player.Clear();
 			cicada.Clear();
-		}
-
-		public override string DisplayName => "Squiddy";
-		public override string Description => @"Look at 'em go!";
-
-		//override color
-
-		public override string StartRoom => "SU_A13";
-		public override void StartNewGame(Room room)
-		{
-			if (room.game.IsStorySession)
-			{
-                if (IsMe(room.game))
-                {
-					room.game.GetStorySession.saveState.deathPersistentSaveData.karmaCap = 2; // starts campaign at k3
-                }
-				if (room.abstractRoom.name == StartRoom)
-				{
-					for (int i = 0; i < room.game.Players.Count; i++)
-					{
-						room.game.Players[i].pos = new WorldCoordinate(room.abstractRoom.index, -1, -1, 3);
-						Debug.Log("Squiddy: Player position set to " + room.game.Players[i].pos);
-					}
-				}
-			}
 		}
 
         protected override void Enable()
@@ -106,14 +90,18 @@ namespace Squiddy
 
             On.Cicada.Die += Cicada_Die;
 			On.CicadaAI.Update += CicadaAI_Update;
+
             On.AbstractCreature.WantToStayInDenUntilEndOfCycle += AbstractCreature_WantToStayInDenUntilEndOfCycle;
             On.AbstractCreature.Abstractize += AbstractCreature_Abstractize;
             On.ShortcutHandler.SuckInCreature += ShortcutHandler_SuckInCreature;
             On.ShortcutHandler.OnScreenPositionOfInShortCutCreature += ShortcutHandler_OnScreenPositionOfInShortCutCreature;
             On.Player.ShortCutColor += Player_ShortCutColor;
             On.RoomCamera.MoveCamera_Room_int += RoomCamera_MoveCamera_Room_int;
+            On.AbstractPhysicalObject.Destroy += AbstractPhysicalObject_Destroy;
 
-            On.Player.CanIPickThisUp += Player_CanIPickThisUp;
+			IL.Cicada.Act += Cicada_Act1;
+
+			On.Player.CanIPickThisUp += Player_CanIPickThisUp;
             On.Player.ObjectEaten += Player_ObjectEaten;
             On.Player.FoodInRoom_Room_bool += Player_FoodInRoom_Room_bool;
             On.Player.ObjectCountsAsFood += Player_ObjectCountsAsFood;
@@ -137,6 +125,8 @@ namespace Squiddy
 
 			densNeededAmount = 0f;
 			densNeeded = false;
+
+            
 		}
 
         protected override void Disable()
@@ -151,12 +141,16 @@ namespace Squiddy
 
 			On.Cicada.Die -= Cicada_Die;
 			On.CicadaAI.Update -= CicadaAI_Update;
+
 			On.AbstractCreature.WantToStayInDenUntilEndOfCycle -= AbstractCreature_WantToStayInDenUntilEndOfCycle;
 			On.AbstractCreature.Abstractize -= AbstractCreature_Abstractize;
 			On.ShortcutHandler.SuckInCreature -= ShortcutHandler_SuckInCreature;
 			On.ShortcutHandler.OnScreenPositionOfInShortCutCreature -= ShortcutHandler_OnScreenPositionOfInShortCutCreature;
 			On.Player.ShortCutColor -= Player_ShortCutColor;
 			On.RoomCamera.MoveCamera_Room_int -= RoomCamera_MoveCamera_Room_int;
+			On.AbstractPhysicalObject.Destroy -= AbstractPhysicalObject_Destroy;
+
+			IL.Cicada.Act += Cicada_Act1;
 
 			On.Player.CanIPickThisUp -= Player_CanIPickThisUp;
 			On.Player.ObjectEaten -= Player_ObjectEaten;
@@ -178,14 +172,7 @@ namespace Squiddy
 			IL.CicadaGraphics.ApplyPalette -= CicadaGraphics_ApplyPalette;
 			On.CicadaGraphics.ApplyPalette -= CicadaGraphics_ApplyPalette;
 
-
 			On.SSOracleBehavior.PebblesConversation.AddEvents -= PebblesConversation_AddEvents;
-		}
-
-		// Ties player and squit (not a grasp, so not easily undone by game code)
-		internal class SquiddyStick : AbstractPhysicalObject.AbstractObjectStick
-		{
-			public SquiddyStick(AbstractPhysicalObject A, AbstractPhysicalObject B) : base(A, B) { }
 		}
 		
 		// Lock player and squiddy
@@ -203,7 +190,6 @@ namespace Squiddy
 				// underwater cam checks these
 				p.airInLungs = self.lungs;
 				if (p.dead && !self.dead) self.Die();
-				p.dead = self.dead;
 
 				// Match some behaviors
 				p.flipDirection = self.flipH; // influences playerpickup
@@ -212,7 +198,7 @@ namespace Squiddy
                 if (!p.slatedForDeletetion)
                 {
 					// mycologist would be proud
-					p.bodyChunks = self.bodyChunks.Reverse().ToArray();
+					p.bodyChunks = self.bodyChunks;
 					p.bodyChunkConnections = self.bodyChunkConnections;
 					p.Destroy(); // when room update actually removes the player, SquiddyStick will break and will need to be added again.
 					Debug.Log("Squiddy: Player removed");
@@ -230,6 +216,7 @@ namespace Squiddy
 				p.checkInput(); // partial update (:
 								//p.Update(eu); // this one acts hilarious
 
+				// a lot of things copypasted from from p.update
 				if (p.wantToJump > 0) p.wantToJump--;
 				if (p.wantToPickUp > 0) p.wantToPickUp--;
 
@@ -370,7 +357,7 @@ namespace Squiddy
 				}
 			}
 
-			orig(self, eu);
+			orig(self, eu); // calls Act/Swim/Held
 		}
 
 		// inputs and stuff
@@ -378,7 +365,6 @@ namespace Squiddy
 		private void Cicada_Act(On.Cicada.orig_Act orig, Cicada self)
         {
 			if(player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p)
-
             {
                 var room = self.room;
                 var chunks = self.bodyChunks;
@@ -527,6 +513,7 @@ namespace Squiddy
                                 IntVector2 intVector = room.ShorcutEntranceHoleDirection(room.GetTilePosition(chunks[i].pos));
                                 if (p.input[0].x == -intVector.x && p.input[0].y == -intVector.y)
                                 {
+									Debug.Log("Squiddy: Entering shortcut");
                                     self.enteringShortCut = new IntVector2?(room.GetTilePosition(chunks[i].pos));
                                 }
                             }
@@ -625,7 +612,9 @@ namespace Squiddy
 				else self.pathFinder.accessibilityStepsPerFrame = 10;
 				self.pathFinder.Update(); // basic movement uses this
 				self.tracker.Update(); // creature looker uses this
-				self.tracker.ForgetCreature(p.abstractCreature);
+				self.tracker.ForgetCreature(p.abstractCreature); // you have to let go
+
+				self.timeInRoom++;
 			}
             else
             {

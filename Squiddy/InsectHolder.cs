@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Linq;
+using UnityEngine;
 
 namespace Squiddy
 {
@@ -25,6 +26,8 @@ namespace Squiddy
 			this.bodyChunks = new BodyChunk[] { new BodyChunk(this, 0, insect.pos, 2f, 0.01f) };
 			this.bodyChunkConnections = new PhysicalObject.BodyChunkConnection[0];
 		}
+
+		public bool bringToFront;
 
 		public override string ToString()
 		{
@@ -104,6 +107,13 @@ namespace Squiddy
 					sprt.isVisible = false;
 				}
 			}
+
+			if (this.grabbedBy.Count != 0 && bringToFront)
+            {
+				bringToFront = false;
+				rCam.spriteLeasers.FirstOrDefault(s => s.drawableObject == this.insect)?.AddSpritesToContainer(null, rCam);
+            }
+
 			if (base.slatedForDeletetion || this.room != rCam.room)
 			{
 				sLeaser.CleanSpritesAndRemove();
