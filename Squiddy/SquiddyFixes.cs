@@ -81,11 +81,29 @@ namespace Squiddy
 		// Die! Squiddy
 		private void Cicada_Die(On.Cicada.orig_Die orig, Cicada self)
 		{
+			orig(self);
 			if (player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p)
 			{
 				if (!p.dead) p.Die();
 			}
+		}
+
+		private void Player_Stun(On.Player.orig_Stun orig, Player self, int st)
+		{
+			if (cicada.TryGet(self.abstractCreature, out var ac) && ac.realizedCreature is Cicada c)
+			{
+				c.Stun(st);
+			}
+			orig(self, st);
+		}
+
+		private void Player_Die(On.Player.orig_Die orig, Player self)
+		{
 			orig(self);
+			if (cicada.TryGet(self.abstractCreature, out var ac) && ac.realizedCreature is Cicada c && !c.dead)
+			{
+				c.Die();
+			}
 		}
 
 

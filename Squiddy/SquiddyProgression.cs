@@ -152,7 +152,14 @@ namespace Squiddy
 			if (IsMe(self.owner.oracle.room.game) && self.id == Conversation.ID.Pebbles_White)
 			{
 				//orig(self);
-				self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("Oh you're still alive. That's a shame, my circuits must be miscalibrated."), 0));
+				self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("Oh you're still alive."), 10));
+				self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("That's a shame, my circuits must be miscalibrated."), 20));
+
+				self.events.Add(new Conversation.WaitEvent(self, 40));
+
+				self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("Tsc. How did you get in in the first place, stupid creature. You aren't worth my time, little bug."), 10));
+
+				self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("Get out of my can before I turn you into a blue goop."), 0));
 			}
 			else
 			{
@@ -160,5 +167,125 @@ namespace Squiddy
 			}
 		}
 
+		private void SSOracleMeetWhite_Update(On.SSOracleBehavior.SSOracleMeetWhite.orig_Update orig, SSOracleBehavior.SSOracleMeetWhite self)
+		{
+			if (IsMe(self.oracle.room.game))
+			{
+				if (self.action == SSOracleBehavior.Action.MeetWhite_Shocked && self.inActionCounter > 40)
+				{
+					self.owner.NewAction(SSOracleBehavior.Action.General_GiveMark);
+					self.owner.afterGiveMarkAction = SSOracleBehavior.Action.General_MarkTalk;
+				}
+			}
+			orig(self);
+		}
+
+		private void ThrowOutBehavior_Update(On.SSOracleBehavior.ThrowOutBehavior.orig_Update orig, SSOracleBehavior.ThrowOutBehavior self)
+		{
+			if (cicada.TryGet(self.player?.abstractCreature, out var ac) && ac.realizedCreature is Cicada cada)
+			{
+				switch (self.action)
+				{
+					case SSOracleBehavior.Action.ThrowOut_ThrowOut:
+						if (self.player.room == self.oracle.room)
+						{
+							self.owner.throwOutCounter++;
+						}
+						self.movementBehavior = SSOracleBehavior.MovementBehavior.Investigate;
+						self.telekinThrowOut = (self.inActionCounter > 20);
+						if (self.owner.throwOutCounter == 160)
+						{
+							self.dialogBox.Interrupt(self.Translate("I'm serious. I'll mess you up."), 0);
+						}
+						else if (self.owner.throwOutCounter == 280)
+						{
+							self.dialogBox.Interrupt(self.Translate("One blue goop coming right up."), 0);
+						}
+						else if (self.owner.throwOutCounter > 320)
+						{
+							self.owner.NewAction(SSOracleBehavior.Action.ThrowOut_KillOnSight);
+						}
+						if (self.owner.playerOutOfRoomCounter > 100 && self.owner.throwOutCounter > 400)
+						{
+							self.owner.NewAction(SSOracleBehavior.Action.General_Idle);
+							self.owner.getToWorking = 1f;
+						}
+						break;
+
+					case SSOracleBehavior.Action.ThrowOut_SecondThrowOut:
+						if (self.player.room == self.oracle.room)
+						{
+							self.owner.throwOutCounter++;
+						}
+						self.movementBehavior = SSOracleBehavior.MovementBehavior.KeepDistance;
+						self.telekinThrowOut = (self.inActionCounter > 20);
+						if (self.owner.throwOutCounter == 50)
+						{
+							self.dialogBox.Interrupt(self.Translate("You again? Not under my watch."), 0);
+						}
+						else if (self.owner.throwOutCounter == 120)
+						{
+							self.dialogBox.Interrupt(self.Translate("One blue goop coming right up."), 0);
+						}
+						else if (self.owner.throwOutCounter > 160)
+						{
+							self.owner.NewAction(SSOracleBehavior.Action.ThrowOut_KillOnSight);
+						}
+						if (self.owner.playerOutOfRoomCounter > 100 && self.owner.throwOutCounter > 400)
+						{
+							self.owner.NewAction(SSOracleBehavior.Action.General_Idle);
+							self.owner.getToWorking = 1f;
+						}
+						break;
+
+					case SSOracleBehavior.Action.ThrowOut_KillOnSight:
+						if ((!self.player.dead || self.owner.killFac > 0.5f) && self.player.room == self.oracle.room)
+						{
+							self.owner.killFac += 0.025f;
+							if (self.owner.killFac >= 1f)
+							{
+								self.player.mainBodyChunk.vel += Custom.RNV() * 12f;
+								for (int i = 0; i < 20; i++)
+								{
+									self.oracle.room.AddObject(new Spark(self.player.mainBodyChunk.pos, Custom.RNV() * UnityEngine.Random.value * 40f, new Color(1f, 1f, 1f), null, 30, 120));
+								}
+
+								self.player.Die();
+								cada.Destroy();
+
+								var bluegoop = new AbstractCreature(self.oracle.room.world, StaticWorld.GetCreatureTemplate(CreatureTemplate.Type.DaddyLongLegs), null, cada.coord, new EntityID());
+								self.oracle.room.abstractRoom.AddEntity(bluegoop);
+								bluegoop.RealizeInRoom();
+
+								self.owner.killFac = 0f;
+							}
+						}
+						else
+						{
+							self.owner.killFac *= 0.8f;
+							self.owner.getToWorking = 1f;
+							self.movementBehavior = SSOracleBehavior.MovementBehavior.KeepDistance;
+							self.owner.NewAction(SSOracleBehavior.Action.General_Idle);
+						}
+						break;
+					default:
+						orig(self);
+						break;
+				}
+			}
+			else
+			{
+				orig(self);
+			}
+		}
+
+		private void SSOracleBehavior_SeePlayer(On.SSOracleBehavior.orig_SeePlayer orig, SSOracleBehavior self)
+		{
+			if (cicada.TryGet(self.player?.abstractCreature, out _) && self.throwOutCounter > 0 && self.player.dead)
+			{
+				return;
+			}
+			orig(self);
+		}
 	}
 }

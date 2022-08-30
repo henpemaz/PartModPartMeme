@@ -95,6 +95,9 @@ namespace Squiddy
             On.Cicada.Die += Cicada_Die;
 			On.CicadaAI.Update += CicadaAI_Update;
 
+            On.Player.Die += Player_Die;
+            On.Player.Stun += Player_Stun;
+
             On.AbstractCreature.WantToStayInDenUntilEndOfCycle += AbstractCreature_WantToStayInDenUntilEndOfCycle;
             On.AbstractCreature.Abstractize += AbstractCreature_Abstractize;
             On.ShortcutHandler.SuckInCreature += ShortcutHandler_SuckInCreature;
@@ -127,11 +130,14 @@ namespace Squiddy
 			On.CicadaGraphics.ApplyPalette += CicadaGraphics_ApplyPalette;
 
             On.SSOracleBehavior.PebblesConversation.AddEvents += PebblesConversation_AddEvents;
+            On.SSOracleBehavior.SSOracleMeetWhite.Update += SSOracleMeetWhite_Update;
+			On.SSOracleBehavior.ThrowOutBehavior.Update += ThrowOutBehavior_Update;
+			On.SSOracleBehavior.SeePlayer += SSOracleBehavior_SeePlayer;
+
+
 
 			densNeededAmount = 0f;
 			densNeeded = false;
-
-            
 		}
 
         protected override void Disable()
@@ -146,6 +152,9 @@ namespace Squiddy
 
 			On.Cicada.Die -= Cicada_Die;
 			On.CicadaAI.Update -= CicadaAI_Update;
+
+			On.Player.Die -= Player_Die;
+			On.Player.Stun -= Player_Stun;
 
 			On.AbstractCreature.WantToStayInDenUntilEndOfCycle -= AbstractCreature_WantToStayInDenUntilEndOfCycle;
 			On.AbstractCreature.Abstractize -= AbstractCreature_Abstractize;
@@ -179,10 +188,15 @@ namespace Squiddy
 			On.CicadaGraphics.ApplyPalette -= CicadaGraphics_ApplyPalette;
 
 			On.SSOracleBehavior.PebblesConversation.AddEvents -= PebblesConversation_AddEvents;
+			On.SSOracleBehavior.SSOracleMeetWhite.Update -= SSOracleMeetWhite_Update;
+            On.SSOracleBehavior.ThrowOutBehavior.Update -= ThrowOutBehavior_Update;
+            On.SSOracleBehavior.SeePlayer -= SSOracleBehavior_SeePlayer;
 		}
-		
-		// Lock player and squiddy
-		// player inconsious update
+
+        
+
+        // Lock player and squiddy
+        // player inconsious update
         private void Cicada_Update(On.Cicada.orig_Update orig, Cicada self, bool eu)
         {
             if (player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p)
