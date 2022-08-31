@@ -15,7 +15,7 @@ namespace Squiddy
 		public override string DisplayName => "Squiddy";
 		public override string Description => @"Look at 'em go!";
 
-		public SquiddyBase() : base("hensquiddy", FormatVersion.V1, 0, true) {
+		public SquiddyBase() : base("Squiddy", FormatVersion.V1, 0, true) {
 			// pre-enable and menu hooks
 
 			// its a me
@@ -33,8 +33,6 @@ namespace Squiddy
 
 		public AttachedField<AbstractCreature, AbstractCreature> player = new AttachedField<AbstractCreature, AbstractCreature>();
 		public AttachedField<AbstractCreature, AbstractCreature> cicada = new AttachedField<AbstractCreature, AbstractCreature>();
-
-		public AttachedField<AbstractRoom, int[]> consumedInsects = new AttachedField<AbstractRoom, int[]>();
 
 		// Ties player and squit (not a grasp, so not easily undone by game code)
 		internal class SquiddyStick : AbstractPhysicalObject.AbstractObjectStick
@@ -87,14 +85,12 @@ namespace Squiddy
 			On.Cicada.Update += Cicada_Update; // input, sync, player things
 			On.Cicada.Act += Cicada_Act; // movement
 			On.Cicada.Swim += Cicada_Swim; // prevent loss of control
-
 			On.Cicada.GrabbedByPlayer += Cicada_GrabbedByPlayer; // prevent loss of control
             On.Cicada.CarryObject += Cicada_CarryObject; // more realistic grab pos, pointy stick
 			On.Cicada.Collide += Cicada_Collide; // charging on creature, attack chunk
 
 			On.Cicada.Die += Cicada_Die; // Die! secret player
 			On.CicadaAI.Update += CicadaAI_Update; // dont let AI interfere on squiddy
-
 			On.Player.Die += Player_Die; // Die! Squiddy
             On.Player.Stun += Player_Stun; // stun squiddy too, also hi pebbles
 
@@ -110,11 +106,20 @@ namespace Squiddy
 			On.InsectCoordinator.NowViewed += InsectCoordinator_NowViewed; // remove respawned insetcs on room reenter
 
 			On.Player.CanIPickThisUp += Player_CanIPickThisUp; // player picks what squiddy wants
+            On.Player.CanBeSwallowed += Player_CanBeSwallowed;
 			On.Player.ObjectEaten += Player_ObjectEaten; // player eats what squiddy eats
 			On.Player.FoodInRoom_Room_bool += Player_FoodInRoom_Room_bool; // squiddy uses different values and eats smallCreature
 			On.Player.ObjectCountsAsFood += Player_ObjectCountsAsFood; // disable autoeat for quarter pips
 			On.AbstractCreatureAI.DoIwantToDropThisItemInDen += AbstractCreatureAI_DoIwantToDropThisItemInDen; // eat the thing you carried to a den
+
+			On.Cicada.InitiateGraphicsModule += Cicada_InitiateGraphicsModule; // special arena colors
 			On.CicadaGraphics.Update += CicadaGraphics_Update; // move tentacles properly
+            On.CicadaGraphics.InitiateSprites += CicadaGraphics_InitiateSprites; // the mark
+			On.CicadaGraphics.AddToContainer += CicadaGraphics_AddToContainer;
+			On.CicadaGraphics.ApplyPalette += CicadaGraphics_ApplyPalette; // Stronger color of body in arena
+            On.CicadaGraphics.DrawSprites += CicadaGraphics_DrawSprites;
+			IL.CicadaGraphics.ApplyPalette += CicadaGraphics_ApplyPalette; // arena color mixing patchup
+
 
 			On.ShortcutGraphics.GenerateSprites += ShortcutGraphics_GenerateSprites; // show me dens
 			On.ShortcutGraphics.Draw += ShortcutGraphics_Draw; // draw dens when squiddy needs them
@@ -125,9 +130,6 @@ namespace Squiddy
 			On.SuperJumpInstruction.ctor += SuperJumpInstruction_ctor; // HA what do you think i am stupid
 			On.RegionState.AdaptRegionStateToWorld += RegionState_AdaptRegionStateToWorld; // remove squiddy from save.
 
-			On.Cicada.InitiateGraphicsModule += Cicada_InitiateGraphicsModule; // special arena colors
-			IL.CicadaGraphics.ApplyPalette += CicadaGraphics_ApplyPalette; // arena color mixing patchup
-			On.CicadaGraphics.ApplyPalette += CicadaGraphics_ApplyPalette; // Stronger color of body in arena
 
 			// Pebbles is one funny guy
 			On.SSOracleBehavior.PebblesConversation.AddEvents += PebblesConversation_AddEvents;
@@ -135,6 +137,9 @@ namespace Squiddy
 			On.SSOracleBehavior.ThrowOutBehavior.Update += ThrowOutBehavior_Update;
 			On.SSOracleBehavior.SeePlayer += SSOracleBehavior_SeePlayer;
             On.SSOracleBehavior.NewAction += SSOracleBehavior_NewAction;
+
+			// Moon
+			//On.sloracle
 
 			densNeededAmount = 0f;
 			densNeeded = false;
@@ -145,14 +150,12 @@ namespace Squiddy
 			On.Cicada.Update -= Cicada_Update;
 			On.Cicada.Act -= Cicada_Act;
 			On.Cicada.Swim -= Cicada_Swim;
-
 			On.Cicada.GrabbedByPlayer -= Cicada_GrabbedByPlayer;
 			On.Cicada.CarryObject -= Cicada_CarryObject;
 			On.Cicada.Collide -= Cicada_Collide;
 
 			On.Cicada.Die -= Cicada_Die;
 			On.CicadaAI.Update -= CicadaAI_Update;
-
 			On.Player.Die -= Player_Die;
 			On.Player.Stun -= Player_Stun;
 
@@ -168,11 +171,19 @@ namespace Squiddy
 			On.InsectCoordinator.NowViewed -= InsectCoordinator_NowViewed;
 
 			On.Player.CanIPickThisUp -= Player_CanIPickThisUp;
+			On.Player.CanBeSwallowed -= Player_CanBeSwallowed;
 			On.Player.ObjectEaten -= Player_ObjectEaten;
 			On.Player.FoodInRoom_Room_bool -= Player_FoodInRoom_Room_bool;
 			On.Player.ObjectCountsAsFood -= Player_ObjectCountsAsFood;
 			On.AbstractCreatureAI.DoIwantToDropThisItemInDen -= AbstractCreatureAI_DoIwantToDropThisItemInDen;
+
+			On.Cicada.InitiateGraphicsModule -= Cicada_InitiateGraphicsModule;
 			On.CicadaGraphics.Update -= CicadaGraphics_Update;
+			On.CicadaGraphics.InitiateSprites -= CicadaGraphics_InitiateSprites;
+			On.CicadaGraphics.AddToContainer -= CicadaGraphics_AddToContainer;
+			On.CicadaGraphics.ApplyPalette -= CicadaGraphics_ApplyPalette;
+			On.CicadaGraphics.DrawSprites -= CicadaGraphics_DrawSprites;
+			IL.CicadaGraphics.ApplyPalette -= CicadaGraphics_ApplyPalette;
 
 			On.ShortcutGraphics.GenerateSprites -= ShortcutGraphics_GenerateSprites;
 			On.ShortcutGraphics.Draw -= ShortcutGraphics_Draw;
@@ -182,10 +193,6 @@ namespace Squiddy
 			IL.ShortcutHelper.Update -= ShortcutHelper_Update;
 			On.SuperJumpInstruction.ctor -= SuperJumpInstruction_ctor;
 			On.RegionState.AdaptRegionStateToWorld -= RegionState_AdaptRegionStateToWorld;
-
-			On.Cicada.InitiateGraphicsModule -= Cicada_InitiateGraphicsModule;
-			IL.CicadaGraphics.ApplyPalette -= CicadaGraphics_ApplyPalette;
-			On.CicadaGraphics.ApplyPalette -= CicadaGraphics_ApplyPalette;
 
 			On.SSOracleBehavior.PebblesConversation.AddEvents -= PebblesConversation_AddEvents;
 			On.SSOracleBehavior.SSOracleMeetWhite.Update -= SSOracleMeetWhite_Update;
@@ -683,26 +690,6 @@ namespace Squiddy
 			}
 		}
 
-		private void CicadaGraphics_Update(On.CicadaGraphics.orig_Update orig, CicadaGraphics self)
-		{
-			orig(self);
-			if (player.TryGet(self.cicada.abstractCreature, out var ap) && ap.realizedCreature is Player p)
-			{
-				// move tentacles properly
-				for (int m = 0; m < 2; m++)
-				{
-					for (int n = 0; n < 2; n++)
-					{
-						Limb limb = self.tentacles[m, n];
-						if (limb.mode == Limb.Mode.HuntAbsolutePosition)
-						{
-							// catch up properly like in relative hunt pos
-							limb.pos += limb.connection.vel;
-						}
-					}
-				}
-			}
-		}
 		private void Cicada_GrabbedByPlayer(On.Cicada.orig_GrabbedByPlayer orig, Cicada self)
 		{
 			if (player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p && self.Consious)

@@ -136,6 +136,208 @@ namespace Squiddy
 			orig(self, creature, room, shortCut);
 		}
 
+		// move tentacles properly
+		private void CicadaGraphics_Update(On.CicadaGraphics.orig_Update orig, CicadaGraphics self)
+		{
+			orig(self);
+			if (player.TryGet(self.cicada.abstractCreature, out var ap) && ap.realizedCreature is Player p)
+			{
+				// move tentacles properly
+				for (int m = 0; m < 2; m++)
+				{
+					for (int n = 0; n < 2; n++)
+					{
+						Limb limb = self.tentacles[m, n];
+						if (limb.mode == Limb.Mode.HuntAbsolutePosition)
+						{
+							// catch up properly like in relative hunt pos
+							limb.pos += limb.connection.vel;
+						}
+					}
+				}
+
+				// update mark
+				var pg = p.graphicsModule as PlayerGraphics;
+				pg.lastMarkAlpha = pg.markAlpha;
+				if (!p.dead && p.room.game.session is StoryGameSession && (p.room.game.session as StoryGameSession).saveState.deathPersistentSaveData.theMark)
+				{
+					pg.markAlpha = Custom.LerpAndTick(pg.markAlpha, Mathf.Clamp(Mathf.InverseLerp(30f, 80f, (float)p.touchedNoInputCounter) - UnityEngine.Random.value * Mathf.InverseLerp(80f, 30f, (float)p.touchedNoInputCounter), 0f, 1f), 0.1f, 0.033333335f);
+				}
+				else
+				{
+					pg.markAlpha = 0f;
+				}
+
+				// glow
+				if (pg.lightSource != null)
+				{
+					pg.lightSource.stayAlive = true;
+					pg.lightSource.setPos = new Vector2?(p.mainBodyChunk.pos);
+					if (pg.lightSource.slatedForDeletetion || p.room.Darkness(p.mainBodyChunk.pos) == 0f)
+					{
+						pg.lightSource = null;
+					}
+				}
+				else if (p.room.Darkness(p.mainBodyChunk.pos) > 0f && p.glowing)
+				{
+					pg.lightSource = new LightSource(p.mainBodyChunk.pos, false, Color.Lerp(new Color(1f, 1f, 1f), PlayerGraphics.SlugcatColor(p.playerState.slugcatCharacter), 0.5f), self.cicada);
+					pg.lightSource.requireUpKeep = true;
+					pg.lightSource.setRad = new float?(300f);
+					pg.lightSource.setAlpha = new float?(1f);
+					p.room.AddObject(pg.lightSource);
+				}
+			}
+		}
+
+		public AttachedField<CicadaGraphics, int> firstExtra = new AttachedField<CicadaGraphics, int>();
+		private void CicadaGraphics_InitiateSprites(On.CicadaGraphics.orig_InitiateSprites orig, CicadaGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
+		{
+			orig(self, sLeaser, rCam);
+			if (player.TryGet(self.cicada.abstractCreature, out var _))
+			{
+				var firstextra = firstExtra[self] = sLeaser.sprites.Length;
+				Array.Resize(ref sLeaser.sprites, sLeaser.sprites.Length + 2);
+
+				sLeaser.sprites[firstextra] = new FSprite("Futile_White", true) { shader = rCam.game.rainWorld.Shaders["FlatLight"] };
+				sLeaser.sprites[firstextra + 1] = new FSprite("pixel", true) { scale = 5f };
+
+				CicadaGraphics_AddToContainer_Impl(self, sLeaser, rCam, null);
+			}
+		}
+
+		private void CicadaGraphics_AddToContainer(On.CicadaGraphics.orig_AddToContainer orig, CicadaGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
+		{
+			orig(self, sLeaser, rCam, newContatiner);
+			if (player.TryGet(self.cicada.abstractCreature, out var _))
+			{
+				if (sLeaser.sprites.Length <= firstExtra[self]) return;
+				CicadaGraphics_AddToContainer_Impl(self, sLeaser, rCam, newContatiner);
+			}
+		}
+
+		private void CicadaGraphics_AddToContainer_Impl(CicadaGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
+		{
+			newContatiner = rCam.ReturnFContainer("Foreground"); // the mark goes there
+			int firstextra = firstExtra[self];
+			for (int i = firstextra; i < firstextra + 2; i++)
+			{
+				newContatiner.AddChild(sLeaser.sprites[i]);
+			}
+		}
+
+		// Stronger color of body in arena
+		private void CicadaGraphics_ApplyPalette(On.CicadaGraphics.orig_ApplyPalette orig, CicadaGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
+		{
+			orig(self, sLeaser, rCam, palette);
+
+			if (player.TryGet(self.cicada.abstractCreature, out var ap) && ap.realizedCreature is Player p)
+			{
+				if (self.cicada.room?.world?.game.IsArenaSession ?? false)
+				{
+					// use 1:1 color no blending no filter
+					Color bodyColor = p.ShortCutColor();
+					var bodyHSL = RXColor.HSLFromColor(bodyColor);
+					if (bodyHSL.l < 0.5) // stupig nighat color palete
+					{
+						if (self.cicada.gender)
+						{
+							self.cicada.gender = false;
+							orig(self, sLeaser, rCam, palette); // what could go wrong
+							self.cicada.gender = true;
+						}
+					}
+
+					sLeaser.sprites[self.HighlightSprite].color = Color.Lerp(bodyColor, new Color(1f, 1f, 1f), 0.7f);
+					sLeaser.sprites[self.BodySprite].color = bodyColor;
+					sLeaser.sprites[self.HeadSprite].color = bodyColor;
+
+					for (int side = 0; side < 2; side++)
+						for (int wing = 0; wing < 2; wing++)
+						{
+							sLeaser.sprites[self.TentacleSprite(side, wing)].color = bodyColor;
+						}
+				}
+			}
+		}
+
+		private void CicadaGraphics_DrawSprites(On.CicadaGraphics.orig_DrawSprites orig, CicadaGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+		{
+			orig(self, sLeaser, rCam, timeStacker, camPos);
+			if (player.TryGet(self.cicada.abstractCreature, out var ap) && ap.realizedCreature is Player p)
+			{
+				var pg = p.graphicsModule as PlayerGraphics;
+				var firstextra = firstExtra[self];
+				Vector2 vector9 = Vector2.Lerp(self.cicada.bodyChunks[0].lastPos, self.cicada.bodyChunks[0].pos, timeStacker) +  self.zRotation * 30f + 
+					(Vector2.Lerp(self.cicada.bodyChunks[0].lastPos, self.cicada.bodyChunks[0].pos, timeStacker) - Vector2.Lerp(self.cicada.bodyChunks[1].lastPos, self.cicada.bodyChunks[1].pos, timeStacker)).normalized * -15f 
+					+ new Vector2(0f, 70f);
+				var pos = vector9 - camPos;
+				var light = sLeaser.sprites[firstextra];
+				var mark = sLeaser.sprites[firstextra + 1];
+				var alpha = Mathf.Lerp(pg.lastMarkAlpha, pg.markAlpha, timeStacker);
+				mark.x = pos.x;
+				mark.y = pos.y;
+				mark.alpha = alpha;
+				light.x = pos.x;
+				light.y = pos.y;
+				light.alpha = 0.2f * alpha;
+				light.scale = 1f + alpha;
+			}
+		}
+
+		// arena colors
+		private void Cicada_InitiateGraphicsModule(On.Cicada.orig_InitiateGraphicsModule orig, Cicada self)
+		{
+			if (self.graphicsModule == null && player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p)
+			{
+				Debug.Log("Squiddy: InitiateGraphicsModule!");
+				//self.flying = false; // shh
+
+				if (self.abstractCreature.world.game.IsArenaSession)
+				{
+					// hsl math was failing to lerp to survivor-white somehow, had a red tint. no hue weight compensation for low sat colors
+					var col = RXColor.HSLFromColor(p.ShortCutColor());
+					var del = Mathf.Abs(col.h * col.s - self.iVars.color.hue * self.iVars.color.saturation) * col.s;
+					//Debug.Log("got del " + del + " for p " + p.playerState.playerNumber);
+					// hunter was getting this ugly purple result from blending cyan and red, looks way better if you shift the other way around, through green
+					// this solution is somewhat 'fragile' but I doubt we're getting that many more characters in arena
+					if (del > 0.5f) // too divergent, blend towards
+					{
+						//col.h = Mathf.Lerp(col.h, 0.33f, 0.66f);
+						col.h = self.iVars.color.hue; // huh just jumping to the opposite side looked great on hunter
+													  //self.iVars.color.hue = (self.iVars.color.hue + 0.33f) / 2f;
+					}
+					self.iVars.color = HSLColor.Lerp(self.iVars.color, new HSLColor(col.h, col.s, col.l), 0.5f * col.s); // magical * sat so white doesnt blend smh
+				}
+			}
+			orig(self);
+		}
+
+		// arena color mixing patchup
+		private void CicadaGraphics_ApplyPalette(ILContext il)
+		{
+			var c = new ILCursor(il);
+			if (c.TryGotoNext(MoveType.AfterLabel,
+				i => i.MatchStloc(0) // I hope this one is stable
+				))
+			{
+				c.MoveAfterLabels();
+				c.Emit(OpCodes.Ldarg_0);
+				c.EmitDelegate<Func<Color, CicadaGraphics, Color>>((cin, self) => // MORE tone of body
+				{
+					if (player.TryGet(self.cicada.abstractCreature, out var ap) && ap.realizedCreature is Player p)
+					{
+						if (self.cicada.room?.world?.game.IsArenaSession ?? false)
+						{
+							var col = RXColor.HSLFromColor(p.ShortCutColor());
+							return HSLColor.Lerp(self.iVars.color, new HSLColor(col.h, col.s, col.l), 0.8f * col.s).rgb;
+						}
+					}
+					return cin;
+				});
+			}
+			else Debug.LogException(new Exception("Couldn't IL-hook CicadaGraphics_ApplyPalette from squiddy")); // deffendisve progrmanig
+		}
+
 		// use cada color for shortcuts unless in arena
 		private Color Player_ShortCutColor(On.Player.orig_ShortCutColor orig, Player self)
 		{
@@ -301,95 +503,6 @@ namespace Squiddy
 			}
 
 			orig(self, playerShelter, activeGate);
-		}
-
-		// arena colors
-		private void Cicada_InitiateGraphicsModule(On.Cicada.orig_InitiateGraphicsModule orig, Cicada self)
-		{
-			if (self.graphicsModule == null && player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p)
-			{
-				Debug.Log("Squiddy: InitiateGraphicsModule!");
-				//self.flying = false; // shh
-
-				if (self.abstractCreature.world.game.IsArenaSession)
-				{
-					// hsl math was failing to lerp to survivor-white somehow, had a red tint. no hue weight compensation for low sat colors
-					var col = RXColor.HSLFromColor(p.ShortCutColor());
-					var del = Mathf.Abs(col.h * col.s - self.iVars.color.hue * self.iVars.color.saturation) * col.s;
-					//Debug.Log("got del " + del + " for p " + p.playerState.playerNumber);
-					// hunter was getting this ugly purple result from blending cyan and red, looks way better if you shift the other way around, through green
-					// this solution is somewhat 'fragile' but I doubt we're getting that many more characters in arena
-					if (del > 0.5f) // too divergent, blend towards
-					{
-						//col.h = Mathf.Lerp(col.h, 0.33f, 0.66f);
-						col.h = self.iVars.color.hue; // huh just jumping to the opposite side looked great on hunter
-													  //self.iVars.color.hue = (self.iVars.color.hue + 0.33f) / 2f;
-					}
-					self.iVars.color = HSLColor.Lerp(self.iVars.color, new HSLColor(col.h, col.s, col.l), 0.5f * col.s); // magical * sat so white doesnt blend smh
-				}
-			}
-			orig(self);
-		}
-
-		// arena color mixing patchup
-		private void CicadaGraphics_ApplyPalette(ILContext il)
-		{
-			var c = new ILCursor(il);
-			if (c.TryGotoNext(MoveType.AfterLabel,
-				i => i.MatchStloc(0) // I hope this one is stable
-				))
-			{
-				c.MoveAfterLabels();
-				c.Emit(OpCodes.Ldarg_0);
-				c.EmitDelegate<Func<Color, CicadaGraphics, Color>>((cin, self) => // MORE tone of body
-				{
-					if (player.TryGet(self.cicada.abstractCreature, out var ap) && ap.realizedCreature is Player p)
-					{
-						if (self.cicada.room?.world?.game.IsArenaSession ?? false)
-						{
-							var col = RXColor.HSLFromColor(p.ShortCutColor());
-							return HSLColor.Lerp(self.iVars.color, new HSLColor(col.h, col.s, col.l), 0.8f * col.s).rgb;
-						}
-					}
-					return cin;
-				});
-			}
-			else Debug.LogException(new Exception("Couldn't IL-hook CicadaGraphics_ApplyPalette from squiddy")); // deffendisve progrmanig
-		}
-
-		// Stronger color of body in arena
-		private void CicadaGraphics_ApplyPalette(On.CicadaGraphics.orig_ApplyPalette orig, CicadaGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
-		{
-			orig(self, sLeaser, rCam, palette);
-
-			if (player.TryGet(self.cicada.abstractCreature, out var ap) && ap.realizedCreature is Player p)
-			{
-				if (self.cicada.room?.world?.game.IsArenaSession ?? false)
-				{
-					// use 1:1 color no blending no filter
-					Color bodyColor = p.ShortCutColor();
-					var bodyHSL = RXColor.HSLFromColor(bodyColor);
-					if (bodyHSL.l < 0.5) // stupig nighat color palete
-					{
-						if (self.cicada.gender)
-						{
-							self.cicada.gender = false;
-							orig(self, sLeaser, rCam, palette); // what could go wrong
-							self.cicada.gender = true;
-						}
-					}
-
-					sLeaser.sprites[self.HighlightSprite].color = Color.Lerp(bodyColor, new Color(1f, 1f, 1f), 0.7f);
-					sLeaser.sprites[self.BodySprite].color = bodyColor;
-					sLeaser.sprites[self.HeadSprite].color = bodyColor;
-
-					for (int side = 0; side < 2; side++)
-						for (int wing = 0; wing < 2; wing++)
-						{
-							sLeaser.sprites[self.TentacleSprite(side, wing)].color = bodyColor;
-						}
-				}
-			}
 		}
 	}
 }

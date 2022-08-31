@@ -12,6 +12,10 @@ namespace Squiddy
 {
     public partial class SquiddyBase
     {
+		// everyone will remember that
+		public AttachedField<AbstractRoom, int[]> consumedInsects = new AttachedField<AbstractRoom, int[]>();
+
+		// things were getting out of hand
 		private void GrabUpdate(Cicada self, Player p, Vector2 inputDir)
 		{
 			var room = self.room;
@@ -26,6 +30,7 @@ namespace Squiddy
 				Creature.Grasp edible = grasps.FirstOrDefault(g => g != null && (
 					(g.grabbed is IPlayerEdible ipe && ipe.Edible && ipe.FoodPoints == 0) // Edible with no food points (otherwise must carry to den)
 				  || g.grabbed is InsectHolder
+				  //|| g.grabbed is OracleSwarmer
 				));
 
 				if (edible != null && (holdingGrab || p.eatCounter < 15))
@@ -47,13 +52,6 @@ namespace Squiddy
 								if (edible.discontinued)
                                 {
 									edible.Release();
-									if(ipe is InsectHolder ih) { // store consumed insects to reduce respawns
-										var insects = consumedInsects[room.abstractRoom] ?? (consumedInsects[room.abstractRoom] = new int[Enum.GetValues(typeof(CosmeticInsect.Type)).Length]);
-										if ((int)ih.insect.type < insects.Length)
-										{
-											insects[(int)ih.insect.type]++;
-										}
-									}
 								}
 							}
 						}
@@ -63,13 +61,14 @@ namespace Squiddy
 							{
 								room.game.cameras[0].hud.foodMeter.RefuseFood();
 							}
+							edible = null;
 						}
 					}
 				}
 
 				if (holdingGrab)
 				{
-					if (edible == null && ((p.objectInStomach == null && grasps.Any(g => g != null && p.CanBeSwallowed((g.grabbed)))) || p.objectInStomach != null))
+					if ((edible == null) && ((p.objectInStomach == null && grasps.Any(g => g != null && p.CanBeSwallowed((g.grabbed)))) || p.objectInStomach != null))
 					{
 						swallow = true;
 					}
@@ -283,6 +282,16 @@ namespace Squiddy
 			return orig(self, obj);
 		}
 
+		// can always swallow a neuron
+		private bool Player_CanBeSwallowed(On.Player.orig_CanBeSwallowed orig, Player self, PhysicalObject testObj)
+		{
+			if (IsMe(self))
+			{
+				return orig(self, testObj) || testObj is OracleSwarmer; // can eat this mans at any time
+			}
+			return orig(self, testObj);
+		}
+
 		// player eats what squiddy eats
 		private void Player_ObjectEaten(On.Player.orig_ObjectEaten orig, Player self, IPlayerEdible edible)
 		{
@@ -290,16 +299,22 @@ namespace Squiddy
 			{
 				if (!(edible is Creature) && edible.FoodPoints > 0)
 				{
+					// not creatures are quarterpoints
 					for (int i = 0; i < edible.FoodPoints; i++)
 					{
 						self.AddQuarterFood();
 					}
 					return;
 				}
-				if (edible is InsectHolder)
+				if (edible is InsectHolder ih)
 				{
 					self.AddQuarterFood();
-					//return;
+					var insects = consumedInsects[self.room.abstractRoom] ?? (consumedInsects[self.room.abstractRoom] = new int[Enum.GetValues(typeof(CosmeticInsect.Type)).Length]);
+					if ((int)ih.insect.type < insects.Length)
+					{
+						insects[(int)ih.insect.type]++;
+					}
+					//return; // player eats it for zero points
 				}
 			}
 			orig(self, edible);
@@ -345,7 +360,7 @@ namespace Squiddy
 		}
 
 		// there, no autoeating quater pip stuff because foodinroom code bad
-		// obs the object here HAS to be an iplayeredible or player code will nullred
+		// obs the object here HAS to be an iplayeredible or player code will nullref
 		private bool Player_ObjectCountsAsFood(On.Player.orig_ObjectCountsAsFood orig, Player self, PhysicalObject obj)
 		{
 			if (IsMe(self) && cicada.TryGet(self.abstractCreature, out var abscada) && abscada.realizedCreature is Cicada cada)
@@ -354,7 +369,6 @@ namespace Squiddy
 			}
 			return orig(self, obj);
 		}
-
 
 		// eat the thing you carried to a den
 		private bool AbstractCreatureAI_DoIwantToDropThisItemInDen(On.AbstractCreatureAI.orig_DoIwantToDropThisItemInDen orig, AbstractCreatureAI self, AbstractPhysicalObject item)
@@ -372,6 +386,18 @@ namespace Squiddy
 							p.SessionRecord.AddEat(item.realizedObject);
 						}
 						p.ObjectEaten(ipe);
+						if (ipe is OracleSwarmer os)
+						{
+							if (self.world.game.session is StoryGameSession sgs)
+							{
+								sgs.saveState.theGlow = true;
+							}
+							p.glowing = true;
+							if (os is SLOracleSwarmer slos && slos.oracle != null)
+							{
+								slos.oracle.GlowerEaten();
+							}
+						}
 						eaten = true;
 					}
 					else if (item is AbstractCreature ac && self.parent.abstractAI.RealAI.StaticRelationship(ac).type == CreatureTemplate.Relationship.Type.Eats)
