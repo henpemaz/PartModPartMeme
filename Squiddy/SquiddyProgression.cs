@@ -153,14 +153,21 @@ namespace Squiddy
 			{
 				//orig(self);
 				self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("Oh you're still alive."), 10));
-				self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("That's a shame, my circuits must be miscalibrated."), 20));
+                self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("That's a shame, my circuits must be miscalibrated."), 10));
 
-				self.events.Add(new Conversation.WaitEvent(self, 40));
+                self.events.Add(new Conversation.WaitEvent(self, 40));
 
-				self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("Tsc. How did you get in in the first place, stupid creature. You aren't worth my time, little bug."), 10));
+                self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("Tsc. How did you get in in the first place, stupid creature. " + (
+                    (self.owner.oracle.room.game.IsStorySession && self.owner.oracle.room.game.GetStorySession.saveState.miscWorldSaveData.memoryArraysFrolicked) ?
+                    "My memory arrays are a maze not intended for the kinds of you." :
+                    "The entrance you took is far above the clouds, you shouldn't be able to reach it.")), 10));
 
-				self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("Get out of my can before I turn you into a blue goop."), 0));
-			}
+                self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("I suppose a bug will get through any maze if given enough time, but why did it have to be me?"), 10));
+
+                self.events.Add(new Conversation.WaitEvent(self, 40));
+
+                self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("You aren't worth my time, little bug. Get out of my can before I turn you into a blue goop."), 0));
+            }
 			else
 			{
 				orig(self);
@@ -175,6 +182,7 @@ namespace Squiddy
 				{
 					self.owner.NewAction(SSOracleBehavior.Action.General_GiveMark);
 					self.owner.afterGiveMarkAction = SSOracleBehavior.Action.General_MarkTalk;
+					self.movementBehavior = SSOracleBehavior.MovementBehavior.Investigate;
 				}
 			}
 			orig(self);
@@ -201,7 +209,7 @@ namespace Squiddy
 						{
 							self.dialogBox.Interrupt(self.Translate("One blue goop coming right up."), 0);
 						}
-						else if (self.owner.throwOutCounter > 320)
+						else if (self.owner.throwOutCounter > 340)
 						{
 							self.owner.NewAction(SSOracleBehavior.Action.ThrowOut_KillOnSight);
 						}
@@ -227,7 +235,7 @@ namespace Squiddy
 						{
 							self.dialogBox.Interrupt(self.Translate("One blue goop coming right up."), 0);
 						}
-						else if (self.owner.throwOutCounter > 160)
+						else if (self.owner.throwOutCounter > 180)
 						{
 							self.owner.NewAction(SSOracleBehavior.Action.ThrowOut_KillOnSight);
 						}
@@ -281,11 +289,125 @@ namespace Squiddy
 
 		private void SSOracleBehavior_SeePlayer(On.SSOracleBehavior.orig_SeePlayer orig, SSOracleBehavior self)
 		{
-			if (cicada.TryGet(self.player?.abstractCreature, out _) && self.throwOutCounter > 0 && self.player.dead)
+			if (cicada.TryGet(self.player?.abstractCreature, out _) && self.player.dead)
 			{
 				return;
 			}
 			orig(self);
 		}
-	}
+
+		private void SSOracleBehavior_NewAction(On.SSOracleBehavior.orig_NewAction orig, SSOracleBehavior self, SSOracleBehavior.Action nextAction)
+		{
+			if (cicada.TryGet(self.player?.abstractCreature, out var ac) && (nextAction == SSOracleBehavior.Action.General_GiveMark || nextAction == SSOracleBehavior.Action.ThrowOut_KillOnSight))
+			{
+				self.oracle.room.AddObject(new SquiddyCrosshair(self, ac.realizedCreature));
+			}
+			orig(self, nextAction);
+		}
+
+        private class SquiddyCrosshair : CosmeticSprite
+        {
+            private readonly int circle = 0;
+            private readonly int la = 1;
+            private readonly int lb = 2;
+
+			private float currentFactor;
+            private float crossAlpha;
+            float red;
+            private float dieOut;
+            private readonly SSOracleBehavior sob;
+            private readonly Creature squiddy;
+
+            public SquiddyCrosshair(SSOracleBehavior sob,Creature squiddy)
+            {
+                this.sob = sob;
+                this.squiddy = squiddy;
+            }
+
+            public override void Update(bool eu)
+            {
+                base.Update(eu);
+				if (slatedForDeletetion) return;
+				if ((sob.action == SSOracleBehavior.Action.General_GiveMark && sob.inActionCounter > 340) || (squiddy.dead))
+				{ 
+					dieOut+= squiddy.dead ? 0.05f : 0.025f;
+				}
+
+				if(dieOut > 1f) { Destroy(); return; }
+			
+				var towards = squiddy.firstChunk.pos - pos;
+
+				if (sob.action == SSOracleBehavior.Action.General_GiveMark)
+				{
+					currentFactor = ((float)sob.inActionCounter) / 300;
+				}
+				if (sob.action == SSOracleBehavior.Action.ThrowOut_KillOnSight || squiddy.dead)
+				{
+					currentFactor = squiddy.dead ? 1f - dieOut : Mathf.Pow(sob.killFac, 0.3f);
+				}
+
+				crossAlpha = Mathf.Max(0, Mathf.InverseLerp(0.33f, 0.66f, currentFactor) - dieOut);
+
+				if(currentFactor < 1f && dieOut == 0f)
+                {
+					var idealDist = Mathf.Lerp(400, 5, Mathf.Pow(currentFactor, 0.5f));
+					if (towards.magnitude > idealDist)
+					{
+						vel += towards.normalized * (towards.magnitude - idealDist) / 4f;
+					}
+
+					if(currentFactor > 0.5f)
+                    {
+						red = Mathf.Pow(UnityEngine.Random.value, 10f - 5f * currentFactor);
+					}
+				}
+                else
+                {
+					red = 1f;
+                }
+				this.vel *= 0.8f;
+			}
+
+			public override void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
+			{
+				sLeaser.sprites = new FSprite[3];
+				sLeaser.sprites[circle] = new FSprite("Futile_White", true) { shader = rCam.game.rainWorld.Shaders["VectorCircle"] };
+				sLeaser.sprites[la] = new FSprite("Futile_White", true) { rotation = 45, scaleY = 1f / 8f };
+				sLeaser.sprites[lb] = new FSprite("Futile_White", true) { rotation = -45, scaleY = 1f / 8f };
+				this.AddToContainer(sLeaser, rCam, null);
+			}
+
+			public override void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+			{
+				Vector2 vector = Vector2.Lerp(this.lastPos, this.pos, timeStacker);
+				var c = sLeaser.sprites[circle];
+				c.x = vector.x - camPos.x;
+				c.y = vector.y - camPos.y;
+				c.scale = 10f - Mathf.Lerp(0, 5, Mathf.Pow(currentFactor, 0.5f));
+				c.color = Color.Lerp(Color.white, Color.red, red);
+				c.alpha = 0.01f + 0.1f * Mathf.Pow(currentFactor, 0.5f) - 0.011f * dieOut;
+
+				var a = sLeaser.sprites[la];
+				a.x = vector.x - camPos.x;
+				a.y = vector.y - camPos.y;
+				a.scaleX = 10f - Mathf.Lerp(0, 5, Mathf.Pow(currentFactor, 0.5f));
+				a.color = Color.Lerp(Color.white, Color.red, red);
+				a.alpha = crossAlpha;
+
+				var b = sLeaser.sprites[lb];
+				b.x = vector.x - camPos.x;
+				b.y = vector.y - camPos.y;
+				b.scaleX = 10f - Mathf.Lerp(0, 5, Mathf.Pow(currentFactor, 0.5f));
+				b.color = Color.Lerp(Color.white, Color.red, red);
+				b.alpha = crossAlpha;
+
+				base.DrawSprites(sLeaser, rCam, timeStacker, camPos);
+			}
+
+            public override void AddToContainer(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
+            {
+                base.AddToContainer(sLeaser, rCam, rCam.ReturnFContainer("Shortcuts"));
+            }
+        }
+    }
 }

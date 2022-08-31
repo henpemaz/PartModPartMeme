@@ -106,7 +106,6 @@ namespace Squiddy
 			}
 		}
 
-
 		private bool AbstractCreature_WantToStayInDenUntilEndOfCycle(On.AbstractCreature.orig_WantToStayInDenUntilEndOfCycle orig, AbstractCreature self)
 		{
 			if (player.TryGet(self, out var ap))
@@ -149,7 +148,7 @@ namespace Squiddy
 
 		float densNeededAmount;
 		bool densNeeded;
-		// for finding dens
+		// show me dens
 		private void ShortcutGraphics_GenerateSprites(On.ShortcutGraphics.orig_GenerateSprites orig, ShortcutGraphics self)
 		{
 			orig(self);
@@ -172,6 +171,8 @@ namespace Squiddy
 				}
 			}
 		}
+
+		// draw dens when squiddy needs them
 		private void ShortcutGraphics_Draw(On.ShortcutGraphics.orig_Draw orig, ShortcutGraphics self, float timeStacker, Vector2 camPos)
 		{
 			orig(self, timeStacker, camPos);
@@ -187,6 +188,7 @@ namespace Squiddy
 			}
 		}
 
+		// tick dens needed amount
 		private void ShortcutGraphics_Update(On.ShortcutGraphics.orig_Update orig, ShortcutGraphics self)
 		{
 			orig(self);
@@ -194,7 +196,6 @@ namespace Squiddy
 			densNeeded = false; // set every frame
 		}
 
-		#region miscfixes
 		// bugfix the gmae
 		// 2 connected creatures leaving den = both added twice to the room.
 		private void AbstractCreature_IsExitingDen(On.AbstractCreature.orig_IsExitingDen orig, AbstractCreature self)
@@ -301,11 +302,8 @@ namespace Squiddy
 
 			orig(self, playerShelter, activeGate);
 		}
-		#endregion miscfixes
 
-		#region arenacolors
 		// arena colors
-
 		private void Cicada_InitiateGraphicsModule(On.Cicada.orig_InitiateGraphicsModule orig, Cicada self)
 		{
 			if (self.graphicsModule == null && player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p)
@@ -393,6 +391,5 @@ namespace Squiddy
 				}
 			}
 		}
-		#endregion arenacolorss
 	}
 }

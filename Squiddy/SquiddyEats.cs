@@ -264,6 +264,7 @@ namespace Squiddy
 			return candidate;
 		}
 
+		// player picks what squiddy wants
 		private bool Player_CanIPickThisUp(On.Player.orig_CanIPickThisUp orig, Player self, PhysicalObject obj)
 		{
 			if (IsMe(self))
@@ -282,6 +283,7 @@ namespace Squiddy
 			return orig(self, obj);
 		}
 
+		// player eats what squiddy eats
 		private void Player_ObjectEaten(On.Player.orig_ObjectEaten orig, Player self, IPlayerEdible edible)
 		{
 			if (IsMe(self))
@@ -303,6 +305,7 @@ namespace Squiddy
 			orig(self, edible);
 		}
 
+		// autoeating code weird
 		private int Player_FoodInRoom_Room_bool(On.Player.orig_FoodInRoom_Room_bool orig, Player self, Room checkRoom, bool eatAndDestroy)
 		{
 			int num = self.FoodInStomach;
@@ -340,7 +343,6 @@ namespace Squiddy
 			// if eaten, will be already accounted for in the original method
 			return (eatAndDestroy ? 0 : extra) + orig(self, checkRoom, eatAndDestroy);
 		}
-
 
 		// there, no autoeating quater pip stuff because foodinroom code bad
 		// obs the object here HAS to be an iplayeredible or player code will nullred
@@ -405,6 +407,7 @@ namespace Squiddy
 			}
 		}
 
+		// remove respawned insetcs on room reenter
 		private void InsectCoordinator_NowViewed(On.InsectCoordinator.orig_NowViewed orig, InsectCoordinator self)
 		{
 			orig(self);

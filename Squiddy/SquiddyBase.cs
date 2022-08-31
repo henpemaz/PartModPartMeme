@@ -89,52 +89,52 @@ namespace Squiddy
 			On.Cicada.Swim += Cicada_Swim; // prevent loss of control
 
 			On.Cicada.GrabbedByPlayer += Cicada_GrabbedByPlayer; // prevent loss of control
-            On.Cicada.CarryObject += Cicada_CarryObject;
-            On.Cicada.Collide += Cicada_Collide;
+            On.Cicada.CarryObject += Cicada_CarryObject; // more realistic grab pos, pointy stick
+			On.Cicada.Collide += Cicada_Collide; // charging on creature, attack chunk
 
-            On.Cicada.Die += Cicada_Die;
-			On.CicadaAI.Update += CicadaAI_Update;
+			On.Cicada.Die += Cicada_Die; // Die! secret player
+			On.CicadaAI.Update += CicadaAI_Update; // dont let AI interfere on squiddy
 
-            On.Player.Die += Player_Die;
-            On.Player.Stun += Player_Stun;
+			On.Player.Die += Player_Die; // Die! Squiddy
+            On.Player.Stun += Player_Stun; // stun squiddy too, also hi pebbles
 
-            On.AbstractCreature.WantToStayInDenUntilEndOfCycle += AbstractCreature_WantToStayInDenUntilEndOfCycle;
-            On.AbstractCreature.Abstractize += AbstractCreature_Abstractize;
-            On.ShortcutHandler.SuckInCreature += ShortcutHandler_SuckInCreature;
-            On.ShortcutHandler.OnScreenPositionOfInShortCutCreature += ShortcutHandler_OnScreenPositionOfInShortCutCreature;
-            On.Player.ShortCutColor += Player_ShortCutColor;
-            On.RoomCamera.MoveCamera_Room_int += RoomCamera_MoveCamera_Room_int;
-            On.AbstractPhysicalObject.Destroy += AbstractPhysicalObject_Destroy;
+            On.AbstractCreature.WantToStayInDenUntilEndOfCycle += AbstractCreature_WantToStayInDenUntilEndOfCycle; // I don't
+            On.AbstractCreature.Abstractize += AbstractCreature_Abstractize; // do NOT abstractize unless I tell you to
+			On.ShortcutHandler.SuckInCreature += ShortcutHandler_SuckInCreature; // player goes in, so shortcut aware things work better
+            On.ShortcutHandler.OnScreenPositionOfInShortCutCreature += ShortcutHandler_OnScreenPositionOfInShortCutCreature; // patchup for entities in dens
+            On.Player.ShortCutColor += Player_ShortCutColor; // use cada color for shortcuts unless in arena
+			On.RoomCamera.MoveCamera_Room_int += RoomCamera_MoveCamera_Room_int; // comming out of den trips the newroom which trips roommic to reset
+			On.AbstractPhysicalObject.Destroy += AbstractPhysicalObject_Destroy; // don't break up on player removal
 
-			IL.Cicada.Act += Cicada_Act1;
-            On.InsectCoordinator.NowViewed += InsectCoordinator_NowViewed;
+			IL.Cicada.Act += Cicada_Act1; // cicada pather gets confused about entering shortcuts, let our code handle that instead
+			On.InsectCoordinator.NowViewed += InsectCoordinator_NowViewed; // remove respawned insetcs on room reenter
 
-			On.Player.CanIPickThisUp += Player_CanIPickThisUp;
-            On.Player.ObjectEaten += Player_ObjectEaten;
-            On.Player.FoodInRoom_Room_bool += Player_FoodInRoom_Room_bool;
-            On.Player.ObjectCountsAsFood += Player_ObjectCountsAsFood;
-			On.AbstractCreatureAI.DoIwantToDropThisItemInDen += AbstractCreatureAI_DoIwantToDropThisItemInDen;
-            On.CicadaGraphics.Update += CicadaGraphics_Update;
+			On.Player.CanIPickThisUp += Player_CanIPickThisUp; // player picks what squiddy wants
+			On.Player.ObjectEaten += Player_ObjectEaten; // player eats what squiddy eats
+			On.Player.FoodInRoom_Room_bool += Player_FoodInRoom_Room_bool; // squiddy uses different values and eats smallCreature
+			On.Player.ObjectCountsAsFood += Player_ObjectCountsAsFood; // disable autoeat for quarter pips
+			On.AbstractCreatureAI.DoIwantToDropThisItemInDen += AbstractCreatureAI_DoIwantToDropThisItemInDen; // eat the thing you carried to a den
+			On.CicadaGraphics.Update += CicadaGraphics_Update; // move tentacles properly
 
-            On.ShortcutGraphics.GenerateSprites += ShortcutGraphics_GenerateSprites;
-			On.ShortcutGraphics.Draw += ShortcutGraphics_Draw;
-            On.ShortcutGraphics.Update += ShortcutGraphics_Update;
+			On.ShortcutGraphics.GenerateSprites += ShortcutGraphics_GenerateSprites; // show me dens
+			On.ShortcutGraphics.Draw += ShortcutGraphics_Draw; // draw dens when squiddy needs them
+			On.ShortcutGraphics.Update += ShortcutGraphics_Update; // tick dens needed amount
 
-			On.AbstractCreature.IsExitingDen += AbstractCreature_IsExitingDen;
-			IL.ShortcutHelper.Update += ShortcutHelper_Update;
-            On.SuperJumpInstruction.ctor += SuperJumpInstruction_ctor;
-            On.RegionState.AdaptRegionStateToWorld += RegionState_AdaptRegionStateToWorld;
+			On.AbstractCreature.IsExitingDen += AbstractCreature_IsExitingDen; // bugfix 2 crits 1 den
+			IL.ShortcutHelper.Update += ShortcutHelper_Update; // skip me for playerpushbacks please, need to enter dens
+			On.SuperJumpInstruction.ctor += SuperJumpInstruction_ctor; // HA what do you think i am stupid
+			On.RegionState.AdaptRegionStateToWorld += RegionState_AdaptRegionStateToWorld; // remove squiddy from save.
 
-			On.Cicada.InitiateGraphicsModule += Cicada_InitiateGraphicsModule;
-			IL.CicadaGraphics.ApplyPalette += CicadaGraphics_ApplyPalette;
-			On.CicadaGraphics.ApplyPalette += CicadaGraphics_ApplyPalette;
+			On.Cicada.InitiateGraphicsModule += Cicada_InitiateGraphicsModule; // special arena colors
+			IL.CicadaGraphics.ApplyPalette += CicadaGraphics_ApplyPalette; // arena color mixing patchup
+			On.CicadaGraphics.ApplyPalette += CicadaGraphics_ApplyPalette; // Stronger color of body in arena
 
-            On.SSOracleBehavior.PebblesConversation.AddEvents += PebblesConversation_AddEvents;
+			// Pebbles is one funny guy
+			On.SSOracleBehavior.PebblesConversation.AddEvents += PebblesConversation_AddEvents;
             On.SSOracleBehavior.SSOracleMeetWhite.Update += SSOracleMeetWhite_Update;
 			On.SSOracleBehavior.ThrowOutBehavior.Update += ThrowOutBehavior_Update;
 			On.SSOracleBehavior.SeePlayer += SSOracleBehavior_SeePlayer;
-
-
+            On.SSOracleBehavior.NewAction += SSOracleBehavior_NewAction;
 
 			densNeededAmount = 0f;
 			densNeeded = false;
@@ -191,9 +191,8 @@ namespace Squiddy
 			On.SSOracleBehavior.SSOracleMeetWhite.Update -= SSOracleMeetWhite_Update;
             On.SSOracleBehavior.ThrowOutBehavior.Update -= ThrowOutBehavior_Update;
             On.SSOracleBehavior.SeePlayer -= SSOracleBehavior_SeePlayer;
+			On.SSOracleBehavior.NewAction -= SSOracleBehavior_NewAction;
 		}
-
-        
 
         // Lock player and squiddy
         // player inconsious update
@@ -640,6 +639,7 @@ namespace Squiddy
 			orig(self);
 		}
 
+		// charging on creature, attack chunk
 		private void Cicada_Collide(On.Cicada.orig_Collide orig, Cicada self, PhysicalObject otherObject, int myChunk, int otherChunk)
 		{
 			if (player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p)
