@@ -57,11 +57,11 @@ https://discord.com/channels/@me/1005701084637044736/1005701836440879124
 
 	can't start game as single player -> done
 
-	pebbles sequence is glitchy af
+	pebbles sequence is glitchy af -> no reproducey
 
 	switching cams at 3 and 4 players unintuitive / doesnt work
 		p2 dies and then what
-			handled very very thorougly
+			handled very very thorougly now
 
 	sharpener causes half black screen
 		I'm not good enough to fix it
@@ -71,6 +71,16 @@ https://discord.com/channels/@me/1005701084637044736/1005701836440879124
 https://discord.com/channels/291184728944410624/431534164932689921/1006106126338760717
 	lizardskin cosmetics break
 		maybe moving all sprotes not a good idea?
+			switched to moving cam containers for everything
 
 
 forecast breaks violently -> fixed
+
+
+
+Whila cam2 doesn't drawn, garbo sprites build up and cause lag
+
+wormgrass or water on first room realized mess up on cam array resize!
+
+
+

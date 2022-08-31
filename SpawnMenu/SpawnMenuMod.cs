@@ -252,7 +252,9 @@ namespace SpawnMenu
                 if (self.game.IsStorySession)
                 {
                     var room = self.game.cameras[0].room;
-                    var overlayowner = room.updateList.First(o => o is SandboxOverlayOwner && !o.slatedForDeletetion) as SandboxOverlayOwner;
+                    var overlayowner = room.updateList.FirstOrDefault(o => o is SandboxOverlayOwner && !o.slatedForDeletetion) as SandboxOverlayOwner;
+
+                    if (overlayowner is null) return;
                     var editor = overlayowner.gameSession.editor;
                     overlayowner.gameSession.PlayMode = true;
 
@@ -312,8 +314,7 @@ namespace SpawnMenu
                     overlayowner.Destroy();
                     overlayowner.overlay.ShutDownProcess();
 
-                    var editCursor = room.updateList.First(o => o is ArenaBehaviors.SandboxEditor.EditCursor && !o.slatedForDeletetion) as ArenaBehaviors.SandboxEditor.EditCursor;
-                    editCursor.Destroy();
+                    (room.updateList.FirstOrDefault(o => o is ArenaBehaviors.SandboxEditor.EditCursor && !o.slatedForDeletetion) as ArenaBehaviors.SandboxEditor.EditCursor)?.Destroy();
                     // with splitscreen, slugbase nullrefs on a hook if one of these is deleted, removed from room, then drawn. not too sure how
                     foreach (var cam in self.game.cameras) 
                         foreach (var sl in cam.spriteLeasers.ToList()) 

@@ -8,8 +8,9 @@
 	kill hostiles in door-less shelter
 	creatures zero-G fix
 	
-	
 	moon/pebbles should acknowledge plastified
+
+	centipede near cabinetbeast spawnkills the player too often
 
 1.2
 	directoryinfo refresh fix
