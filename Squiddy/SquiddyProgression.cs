@@ -409,5 +409,55 @@ namespace Squiddy
                 base.AddToContainer(sLeaser, rCam, rCam.ReturnFContainer("Shortcuts"));
             }
         }
-    }
+
+		private void MoonConversation_AddEvents(On.SLOracleBehaviorHasMark.MoonConversation.orig_AddEvents orig, SLOracleBehaviorHasMark.MoonConversation self)
+		{
+			if (IsMe(self.slOracleBehaviorHasMark.oracle.room.game))
+			{
+				if (self.id == Conversation.ID.MoonFirstPostMarkConversation)
+				{
+                    if (self.State.neuronsLeft == 4)
+                    {
+						self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("Argh! It is you again."), 10));
+						self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("Pest! Come to munch on my neurons again? I don't have any to spare, go away!"), 5));
+						self.events.Add(new Conversation.TextEvent(self, 20, self.Translate(". . ."), 30));
+						self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("There will be no benefit if we are both filled with rage like that. I can sense it in you, too.<LINE>I know it's much to ask from a wild animal, but please stay civil, <PlayerName>."), 20));
+						self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("We are both victims of the circunstances, you and I.<LINE>But right now, you seem more capable of fighting back than I do."), 30));
+						self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("Please put it to good use."), 15));
+						self.events.Add(new Conversation.WaitEvent(self, 60));
+						self.events.Add(new Conversation.TextEvent(self, 30, self.Translate("I see that someone has given you the gift of communication. Was it Five Pebbles?<LINE>He's sick, you know. Being corrupted from the inside by old age and increasingly desperate experiments."), 30));
+						self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("And to think he would help a wild creature like you. He must be just completely mad at this point."), 30));
+						return;
+					}
+					if (self.State.neuronsLeft >= 5) {
+						self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("Hello <PlayerName>."), 10));
+						self.events.Add(new Conversation.TextEvent(self, 25, self.Translate("What a facinating specimen... Are you a squidcicada?<LINE>You seem so oddly familiar too..."), 0));
+						if (self.State.playerEncounters > 0 && self.State.playerEncountersWithMark == 0)
+						{
+							self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("Perhaps... I saw you before? Or a relative of yours?<LINE>I have a vague memory..."), 20));
+						}
+                        else
+                        {
+							self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("No, really, you seem really, really familiar...<LINE>You... or something just like you, used to pay me visit?"), 20));
+							self.events.Add(new Conversation.TextEvent(self, 20, self.Translate("This intrigues me very much. More food for thought than what would be adequate for someone in my predicament."), 20));
+						}
+						self.events.Add(new Conversation.TextEvent(self, 20, self.Translate("But anyways, <PlayerName>, what are you doing around these parts?<LINE>As you can see, I have nothing for you. Not even my memories."), 10));
+						self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("Or did I say that already?"), 5));
+						self.events.Add(new Conversation.TextEvent(self, 30, self.Translate("I see that someone has given you the gift of communication. Was it Five Pebbles? It must have been a really dangerous journey.<LINE>He's sick, you know. Being corrupted from the inside by old age and increasingly desperate experiments."), 30));
+						self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("I would have never imagined Five Pebbles being so benevolent to the wildlife like that, but here you are!<LINE>Maybe this will be his redemption arc?"), 20));
+						self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("We weren't made to cross out, you see, we were made to keep Iterating, and it has driven many of us a little mad."), 30));
+						self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("It is good to have someone to talk to after all this time!<LINE>I have had scavengers come by before, as you can tell from the paintings on the walls."), 0));
+						self.events.Add(new Conversation.TextEvent(self, 30, self.Translate("... hopefully the rain will wash out whatever markings you happen to leave, little creature."), 0));
+						return;
+					}
+				}
+				else if (self.id == Conversation.ID.MoonSecondPostMarkConversation)
+				{
+
+				}
+			}
+
+			orig(self);
+		}
+	}
 }

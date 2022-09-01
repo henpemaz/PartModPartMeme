@@ -120,7 +120,6 @@ namespace Squiddy
             On.CicadaGraphics.DrawSprites += CicadaGraphics_DrawSprites;
 			IL.CicadaGraphics.ApplyPalette += CicadaGraphics_ApplyPalette; // arena color mixing patchup
 
-
 			On.ShortcutGraphics.GenerateSprites += ShortcutGraphics_GenerateSprites; // show me dens
 			On.ShortcutGraphics.Draw += ShortcutGraphics_Draw; // draw dens when squiddy needs them
 			On.ShortcutGraphics.Update += ShortcutGraphics_Update; // tick dens needed amount
@@ -130,7 +129,6 @@ namespace Squiddy
 			On.SuperJumpInstruction.ctor += SuperJumpInstruction_ctor; // HA what do you think i am stupid
 			On.RegionState.AdaptRegionStateToWorld += RegionState_AdaptRegionStateToWorld; // remove squiddy from save.
 
-
 			// Pebbles is one funny guy
 			On.SSOracleBehavior.PebblesConversation.AddEvents += PebblesConversation_AddEvents;
             On.SSOracleBehavior.SSOracleMeetWhite.Update += SSOracleMeetWhite_Update;
@@ -138,14 +136,15 @@ namespace Squiddy
 			On.SSOracleBehavior.SeePlayer += SSOracleBehavior_SeePlayer;
             On.SSOracleBehavior.NewAction += SSOracleBehavior_NewAction;
 
-			// Moon
-			//On.sloracle
+            // Moon
+            On.SLOracleBehaviorHasMark.MoonConversation.AddEvents += MoonConversation_AddEvents;
 
 			densNeededAmount = 0f;
 			densNeeded = false;
 		}
 
-        protected override void Disable()
+
+		protected override void Disable()
 		{
 			On.Cicada.Update -= Cicada_Update;
 			On.Cicada.Act -= Cicada_Act;
@@ -199,6 +198,8 @@ namespace Squiddy
             On.SSOracleBehavior.ThrowOutBehavior.Update -= ThrowOutBehavior_Update;
             On.SSOracleBehavior.SeePlayer -= SSOracleBehavior_SeePlayer;
 			On.SSOracleBehavior.NewAction -= SSOracleBehavior_NewAction;
+
+			On.SLOracleBehaviorHasMark.MoonConversation.AddEvents -= MoonConversation_AddEvents;
 		}
 
         // Lock player and squiddy

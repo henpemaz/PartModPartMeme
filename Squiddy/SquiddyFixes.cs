@@ -186,6 +186,19 @@ namespace Squiddy
 					pg.lightSource.setAlpha = new float?(1f);
 					p.room.AddObject(pg.lightSource);
 				}
+
+				// looker
+				if (p.room != null)
+                {
+					pg.objectLooker.Update();
+					if (self.creatureLooker.lookCreature == null && pg.objectLooker.looking)
+					{
+						Vector2 vector = Custom.DirVec(self.cicada.bodyChunks[1].pos, self.cicada.mainBodyChunk.pos);
+						self.lookDir = Custom.DirVec(self.cicada.bodyChunks[0].pos, pg.objectLooker.mostInterestingLookPoint);
+						Vector2 vector2 = Custom.RotateAroundOrigo(self.lookDir, Custom.AimFromOneVectorToAnother(new Vector2(0f, 0f), new Vector2(-vector.x, vector.y)));
+						self.lookRotation = Custom.AimFromOneVectorToAnother(-vector2, vector2);
+					}
+				}
 			}
 		}
 
@@ -210,7 +223,7 @@ namespace Squiddy
 			orig(self, sLeaser, rCam, newContatiner);
 			if (player.TryGet(self.cicada.abstractCreature, out var _))
 			{
-				if (sLeaser.sprites.Length <= firstExtra[self]) return;
+				if (sLeaser.sprites.Length <= firstExtra[self] || firstExtra[self] == 0) return;
 				CicadaGraphics_AddToContainer_Impl(self, sLeaser, rCam, newContatiner);
 			}
 		}
