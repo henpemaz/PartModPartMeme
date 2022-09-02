@@ -20,7 +20,30 @@ namespace Squiddy
         {
             instance = this;
             PlayerManager.RegisterCharacter(new SquiddyBase());
+            //On.VoidSea.VoidWorm.MainWormBehavior.SuperSwim += MainWormBehavior_SuperSwim;
+            //On.VoidSea.VoidWorm.Swim += VoidWorm_Swim;
         }
+
+        //private void VoidWorm_Swim(On.VoidSea.VoidWorm.orig_Swim orig, VoidSea.VoidWorm self)
+        //{
+        //    orig(self);
+        //    orig(self);
+        //    orig(self);
+        //    orig(self);
+        //    orig(self);
+        //    orig(self);
+        //    orig(self);
+        //    orig(self);
+        //    orig(self);
+        //    orig(self);
+        //    orig(self);
+        //}
+
+        //private void MainWormBehavior_SuperSwim(On.VoidSea.VoidWorm.MainWormBehavior.orig_SuperSwim orig, VoidSea.VoidWorm.MainWormBehavior self, float add)
+        //{
+        //    orig(self, add * 10);
+        //}
+
         void Update() // debug thinghies
         {
             //if (Input.GetKeyDown("1"))

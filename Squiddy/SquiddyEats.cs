@@ -90,9 +90,12 @@ namespace Squiddy
 				if (p.objectInStomach != null && p.swallowAndRegurgitateCounter > 110)
 				{
 					p.Regurgitate();
-					var grabbed = p.grasps[0].grabbed;
-					p.grasps[0].Release();
-					self.TryToGrabPrey(grabbed);
+					if(p.grasps[0] != null)
+                    {
+						var grabbed = p.grasps[0].grabbed;
+						p.grasps[0].Release();
+						self.TryToGrabPrey(grabbed);
+					}
 					p.swallowAndRegurgitateCounter = 0;
 				}
 				else if (p.objectInStomach == null && p.swallowAndRegurgitateCounter > 90)
@@ -370,6 +373,24 @@ namespace Squiddy
 			return orig(self, obj);
 		}
 
+		private void Player_Regurgitate(ILContext il)
+		{
+			var c = new ILCursor(il);
+			if (c.TryGotoNext(MoveType.Before,
+				i => i.MatchLdcI4(0),
+				i => i.MatchStloc(2)
+				))
+			{
+				c.Index += 1;
+				c.Emit(OpCodes.Ldarg_0);
+				c.EmitDelegate<Func<bool, Player, bool>>((a, p) => // bypass me, pushbacks
+				{
+					return IsMe(p) || a;
+				});
+			}
+			else Debug.LogException(new Exception("Couldn't IL-hook Player_Regurgitate from squiddy")); // deffendisve progrmanig
+		}
+
 		// eat the thing you carried to a den
 		private bool AbstractCreatureAI_DoIwantToDropThisItemInDen(On.AbstractCreatureAI.orig_DoIwantToDropThisItemInDen orig, AbstractCreatureAI self, AbstractPhysicalObject item)
 		{
@@ -430,6 +451,44 @@ namespace Squiddy
 			else
 			{
 				return orig(self, item);
+			}
+		}
+
+		// squiddy munches on some popcorn
+		private void SeedCob_Update(On.SeedCob.orig_Update orig, SeedCob self, bool eu)
+		{
+			orig(self, eu);
+			if (!self.AbstractCob.dead && self.open > 0.8f)
+			{
+				foreach (var ap in self.room.game.Players)
+				{
+					if (ap.realizedCreature is Player p && p.room == self.room && cicada.TryGet(ap, out var ac) && ac.realizedCreature is Cicada squiddy)
+					{
+						if (p.eatExternalFoodSourceCounter < 1 && p.dontEatExternalFoodSourceCounter < 1 && p.FoodInStomach < p.MaxFoodInStomach && (p.touchedNoInputCounter > 5 || p.input[0].pckp))
+						{
+							if (squiddy.grasps.Any(x => x == null))
+							{
+								Vector2 pos2 = p.mainBodyChunk.pos;
+								Vector2 vector = Custom.ClosestPointOnLineSegment(self.bodyChunks[0].pos, self.bodyChunks[1].pos, pos2);
+								if (Custom.DistLess(pos2, vector, 25f))
+								{
+									p.eatExternalFoodSourceCounter = 15;
+									squiddy.TryToGrabPrey(self);
+									if (self.room.game.IsStorySession && self.room.game.GetStorySession.playerSessionRecords != null)
+									{
+										self.room.game.GetStorySession.playerSessionRecords[(ap.state as PlayerState).playerNumber].AddEat(self);
+									}
+									self.delayedPush = new Vector2?(Custom.DirVec(pos2, vector) * 1.2f);
+									self.pushDelay = 4;
+									if (p.graphicsModule != null)
+									{
+										(p.graphicsModule as PlayerGraphics).LookAtPoint(vector, 100f);
+									}
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 

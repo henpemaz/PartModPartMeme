@@ -25,18 +25,17 @@ namespace Squiddy
 		// comming out of den trips the newroom which trips roommic to reset
 		private void RoomCamera_MoveCamera_Room_int(On.RoomCamera.orig_MoveCamera_Room_int orig, RoomCamera self, Room newRoom, int camPos)
 		{
-			if (cicada.TryGet(self.followAbstractCreature, out _) && newRoom == self.room && camPos == self.cameraNumber) return;
+			if (cicada.TryGet(self.followAbstractCreature, out _) && newRoom == self.room) return;
 			orig(self, newRoom, camPos);
 		}
 
-		// cicada pather gets confused about entering shortcuts, let our code handle that instead
+		// cicada pather gets confused about entering shortcuts, let our code handle that instead, also patchup zerog
 		private void Cicada_Act1(ILContext il)
 		{
 			var c = new ILCursor(il);
 			ILLabel dorun = null;
 			ILLabel dontrun = null;
 			if (c.TryGotoNext(MoveType.AfterLabel,
-				//i => i.MatchStfld<Creature>("enteringShortCut")
 				i => i.MatchLdloc(0),
 				i => i.MatchLdfld<MovementConnection>("type"),
 				i => i.MatchLdcI4(13),
@@ -59,7 +58,29 @@ namespace Squiddy
 				});
 				c.Emit(OpCodes.Brtrue, dontrun); // dont run if squiddy
 			}
-			else Debug.LogException(new Exception("Couldn't IL-hook Cicada_Act1 from squiddy")); // deffendisve progrmanig
+			else Debug.LogException(new Exception("Couldn't IL-hook Cicada_Act1 from squiddy for enteringshortcut")); // deffendisve progrmanig
+
+			// patchup zerog
+			c.Index = 0;
+			while (c.TryGotoNext(MoveType.After,
+				i => (i.MatchMul() && i.Previous.MatchLdcR4(out _)) || i.MatchLdcR4(out _),
+				i => i.MatchLdarg(0),
+				i => i.MatchLdfld<Cicada>("flyingPower"),
+				i => i.MatchMul(),
+				i => i.MatchLdarg(0),
+				i => i.MatchLdfld<Cicada>("stamina"),
+				i => i.MatchMul(),
+				i => i.MatchAdd(),
+				i => i.MatchStfld<Vector2>("y")
+				))
+            {
+                c.Index -= 2;
+                c.Emit(OpCodes.Ldarg_0);
+                c.Emit<PhysicalObject>(OpCodes.Callvirt, "get_gravity");
+                c.Emit(OpCodes.Mul);
+                c.Emit(OpCodes.Ldc_R4, (float)(1d / 0.9d));
+                c.Emit(OpCodes.Mul);
+			}
 		}
 
 		private Vector2? ShortcutHandler_OnScreenPositionOfInShortCutCreature(On.ShortcutHandler.orig_OnScreenPositionOfInShortCutCreature orig, ShortcutHandler self, Room room, Creature crit)
@@ -84,6 +105,7 @@ namespace Squiddy
 			orig(self);
 			if (player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p)
 			{
+				//Debug.LogError(Environment.StackTrace);
 				if (!p.dead) p.Die();
 			}
 		}
@@ -323,6 +345,10 @@ namespace Squiddy
 				}
 			}
 			orig(self);
+			if (self.graphicsModule is CicadaGraphics cg && player.TryGet(self.abstractCreature, out  _) )
+			{
+				cg.cullRange = 0;
+			}
 		}
 
 		// arena color mixing patchup

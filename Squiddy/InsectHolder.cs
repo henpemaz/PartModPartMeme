@@ -25,6 +25,9 @@ namespace Squiddy
 			this.p = p;
 			this.bodyChunks = new BodyChunk[] { new BodyChunk(this, 0, insect.pos, 2f, 0.01f) };
 			this.bodyChunkConnections = new PhysicalObject.BodyChunkConnection[0];
+			this.CollideWithObjects = false;
+			this.CollideWithTerrain = false;
+			this.collisionLayer = 0;
 		}
 
 		public bool bringToFront;

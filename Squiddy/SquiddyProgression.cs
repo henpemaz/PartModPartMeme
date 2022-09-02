@@ -305,7 +305,22 @@ namespace Squiddy
 			orig(self, nextAction);
 		}
 
-        private class SquiddyCrosshair : CosmeticSprite
+		private void SSOracleBehavior_Update(On.SSOracleBehavior.orig_Update orig, SSOracleBehavior self, bool eu)
+		{
+			if (cicada.TryGet(self.player?.abstractCreature, out var ac) && ac.realizedCreature is Cicada cada)
+			{
+				var og = self.player.grasps;
+				self.player.grasps = cada.grasps;
+				orig(self, eu);
+				self.player.grasps = og;
+			}
+			else
+			{
+				orig(self, eu);
+			}
+		}
+
+		private class SquiddyCrosshair : CosmeticSprite
         {
             private readonly int circle = 0;
             private readonly int la = 1;
@@ -421,7 +436,7 @@ namespace Squiddy
 						self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("Argh! It is you again."), 10));
 						self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("Pest! Come to munch on my neurons again? I don't have any to spare, go away!"), 5));
 						self.events.Add(new Conversation.TextEvent(self, 20, self.Translate(". . ."), 30));
-						self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("There will be no benefit if we are both filled with rage like that. I can sense it in you, too.<LINE>I know it's much to ask from a wild animal, but please stay civil, <PlayerName>."), 20));
+						self.events.Add(new Conversation.TextEvent(self, 20, self.Translate("There will be no benefit if we are both filled with rage like that. I can sense it in you, too.<LINE>I know it's much to ask from a wild animal, but please stay civil, <PlayerName>."), 20));
 						self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("We are both victims of the circunstances, you and I.<LINE>But right now, you seem more capable of fighting back than I do."), 30));
 						self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("Please put it to good use."), 15));
 						self.events.Add(new Conversation.WaitEvent(self, 60));
@@ -451,13 +466,78 @@ namespace Squiddy
 						return;
 					}
 				}
-				else if (self.id == Conversation.ID.MoonSecondPostMarkConversation)
-				{
+				//else if (self.id == Conversation.ID.MoonSecondPostMarkConversation)
+				//{
 
-				}
+				//}
 			}
 
 			orig(self);
+		}
+
+		private void SLOracleBehaviorHasMark_Update(On.SLOracleBehaviorHasMark.orig_Update orig, SLOracleBehaviorHasMark self, bool eu)
+		{
+			if (cicada.TryGet(self.player?.abstractCreature, out var ac) && ac.realizedCreature is Cicada cada)
+			{
+				var og = self.player.grasps;
+				self.player.grasps = cada.grasps;
+				orig(self, eu);
+				self.player.grasps = og;
+			}
+			else
+			{
+				orig(self, eu);
+			}
+		}
+
+		// Let me through dastards
+		private float TempleGuardAI_ThrowOutScore(On.TempleGuardAI.orig_ThrowOutScore orig, TempleGuardAI self, Tracker.CreatureRepresentation crit)
+		{
+			if (player.TryGet(crit.representedCreature, out var ap) && ap.realizedCreature is Player p)
+			{
+				if (p.KarmaCap == 9)
+				{
+					return 0f;
+				}
+			}
+			return orig(self, crit);
+		}
+
+
+		private void Ghost_MoveCreature(On.VoidSea.PlayerGhosts.Ghost.orig_MoveCreature orig, VoidSea.PlayerGhosts.Ghost self, Vector2 movePos)
+		{
+			orig(self, movePos);
+			if (cicada.TryGet(self.creature.abstractCreature, out var ac) && ac.realizedCreature is Cicada squiddy)
+			{
+				squiddy.graphicsModule.Reset();
+			}
+		}
+
+		private void PlayerGhosts_AddGhost(On.VoidSea.PlayerGhosts.orig_AddGhost orig, VoidSea.PlayerGhosts self)
+		{
+			orig(self);
+			var added = self.ghosts.Last();
+			if (added != null && cicada.TryGet(added.creature.abstractCreature, out _)) self.voidSea.VoidSeaTreatment(added.creature, added.swimSpeed);
+		}
+
+		private void VoidSeaScene_VoidSeaTreatment(On.VoidSea.VoidSeaScene.orig_VoidSeaTreatment orig, VoidSea.VoidSeaScene self, Player player, float swimSpeed)
+		{
+			orig(self, player, swimSpeed);
+			if (cicada.TryGet(player.abstractCreature, out var ac) && ac.realizedCreature is Cicada squiddy)
+			{
+				squiddy.lungs = 1f;
+				squiddy.flyingPower = swimSpeed;
+				squiddy.stamina = swimSpeed;
+				squiddy.flying = true;
+				if (squiddy.Submersion > 0.5f) squiddy.mainBodyChunk.vel.y -= 0.5f;
+				squiddy.gravity = Mathf.Lerp(0.9f, 0f, squiddy.Submersion);
+				squiddy.buoyancy = 0f;
+
+				for (int i = 0; i < squiddy.bodyChunks.Length; i++)
+				{
+					squiddy.bodyChunks[i].restrictInRoomRange = float.MaxValue;
+				}
+			}
 		}
 	}
 }

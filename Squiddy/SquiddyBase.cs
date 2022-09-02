@@ -88,6 +88,7 @@ namespace Squiddy
 			On.Cicada.GrabbedByPlayer += Cicada_GrabbedByPlayer; // prevent loss of control
             On.Cicada.CarryObject += Cicada_CarryObject; // more realistic grab pos, pointy stick
 			On.Cicada.Collide += Cicada_Collide; // charging on creature, attack chunk
+            On.Cicada.TerrainImpact += Cicada_TerrainImpact; // fall damage death, embed
 
 			On.Cicada.Die += Cicada_Die; // Die! secret player
 			On.CicadaAI.Update += CicadaAI_Update; // dont let AI interfere on squiddy
@@ -103,6 +104,7 @@ namespace Squiddy
 			On.AbstractPhysicalObject.Destroy += AbstractPhysicalObject_Destroy; // don't break up on player removal
 
 			IL.Cicada.Act += Cicada_Act1; // cicada pather gets confused about entering shortcuts, let our code handle that instead
+											// also fix zerog
 			On.InsectCoordinator.NowViewed += InsectCoordinator_NowViewed; // remove respawned insetcs on room reenter
 
 			On.Player.CanIPickThisUp += Player_CanIPickThisUp; // player picks what squiddy wants
@@ -110,7 +112,9 @@ namespace Squiddy
 			On.Player.ObjectEaten += Player_ObjectEaten; // player eats what squiddy eats
 			On.Player.FoodInRoom_Room_bool += Player_FoodInRoom_Room_bool; // squiddy uses different values and eats smallCreature
 			On.Player.ObjectCountsAsFood += Player_ObjectCountsAsFood; // disable autoeat for quarter pips
+            IL.Player.Regurgitate += Player_Regurgitate; // ALWAYS grab it
 			On.AbstractCreatureAI.DoIwantToDropThisItemInDen += AbstractCreatureAI_DoIwantToDropThisItemInDen; // eat the thing you carried to a den
+            On.SeedCob.Update += SeedCob_Update;
 
 			On.Cicada.InitiateGraphicsModule += Cicada_InitiateGraphicsModule; // special arena colors
 			On.CicadaGraphics.Update += CicadaGraphics_Update; // move tentacles properly
@@ -135,16 +139,23 @@ namespace Squiddy
 			On.SSOracleBehavior.ThrowOutBehavior.Update += ThrowOutBehavior_Update;
 			On.SSOracleBehavior.SeePlayer += SSOracleBehavior_SeePlayer;
             On.SSOracleBehavior.NewAction += SSOracleBehavior_NewAction;
+            On.SSOracleBehavior.Update += SSOracleBehavior_Update;
 
-            // Moon
-            On.SLOracleBehaviorHasMark.MoonConversation.AddEvents += MoonConversation_AddEvents;
+			// M'oon
+			On.SLOracleBehaviorHasMark.MoonConversation.AddEvents += MoonConversation_AddEvents;
+            On.SLOracleBehaviorHasMark.Update += SLOracleBehaviorHasMark_Update;
+
+            On.TempleGuardAI.ThrowOutScore += TempleGuardAI_ThrowOutScore; // let me through
+            On.VoidSea.VoidSeaScene.VoidSeaTreatment += VoidSeaScene_VoidSeaTreatment;
+            On.VoidSea.PlayerGhosts.AddGhost += PlayerGhosts_AddGhost;
+            On.VoidSea.PlayerGhosts.Ghost.MoveCreature += Ghost_MoveCreature;
 
 			densNeededAmount = 0f;
 			densNeeded = false;
 		}
 
 
-		protected override void Disable()
+        protected override void Disable()
 		{
 			On.Cicada.Update -= Cicada_Update;
 			On.Cicada.Act -= Cicada_Act;
@@ -152,6 +163,7 @@ namespace Squiddy
 			On.Cicada.GrabbedByPlayer -= Cicada_GrabbedByPlayer;
 			On.Cicada.CarryObject -= Cicada_CarryObject;
 			On.Cicada.Collide -= Cicada_Collide;
+			On.Cicada.TerrainImpact -= Cicada_TerrainImpact;
 
 			On.Cicada.Die -= Cicada_Die;
 			On.CicadaAI.Update -= CicadaAI_Update;
@@ -174,7 +186,9 @@ namespace Squiddy
 			On.Player.ObjectEaten -= Player_ObjectEaten;
 			On.Player.FoodInRoom_Room_bool -= Player_FoodInRoom_Room_bool;
 			On.Player.ObjectCountsAsFood -= Player_ObjectCountsAsFood;
+			IL.Player.Regurgitate -= Player_Regurgitate;
 			On.AbstractCreatureAI.DoIwantToDropThisItemInDen -= AbstractCreatureAI_DoIwantToDropThisItemInDen;
+			On.SeedCob.Update -= SeedCob_Update;
 
 			On.Cicada.InitiateGraphicsModule -= Cicada_InitiateGraphicsModule;
 			On.CicadaGraphics.Update -= CicadaGraphics_Update;
@@ -198,13 +212,21 @@ namespace Squiddy
             On.SSOracleBehavior.ThrowOutBehavior.Update -= ThrowOutBehavior_Update;
             On.SSOracleBehavior.SeePlayer -= SSOracleBehavior_SeePlayer;
 			On.SSOracleBehavior.NewAction -= SSOracleBehavior_NewAction;
+			On.SSOracleBehavior.Update -= SSOracleBehavior_Update;
 
 			On.SLOracleBehaviorHasMark.MoonConversation.AddEvents -= MoonConversation_AddEvents;
+			On.SLOracleBehaviorHasMark.Update -= SLOracleBehaviorHasMark_Update;
+
+			On.TempleGuardAI.ThrowOutScore -= TempleGuardAI_ThrowOutScore;
+			On.VoidSea.VoidSeaScene.VoidSeaTreatment -= VoidSeaScene_VoidSeaTreatment;
+			On.VoidSea.PlayerGhosts.AddGhost -= PlayerGhosts_AddGhost;
+			On.VoidSea.PlayerGhosts.Ghost.MoveCreature -= Ghost_MoveCreature;
+
 		}
 
-        // Lock player and squiddy
-        // player inconsious update
-        private void Cicada_Update(On.Cicada.orig_Update orig, Cicada self, bool eu)
+		// Lock player and squiddy
+		// player inconsious update
+		private void Cicada_Update(On.Cicada.orig_Update orig, Cicada self, bool eu)
         {
             if (player.TryGet(self.abstractCreature, out var ap) && ap.realizedCreature is Player p)
             {
@@ -246,6 +268,23 @@ namespace Squiddy
 				// a lot of things copypasted from from p.update
 				if (p.wantToJump > 0) p.wantToJump--;
 				if (p.wantToPickUp > 0) p.wantToPickUp--;
+
+				// eat popcorn
+				if (p.dontEatExternalFoodSourceCounter > 0)
+				{
+					p.dontEatExternalFoodSourceCounter--;
+				}
+				if (p.Consious && p.eatExternalFoodSourceCounter > 0)
+				{
+					p.eatExternalFoodSourceCounter--;
+					if (p.eatExternalFoodSourceCounter < 1)
+					{
+						p.AddFood(1);
+						if (self.grasps[0]?.grabbed is SeedCob) self.grasps[0].Release();
+						p.dontEatExternalFoodSourceCounter = 45;
+						p.room.PlaySound(SoundID.Slugcat_Bite_Fly, p.mainBodyChunk);
+					}
+				}
 
 				// no input
 				if (p.input[0].x == 0 && p.input[0].y == 0 && !p.input[0].jmp && !p.input[0].thrw && !p.input[0].pckp)
@@ -399,6 +438,16 @@ namespace Squiddy
 					}
 				}
 
+				// Void melt / lights so damn annoying
+				if(self.room?.roomSettings.GetEffect(RoomSettings.RoomEffect.Type.VoidMelt) is RoomSettings.RoomEffect effect)
+                {
+					for (int m = 0; m < self.bodyChunks.Length; m++)
+					{
+						BodyChunk bodyChunk = self.bodyChunks[m];
+						bodyChunk.vel.y = bodyChunk.vel.y - self.gravity * 0.5f * effect.amount * (1f - self.bodyChunks[m].submersion);
+					}
+				}
+
 				// cheats
 				if (self.room != null && self.room.game.devToolsActive)
 				{
@@ -496,12 +545,12 @@ namespace Squiddy
 
 					if (self.Charging && self.grasps[0] != null && self.grasps[0].grabbed is Weapon w)
 					{
-						SharedPhysics.CollisionResult result = SharedPhysics.TraceProjectileAgainstBodyChunks(null, self.room, w.firstChunk.lastPos, ref w.firstChunk.pos, w.firstChunk.rad + 5f, 1, self, true);
+						SharedPhysics.CollisionResult result = SharedPhysics.TraceProjectileAgainstBodyChunks(null, self.room, w.firstChunk.lastPos, ref w.firstChunk.pos, w.firstChunk.rad, 1, self, true);
                         if (result.hitSomething)
                         {
 							var dir = (self.bodyChunks[0].pos - self.bodyChunks[1].pos).normalized;
 							var throwndir = new IntVector2(Mathf.Abs(dir.x) > 0.38 ? (int)Mathf.Sign(dir.x) : 0, Mathf.Abs(dir.y) > 0.38 ? (int)Mathf.Sign(dir.y) : 0);
-							w.Thrown(p, w.firstChunk.pos, w.firstChunk.lastPos, throwndir, 1f, self.evenUpdate);
+							w.Thrown(self, w.firstChunk.pos, w.firstChunk.lastPos, throwndir, 1f, self.evenUpdate);
 							if (w is Spear sp && !(result.obj is Player))
 							{
 								sp.spearDamageBonus *= 0.6f;
@@ -538,6 +587,10 @@ namespace Squiddy
                     self.AI.behavior = CicadaAI.Behavior.GetUnstuck; // helps with sitting behavior
                     var dest = basepos + inputDir * 20f;
                     if (self.flying) dest.y -= 12f; // nose up goes funny
+					if(Mathf.Abs(inputDir.y) < 0.1f) // trying to move horizontally, compensate for momentum a bit
+                    {
+						dest.y -= self.mainBodyChunk.vel.y * 1.3f;
+                    }
                     self.abstractCreature.abstractAI.SetDestination(self.room.GetWorldCoordinate(dest));
                 }
                 else
@@ -620,7 +673,6 @@ namespace Squiddy
 					}
 				}
 			}
-
 			orig(self);
 		}
 
@@ -661,6 +713,7 @@ namespace Squiddy
 					if (we is Spear sp && !(otherObject is Player))
 					{
 						sp.spearDamageBonus *= 0.6f;
+						sp.setRotation = dir;
 					}
 					we.Forbid();
 					self.ReleaseGrasp(0);
@@ -669,6 +722,42 @@ namespace Squiddy
 				return;
 			}
 			orig(self, otherObject, myChunk, otherChunk);
+		}
+
+		// fall damage, and embed sticks
+		private void Cicada_TerrainImpact(On.Cicada.orig_TerrainImpact orig, Cicada self, int chunk, IntVector2 direction, float speed, bool firstContact)
+		{
+			orig(self, chunk, direction, speed, firstContact);
+
+			if (player.TryGet(self.abstractCreature, out var ap))
+			{
+				if (speed > 60f && direction.y < 0)
+				{
+					self.room.PlaySound(SoundID.Slugcat_Terrain_Impact_Death, self.mainBodyChunk);
+					Debug.Log("Fall damage death");
+					self.Die();
+				}
+				else if (speed > (self.Charging ? 45f : 35f))
+				{
+					self.room.PlaySound(SoundID.Slugcat_Terrain_Impact_Hard, self.mainBodyChunk);
+					self.Stun((int)Custom.LerpMap(speed, 35f, 60f, 40f, 140f, 2.5f));
+				}
+
+
+				if (self.grasps[0]?.grabbed is Spear speary)
+				{
+					var bodyDir = (self.bodyChunks[0].pos - self.bodyChunks[1].pos).normalized;
+					var dir = direction.ToVector2();
+					if (Vector2.Dot(bodyDir, dir) > 0.67)
+					{
+						speary.Thrown(self, speary.firstChunk.pos, speary.firstChunk.lastPos, direction, 1f, self.evenUpdate);
+						speary.spearDamageBonus *= 0.6f;
+						speary.setRotation = dir;
+						speary.Forbid();
+						self.ReleaseGrasp(0);
+					}
+				}
+			}
 		}
 
 		// dont let AI interfere on squiddy
