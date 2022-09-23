@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{96A41D62-3E21-45CB-BAD7-CB3D555C18D8}</ProjectGuid>
+    <ProjectGuid>{0EB61147-E683-4F66-A5F2-7D6C69F52AC7}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TheWilderness</RootNamespace>
-    <AssemblyName>TheWilderness</AssemblyName>
+    <RootNamespace>GunTurret</RootNamespace>
+    <AssemblyName>GunTurret</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -99,12 +99,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Bumper.cs" />
-    <Compile Include="PlacedObjectsManager.cs" />
-    <Compile Include="RoomTransition.cs" />
-    <Compile Include="SlugBall.cs" />
-    <Compile Include="SoundtrackToken.cs" />
-    <Compile Include="TheWilderness.cs" />
+    <Compile Include="GunTurretMod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

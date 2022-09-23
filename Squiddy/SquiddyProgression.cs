@@ -459,7 +459,7 @@ namespace Squiddy
 						self.events.Add(new Conversation.TextEvent(self, 20, self.Translate("But anyways, <PlayerName>, what are you doing around these parts?<LINE>As you can see, I have nothing for you. Not even my memories."), 10));
 						self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("Or did I say that already?"), 5));
 						self.events.Add(new Conversation.TextEvent(self, 30, self.Translate("I see that someone has given you the gift of communication. Was it Five Pebbles? It must have been a really dangerous journey.<LINE>He's sick, you know. Being corrupted from the inside by old age and increasingly desperate experiments."), 30));
-						self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("I would have never imagined Five Pebbles being so benevolent to the wildlife like that, but here you are!<LINE>Maybe this will be his redemption arc?"), 20));
+						self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("I would have never imagined Five Pebbles being so benevolent to the wildlife like that, but here you are!<LINE>Maybe this will be his redemption arc? I highly doubt so, but there's no harm in wishful thinking."), 20));
 						self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("We weren't made to cross out, you see, we were made to keep Iterating, and it has driven many of us a little mad."), 30));
 						self.events.Add(new Conversation.TextEvent(self, 0, self.Translate("It is good to have someone to talk to after all this time!<LINE>I have had scavengers come by before, as you can tell from the paintings on the walls."), 0));
 						self.events.Add(new Conversation.TextEvent(self, 30, self.Translate("... hopefully the rain will wash out whatever markings you happen to leave, little creature."), 0));
@@ -495,14 +495,13 @@ namespace Squiddy
 		{
 			if (player.TryGet(crit.representedCreature, out var ap) && ap.realizedCreature is Player p)
 			{
-				if (p.KarmaCap == 9)
+				if (p.KarmaCap >= 9)
 				{
 					return 0f;
 				}
 			}
 			return orig(self, crit);
 		}
-
 
 		private void Ghost_MoveCreature(On.VoidSea.PlayerGhosts.Ghost.orig_MoveCreature orig, VoidSea.PlayerGhosts.Ghost self, Vector2 movePos)
 		{

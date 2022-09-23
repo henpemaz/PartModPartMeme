@@ -25,24 +25,33 @@ namespace SweetDreams
     [BepInEx.BepInPlugin("henpemaz.sweetdreams", "SweetDreams", "1.0")]
     public class SweetDreams : BepInEx.BaseUnityPlugin
     {
-        public string author = "Intikus, Tealppup & Henpemaz";
-        public static SweetDreams instance;
+        void Update() // debug thinghies
+        {
+            if (Input.GetKeyDown("1"))
+            {
+                if (GameObject.FindObjectOfType<RainWorld>()?.processManager?.currentMainLoop is RainWorldGame game)
+                    game.Win(false);
+            }
+        }
 
         public void OnEnable()
         {
-            instance = this;
-
             // magic happens here
             On.Menu.SleepAndDeathScreen.GetDataFromGame += SleepAndDeathScreen_GetDataFromGame;
-
-            On.RainWorldGame.Update += RainWorldGame_Update;
         }
 
-        private void RainWorldGame_Update(On.RainWorldGame.orig_Update orig, RainWorldGame self)
+        public class Dream
         {
-            // testing
-            orig(self);
-            if (self.clock > 80 && self.Players[0].Room.realizedRoom != null && self.Players[0].Room.realizedRoom.readyForAI && self.manager.upcomingProcess == null) self.Win(false);
+            DreamLayer[] layers;
+            string song;
+        }
+
+        public class DreamLayer
+        {
+            string asset;
+            float slugoffset;
+            Vector2 offset;
+            MenuDepthIllustration.MenuShader shader = MenuDepthIllustration.MenuShader.Normal;
         }
 
         private void SleepAndDeathScreen_GetDataFromGame(On.Menu.SleepAndDeathScreen.orig_GetDataFromGame orig, SleepAndDeathScreen self, KarmaLadderScreen.SleepDeathScreenDataPackage package)

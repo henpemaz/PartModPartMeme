@@ -108,6 +108,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheWilderness", "TheWildern
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZeroG", "ZeroG\ZeroG.csproj", "{77C4C2CE-29AE-40B3-816A-D38BC4E0F4D6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GunTurret", "GunTurret\GunTurret.csproj", "{0EB61147-E683-4F66-A5F2-7D6C69F52AC7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -314,6 +316,10 @@ Global
 		{77C4C2CE-29AE-40B3-816A-D38BC4E0F4D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{77C4C2CE-29AE-40B3-816A-D38BC4E0F4D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{77C4C2CE-29AE-40B3-816A-D38BC4E0F4D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0EB61147-E683-4F66-A5F2-7D6C69F52AC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0EB61147-E683-4F66-A5F2-7D6C69F52AC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0EB61147-E683-4F66-A5F2-7D6C69F52AC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0EB61147-E683-4F66-A5F2-7D6C69F52AC7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

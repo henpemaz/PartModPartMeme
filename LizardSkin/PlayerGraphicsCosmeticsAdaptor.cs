@@ -185,7 +185,7 @@ namespace LizardSkin
             PlayerGraphicsCosmeticsAdaptor toReturn = null;
             for (int i = ghostAdaptors.Count - 1; i >= 0; i--)
             {
-                if (!ghostAdaptors[i].IsAlive || (ghostAdaptors[i].Target as PlayerGraphicsCosmeticsAdaptor).graphics.owner.slatedForDeletetion)
+                if (!ghostAdaptors[i].IsAlive)
                 {
                     ghostAdaptors.RemoveAt(i);
                 }

@@ -9,13 +9,149 @@ using System.Collections.Generic;
 
 namespace TheWilderness
 {
-	[BepInEx.BepInPlugin("henpemaz.thewildernessmod", "The Wilderness", "1.0")]
+    [BepInEx.BepInPlugin("henpemaz.thewildernessmod", "The Wilderness", "1.0")]
 	public class TheWilderness : BepInEx.BaseUnityPlugin
 	{
 		public void OnEnable()
 		{
 			On.RoomCamera.ApplyPalette += RoomCamera_ApplyPalette;
 			On.Room.Loaded += Room_Loaded;
+
+			
+
+            On.RainWorld.Start += RainWorld_Start;
+		}
+
+        private void RainWorld_Start(On.RainWorld.orig_Start orig, RainWorld self)
+        {
+			Bumper.Apply();
+			SlugBall.Apply();
+
+			RoomTransition.Apply();
+
+			BHHugeFanObject.Apply();
+
+			SoundtrackToken.Apply();
+			orig(self);
+        }
+
+
+		class BHHugeFanObject : CosmeticSprite
+		{
+			internal static void Apply()
+			{
+				PlacedObjectsManager.RegisterManagedObject(new PlacedObjectsManager.ManagedObjectType("BHHugeFanObject", typeof(BHHugeFanObject), null, null));
+			}
+
+			float[] _fanRotation = new float[2] { 1f, 1f };
+			PlacedObject _pObj;
+
+			public BHHugeFanObject(Room room, PlacedObject pObj)
+			{
+				this.room = room;
+				_pObj = pObj;
+			}
+
+			public override void Update(bool eu)
+			{
+				base.Update(eu);
+				if (_pObj != null)
+					pos = _pObj.pos;
+				_fanRotation[0] = _fanRotation[1];
+				_fanRotation[1] -= .02f;
+				if (_fanRotation[1] <= -1f)
+					_fanRotation[1] = 1f;
+			}
+
+			public override void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
+			{
+				base.InitiateSprites(sLeaser, rCam);
+				//const string fan = "BHHugeFan", blade = "BHHugeFanBlade";
+				sLeaser.sprites = new FSprite[4]
+				{
+			new FSprite("BHHugeFanEgg"),
+			new FSprite("BHHugeFanEgg"),
+			new FSprite("BHHugeFanBlades"),
+			new FSprite("BHHugeFanBlades")
+				};
+				/*sLeaser.sprites = new FSprite[20]
+				{
+					new($"{fan}GR0") { alpha = 1f - 9f / 30f },
+					new($"{fan}GR1") { alpha = 1f - 8f / 30f },
+					new($"{fan}GR2") { alpha = 1f - 5f / 30f },
+					new($"{fan}RE2") { alpha = 1f - 5f / 30f },
+					new($"{fan}BL2") { alpha = 1f - 5f / 30f },
+					new($"{fan}GR3") { alpha = 1f - 3f / 30f },
+					new($"{fan}RE3") { alpha = 1f - 3f / 30f },
+					new($"{fan}BL3") { alpha = 1f - 3f / 30f },
+					new($"{fan}GR4") { alpha = 1f - 1f / 30f },
+					new($"{fan}RE4") { alpha = 1f - 1f / 30f },
+					new($"{fan}BL4") { alpha = 1f - 1f / 30f },
+					new($"{fan}GR5") { alpha = 1f },
+					new($"{fan}RE5") { alpha = 1f },
+					new($"{fan}BL5") { alpha = 1f },
+					new($"{blade}0") { alpha = 1f - 9f / 30f },
+					new($"{blade}1") { alpha = 1f - 8f / 30f },
+					new($"{blade}2") { alpha = 1f - 5f / 30f },
+					new($"{blade}3") { alpha = 1f - 3f / 30f },
+					new($"{blade}4") { alpha = 1f - 1f / 30f },
+					new($"{blade}5") { alpha = 1f }
+				};*/
+				for (var i = 0; i < sLeaser.sprites.Length; i++)
+				{
+					sLeaser.sprites[i].shader = rCam.game.rainWorld.Shaders["ColoredSprite2"];
+
+					/*sLeaser.sprites[i].anchorX = sLeaser.sprites[i].element.atlas.texture.width / 2f;
+					sLeaser.sprites[i].anchorY = sLeaser.sprites[i].element.atlas.texture.height / 2f;*/
+				}
+				AddToContainer(sLeaser, rCam, null);
+			}
+
+			public override void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+			{
+				for (var i = 0; i < sLeaser.sprites.Length; i++)
+				{
+					sLeaser.sprites[i].x = Mathf.Lerp(lastPos.x, pos.x, timeStacker) - camPos.x;
+					sLeaser.sprites[i].y = Mathf.Lerp(lastPos.y, pos.y, timeStacker) - camPos.y;
+					//sLeaser.sprites[i].color = sLeaser.sprites[i].element.name.Contains("RE") ? Color.red : (sLeaser.sprites[i].element.name.Contains("BL") ? Color.blue : Color.green);
+				}
+				sLeaser.sprites[2].scaleX = Mathf.Sin(Mathf.Lerp(_fanRotation[0], _fanRotation[1], timeStacker) * Mathf.PI);
+				sLeaser.sprites[3].scaleX = Mathf.Sin(Mathf.Lerp(_fanRotation[0], _fanRotation[1], timeStacker) * Mathf.PI);
+				base.DrawSprites(sLeaser, rCam, timeStacker, camPos);
+			}
+
+			public override void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
+			{
+				base.ApplyPalette(sLeaser, rCam, palette);
+				/*for (var i = 0; i < sLeaser.sprites.Length; i++)
+				{
+					var s = sLeaser.sprites[i].element.name.Contains("RE") ? 0 : (sLeaser.sprites[i].element.name.Contains("BL") ? 2 : 1);
+					var k = 1f - sLeaser.sprites[i].alpha;
+					var dp = (int)(k * 30f);
+					if (room is not null)
+						sLeaser.sprites[i].color = ColorClamp(Color.Lerp(Color.Lerp(palette.texture.GetPixel(dp, s + 3), palette.texture.GetPixel(dp, s), room.DarknessOfPoint(rCam, pos)), palette.fogColor, palette.fogAmount * k), .01f, 1f);
+				}*/
+			}
+
+			public override void AddToContainer(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContainer)
+			{
+				for (var i = 0; i < sLeaser.sprites.Length; i++)
+					sLeaser.sprites[i].RemoveFromContainer();
+				newContainer = rCam.ReturnFContainer("Foreground");
+				newContainer.AddChild(sLeaser.sprites[1]);
+				newContainer.AddChild(sLeaser.sprites[3]);
+				newContainer = rCam.ReturnFContainer("Background");
+				newContainer.AddChild(sLeaser.sprites[0]);
+				newContainer.AddChild(sLeaser.sprites[2]);
+			}
+
+			/*static Color ColorClamp(Color clr, float allValMin, float allValMax)
+			{
+				var r = Mathf.Clamp(clr.r, allValMin, allValMax);
+				var g = Mathf.Clamp(clr.g, allValMin, allValMax);
+				var b = Mathf.Clamp(clr.b, allValMin, allValMax);
+				return new(r, g, b);
+			}*/
 		}
 
 		private void Room_Loaded(On.Room.orig_Loaded orig, Room self)

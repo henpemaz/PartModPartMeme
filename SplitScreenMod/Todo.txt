@@ -81,6 +81,8 @@ forecast breaks violently -> fixed
 Whila cam2 doesn't drawn, garbo sprites build up and cause lag
 
 wormgrass or water on first room realized mess up on cam array resize!
+	hunter start breaks
 
+splatcat = invisibru
 
-
+textboxes in splitscreen suck, specially if perma-split
