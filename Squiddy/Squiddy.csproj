@@ -96,6 +96,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="SquiddyEats.cs" />
+    <Compile Include="SquiddyScenes.cs" />
     <Compile Include="SquiddyProgression.cs" />
     <Compile Include="SquiddyFixes.cs" />
     <Compile Include="InsectHolder.cs" />
@@ -104,7 +105,14 @@
     <Compile Include="SquiddyBase.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Todo.txt" />
+    <EmbeddedResource Include="Resources\Scenes\SelectMenu\bkg.png" />
+    <EmbeddedResource Include="Resources\Scenes\SelectMenu\mg.png" />
+    <EmbeddedResource Include="Resources\Scenes\SelectMenu\positions.txt" />
+    <EmbeddedResource Include="Resources\Scenes\SelectMenu\squit.png" />
+    <None Include="Todo.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Scenes\SelectMenu\scene.json" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

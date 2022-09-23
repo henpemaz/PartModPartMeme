@@ -10,7 +10,7 @@ using UnityEngine;
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 namespace Squiddy
 {
-    [BepInEx.BepInPlugin("henpemaz.squiddymod", "Squiddy", "1.0")]
+    [BepInEx.BepInPlugin("henpemaz.squiddymod", "Squiddy", "0.5")]
     public class Squiddy : BepInEx.BaseUnityPlugin
     {
         public string author = "Henpemaz";
