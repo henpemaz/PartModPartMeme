@@ -1,5 +1,10 @@
 # PartModPartMeme
-My Rain World modding projects
+
+This repo is for the 1.5 version of the game. Newer mods and Remix ports will be developed over at my RemixMods repo.
+
+Please try and contact me through Github/Discord/Email about porting my 1.5 mods to Remix, and give me a month to answer, before trying to do the porting yourself.
+
+## My Rain World modding projects
 
 Some have to-dos, some even have comments! Feel free to reach me over on discord if you want to contribute or make derivative works.
 

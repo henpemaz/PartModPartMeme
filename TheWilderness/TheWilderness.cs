@@ -4,6 +4,8 @@ using System.Reflection;
 using UnityEngine;
 using System.IO;
 using System.Collections.Generic;
+using System.Text;
+using System.Linq;
 
 [assembly: AssemblyTrademark("Henpemaz")]
 
@@ -32,11 +34,15 @@ namespace TheWilderness
 			BHHugeFanObject.Apply();
 
 			SoundtrackToken.Apply();
+
+			Emote.Apply();
+
 			orig(self);
         }
 
 
-		class BHHugeFanObject : CosmeticSprite
+
+        class BHHugeFanObject : CosmeticSprite
 		{
 			internal static void Apply()
 			{

@@ -39,6 +39,9 @@
       <HintPath>..\References\Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>..\References\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
     <Reference Include="BepInEx">
       <HintPath>..\References\bepinex\BepInEx.dll</HintPath>
       <Private>False</Private>
@@ -100,6 +103,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Bumper.cs" />
+    <Compile Include="Emote.cs" />
     <Compile Include="PlacedObjectsManager.cs" />
     <Compile Include="RoomTransition.cs" />
     <Compile Include="SlugBall.cs" />
