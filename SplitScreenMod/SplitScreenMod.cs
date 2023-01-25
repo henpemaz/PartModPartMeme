@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace SplitScreenMod
 {
-    [BepInPlugin("henpemaz.splitscreen", "SplitScreen", "0.1.3")]
+    [BepInPlugin("henpemaz.splitscreen", "SplitScreen", "0.1.4")]
     public partial class SplitScreenMod : BaseUnityPlugin
     {
 
@@ -107,6 +107,7 @@ namespace SplitScreenMod
         private void RainWorld_Start(On.RainWorld.orig_Start orig, RainWorld self)
         {
             // jolly also hooks this to spawn players, hooked late for interop
+            IL.RainWorldGame.ctor += RainWorldGame_ctor1;
             On.RainWorldGame.ctor += RainWorldGame_ctor; // make roomcam2, follow fix
 
             // fixes in fixes file
@@ -217,31 +218,53 @@ namespace SplitScreenMod
             }
         }
 
+        private void RainWorldGame_ctor1(ILContext il)
+        {
+            var c = new ILCursor(il);
+            if (c.TryGotoNext(MoveType.Before,
+                i => i.MatchLdarg(0),
+                i => i.MatchCallOrCallvirt<RainWorldGame>("get_world"),
+                i => i.MatchLdloc(0),
+                i => i.MatchCallOrCallvirt<World>("ActivateRoom")
+                ))
+            {
+                c.MoveAfterLabels();
+                c.Emit(OpCodes.Ldarg_0);
+                c.EmitDelegate<Action<RainWorldGame>>((self) =>
+                {
+                    if (self.session.Players.Count > 1 && preferedSplitMode != SplitMode.NoSplit)
+                    {
+                        var cams = self.cameras;
+                        Array.Resize(ref cams, 2);
+                        self.cameras = cams;
+                        cams[1] = new RoomCamera(self, 1);
+
+                        cams[0].followAbstractCreature = self.session.Players[0];
+                        cams[1].followAbstractCreature = self.session.Players[1];
+                    }
+                });
+            }
+            else Debug.LogException(new Exception("Couldn't IL-hook RainWorldGame_ctor1 from SplitScreenMod")); // deffendisve progrmanig
+        }
+
         private void RainWorldGame_ctor(On.RainWorldGame.orig_ctor orig, RainWorldGame self, ProcessManager manager)
         {
+            preferedSplitMode = confPreferedSplitMode.Value;
+            alwaysSplit = confAlwaysSplit.Value;
+
             for (int i = 0; i < cameraListeners.Length; i++)
             {
                 if (cameraListeners[i] != null) cameraListeners[i].Destroy();
                 cameraListeners[i] = null;
             }
             realizer2 = null;
-            // note, this could maybe be moved to manager.switchmainprocess, so that it's tied to game being the main process and wont fire if someone tries to instantiate a game for some reason
-            // but then I'd have to rain checks for game == pm.mainprocess everywhere and thatd be ass
+
             orig(self, manager);
-            preferedSplitMode = confPreferedSplitMode.Value;
-            alwaysSplit = confAlwaysSplit.Value;
             
             if (self.session.Players.Count > 1 && preferedSplitMode != SplitMode.NoSplit)
             {
                 var cams = self.cameras;
-                Array.Resize(ref cams, 2);
-                self.cameras = cams;
-
-                cams[1] = new RoomCamera(self, 1);
                 cams[1].MoveCamera(self.world.activeRooms[0], 0);
-
-                cams[0].followAbstractCreature = self.session.Players[0];
-                cams[1].followAbstractCreature = self.session.Players[1];
 
                 realizer2 = new RoomRealizer(self.session.Players.First(p => p != self.roomRealizer.followCreature), self.world)
                 {
@@ -249,10 +272,6 @@ namespace SplitScreenMod
                     recentlyAbstractedRooms = self.roomRealizer.recentlyAbstractedRooms,
                     realizeNeighborCandidates = self.roomRealizer.realizeNeighborCandidates
                 };
-
-                // vanilla splitScreenMode = horiz split only, we want MORE
-                //foreach (RoomCamera c in cams) if (c != null) c.splitScreenMode = true;
-                // cam.offset also dropped, too buggy as some idraws wouldnt use campos
             }
 
             CurrentSplitMode = SplitMode.NoSplit;
@@ -397,11 +416,6 @@ namespace SplitScreenMod
             try
             {
                 curCamera = self.cameraNumber;
-                if (self.cameraNumber > 0 && CurrentSplitMode == SplitMode.NoSplit) // optimized out
-                {
-                    self.virtualMicrophone.DrawUpdate(timeStacker, timeSpeed); // needs to remove old loops though
-                    return;
-                }
                 orig(self, timeStacker, timeSpeed);
             }
             finally
